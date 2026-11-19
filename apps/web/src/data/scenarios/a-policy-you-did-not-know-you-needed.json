@@ -1,0 +1,418 @@
+{
+ "slug": "a-policy-you-did-not-know-you-needed",
+ "status": "draft",
+ "order": 45,
+ "title": "Your care home policies and procedures look complete. <em>What if one is missing?</em>",
+ "meta_title": "Care Home Policies and Procedures: Find Gaps | CareStreamAI",
+ "meta_description": "Your care home policies and procedures may have a hole you cannot see. CareStream checks what your policies say and flags a policy you may be missing.",
+ "eyebrow": "Scenario",
+ "lede": "A folder full of policies feels finished, but nobody checks what is not in it. Your care home policies and procedures can look complete while one subject is missing. <a href=\"/training-platform\">CareStream reads your own policies</a>, and where the evidence shows a subject is not covered, it suggests a policy to add.",
+ "fine": "14 day free trial · Set up in a day · UK data residency",
+ "panel": {
+  "title": "Your policy library",
+  "pill": "Illustration",
+  "rows": [
+   {
+    "label": "Policies uploaded and indexed",
+    "note": "Day 1",
+    "done": true
+   },
+   {
+    "label": "Coverage run on your own policies",
+    "note": "Day 1",
+    "done": true
+   },
+   {
+    "label": "Missing policy suggested",
+    "note": "Not yet",
+    "done": false
+   },
+   {
+    "label": "Policy added and read by staff",
+    "note": "Not yet",
+    "done": false
+   }
+  ],
+  "meter": 50
+ },
+ "image": "https://api.carestreamai.com/public/policy-shop/image/1bc01508-f963-4bf4-9ad6-d3691974eeeb.webp",
+ "image_alt": "A manager runs a finger down a long filing shelf of policy folders and pauses at an empty gap, smiling thoughtfully while a colleague watches",
+ "card_title": "Is there a policy your home does not have?",
+ "card_snippet": "A shelf of policies can look complete. CareStream reads what your policies actually say, flags a subject nobody has covered, and lets you add a written policy for it.",
+ "primary_keyword": "care home policies and procedures",
+ "secondary_keywords": [
+  "care home policies",
+  "cqc policies",
+  "care policies",
+  "policy template",
+  "policy review"
+ ],
+ "feature_links": [
+  {
+   "title": "Training built from your own policies",
+   "body": "Short training from your policies, with wrong answers turned into lessons.",
+   "action": "See the feature",
+   "href": "/training-platform"
+  },
+  {
+   "title": "Policy gap detection",
+   "body": "See which regulations have a policy behind them and which do not.",
+   "action": "See gap detection",
+   "href": "/policy-gap-detection"
+  },
+  {
+   "title": "CQC and compliance",
+   "body": "Evidence that builds itself, and a readiness report for your next inspection.",
+   "action": "See CQC and compliance",
+   "href": "/cqc-compliance"
+  }
+ ],
+ "intro": {
+  "heading": "The policy nobody thought to write.",
+  "sub": "A scenario we see in many care settings.",
+  "paragraph": "A registered manager takes over a service and inherits a tidy shelf of folders. Safeguarding, medication, infection control and complaints are all there, and each has a review date. Nobody has ever asked a different question, which is what is not on the shelf. Over the years a service adds a hydration plan here and a new type of equipment there, and the policy set stays as it was. The manager is confident because every folder looks in order. Then a deputy mentions that nothing explains how the home deals with legionella. Here is how that plays out."
+ },
+ "trail": [
+  {
+   "when": "Monday",
+   "text": "A new manager takes over a service and inherits a full shelf of policies.",
+   "kind": "ok"
+  },
+  {
+   "when": "Week one",
+   "text": "Each folder has a cover sheet and a review date.",
+   "kind": "ok"
+  },
+  {
+   "when": "Week two",
+   "text": "The core subjects are all there. The manager relaxes.",
+   "kind": "ok"
+  },
+  {
+   "when": "Month three",
+   "text": "Nobody has asked what the set does not cover.",
+   "kind": "gap"
+  },
+  {
+   "when": "The old way",
+   "text": "Policies were added when something went wrong, never from a list.",
+   "kind": "gap"
+  },
+  {
+   "when": "What a title check misses",
+   "text": "A folder called Health and Safety may say nothing about water.",
+   "kind": "gap"
+  },
+  {
+   "when": "What the manager has",
+   "text": "A shelf that looks complete and no way to prove it is.",
+   "kind": "gap"
+  },
+  {
+   "when": "Inspection day",
+   "text": "“Where is your policy on this?” The folder is not there.",
+   "kind": "end"
+  }
+ ],
+ "trail_close": "<b>The shelf was never the problem.</b> The gap is between what a library looks like and what its content covers. Here is how CareStream reads your own policies and tells you what the evidence says is missing.",
+ "why": {
+  "heading": "A full shelf does not mean a full set",
+  "sub": "Nobody notices an absent policy until someone asks for it.",
+  "cards": [
+   {
+    "icon": "chat",
+    "title": "Folder titles can mislead",
+    "body": "A policy called Health and Safety can run to ten pages and still not mention a subject you need. The title looks right and the content has a hole."
+   },
+   {
+    "icon": "tick",
+    "title": "Generic lists do not know your service",
+    "body": "A downloaded policy template or a list from the internet does not know your size, your setting or what your own policies already say."
+   },
+   {
+    "icon": "alert",
+    "title": "Reading every page by hand does not scale",
+    "body": "Comparing each policy against the rules, line by line, is a job no manager has time for. So it gets put off, and the hole stays hidden."
+   }
+  ]
+ },
+ "how": {
+  "heading": "Your policies in, the missing subjects out.",
+  "sub": "This is the <a href=\"/policy-gap-detection\">policy gap detection</a> feature, in the order a manager meets it. See also <a href=\"/uses/policy-gaps\">finding gaps in your policy set</a> and <a href=\"/uses/out-of-date-policies\">catching policies that have gone out of date</a>.",
+  "blocks": [
+   {
+    "heading": "Upload your policies and run a coverage check",
+    "bullets": [
+     "Upload your care policies as PDF, Word, ODT or text files, and CareStream reads what they say, not just what they are called",
+     "Set your service profile first, so the check looks at the regulations that apply to your type of service",
+     "Run the coverage analysis and see which regulations have a policy behind them"
+    ],
+    "tags": [
+     {
+      "label": "Policy gap detection",
+      "href": "/policy-gap-detection"
+     },
+     {
+      "label": "How CareStream works",
+      "href": "/how-it-works"
+     }
+    ],
+    "mock": {
+     "type": "training",
+     "module": "Policy Gap Detection: coverage run (illustration)",
+     "questions": [
+      "Does any policy in the library have this regulation as its subject?",
+      "Does that policy contain every element a compliant policy needs?",
+      "Is anything uncovered, and which policy title would fix it?"
+     ],
+     "staff_count": 14
+    }
+   },
+   {
+    "heading": "A missing policy appears, and you choose what to do",
+    "bullets": [
+     "A subject with no policy behind it is grouped under a suggested policy title, drawn from the evidence and not from matching your folder names",
+     "It is a suggestion, not a verdict. You can ignore it, restore it later, or buy a written policy for your service",
+     "A bought policy goes through your own approval steps before staff see it, and it is read by a person first"
+    ],
+    "tags": [
+     {
+      "label": "Missing policy detection",
+      "href": "/policy-gap-detection"
+     },
+     {
+      "label": "Gaps in your policy set",
+      "href": "/uses/policy-gaps"
+     }
+    ],
+    "mock": {
+     "type": "followup",
+     "module": "Water Safety (Legionella)",
+     "question": "Who in the home is named as the water safety lead?",
+     "why": "A policy only protects people if staff know who owns the subject and what to do. A newly added policy needs a quick check that it landed.",
+     "remember": [
+      "Know who the named lead is",
+      "Know where the policy is kept",
+      "Report a concern straight away"
+     ],
+     "picture": "A carer notices a shower that has not been run for weeks and wonders who to tell."
+    }
+   },
+   {
+    "heading": "Turn the new policy into a short briefing for staff",
+    "bullets": [
+     "Once the policy is in your library, you can allocate a short training module on its topic, built from your own policies",
+     "Staff complete it in the Staff Hub on their own phone, and a wrong answer lands in their Follow-up tab",
+     "The module is a topic named module. You cannot pick a single policy or section, so check the preview before you assign it"
+    ],
+    "tags": [
+     {
+      "label": "Training built from your own policies",
+      "href": "/training-platform"
+     },
+     {
+      "label": "Adhoc training",
+      "href": "/uses/adhoc-training"
+     }
+    ],
+    "mock": {
+     "type": "training",
+     "module": "Water Safety (Legionella)",
+     "questions": [
+      "What should you do if a shower has not been used for a week?",
+      "Who do you report a water temperature concern to?"
+     ],
+     "staff_count": 18
+    }
+   },
+   {
+    "heading": "See where your set stands, and keep it reviewed",
+    "bullets": [
+     "The gap view shows how many regulations have a policy behind them, and which still need work",
+     "Run the out of date scan for old terms and overdue review dates. It uses no AI and no tokens",
+     "Make each policy review easier by working from one place, with suggested changes you adopt or ignore"
+    ],
+    "tags": [
+     {
+      "label": "Out of date policies",
+      "href": "/uses/out-of-date-policies"
+     },
+     {
+      "label": "CQC and compliance evidence",
+      "href": "/cqc-compliance"
+     }
+    ],
+    "mock": {
+     "type": "gaps",
+     "stats": {
+      "open": 6,
+      "affected": 3,
+      "closed": 9,
+      "engaged": 7
+     },
+     "missed": [
+      [
+       "Who is the named water safety lead?",
+       "5 staff"
+      ],
+      [
+       "Where is the legionella risk assessment kept?",
+       "4 staff"
+      ],
+      [
+       "How often are unused outlets flushed?",
+       "3 staff"
+      ]
+     ],
+     "weak": [
+      [
+       "Water safety",
+       "58%"
+      ],
+      [
+       "Infection control",
+       "71%"
+      ],
+      [
+       "Safeguarding",
+       "86%"
+      ]
+     ]
+    }
+   }
+  ]
+ },
+ "talk": {
+  "heading": "The questions managers ask, and how CareStream answers them",
+  "sub": "Read this as a conversation. The questions are the ones we hear most.",
+  "items": [
+   {
+    "q": "Will CareStream give me a list of every policy my home needs?",
+    "a": "No, and we would be wary of any tool that claimed to. It looks at what your own policies say and checks that against a set of regulations matched to your type of service. Where nothing in your library covers a regulation, it suggests a policy to add. It works from evidence in your policies, not from a fixed list."
+   },
+   {
+    "q": "How does it decide a policy is missing?",
+    "a": "It reads the content of your policies, not their titles. For each regulation it asks whether any policy is actually about that subject, and then whether that policy contains what it should. Only a subject with no policy behind it counts as missing. So a mislabelled folder cannot fool it either way."
+   },
+   {
+    "q": "Is it a verdict I have to act on?",
+    "a": "No. It is a suggestion. You can ignore it, restore it later, or add a written policy. It also stays quiet if the result looks out of date, for example when policies have changed since the last run."
+   },
+   {
+    "q": "What happens when I want the missing policy?",
+    "a": "You can buy a written policy from the CareStream policy shop. It is written from your service details, checked by a gate, then read by a person before it arrives in your library. It goes through your own approval steps like any other policy, and the next coverage run reads it as evidence. The shop is separate from the subscription."
+   },
+   {
+    "q": "Do I need to turn the new policy into training?",
+    "a": "It helps. Once the policy is in, you can allocate a short <a href=\"/training-platform\">training module built from your own policies</a>. Staff do it in the Staff Hub, and a wrong answer goes to their Follow-up tab, where they choose Learn &amp; retry or Just retry. You see the result in the Knowledge gaps view, and a Monday digest arrives by email."
+   },
+   {
+    "q": "Does CareStream rewrite my policies for me?",
+    "a": "Not on its own. It suggests wording, and an admin adopts or ignores each suggestion. Adopted wording becomes a tracked change in a draft, and nothing reaches staff until it passes your approval steps. The example wording is drafted by our own machine learning, so read it as a starting point."
+   },
+   {
+    "q": "Can I try this without paying?",
+    "a": "There is a free route that checks up to 5 uploaded policies in total, with all four analyses, and paid plans have a 14 day free trial. Gap detection and fixes are Professional and above. <a href=\"/register\">Create a free account</a> to see it on your own policies."
+   },
+   {
+    "q": "Will this get me a good CQC rating?",
+    "a": "No. It gives you a clearer picture and a record of what you did about it. The wording it suggests is guidance, not legal advice, and you decide what your service adopts."
+   }
+  ]
+ },
+ "limits": {
+  "heading": "A second pair of eyes, not a list of every law",
+  "cards": [
+   {
+    "title": "It infers from your policies, it does not list everything",
+    "body": "It checks your library against regulations that apply to your service. It does not promise to name every policy your home needs, and it cannot see practices that are not written down."
+   },
+   {
+    "title": "Suggestions are not automatic edits",
+    "body": "Gap fixes and wording changes are only suggestions until an admin adopts them and your approval steps finish. Gap detection and fixes are on Professional and above, with a limited free route."
+   },
+   {
+    "title": "A written policy is bought separately and read by a person",
+    "body": "The policy shop is separate from your subscription. A policy takes a short set of questions and is delivered within a couple of working days, so it is not instant."
+   }
+  ]
+ },
+ "read_next": [
+  "policies-required-by-cqc-for-a-care-home",
+  "policy-gap-analysis-for-care-homes",
+  "safeguarding-policy-care-home"
+ ],
+ "faqs": {
+  "heading": "Care home policies and procedures, answered",
+  "groups": [
+   {
+    "group": "About your policies",
+    "items": [
+     {
+      "q": "What care home policies and procedures does a service need?",
+      "a": "There is no single national list. What you need depends on your type of service and the regulated activities you carry out. A check against the regulations that apply to you is a safer starting point than a generic list. Our guide to <a href=\"/blog/policies-required-by-cqc-for-a-care-home\">policies required by CQC</a> explains how to approach it."
+     },
+     {
+      "q": "What are CQC policies?",
+      "a": "The Care Quality Commission does not publish a set of policies for you to copy. It inspects whether your service has the governance and the records it needs. Its <a href=\"https://www.cqc.org.uk/guidance-regulation/providers/regulations-service-providers-and-managers/health-social-care-act/regulation-17\">guidance on Regulation 17</a> lists governance arrangements such as policies and procedures among those records."
+     },
+     {
+      "q": "Is a policy template enough for a care home?",
+      "a": "A policy template is a starting point, not a finished policy. It may not reflect your service, and templates from different places can contradict each other. Read our post on <a href=\"/blog/why-downloaded-care-policy-templates-create-contradictions\">why downloaded templates create contradictions</a>."
+     },
+     {
+      "q": "How do I find out which care policies I am missing?",
+      "a": "Read what your policies actually say against the regulations that apply to you. CareStream does this with a coverage check, and a regulation with no policy behind it is suggested as a missing policy."
+     },
+     {
+      "q": "How often should a policy review happen?",
+      "a": "There is no fixed legal interval, so set one that suits each policy and keep to it. The <a href=\"https://www.cqc.org.uk/guidance-regulation/providers/regulations-service-providers-and-managers/health-social-care-act/regulation-17\">CQC says</a> systems and processes should be continually reviewed to make sure they remain fit for purpose. See <a href=\"/blog/how-often-should-care-policies-be-reviewed\">how often care policies should be reviewed</a>."
+     }
+    ]
+   },
+   {
+    "group": "About CareStream",
+    "items": [
+     {
+      "q": "Does the missing policy check cost AI tokens?",
+      "a": "Showing the missing policies is read only and free. It relies on a coverage run, which uses AI tokens, so run that first. The separate out of date scan uses none."
+     },
+     {
+      "q": "Is the missing policy check on every plan?",
+      "a": "The free route checks up to 5 uploaded policies in total. Gap detection and the fixes are on Professional and above. See <a href=\"/pricing\">pricing</a> for the current plans."
+     },
+     {
+      "q": "Do I have to buy the policy from CareStream?",
+      "a": "No. You can write your own, use one from elsewhere, or ignore the suggestion. Whatever you add, upload it, and the next coverage run reads it as evidence."
+     },
+     {
+      "q": "Does it replace my own policy review?",
+      "a": "No. It supports it. A person still decides what the policy should say, and the guide below shows a simple way to run a review."
+     }
+    ]
+   }
+  ]
+ },
+ "guide": {
+  "heading": "A practical way to check your policy set",
+  "lede": "Care home policies and procedures only protect people if they cover the right subjects, and a regular review is how you find out. Under the regulations, systems and processes must be <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/17\">established and operated effectively</a>, so a review of what you have is part of good governance.",
+  "sections": [
+   {
+    "h3": "Start with what each policy actually says",
+    "paragraphs": [
+     "Do not trust titles. Open each policy and ask what subject it truly covers, who owns it and when it was last reviewed. A policy named Health and Safety may not cover water, and a policy called Safeguarding may be silent on what staff do after a disclosure. A short list of subjects against folders will show where you have no cover at all."
+    ]
+   },
+   {
+    "h3": "A simple policy review for a busy service",
+    "checklist": [
+     "List every subject your service deals with, including equipment and specialist care.",
+     "Match each subject to the policy that really covers it, by content and not by title.",
+     "Mark anything with no match as a gap, and decide whether to write, buy or ignore it.",
+     "Set a review date and a named owner for every policy, then tell staff what changed."
+    ]
+   }
+  ],
+  "note": "<b>For the inspector.</b> Keep the date of each check, what you found and what you decided, so you can show a policy set that is reviewed and not only filed."
+ }
+}

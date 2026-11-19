@@ -1,0 +1,324 @@
+{
+  "slug": "buy-a-policy-written-for-your-service",
+  "status": "draft",
+  "order": 46,
+  "title": "Searching for a policy template? <em>Have one written for your service.</em>",
+  "meta_title": "Policy Template or a Policy Written for You | CareStreamAI",
+  "meta_description": "Care policies that use your names, your leads and your service details, written against the regulation checklist and read by a person before delivery.",
+  "eyebrow": "Scenario",
+  "lede": "A policy template saves a morning and costs you later, because the blanks never quite fit your service. CareStream writes the policy for you from your details, then delivers it into your own library, ready for <a href=\"/training-platform\">staff to read and train on</a>.",
+  "fine": "14 day free trial · Set up in a day · UK data residency",
+  "panel": {
+    "title": "From a blank page to a policy you can use",
+    "pill": "Illustration",
+    "rows": [
+      { "label": "Short questions answered", "note": "Day 0", "done": true },
+      { "label": "Policy written and checked", "note": "Within 2 working days", "done": true },
+      { "label": "Approved through your own chain", "note": "Not yet", "done": false },
+      { "label": "Staff briefed on the new policy", "note": "Not yet", "done": false }
+    ],
+    "meter": 50
+  },
+  "image": "https://api.carestreamai.com/public/policy-shop/image/7c7bd9cc-cd5f-4858-bda9-653c1a04113a.webp",
+  "image_alt": "A manager at a desk opens a delivered policy folder with the company name on the cover, nodding with quiet satisfaction, a garden visible through the window behind",
+  "card_title": "Looking for a policy template? Get one written for your service",
+  "card_snippet": "A downloaded template carries someone else's names and gaps. CareStream writes the policy from your details, checks it against the regulation checklist, and a person reads it before delivery.",
+  "primary_keyword": "policy template",
+  "secondary_keywords": [
+    "care home policies",
+    "care policies",
+    "care home policy templates",
+    "cqc policies",
+    "policy approval"
+  ],
+  "feature_links": [
+    {
+      "title": "Training built from your own policies",
+      "body": "Once a policy is live, staff can be briefed and checked on it in the Staff Hub.",
+      "action": "See the feature",
+      "href": "/training-platform"
+    },
+    {
+      "title": "Policy gap detection",
+      "body": "See which regulations your policies cover, and what example wording could close the rest.",
+      "action": "See gap detection",
+      "href": "/policy-gap-detection"
+    },
+    {
+      "title": "Out of date policies",
+      "body": "A quick scan for superseded terms, placeholders and policies overdue for review.",
+      "action": "See the scan",
+      "href": "/uses/out-of-date-policies"
+    }
+  ],
+  "intro": {
+    "heading": "You needed a policy last week. The template has someone else's name on it.",
+    "sub": "A scenario we see in many care settings.",
+    "paragraph": "A new registered manager is tidying the policy folder before a visit. One policy is missing, so she searches online and downloads a policy template. It looks tidy. She types in the home's name and sends it round. A fortnight later a senior carer asks who the safeguarding lead is, because the document names a post the home does not have, and two paragraphs mention a body that no longer exists. Nobody meant any harm. The policy simply was never written for this service. Here is how that plays out."
+  },
+  "trail": [
+    { "when": "Monday", "text": "A gap in the policy folder is spotted before a visit.", "kind": "ok" },
+    { "when": "Monday afternoon", "text": "A template is found, the home's name typed in, the job ticked off.", "kind": "ok" },
+    { "when": "Tuesday", "text": "The policy is shared with the team and filed.", "kind": "ok" },
+    { "when": "Two weeks later", "text": "A carer asks who the lead is. The policy names a role the home does not have.", "kind": "gap" },
+    { "when": "The wording", "text": "Two sections mention a body that has since been replaced.", "kind": "gap" },
+    { "when": "The detail", "text": "Nobody checked whether it matches what the home actually does.", "kind": "gap" },
+    { "when": "What the manager has", "text": "A tidy file, and no clear view of whether staff follow it.", "kind": "gap" },
+    { "when": "Inspection day", "text": "“Show me how this policy works here.” The file does not say.", "kind": "end" }
+  ],
+  "trail_close": "<b>The template was never the real problem.</b> The gap is between a generic document and your service. Here is how CareStream closes it, and where it does not.",
+  "why": {
+    "heading": "A policy has to describe your service, not a service in general",
+    "sub": "Staff follow what is written. If it is wrong for your home, they follow the wrong thing.",
+    "cards": [
+      {
+        "icon": "chat",
+        "title": "Blanks are not the same as fit",
+        "body": "Swapping a company name into a template changes the cover page. It does not change the roles, the routines or the leads the policy describes."
+      },
+      {
+        "icon": "tick",
+        "title": "A checklist beats a hunch",
+        "body": "A good policy covers the points the regulation expects. Writing from a checklist is more reliable than adapting a document whose source you cannot see."
+      },
+      {
+        "icon": "alert",
+        "title": "Old wording hides in the small print",
+        "body": "Templates copied from older documents carry names of bodies and frameworks that have moved on. Staff trust them anyway, because they sit in your folder."
+      }
+    ]
+  },
+  "how": {
+    "heading": "Your details in, a written policy out.",
+    "sub": "This is the policy shop alongside <a href=\"/training-platform\">Training built from your own policies</a>, in the order a manager meets it. See also <a href=\"/policy-gap-detection\">how gaps in your policy set are found</a> and <a href=\"/uses/policy-gaps\">what a missing policy looks like</a>.",
+    "blocks": [
+      {
+        "heading": "Choose the policy and answer a few short questions",
+        "bullets": [
+          "Pick the policy you need from the shop. It is bought on its own, separate from your subscription, through hosted Stripe Checkout",
+          "You answer short questions once: company name, service address, registered manager, nominated individual and your provider and location IDs. Later purchases reuse them",
+          "Some policies add a few questions of their own, so the policy says what your service really does"
+        ],
+        "tags": [
+          { "label": "How CareStream works", "href": "/how-it-works" },
+          { "label": "Policy gap detection", "href": "/policy-gap-detection" }
+        ],
+        "mock": {
+          "type": "training",
+          "module": "Safeguarding policy: your details",
+          "questions": [
+            "Who is your safeguarding lead?",
+            "What is your registered company name and service address?",
+            "Who is your nominated individual?"
+          ],
+          "staff_count": 1
+        }
+      },
+      {
+        "heading": "Then brief your staff on the new policy",
+        "bullets": [
+          "Once the delivered policy is live, allocate adhoc training on the topic in the Training screen. It draws on your own policies, and you can edit and preview it first",
+          "A wrong answer goes into the carer's Follow-up tab and they get an email, at most once a day. They choose Learn &amp; retry or Just retry, as often as they need",
+          "Policy reading itself is recorded as read sessions in the hub, not as signatures"
+        ],
+        "tags": [
+          { "label": "Adhoc training", "href": "/uses/adhoc-training" },
+          { "label": "Wrong answers become lessons", "href": "/training-platform" }
+        ],
+        "mock": {
+          "type": "followup",
+          "module": "Safeguarding policy",
+          "question": "A carer notices a new bruise and the resident will not say how it happened. What does the policy ask you to do?",
+          "why": "The policy asks staff to report a concern to the safeguarding lead without delay, so that it can be looked at properly.",
+          "remember": [
+            "Report it to the safeguarding lead",
+            "Record what you saw and heard",
+            "Do not investigate it yourself"
+          ],
+          "picture": "You notice an unexplained bruise while helping someone get dressed."
+        }
+      },
+      {
+        "heading": "Staff can ask about it in their own language",
+        "bullets": [
+          "The policy stays in English underneath, and the assistant answers a question in the language it was asked in",
+          "A carer can ask what the policy says without waiting for a colleague to translate",
+          "Translation is part of the paid plans, and the Free plan is English only"
+        ],
+        "tags": [
+          { "label": "Training in 60+ languages", "href": "/languages" },
+          { "label": "Staff Hub in 60+ languages", "href": "/uses/multilingual-staff-hub" }
+        ],
+        "mock": {
+          "type": "language",
+          "second_language": "Polish"
+        }
+      },
+      {
+        "heading": "See where staff are still unsure",
+        "bullets": [
+          "The Knowledge gaps view shows the most missed questions and the weakest topics on the briefing",
+          "That tells you whether the policy needs clearer wording, or a team needs another conversation",
+          "A Monday digest email brings the picture to you"
+        ],
+        "tags": [
+          { "label": "Reporting that runs itself", "href": "/training-platform" },
+          { "label": "CQC and compliance evidence", "href": "/cqc-compliance" }
+        ],
+        "mock": {
+          "type": "gaps",
+          "stats": { "open": 6, "affected": 4, "closed": 15, "engaged": 68 },
+          "missed": [
+            ["Who the safeguarding lead is", "4 staff"],
+            ["When to report a concern", "3 staff"],
+            ["Where records are kept", "2 staff"]
+          ],
+          "weak": [
+            ["Safeguarding policy", "4 gaps"],
+            ["Reporting and recording", "2 gaps"]
+          ]
+        }
+      }
+    ]
+  },
+  "talk": {
+    "heading": "The questions managers ask, and how CareStream answers them",
+    "sub": "Read this as a conversation. The questions are the ones we hear most.",
+    "items": [
+      {
+        "q": "Is this just a policy template I download?",
+        "a": "No. CareStream writes the policy from your details, against a checklist of what the regulation expects. Our own machine learning drafts it, an automatic check runs on it, and then a person reads it. It is delivered to your policy library, not as an instant download."
+      },
+      {
+        "q": "How long does it take?",
+        "a": "Delivery is within 2 working days after you finish the short questions. That is slower than a download, because it is written and read rather than copied."
+      },
+      {
+        "q": "What do you need to know from me?",
+        "a": "Your company name, service address, registered manager, nominated individual and your CQC provider and location IDs, plus a few questions specific to the policy. You answer the shared ones once, and later policies reuse them."
+      },
+      {
+        "q": "Will it use the names of our leads?",
+        "a": "Yes, where the policy mentions a role. You can set <a href=\"/how-it-works\">named role holders</a> such as the safeguarding lead, from a list of 24 roles. If nobody is named, the role is left plain rather than invented. Merging names into policies is on the Professional plan and above."
+      },
+      {
+        "q": "What checks happen before I get it?",
+        "a": "An automatic gate checks that no blanks are left, that no defunct bodies are named, that your organisation is named, and that every required point of the regulation checklist is addressed. A person then reads it. That is a check on the draft, not a guarantee that it is right for every service."
+      },
+      {
+        "q": "Can I use it straight away?",
+        "a": "It goes through your own approval chain first. Depending on your settings, that is your care manager, an external reviewer, or straight to live. Approval chain features are on the Professional plan and above."
+      },
+      {
+        "q": "What if I change my mind?",
+        "a": "There is a fourteen day refund. If you want to try the wider product first, you can <a href=\"/register\">create a free account</a>, and paid plans have a 14 day free trial."
+      },
+      {
+        "q": "Does a delivered policy make us compliant?",
+        "a": "No. It gives you a well structured policy written for your service. Whether your team follows it is the part that shows in an inspection, so you still need to brief staff and review it. It is not legal advice and it does not guarantee a CQC rating."
+      }
+    ]
+  },
+  "limits": {
+    "heading": "A written policy is a start, not a finished compliance job",
+    "cards": [
+      {
+        "title": "It is not instant, and not a download",
+        "body": "The policy is written from your answers, checked and read by a person, and delivered within 2 working days. If you need something in the next hour, this is not it."
+      },
+      {
+        "title": "It does not decide how your home runs",
+        "body": "The writer is told not to invent practices you have not confirmed, and flags any it cannot check. You still need to read the policy and make sure it matches your real routines."
+      },
+      {
+        "title": "Approval and gap tools sit on higher plans",
+        "body": "Policies are bought separately from the subscription. Gap detection, the approval chain and name merging are on Professional and above. The Free plan screens up to 5 uploaded policies."
+      }
+    ]
+  },
+  "read_next": [
+    "why-downloaded-care-policy-templates-create-contradictions",
+    "policies-required-by-cqc-for-a-care-home",
+    "safeguarding-policy-care-home"
+  ],
+  "faqs": {
+    "heading": "Policies and CareStream, answered",
+    "groups": [
+      {
+        "group": "About the policies",
+        "items": [
+          {
+            "q": "Is a policy template good enough for a care home?",
+            "a": "A policy template is a starting point, not a finished policy. It has to be matched to your roles, your routines and your service, otherwise staff follow wording that does not describe what you do. Our <a href=\"/blog/why-downloaded-care-policy-templates-create-contradictions\">article on downloaded templates</a> explains where the contradictions come from."
+          },
+          {
+            "q": "Which care home policies do we need?",
+            "a": "It depends on your service. The <a href=\"/blog/policies-required-by-cqc-for-a-care-home\">guide to the policies a care home needs</a> is a good starting point. CareStream's gap check can also show which regulations in scope for your service have no policy behind them yet."
+          },
+          {
+            "q": "How are care policies written for my service?",
+            "a": "You answer short questions about your service. The policy is drafted against the regulation checklist, checked for blanks, defunct names and missing points, and read by a person before delivery. Staff can then be briefed on it in the Staff Hub."
+          },
+          {
+            "q": "Where do I find care home policy templates in CareStream?",
+            "a": "CareStream does not offer care home policy templates to download. It writes policies for you. If you already have documents, you can upload them as they are and have them checked for gaps, out of date wording and conflicts."
+          },
+          {
+            "q": "Can I upload my own policy as well?",
+            "a": "Yes. You can upload PDF, DOCX, ODT or TXT files. An uploaded policy is stored as it is and checked afterwards, whereas a shop policy is written from your details."
+          },
+          {
+            "q": "Do staff have to sign the policy?",
+            "a": "CareStream records read sessions in the Staff Hub, including time spent, how far they scrolled and whether they marked it as read. It does not record signatures or version acknowledgements."
+          }
+        ]
+      },
+      {
+        "group": "About approval and inspections",
+        "items": [
+          {
+            "q": "How does policy approval work?",
+            "a": "A delivered policy goes through your own approval chain. Depending on your settings, it passes to your care manager, to an external reviewer by a one off link, or straight to live. The approval chain is on the Professional plan and above."
+          },
+          {
+            "q": "Which CQC policies will an inspector expect to see?",
+            "a": "The regulations do not list a fixed set of documents. <a href=\"https://www.cqc.org.uk/guidance-regulation/providers/regulations-service-providers-and-managers/health-social-care-act/regulation-17\">CQC guidance on Regulation 17</a> treats policies and procedures as part of your governance records, so you need ones that fit your service and are kept up to date. Our <a href=\"/blog/policies-required-by-cqc-for-a-care-home\">guide to required policies</a> goes through the common ones."
+          },
+          {
+            "q": "Do cqc policies need a review date?",
+            "a": "Good governance needs systems that help you keep policies current, and a review date is the simplest one. CareStream lets you set a review date and sends a reminder to your admins when policies fall due. See the <a href=\"/uses/out-of-date-policies\">out of date scan</a> for more."
+          }
+        ]
+      }
+    ]
+  },
+  "guide": {
+    "heading": "A practical way to choose and bring in a new policy",
+    "lede": "Whether you buy a written policy or adapt one yourself, the work that matters happens after the document arrives. This is a short way to make it count.",
+    "sections": [
+      {
+        "h3": "Before you start",
+        "paragraphs": [
+          "Good governance depends on records that show how the service is managed. <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/17\">Regulation 17 of the 2014 regulations</a> asks providers to have systems that assess, monitor and improve the quality and safety of the service. The <a href=\"https://www.cqc.org.uk/guidance-regulation/providers/regulations-service-providers-and-managers/health-social-care-act/regulation-17\">CQC's guidance on the same regulation</a> counts policies and procedures among the governance records. A policy is only useful if it describes what you do."
+        ]
+      },
+      {
+        "h3": "Five checks when a new policy arrives",
+        "checklist": [
+          "Read it start to finish and mark anything that does not match what your team does.",
+          "Check the names, roles and leads match the people who hold them today.",
+          "Put it through your approval chain and keep a record of who approved it and when.",
+          "Set a review date so it does not drift out of date quietly.",
+          "Brief the staff it affects and check what they took in, rather than only sending it round."
+        ]
+      },
+      {
+        "h3": "Keep the set consistent",
+        "paragraphs": [
+          "Two policies can say different things about the same point, such as who to call or how soon. The <a href=\"/policy-gap-detection\">gap check</a> looks for these conflicts, and the <a href=\"/cqc-compliance\">CQC readiness report</a> on the Professional plan shows how staff have engaged with your policies. The <a href=\"/staff-training/safeguarding-adults-and-children\">safeguarding course</a> is a useful pairing when the new policy is about safeguarding."
+        ]
+      }
+    ],
+    "note": "<b>For the inspector.</b> Keep the policy, the approval record and the evidence that staff were briefed together. It shows the policy is used, not only filed."
+  }
+}

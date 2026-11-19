@@ -1,0 +1,412 @@
+{
+ "slug": "which-of-your-policies-are-out-of-date",
+ "status": "draft",
+ "order": 40,
+ "title": "Your next policy review: <em>which of your policies are out of date?</em>",
+ "meta_title": "Policy Review for Care Homes: Find Outdated Policies | CareStreamAI",
+ "meta_description": "Run a policy review that lists outdated wording, placeholders and overdue review dates in your care home policies. No AI guesswork, no tokens used.",
+ "eyebrow": "Scenario",
+ "lede": "A good policy review starts with knowing which documents have drifted. CareStream <a href=\"/training-platform\">scans your uploaded policies</a> for old names, leftover placeholders and overdue review dates, then gives you a plain list. It is a deterministic check, so there is no AI guesswork in the list itself.",
+ "fine": "14 day free trial · Set up in a day · UK data residency",
+ "panel": {
+  "title": "Before the review",
+  "pill": "Illustration",
+  "rows": [
+   {
+    "label": "Policies uploaded to one place",
+    "note": "Day 1",
+    "done": true
+   },
+   {
+    "label": "Out of date scan run",
+    "note": "Day 1",
+    "done": true
+   },
+   {
+    "label": "Old wording and placeholders fixed",
+    "note": "Not yet",
+    "done": false
+   },
+   {
+    "label": "Review dates recorded",
+    "note": "Not yet",
+    "done": false
+   }
+  ],
+  "meter": 50
+ },
+ "image": "https://api.carestreamai.com/public/policy-shop/image/85597e52-9496-4ad4-85e7-775008be6142.webp",
+ "image_alt": "A manager holds up a policy folder with a few coloured tabs while a deputy beside them checks a printed list, both thoughtful in a bright office",
+ "card_title": "Which of your policies are out of date? Get a plain list",
+ "card_snippet": "A folder of policies looks complete until someone reads it closely. Scan your uploaded policies for old names, placeholders and overdue review dates, with no AI guesswork in the list.",
+ "primary_keyword": "policy review",
+ "secondary_keywords": [
+  "policy update",
+  "outdated policies",
+  "policy review schedule",
+  "policy review checklist",
+  "policy version control",
+  "care home policies"
+ ],
+ "feature_links": [
+  {
+   "title": "Training built from your own policies",
+   "body": "Short training from your policies, with wrong answers that become short lessons.",
+   "action": "See the feature",
+   "href": "/training-platform"
+  },
+  {
+   "title": "Out of date policies",
+   "body": "How the scan finds old wording, placeholders and overdue reviews in one list.",
+   "action": "See out of date policies",
+   "href": "/uses/out-of-date-policies"
+  },
+  {
+   "title": "Policy gap detection",
+   "body": "Check your policy set against the regulations that apply to your service.",
+   "action": "See policy gap detection",
+   "href": "/policy-gap-detection"
+  }
+ ],
+ "intro": {
+  "heading": "The folder looks complete. Is it?",
+  "sub": "A scenario we see in many care settings.",
+  "paragraph": "A manager and her deputy are tidying the policy folder before a busy quarter. Every policy is there, and a few have coloured tabs from past reviews. Then the deputy reads the infection control policy properly. It still carries wording from the pandemic. The safeguarding policy names a body that no longer exists under that name. The medication policy has a gap where a name should go. Nobody did anything wrong. The documents were fine once, and time moved on. The manager now needs a list, not a hunch. Here is how that plays out."
+ },
+ "trail": [
+  {
+   "when": "Last year",
+   "text": "The home reviews its policies. Tabs go on the folder.",
+   "kind": "ok"
+  },
+  {
+   "when": "Afterwards",
+   "text": "New staff are told to read the folder. Most do.",
+   "kind": "ok"
+  },
+  {
+   "when": "Months later",
+   "text": "The manager is confident the set is in good order.",
+   "kind": "ok"
+  },
+  {
+   "when": "Quietly",
+   "text": "Pandemic era wording stays in the infection control policy.",
+   "kind": "gap"
+  },
+  {
+   "when": "Meanwhile",
+   "text": "An old agency name sits in the safeguarding policy.",
+   "kind": "gap"
+  },
+  {
+   "when": "Still there",
+   "text": "A placeholder such as [insert name] was never filled in.",
+   "kind": "gap"
+  },
+  {
+   "when": "And more",
+   "text": "Three policies have no review date recorded anywhere.",
+   "kind": "gap"
+  },
+  {
+   "when": "Inspection day",
+   "text": "“When was this last reviewed, and what changed?” The manager has tabs, not answers.",
+   "kind": "end"
+  }
+ ],
+ "trail_close": "<b>The policies were never the problem.</b> The gap is between a folder that looks current and one you can prove is. Here is how CareStream gives you the list, using your own documents.",
+ "why": {
+  "heading": "Outdated policies hide in plain sight",
+  "sub": "Nobody notices a stale sentence until a member of staff acts on it.",
+  "cards": [
+   {
+    "icon": "chat",
+    "title": "Staff follow what is written",
+    "body": "A carer who asks the assistant or reads the policy gets the old wording as if it were current. The policy is the instruction."
+   },
+   {
+    "icon": "tick",
+    "title": "Reviews slip quietly",
+    "body": "A policy review schedule is easy to set and easy to forget. Without a date on record, nobody can say which policies are overdue."
+   },
+   {
+    "icon": "alert",
+    "title": "Checking by hand takes days",
+    "body": "Reading every page of every policy for old names and blanks is slow, and tired eyes miss things. So it waits until it is urgent."
+   }
+  ]
+ },
+ "how": {
+  "heading": "Your policies in, the plain list out.",
+  "sub": "This works on the policies you upload to CareStream, as part of <a href=\"/policy-gap-detection\">policy gap detection</a>. For a wider view of the problem, see <a href=\"/uses/out-of-date-policies\">out of date policies</a> and <a href=\"/uses/adhoc-training\">briefing staff with adhoc training</a>.",
+  "blocks": [
+   {
+    "heading": "Scan for old wording, then brief staff on the change",
+    "bullets": [
+     "On the Gaps page, the Out-of-date content step has a Scan policies button. It runs at once and uses none of your AI tokens",
+     "It looks for superseded names, pandemic era wording, unfilled placeholders, very thin policies and overdue reviews, each marked high, medium or low",
+     "Once you have updated a policy, allocate an adhoc training module on that topic so staff are checked on the new wording. You can edit and preview it first"
+    ],
+    "tags": [
+     {
+      "label": "Training built from your own policies",
+      "href": "/training-platform"
+     },
+     {
+      "label": "Adhoc training",
+      "href": "/uses/adhoc-training"
+     }
+    ],
+    "mock": {
+     "type": "training",
+     "module": "Infection Prevention and Control",
+     "questions": [
+      "What should you do before putting on gloves?",
+      "Who do you tell if you suspect an outbreak on the unit?",
+      "Where do you find the current cleaning schedule?"
+     ],
+     "staff_count": 18
+    }
+   },
+   {
+    "heading": "A wrong answer becomes a short lesson on the new wording",
+    "bullets": [
+     "A wrong answer goes into the carer's Follow-up tab in the Staff Hub, and they get an email, at most once a day, in English",
+     "They choose Learn &amp; retry, a short lesson then a fresh question, or Just retry the same question, as often as they need",
+     "Nothing alerts you to each wrong answer. The picture reaches you in Analytics and the Monday digest"
+    ],
+    "tags": [
+     {
+      "label": "Wrong answers become lessons",
+      "href": "/training-platform"
+     },
+     {
+      "label": "How CareStream works",
+      "href": "/how-it-works"
+     }
+    ],
+    "mock": {
+     "type": "followup",
+     "module": "Infection Prevention and Control",
+     "question": "Who do you tell first if you suspect an outbreak on the unit?",
+     "why": "Acting quickly on a suspected outbreak protects residents and colleagues, so the right person must hear first.",
+     "remember": [
+      "Tell the senior on shift straight away",
+      "Keep the person comfortable and apart",
+      "Write down what you saw and when"
+     ],
+     "picture": "A resident has been unwell all morning and two others now feel sick."
+    }
+   },
+   {
+    "heading": "Updated policies reach staff in the language they think in",
+    "bullets": [
+     "Once a policy is updated, staff who read best in another language can read it in theirs in the Staff Hub",
+     "Translation is machine translation, and staff can suggest better wording for an admin to approve",
+     "Translation is part of the paid plans, and hub menus stay in English"
+    ],
+    "tags": [
+     {
+      "label": "Policies in 60+ languages",
+      "href": "/languages"
+     },
+     {
+      "label": "Staff Hub in 60+ languages",
+      "href": "/uses/multilingual-staff-hub"
+     }
+    ],
+    "mock": {
+     "type": "language",
+     "second_language": "Romanian"
+    }
+   },
+   {
+    "heading": "See where staff are still unsure after a policy update",
+    "bullets": [
+     "The Knowledge gaps view shows the most missed questions and the weakest topics after you change a policy",
+     "See how gaps are being closed, so a policy update becomes understanding and not just a new file",
+     "A Monday digest email brings the picture to you without you asking for it"
+    ],
+    "tags": [
+     {
+      "label": "Reporting that runs itself",
+      "href": "/training-platform"
+     },
+     {
+      "label": "CQC and compliance evidence",
+      "href": "/cqc-compliance"
+     }
+    ],
+    "mock": {
+     "type": "gaps",
+     "stats": {
+      "open": 6,
+      "affected": 4,
+      "closed": 11,
+      "engaged": 68
+     },
+     "missed": [
+      [
+       "Who to tell about an outbreak",
+       "4 staff"
+      ],
+      [
+       "Current cleaning schedule",
+       "3 staff"
+      ],
+      [
+       "Glove and apron order",
+       "2 staff"
+      ]
+     ],
+     "weak": [
+      [
+       "Infection Prevention and Control",
+       "5 gaps"
+      ],
+      [
+       "Medication",
+       "1 gap"
+      ]
+     ]
+    }
+   }
+  ]
+ },
+ "talk": {
+  "heading": "The questions managers ask, and how CareStream answers them",
+  "sub": "Read this as a conversation. These are the questions we hear most.",
+  "items": [
+   {
+    "q": "How does CareStream tell me which policies are out of date?",
+    "a": "You upload your policies, then run the Scan policies step on the Gaps page. It checks the text for superseded names, pandemic era wording, unfilled placeholders, thin content and overdue review dates, and gives each policy a severity and a score. It is a fixed check with no AI in it, so you get the same list each time for the same text."
+   },
+   {
+    "q": "Does it find every outdated point?",
+    "a": "No. It finds what its catalogue of signals knows about. It does not read for clinical accuracy and it cannot tell whether your own procedure is wise. Treat it as a fast first pass that you follow with your own review."
+   },
+   {
+    "q": "What happens when it finds something?",
+    "a": "You open Review and fix. For superseded terms it pre fills the old wording with the current term from the catalogue, so you can check it and accept it. Nothing is changed for you without you looking, and you can ignore a finding for one policy or for the whole account."
+   },
+   {
+    "q": "What about policies with no review date?",
+    "a": "They are counted, not marked as faults. You then set a date and an interval, such as 6 months, 12 months, 2 years or 3 years, and that policy joins your review schedule. Once a date is past, it appears in the Policies due for review panel and you get one reminder email per review cycle."
+   },
+   {
+    "q": "Can I tell staff when a policy changes?",
+    "a": "Yes, in the sense that you can allocate an adhoc training module on that topic, built from your own policies where they cover it. Staff complete it in the Staff Hub, and a wrong answer becomes a short lesson. Changing a policy does not trigger training by itself. You choose to allocate it."
+   },
+   {
+    "q": "Does it keep a record of policy versions?",
+    "a": "Document version history is on every plan. Uploading a replacement raises the version number and the older one is kept in History. CareStream records that staff read a policy, with time and whether they pressed Mark as read. It does not record signatures or which version a read was against."
+   },
+   {
+    "q": "Is this part of the free plan?",
+    "a": "The free plan screens up to 5 uploaded policies in total with all four gap checks, including the out of date scan. The scan on the whole set, the gap fixes and the approval steps are on Professional and above."
+   },
+   {
+    "q": "How do I try it?",
+    "a": "There is a 14 day free trial on the paid plans, and you can <a href=\"/register\">create a free account</a> to see the scan on up to 5 of your own policies. The <a href=\"/pricing\">pricing page</a> shows what each plan includes."
+   }
+  ]
+ },
+ "limits": {
+  "heading": "A plain list of what to look at, not a verdict",
+  "cards": [
+   {
+    "title": "It does not find every outdated point",
+    "body": "The scan matches known signals such as old names, pandemic wording and blanks. It cannot judge clinical accuracy or spot every change in practice."
+   },
+   {
+    "title": "It does not rewrite policies on its own",
+    "body": "Fixes are suggestions you check and accept. Wording from the gap checks is drafted by our own machine learning and is for you to review, adapt and approve."
+   },
+   {
+    "title": "It is not legal advice or a guarantee",
+    "body": "A clean scan does not guarantee compliance or a CQC rating. Full scanning of a large library, gap fixes and approvals are on Professional and above."
+   }
+  ]
+ },
+ "read_next": [
+  "six-signs-your-policy-set-has-quietly-drifted-out-of-date",
+  "how-often-should-care-policies-be-reviewed",
+  "keeping-care-policies-current-with-cqc-regulation"
+ ],
+ "faqs": {
+  "heading": "Out of date policies, answered",
+  "groups": [
+   {
+    "group": "About the scan",
+    "items": [
+     {
+      "q": "What counts as outdated policies in the scan?",
+      "a": "Old names for bodies, laws and frameworks, pandemic era wording, unfilled placeholders such as XXXX, TBC or [insert name], very little content or no purpose or scope, and overdue or missing review dates. Each finding is high, medium or low."
+     },
+     {
+      "q": "Does the scan use AI?",
+      "a": "No. The out of date scan is a fixed check and uses none of your AI tokens. Some other gap checks, such as example wording, are drafted by our own machine learning and are suggestions for you to review."
+     },
+     {
+      "q": "Can I run a policy update check on only a few policies?",
+      "a": "Yes. The free plan screens up to 5 uploaded policies in total. Upload your most used policies first, such as infection control, safeguarding and medication."
+     },
+     {
+      "q": "Does it replace my own review?",
+      "a": "No. It gives you a starting list so your review is quicker. You still decide what is right for your service. See <a href=\"/blog/how-often-should-care-policies-be-reviewed\">how often care policies should be reviewed</a>."
+     }
+    ]
+   },
+   {
+    "group": "About review dates and records",
+    "items": [
+     {
+      "q": "How do I set up a policy review schedule?",
+      "a": "Record a last reviewed date and an interval for each policy: 6 months, 12 months, 2 years or 3 years. Overdue policies show in the Policies due for review panel, and the admins get a reminder email."
+     },
+     {
+      "q": "What is a good policy review checklist?",
+      "a": "Start with the checklist in the guide below: names, dates, placeholders, who it applies to, and who needs to know about any change. The scan covers the first few for you."
+     },
+     {
+      "q": "Does CareStream do policy version control?",
+      "a": "Document version history is on every plan, and a replacement upload raises the version number while the older one stays in History. Edited policies approved on Professional and above get major version numbers. See <a href=\"/blog/care-policy-version-control\">care policy version control</a>."
+     },
+     {
+      "q": "Which care home policies should I scan first?",
+      "a": "Start with the ones staff use daily or that carry the most risk, such as safeguarding, medication and infection prevention and control, then work through the rest of your care home policies."
+     }
+    ]
+   }
+  ]
+ },
+ "guide": {
+  "heading": "A practical way to run a policy review",
+  "lede": "A review does not need a weekend. It needs a short list of what to check, a date, and a record of what changed. <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/17\">Regulation 17 on good governance</a> asks for systems or processes that are established and operated effectively, and that let you assess, monitor and improve the quality and safety of the service. The regulation does not name policies, but a dated review is one simple way to show that you do this.",
+  "sections": [
+   {
+    "h3": "Why staff training follows the policy",
+    "paragraphs": [
+     "A policy that changes is only useful once the people doing the work know about it. <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/18\">Regulation 18 on staffing</a> says employed persons must receive such appropriate support, training, professional development, supervision and appraisal as is necessary to carry out their duties. After any policy update, a short check on the change shows whether staff took it in."
+    ]
+   },
+   {
+    "h3": "A policy review checklist you can copy",
+    "checklist": [
+     "Names: do bodies, laws and frameworks still carry their current names?",
+     "Blanks: are there placeholders, such as a missing role or a TBC?",
+     "Dates: is there a last reviewed date and a next review date on record?",
+     "People: who needs to hear about the change, and have they been checked on it?"
+    ]
+   },
+   {
+    "h3": "Set a rhythm and keep the record",
+    "paragraphs": [
+     "Pick an interval that suits each policy, put it on record, and let the reminder do the nagging. Keep the old version in your history and note what changed. Then the answer to “when was this last reviewed?” takes seconds, not an afternoon."
+    ]
+   }
+  ],
+  "note": "<b>For the inspector.</b> Keep the scan result, the review date, the version history and the staff check together, so you can show what you found and what you did about it."
+ }
+}

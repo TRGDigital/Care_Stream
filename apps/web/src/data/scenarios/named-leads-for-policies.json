@@ -1,0 +1,222 @@
+{
+  "slug": "named-leads-for-policies",
+  "status": "draft",
+  "order": 49,
+  "title": "Who is your safeguarding lead? <em>Put the real name on every policy.</em>",
+  "meta_title": "Safeguarding Lead Named on Every Policy | CareStreamAI",
+  "meta_description": "Name your safeguarding lead and 23 other roles once in Settings, so your policies show the real person and staff know who to go to.",
+  "eyebrow": "Scenario",
+  "lede": "Your policies say \"report it to the safeguarding lead\", but which person is that today? CareStream lets you name each role holder once, so the policies staff read show a real name, and the <a href=\"/training-platform\">Staff Hub can check they know who to go to</a>.",
+  "fine": "14 day free trial · Set up in a day · UK data residency",
+  "panel": {
+    "title": "From a job title to a named person",
+    "pill": "Illustration",
+    "rows": [
+      { "label": "Role holder named in Settings", "note": "Day 0", "done": true },
+      { "label": "Policies show the real name", "note": "Same day", "done": true },
+      { "label": "Staff asked who to go to", "note": "Not yet", "done": false },
+      { "label": "Gaps reviewed by the manager", "note": "Not yet", "done": false }
+    ],
+    "meter": 50
+  },
+  "image": "https://api.carestreamai.com/public/policy-shop/image/837d28d6-3ff4-427a-bb66-6f86489f5cd2.webp",
+  "image_alt": "Three staff in teal and navy stand beside a notice board with a neat list of named leads, one pointing at the board, in a warm friendly corridor",
+  "card_title": "The right person named on each policy, so staff know who to go to",
+  "card_snippet": "Policies often say \"tell the lead\" without saying who that is. See how naming each role holder once keeps your policies accurate and your team clear.",
+  "primary_keyword": "safeguarding lead",
+  "secondary_keywords": ["caldicott guardian", "policy owner", "policy governance", "care home policies", "policy compliance"],
+  "feature_links": [
+    { "title": "Training built from your own policies", "body": "Once a policy names the right person, staff can be briefed and checked on it in the Staff Hub.", "action": "See the feature", "href": "/training-platform" },
+    { "title": "Policy gap detection", "body": "See which regulations your policies cover and which wording needs attention.", "action": "See gap detection", "href": "/policy-gap-detection" },
+    { "title": "Out of date policies", "body": "A quick scan for superseded terms, placeholders and policies overdue for review.", "action": "See the scan", "href": "/uses/out-of-date-policies" }
+  ],
+  "intro": {
+    "heading": "The policy says \"the lead\". Half the team guess who that is.",
+    "sub": "A scenario we see in many care settings.",
+    "paragraph": "A deputy manager is reading through the policy folder with a cup of tea. Every policy names a role: the safeguarding lead, the infection prevention and control lead, the Caldicott Guardian, the fire safety officer. None of them names a person. Last spring someone changed role, and nobody went back through the documents. At handover a new carer asks who the safeguarding lead is, and two senior staff give two different answers. The policies are sound. They simply do not say who holds each job today. Here is how that plays out."
+  },
+  "trail": [
+    { "when": "Last year", "text": "The policies are written and approved, with each role named by title.", "kind": "ok" },
+    { "when": "Induction", "text": "New staff are told to read the policies and sign the folder.", "kind": "ok" },
+    { "when": "Team meeting", "text": "Everyone agrees roles and responsibilities are clear.", "kind": "ok" },
+    { "when": "Spring", "text": "The lead for one role moves on. The documents do not change.", "kind": "gap" },
+    { "when": "Summer", "text": "Another lead is picked up by a different senior. Only some staff hear.", "kind": "gap" },
+    { "when": "Handover", "text": "A carer asks who to tell. Two seniors name two people.", "kind": "gap" },
+    { "when": "What the manager has", "text": "Sound policies, but no one place showing who holds each role.", "kind": "gap" },
+    { "when": "Inspection day", "text": "\"Who is your safeguarding lead?\" The team is not sure.", "kind": "end" }
+  ],
+  "trail_close": "Nobody did anything wrong. The names simply lived in people's heads instead of one place the policies could read from. Here is why that matters, and how to fix it.",
+  "why": {
+    "heading": "A role on paper only helps if people know who holds it",
+    "sub": "Staff follow what the policy says. If it points to a title, they have to work out the person.",
+    "cards": [
+      { "icon": "chat", "title": "Staff ask the person next to them", "body": "When a policy says \"tell the lead\", a worried carer asks a colleague. That colleague may be out of date. A named person removes the guesswork." },
+      { "icon": "tick", "title": "One place to keep names current", "body": "Updating a name in each of your care home policies by hand is slow and easy to miss. Keeping role holders in one list means a change is made once." },
+      { "icon": "alert", "title": "Changes slip through quietly", "body": "People move roles, go on leave or leave the service. Without a prompt to check, an out of date name can sit in a policy for months." }
+    ]
+  },
+  "how": {
+    "heading": "Name the role once. Let the policies and the team follow.",
+    "sub": "Naming leads sits alongside <a href=\"/policy-gap-detection\">policy gap detection</a> and the Staff Hub. Here is the loop, step by step. The screens below are illustrations.",
+    "blocks": [
+      {
+        "heading": "1. Check staff know who holds each role",
+        "bullets": [
+          "Pick the topic named module, Named role holders, in Adhoc Training. You choose a topic, not a single policy.",
+          "Staff open it in the Staff Hub. Questions are built from your own policies where they cover the topic.",
+          "Short and practical, so it fits a handover, not a training day. This mock is an illustration."
+        ],
+        "tags": [
+          { "label": "Ad hoc training", "href": "/uses/adhoc-training" },
+          { "label": "Training from your policies", "href": "/training-platform" }
+        ],
+        "mock": {
+          "type": "training",
+          "module": "Named role holders",
+          "questions": [
+            "A carer is worried about a resident's safety. Who do you tell first?",
+            "Who is the person responsible for protecting the confidentiality of health and care information?",
+            "Where can you find out who holds each lead role?"
+          ],
+          "staff_count": 14
+        }
+      },
+      {
+        "heading": "2. A wrong answer becomes a short follow up",
+        "bullets": [
+          "A wrong answer goes to the Follow-up tab in the Staff Hub, and the person gets one email at most every 24 hours.",
+          "They tap Learn and retry to open a short lesson, then answer a fresh question. Retries are unlimited.",
+          "Nothing is sent to you when a retry is wrong. You see the pattern in your knowledge gaps view. Illustration only."
+        ],
+        "tags": [
+          { "label": "How CareStream works", "href": "/how-it-works" },
+          { "label": "Annual training", "href": "/uses/annual-training" }
+        ],
+        "mock": {
+          "type": "followup",
+          "module": "Named role holders",
+          "question": "A carer is worried about a resident's safety. Who do you tell first?",
+          "why": "The safeguarding policy asks staff to report a concern to the safeguarding lead without delay, so it can be looked at properly.",
+          "remember": ["Tell the named lead", "Use the deputy if they are away", "Write down what you saw and heard"],
+          "picture": "You see a worrying mark and the usual lead is on a day off."
+        }
+      },
+      {
+        "heading": "3. Keep the names behind your policies in one place",
+        "bullets": [
+          "Settings holds 24 named roles, from the registered manager to the Caldicott Guardian, fire safety officer and complaints lead.",
+          "Assign a specialist role to a staff member and the role holder is filled in, so policies that name that role show the real name. You can also type a name in yourself.",
+          "Role holder names merged into policies is on Professional and above, and a switch lets you turn it off. Illustration only."
+        ],
+        "tags": [
+          { "label": "Policy gap detection", "href": "/policy-gap-detection" },
+          { "label": "Policy owner and review", "href": "/uses/out-of-date-policies" }
+        ],
+        "mock": {
+          "type": "training",
+          "module": "Policy governance: who holds each role",
+          "questions": [
+            "Which policy names the person you would tell about an infection outbreak?",
+            "Who covers the fire safety officer role when they are away?"
+          ],
+          "staff_count": 9
+        }
+      },
+      {
+        "heading": "4. See who still is not sure",
+        "bullets": [
+          "The Knowledge gaps view shows the most missed questions and the weakest topics across your team.",
+          "It also shows how gaps are being closed, so you can see whether the follow ups are working.",
+          "Use it to decide who to brief next. Example figures, illustration only."
+        ],
+        "tags": [
+          { "label": "Policy gaps", "href": "/uses/policy-gaps" },
+          { "label": "Staff training", "href": "/staff-training" }
+        ],
+        "mock": {
+          "type": "gaps",
+          "stats": { "open": 7, "affected": 5, "closed": 16, "engaged": 71 },
+          "missed": [["Who the named lead is", "5 staff"], ["Who the data protection contact is", "3 staff"], ["Who covers the lead when away", "2 staff"]],
+          "weak": [["Named role holders", "6 gaps"], ["Safeguarding policy", "3 gaps"]]
+        }
+      }
+    ]
+  },
+  "talk": {
+    "heading": "What managers ask about naming leads",
+    "sub": "Plain answers, including what the product does not do.",
+    "items": [
+      { "q": "How do I name a lead in CareStream?", "a": "In Settings you assign a staff member to a named role. CareStream supports 24 named roles, and you can also type a name in by hand if the person is not on your staff list." },
+      { "q": "Will the name appear in my policies?", "a": "Where a policy mentions the role, the name is shown instead of the bare title. This merge is part of the Professional and Enterprise plans, and a switch turns it off if you prefer titles." },
+      { "q": "Does it change my policies by itself when someone moves on?", "a": "No. Changing the role holder in Settings updates the name that is shown. It does not rewrite your policy wording, and any suggested policy fix stays a suggestion until an admin adopts it and your approval steps finish." },
+      { "q": "Can I check that staff actually know who the leads are?", "a": "Yes. Assign a short module on named role holders in Adhoc Training. A wrong answer becomes a follow up the person opens with Learn and retry, and you see the pattern in Knowledge gaps." },
+      { "q": "Is the Caldicott Guardian covered?", "a": "It is one of the 24 named roles, so you can name the person. We do not define or advise on the role itself. Your own governance arrangements and official guidance come first." },
+      { "q": "Does it record that staff have read the policy?", "a": "It records read sessions, such as time spent and scroll, and a Mark as read action. It does not hold signatures or a policy version number against each read." },
+      { "q": "Does it tell me if a policy has no one named?", "a": "Gap checking looks at coverage, consistency and out of date wording, not who is named. If nobody is assigned a role, the policy keeps the plain role title." },
+      { "q": "What does it cost and can I try it?", "a": "There is a 14 day free trial on the paid plans. <a href=\"/register\">Create a free account</a> to look around, and see <a href=\"/pricing\">the pricing page</a> for current plan details." }
+    ]
+  },
+  "limits": {
+    "heading": "What this does not do",
+    "cards": [
+      { "title": "It does not pick the right person", "body": "You decide who holds each role. CareStream shows the name you set. It does not check qualifications, training or whether someone is suited to a role." },
+      { "title": "It does not rewrite your policies for you", "body": "Names are shown where a policy mentions a role. Wording changes are suggestions until an admin adopts them and your approval chain finishes. Nothing is edited behind your back." },
+      { "title": "It is not legal advice or a guarantee", "body": "It helps you keep policy compliance visible. It does not promise compliance or a CQC rating, and it does not tell you who must hold a role in your service." }
+    ]
+  },
+  "read_next": ["safeguarding-policy-care-home", "infection-prevention-and-control-policy", "policy-gap-analysis-for-care-homes"],
+  "faqs": {
+    "heading": "Questions about named leads and policies",
+    "groups": [
+      {
+        "group": "Roles and names",
+        "items": [
+          { "q": "What does a lead do for safeguarding in a care home?", "a": "That is set by your own policy and local arrangements, so we do not define it here. Our <a href=\"/blog/safeguarding-policy-care-home\">safeguarding policy guide</a> explains how a policy should describe the role." },
+          { "q": "What is a Caldicott Guardian?", "a": "The <a href=\"https://www.gov.uk/government/groups/uk-caldicott-guardian-council\">UK Caldicott Guardian Council</a> describes it as a senior person responsible for protecting the confidentiality of people's health and care information. CareStream lets you name that person among your role holders." },
+          { "q": "Who should be the policy owner for each policy?", "a": "That is your decision. Many services give each policy an owner who reviews it. CareStream shows named role holders in your policies, and our <a href=\"/blog/how-often-should-care-policies-be-reviewed\">guide to reviewing policies</a> covers review habits." },
+          { "q": "Can one person hold more than one role?", "a": "Yes, nothing stops the same person being named for several roles. Think about whether that is workable when they are away." }
+        ]
+      },
+      {
+        "group": "Policies and plans",
+        "items": [
+          { "q": "How does this help with policy governance?", "a": "It keeps names in one place and lets you check staff know them. Good policy governance also needs review dates, approval and version history, which sit in the policy features on Professional and above." },
+          { "q": "Can I name role holders on the Starter plan?", "a": "Role holder names merged into policies is a Professional and Enterprise feature. Check the <a href=\"/pricing\">pricing page</a> for what each plan includes today." },
+          { "q": "Do I need to update every one of my care home policies when a lead changes?", "a": "No. Change the role holder in Settings and policies that name the role show the new name where the merge is switched on. Your <a href=\"/blog/care-policy-version-control\">version control habits</a> still matter for wording changes." },
+          { "q": "Does CareStream check policy compliance?", "a": "It checks policies for gaps, conflicts and out of date wording. See <a href=\"/policy-gap-detection\">policy gap detection</a>. Final decisions on compliance stay with you." }
+        ]
+      }
+    ]
+  },
+  "guide": {
+    "heading": "A simple way to keep named leads current",
+    "lede": "You do not need new systems to start. A short routine does most of the work.",
+    "sections": [
+      {
+        "h3": "List the roles your service actually uses",
+        "paragraphs": [
+          "Start from the roles your policies mention, not from a long list. Under <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/17\">Regulation 17 of the 2014 regulations</a>, providers must operate systems and processes effectively and keep necessary records about the management of the regulated activity. Knowing who holds each lead role is a sensible part of that picture, though the regulation does not name specific roles."
+        ],
+        "checklist": [
+          "Write down every role title your policies mention",
+          "Name one person for each, and a cover if you can",
+          "Tell the team where the list lives",
+          "Set a date to check the list each quarter"
+        ]
+      },
+      {
+        "h3": "Check, do not assume",
+        "paragraphs": [
+          "A name on a list is not the same as staff knowing it. A short question at handover, or a Staff Hub module on named role holders, shows you quickly who is unsure. Read the answers as a prompt to brief people, not as a score."
+        ]
+      },
+      {
+        "h3": "Review when something changes",
+        "paragraphs": [
+          "When a lead leaves, changes role or goes on long leave, update the name the same day and let the team know. Our guide to <a href=\"/blog/six-signs-your-policy-set-has-quietly-drifted-out-of-date\">policy drift</a> lists other signs your policy set needs attention."
+        ]
+      }
+    ],
+    "note": "This guide is general information for managers. It is not legal advice. Check your own responsibilities with the relevant regulator and guidance."
+  }
+}

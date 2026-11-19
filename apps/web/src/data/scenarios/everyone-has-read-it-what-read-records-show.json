@@ -1,0 +1,319 @@
+{
+ "slug": "everyone-has-read-it-what-read-records-show",
+ "status": "draft",
+ "order": 50,
+ "title": "“Everyone has read it.” <em>Have they read and understood it?</em>",
+ "meta_title": "Read and Understood: Policy Reading Records | CareStreamAI",
+ "meta_description": "A tick says a policy was opened. See what read records show, what they cannot, and how questions after reading show who understood it.",
+ "eyebrow": "Scenario",
+ "lede": "A manager says everyone has read the new policy. An inspector asks how they know it was read and understood. CareStream keeps a record of every policy reading in the Staff Hub, and with <a href=\"/training-platform\">short training built from your own policies</a> you can check what stayed with people.",
+ "fine": "14 day free trial · Set up in a day · UK data residency",
+ "panel": {
+  "title": "After the policy was updated",
+  "pill": "Illustration",
+  "rows": [
+   { "label": "Policy shared with the team", "note": "Week 1", "done": true },
+   { "label": "Read sessions recorded", "note": "Week 1", "done": true },
+   { "label": "Understanding checked with questions", "note": "Not yet", "done": false },
+   { "label": "Gaps closed with a short lesson", "note": "Not yet", "done": false }
+  ],
+  "meter": 50
+ },
+ "image": "https://api.carestreamai.com/public/policy-shop/image/b5171d12-03b9-47a1-bdf8-f57579022bd5.webp",
+ "image_alt": "A carer reads a policy on her phone in a quiet corner of the staff room, a thoughtful look on her face, while a colleague with a mug stands nearby",
+ "card_title": "“Everyone has read the policy.” How do you know?",
+ "card_snippet": "A read record shows who opened a policy, for how long and whether they reached the end. It cannot show they understood it. Add short questions built from your own policies to find out.",
+ "primary_keyword": "read and understood",
+ "secondary_keywords": [
+  "policy acknowledgement",
+  "policy sign off",
+  "policy training",
+  "policy compliance",
+  "policy governance"
+ ],
+ "feature_links": [
+  {
+   "title": "Training built from your own policies",
+   "body": "Short training from your policies, questions to check it landed, and wrong answers that become lessons.",
+   "action": "See the feature",
+   "href": "/training-platform"
+  },
+  {
+   "title": "Policy gap detection",
+   "body": "Check your policies against the regulations, with suggested fixes you adopt and approve yourself.",
+   "action": "See policy gap detection",
+   "href": "/policy-gap-detection"
+  },
+  {
+   "title": "CQC and compliance",
+   "body": "Evidence that builds itself, including how staff use your policies.",
+   "action": "See CQC and compliance",
+   "href": "/cqc-compliance"
+  }
+ ],
+ "intro": {
+  "heading": "The policy went out. Everyone says they have read it.",
+  "sub": "A scenario we see in many care settings.",
+  "paragraph": "A registered manager rewrites the medication policy after a near miss. She shares it with the team, and at handover three people say they have read it. A week later the senior asks how everyone is doing and the answer is “fine, everyone has read it”. Nobody has checked how long people spent on it, whether they reached the end, or whether they could say what changed. Some staff scrolled to the bottom to get it out of the way. Others read it carefully but are unsure about one new step. The manager believes it is done. Here is how that plays out."
+ },
+ "trail": [
+  { "when": "Monday", "text": "The medication policy is rewritten after a near miss.", "kind": "ok" },
+  { "when": "Tuesday", "text": "It is shared and staff are asked to read it.", "kind": "ok" },
+  { "when": "By Friday", "text": "Staff tell the manager they have read it.", "kind": "ok" },
+  { "when": "Week two", "text": "Nobody has checked how long each person actually spent on it.", "kind": "gap" },
+  { "when": "Who might have rushed it", "text": "A carer who scrolled to the bottom on a break to get it done.", "kind": "gap" },
+  { "when": "And another", "text": "A carer who read it carefully but is unsure about the new double check step.", "kind": "gap" },
+  { "when": "What the manager has", "text": "A belief that it is done. Nothing showing what anyone took in.", "kind": "gap" },
+  { "when": "Inspection day", "text": "“How do you know staff understood the new policy?” “They all read it.”", "kind": "end" }
+ ],
+ "trail_close": "<b>Reading is a start, not the finish.</b> The gap is between a policy being opened and a policy being understood. Here is what CareStream records, what it does not, and how to close the gap.",
+ "why": {
+  "heading": "A policy that has been opened is not a policy that has been understood",
+  "sub": "A tick tells you something happened. It does not tell you what stayed with the person.",
+  "cards": [
+   {
+    "icon": "chat",
+    "title": "“I have read it” can mean many things",
+    "body": "It can mean careful reading, a quick scroll, or a skim on a break. Time spent and how far someone got say more than a simple yes, but neither shows what they took in."
+   },
+   {
+    "icon": "tick",
+    "title": "A new version changes the question",
+    "body": "When a policy changes, the real question is who needs to know what is different. Our guide to <a href=\"/blog/care-policy-version-control\">care policy version control</a> and the <a href=\"/blog/policy-changed-who-needs-retraining-a-four-question-framework-for-care-managers\">four question framework for retraining</a> help you decide."
+   },
+   {
+    "icon": "alert",
+    "title": "Chasing it person by person does not scale",
+    "body": "Quizzing every carer yourself after every policy change is work no manager has time for. Without it the gap stays open until an incident brings it out."
+   }
+  ]
+ },
+ "how": {
+  "heading": "What the read record shows, and what to add to it",
+  "sub": "This is the <a href=\"/training-platform\">Training built from your own policies</a> feature alongside the policy reading records. See also <a href=\"/uses/adhoc-training\">allocating adhoc training</a> and <a href=\"/how-it-works\">how CareStream works</a>.",
+  "blocks": [
+   {
+    "heading": "See how each person read the policy",
+    "bullets": [
+     "Every time a carer reads a policy in the Staff Hub, CareStream stores a reading session: time spent, how far they scrolled, whether they reached the end, whether they pressed Mark as read, and the language",
+     "On each staff record you see the reading quality for each policy: thorough, skimmed or partial",
+     "Thorough means they scrolled at least 90 percent and spent at least 60 seconds. Skimmed means they reached the end or marked it read too quickly"
+    ],
+    "tags": [
+     { "label": "Policy reading records", "href": "/training-platform" },
+     { "label": "CQC and compliance evidence", "href": "/cqc-compliance" }
+    ],
+    "mock": {
+     "type": "training",
+     "module": "Medication, new double check step",
+     "questions": [
+      "Who must check the dose before it is given under the new step?",
+      "What do you do if the two checks do not agree?",
+      "Where do you record that the check was done?"
+     ],
+     "staff_count": 18
+    }
+   },
+   {
+    "heading": "Add questions so you can see what was understood",
+    "bullets": [
+     "After the policy goes out, allocate a short adhoc training module on the topic, built from your own policies where they cover it, with general good practice as the fallback. You can edit and preview it first",
+     "A wrong answer goes into the carer's Follow-up tab in the Staff Hub, and they get an email, at most once a day",
+     "They choose Learn &amp; retry, a short lesson then a fresh question, or Just retry the same question, as often as they need"
+    ],
+    "tags": [
+     { "label": "Wrong answers become lessons", "href": "/training-platform" },
+     { "label": "Adhoc training", "href": "/uses/adhoc-training" }
+    ],
+    "mock": {
+     "type": "followup",
+     "module": "Medication, new double check step",
+     "question": "What do you do if the two checks do not agree?",
+     "why": "If the checks disagree, the dose should not be given until the difference is resolved, because a mistake could harm the person.",
+     "remember": [
+      "Stop and do not give the dose",
+      "Check again against the record",
+      "Tell the senior on shift"
+     ],
+     "picture": "You and a colleague read different amounts on the label and the chart."
+    }
+   },
+   {
+    "heading": "Questions in the language each carer thinks in",
+    "bullets": [
+     "A read record also notes the language used, so you can see who is reading in which language",
+     "Your admin sets each carer's first language, and training questions and automated messages go to them in it",
+     "Translation is machine translation from our own machine learning and is part of the paid plans only. The Follow-up email is English only"
+    ],
+    "tags": [
+     { "label": "Training in 60+ languages", "href": "/languages" },
+     { "label": "Staff Hub in 60+ languages", "href": "/uses/multilingual-staff-hub" }
+    ],
+    "mock": {
+     "type": "language",
+     "second_language": "Polish"
+    }
+   },
+   {
+    "heading": "See where understanding is weak across the team",
+    "bullets": [
+     "The Knowledge gaps view shows the most missed questions and the weakest topics, so you see which part of the policy did not land",
+     "See how gaps are being closed, and mark a person's record as reviewed",
+     "A Monday digest email brings the picture to you, so policy compliance does not depend on you remembering to look"
+    ],
+    "tags": [
+     { "label": "Reporting that runs itself", "href": "/training-platform" },
+     { "label": "Policy gaps", "href": "/uses/policy-gaps" }
+    ],
+    "mock": {
+     "type": "gaps",
+     "stats": { "open": 6, "affected": 4, "closed": 14, "engaged": 68 },
+     "missed": [
+      ["The second check on the dose", "4 staff"],
+      ["What to do if checks disagree", "3 staff"],
+      ["Where the check is recorded", "2 staff"]
+     ],
+     "weak": [
+      ["Medication", "6 gaps"],
+      ["Records", "2 gaps"]
+     ]
+    }
+   }
+  ]
+ },
+ "talk": {
+  "heading": "The questions managers ask, and how CareStream answers them",
+  "sub": "Read this as a conversation. The questions are the ones we hear most.",
+  "items": [
+   {
+    "q": "Can CareStream show me that every carer has read and understood a policy?",
+    "a": "It can show who opened the policy and how they read it, and it can check understanding with questions. It does not record a statement from the carer that they have read and understood it. Reading and understanding are two different things, so we show both separately."
+   },
+   {
+    "q": "What exactly does a read record contain?",
+    "a": "Each time a carer reads a policy in the Staff Hub, a reading session is stored: time spent, how far they scrolled, whether they reached the end, whether they pressed Mark as read, and the language. On the staff record you see whether that reading was thorough, skimmed or partial."
+   },
+   {
+    "q": "Is there a policy sign off where staff agree to the policy?",
+    "a": "No. CareStream does not have a signed policy sign off or a signature page. A carer can press Mark as read, and that is recorded with the time and scroll, but it is not a signed statement. If you need signatures for a policy, you will need to keep that process alongside CareStream."
+   },
+   {
+    "q": "If I update a policy, are staff asked to read it again?",
+    "a": "Not automatically. A read record does not store which version of the policy was read, and staff are not forced to re-read a new version. You decide who needs to know what changed, then allocate a short module on that topic. Our <a href=\"/blog/policy-changed-who-needs-retraining-a-four-question-framework-for-care-managers\">framework for retraining after a policy change</a> helps with that decision."
+   },
+   {
+    "q": "How would I check that staff understood the change?",
+    "a": "In the Training screen you allocate an adhoc module on the topic. It is built from <a href=\"/training-platform\">your own policies</a> where they cover it, and you can edit and preview it first. Staff answer in the Staff Hub, and wrong answers go into their Follow-up tab with a short lesson and a fresh question."
+   },
+   {
+    "q": "Will I be told every time someone gets a question wrong?",
+    "a": "No. Nothing alerts you on each wrong answer. You see the pattern in Analytics, Knowledge gaps, which shows open gaps, the most missed questions, the weakest topics and how gaps are being closed. A digest arrives on Monday."
+   },
+   {
+    "q": "Does it change my policies for me?",
+    "a": "No. <a href=\"/policy-gap-detection\">Policy gap detection</a> suggests fixes and wording, but nothing is edited until an admin adopts it and your approval chain finishes. Gap detection and approvals are on Professional and above, and the Free plan screens up to 5 uploaded policies in total."
+   },
+   {
+    "q": "How do I try it, and what does it cost?",
+    "a": "Create a free account at <a href=\"/register\">the registration page</a>. The paid plans come with a 14 day free trial, and you can see current plans on the <a href=\"/pricing\">pricing page</a>. Adhoc training and translation are on the paid plans."
+   }
+  ]
+ },
+ "limits": {
+  "heading": "A reading record and a check, not a signed register",
+  "cards": [
+   {
+    "title": "It does not record a signed statement",
+    "body": "CareStream stores reading sessions, not signatures. There is no signed read and understood statement, and no policy acknowledgement from the carer. A Mark as read press is recorded, but it is not a signature."
+   },
+   {
+    "title": "It does not store the policy version",
+    "body": "A reading session does not record which version of the policy was read, and staff are not made to re-read when a policy changes. Reading is also not understanding. Only questions show that."
+   },
+   {
+    "title": "Plans, alerts and automatic edits",
+    "body": "Adhoc training and translation are on the paid plans. Gap fixes and approvals are Professional and above. Nothing alerts you on each wrong answer, and nothing edits a policy until an admin adopts the change and approval finishes."
+   }
+  ]
+ },
+ "read_next": [
+  "care-policy-version-control",
+  "policy-changed-who-needs-retraining-a-four-question-framework-for-care-managers",
+  "six-signs-your-policy-set-has-quietly-drifted-out-of-date"
+ ],
+ "faqs": {
+  "heading": "Policy reading records and CareStream, answered",
+  "groups": [
+   {
+    "group": "About reading records",
+    "items": [
+     {
+      "q": "What does a read record show?",
+      "a": "It shows that a carer opened the policy in the Staff Hub, how long they spent, how far they scrolled, whether they reached the end and whether they marked it as read. It shows how the policy was read. It does not show what the carer understood."
+     },
+     {
+      "q": "Can I get a policy acknowledgement from every carer?",
+      "a": "CareStream does not provide a signed policy acknowledgement. It records reading sessions and a Mark as read press. To see understanding, add questions built from your policies and look at the results."
+     },
+     {
+      "q": "How do I show policy compliance without a signature?",
+      "a": "Show the whole chain: the policy was shared, staff read it, they were asked questions on it, wrong answers were followed up with a lesson, and the gaps closed. That tells a more complete story than a signature, and it sits alongside the rest of your <a href=\"/cqc-compliance\">CQC evidence</a>."
+     },
+     {
+      "q": "Does policy training replace reading the policy?",
+      "a": "No. Staff still read the policy. Policy training, in the form of short questions built from your policies, checks what they took in and teaches the points they missed."
+     },
+     {
+      "q": "Do staff need to read a policy again when it changes?",
+      "a": "CareStream does not make them. The record does not store the version read, so you decide who needs to know what changed and allocate a short module. See <a href=\"/uses/out-of-date-policies\">out of date policies</a> for how to spot policies that need review."
+     }
+    ]
+   },
+   {
+    "group": "About governance and inspections",
+    "items": [
+     {
+      "q": "What does good policy governance look like?",
+      "a": "Policies are reviewed, approved by the right people, current and followed in practice. <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/17\">Regulation 17 on good governance</a> requires systems or processes to be established and operated effectively, including to assess, monitor and improve the quality and safety of services."
+     },
+     {
+      "q": "Will an inspector accept read records as evidence?",
+      "a": "We cannot promise how any inspector will see it, and CareStream does not guarantee compliance or a rating. The <a href=\"https://www.cqc.org.uk/guidance-regulation/providers/regulations-service-providers-and-managers/health-social-care-act/regulation-17\">CQC guidance on Regulation 17</a> lists policies and procedures among governance records. Read records, questions and follow ups show how your policies are used."
+     },
+     {
+      "q": "Does CareStream edit my policies for me?",
+      "a": "No. Suggested fixes and wording are only suggestions until an admin adopts them and the approval chain finishes. Our <a href=\"/policy-gap-detection\">policy gap detection</a> is on Professional and above."
+     }
+    ]
+   }
+  ]
+ },
+ "guide": {
+  "heading": "A practical way to know a policy has landed",
+  "lede": "Sharing a policy is the easy part. The harder part is knowing it changed what people do, and a simple routine makes that manageable.",
+  "sections": [
+   {
+    "h3": "Why a tick is not enough",
+    "paragraphs": [
+     "<a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/17\">Regulation 17</a> asks providers to operate systems that assess, monitor and improve the quality and safety of the service. A tick on a list shows the policy was shared. Policy governance is stronger when you can also show that you checked it was understood and acted on what you found."
+    ]
+   },
+   {
+    "h3": "Four checks after a policy changes",
+    "checklist": [
+     "Same week: share the policy and look at who has read it, and how, on each staff record.",
+     "Within a week: allocate a short adhoc module on the topic, with questions built from your policies.",
+     "Whenever an answer is wrong: the carer opens a short lesson on that point, then a fresh question.",
+     "Each month: look at the most missed questions and the weakest topics in Knowledge gaps."
+    ]
+   },
+   {
+    "h3": "Keep a signature if you need one",
+    "paragraphs": [
+     "Some services want a signed policy sign off for particular policies. CareStream does not provide one, so keep your own signed list for those and use CareStream for the reading record and the questions."
+    ]
+   }
+  ],
+  "note": "<b>For the inspector.</b> Keep the read records, the questions, the lessons and the results together, so you can show understanding as well as reading."
+ }
+}

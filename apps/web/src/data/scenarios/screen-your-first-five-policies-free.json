@@ -1,0 +1,294 @@
+{
+ "slug": "screen-your-first-five-policies-free",
+ "status": "draft",
+ "order": 39,
+ "title": "Run a policy gap analysis on five policies <em>before you spend anything.</em>",
+ "meta_title": "Policy Gap Analysis, Free on 5 Policies | CareStreamAI",
+ "meta_description": "See what a policy gap analysis finds in up to five of your own policies on the Free plan, before you pay. Suggestions only, with the limits stated plainly.",
+ "eyebrow": "Scenario",
+ "lede": "You do not have to buy anything to find out what a policy gap analysis would show you. On the Free plan, <a href=\"/training-platform\">CareStream</a> checks up to five of your own uploaded policies against the regulations that apply to your service. Then you decide whether the rest is worth paying for.",
+ "fine": "14 day free trial · Set up in a day · UK data residency",
+ "panel": {
+  "title": "Your first week with five policies",
+  "pill": "Illustration",
+  "rows": [
+   { "label": "Five policies picked and uploaded", "note": "Day 1", "done": true },
+   { "label": "Four checks run on them", "note": "Day 1", "done": true },
+   { "label": "Findings read and compared with your own view", "note": "Day 2", "done": false },
+   { "label": "Decision made on the paid plans", "note": "Not yet", "done": false }
+  ],
+  "meter": 50
+ },
+ "image": "https://api.carestreamai.com/public/policy-shop/image/0ef57dbb-44d2-49ef-9e46-6b3a88a1702d.webp",
+ "image_alt": "A care home manager at a desk sorting five printed policies into a neat pile beside a laptop, with a mug of tea and a bright window behind",
+ "card_title": "Not sure your policies are in good shape? Check five of them free",
+ "card_snippet": "Upload up to five of your own policies on the Free plan and see what a gap check finds, before you spend anything. The findings are suggestions for you to review, not automatic edits.",
+ "primary_keyword": "policy gap analysis",
+ "secondary_keywords": [
+  "care home policies",
+  "policy review",
+  "policy audit",
+  "compliance gap analysis",
+  "free policy review",
+  "cqc policies"
+ ],
+ "intro": {
+  "heading": "You suspect the folder is out of date. You have not had time to check.",
+  "sub": "A scenario we see in many care settings.",
+  "paragraph": "A registered manager took over a service eight months ago. The policy folder came with the job: some documents were written in house, some downloaded years ago, some edited by three different people. Everything is filed and nothing looks missing. But she has never read them side by side, and a proper policy audit would take a week she does not have. A paid review feels like a leap when she cannot say whether the problem is big or small. So she wants a small, honest first look before she commits money."
+ },
+ "trail": [
+  { "when": "Handover", "text": "The new manager inherits a full policy folder and a long to do list.", "kind": "ok" },
+  { "when": "First month", "text": "She reads the policies the team asks about and they look sensible.", "kind": "ok" },
+  { "when": "Each year", "text": "Everyone agrees the policies should be reviewed. A date goes in the diary.", "kind": "ok" },
+  { "when": "Month eight", "text": "The folder has never been read as a whole, so nobody knows what is missing.", "kind": "gap" },
+  { "when": "In the folder", "text": "A policy still names a body and a framework that have since been replaced.", "kind": "gap" },
+  { "when": "Two policies", "text": "One says report within 24 hours. Another, written later, says by the end of the shift.", "kind": "gap" },
+  { "when": "Spending", "text": "A paid review feels risky when she has no idea how big the problem is.", "kind": "gap" },
+  { "when": "Inspection day", "text": "“Show me how you know your policies are current.” A date in the diary is not an answer.", "kind": "end" }
+ ],
+ "trail_close": "<b>You do not need to guess how big the problem is.</b> Five policies is enough to see what the checks find and how they work. Here is what you get for free, and where the free part stops.",
+ "why": {
+  "heading": "A policy review you keep postponing is a risk you cannot size",
+  "sub": "The cost of not knowing is that you cannot decide what to do first.",
+  "cards": [
+   {
+    "icon": "chat",
+    "title": "Policies drift without anyone noticing",
+    "body": "Care home policies are edited, copied and added to over the years. Small contradictions and old wording build up quietly, because nobody reads the whole set at once."
+   },
+   {
+    "icon": "tick",
+    "title": "A manual policy audit takes days",
+    "body": "Reading every policy against every regulation is a week of work. Most managers never get that week, so the review slips another year."
+   },
+   {
+    "icon": "alert",
+    "title": "Paying before you know is a gamble",
+    "body": "A tool that promises to find gaps is easy to doubt. Seeing it run on five of your own documents answers the question with evidence, not a sales pitch."
+   }
+  ]
+ },
+ "how": {
+  "heading": "Five policies in, four checks out.",
+  "sub": "This is the free part of the <a href=\"/policy-gap-detection\">policy gap detection</a> feature, in the order a manager meets it. Read the <a href=\"/blog/policy-gap-analysis-for-care-homes\">guide to gap analysis for care homes</a> for the thinking behind it.",
+  "blocks": [
+   {
+    "heading": "Upload up to five policies and run the checks",
+    "bullets": [
+     "Create a free account and upload your policies as PDF, Word, ODT or text files. The Free plan covers up to five in total",
+     "The coverage check reads each policy against the regulations that apply to your type of service, using a checklist of what a good policy should contain",
+     "You can also run the out of date, consistency and wording checks on the same five policies"
+    ],
+    "tags": [
+     { "label": "Policy gap detection", "href": "/policy-gap-detection" },
+     { "label": "Policy gaps in practice", "href": "/uses/policy-gaps" }
+    ],
+    "mock": {
+     "type": "training",
+     "module": "Free plan: 5 of 5 policies checked",
+     "questions": [
+      "Does your safeguarding policy say who the lead is and when to report?",
+      "Is any wording in your infection control policy out of date?",
+      "Do your medication and handover policies agree on timings?"
+     ]
+    }
+   },
+   {
+    "heading": "See what to add, with example wording to review",
+    "bullets": [
+     "Where a policy only partly covers a requirement, the coverage check lists what is missing and where it could go",
+     "Each suggestion comes with example wording drafted by our own machine learning. It is guidance to review and adapt, not legal advice",
+     "On the Free plan you can open three of these example wordings in total, so choose the ones that matter most"
+    ],
+    "tags": [
+     { "label": "What a gap check looks for", "href": "/blog/policy-gap-analysis-for-care-homes" },
+     { "label": "Out of date policies", "href": "/uses/out-of-date-policies" }
+    ],
+    "mock": {
+     "type": "training",
+     "module": "Medication policy: what to add",
+     "questions": [
+      "Who checks that a medicine has been given before it is signed for?",
+      "What happens when a medicine is refused?",
+      "How are errors reported and reviewed?"
+     ]
+    }
+   },
+   {
+    "heading": "The out of date scan uses no AI at all",
+    "bullets": [
+     "It looks for replaced legislation, bodies and frameworks, old time bound wording, unfilled placeholders and thin policies",
+     "It runs instantly and uses none of your allowance. It is a fixed set of checks, so the same policy gives the same answer",
+     "A cross policy check finds where two policies disagree, quoting each one, so you see the contradiction for yourself"
+    ],
+    "tags": [
+     { "label": "Spot out of date wording", "href": "/uses/out-of-date-policies" },
+     { "label": "Template contradictions", "href": "/blog/why-downloaded-care-policy-templates-create-contradictions" }
+    ],
+    "mock": {
+     "type": "training",
+     "module": "Out of date scan: example findings",
+     "questions": [
+      "Key Lines of Enquiry are mentioned. They have been replaced by quality statements.",
+      "A placeholder reading TBC is still in the text.",
+      "No review date has been recorded."
+     ]
+    }
+   },
+   {
+    "heading": "Fixing it, and getting staff to understand the change, is paid",
+    "bullets": [
+     "Adopting a fix, aligning wording to CQC policies, the approval chain and the readiness report are on Professional and above",
+     "Nothing changes by itself. A fix stays a suggestion until an admin adopts it and the approval steps finish",
+     "On the paid plans a short adhoc module on the changed policy shows whether staff understood it. The figures below are an illustration"
+    ],
+    "tags": [
+     { "label": "Policy change briefings", "href": "/blog/policy-changed-who-needs-retraining-a-four-question-framework-for-care-managers" },
+     { "label": "Pricing", "href": "/pricing" }
+    ],
+    "mock": {
+     "type": "gaps",
+     "stats": { "open": 6, "affected": 4, "closed": 11, "engaged": 68 },
+     "missed": [
+      ["Reporting window after an incident", "4 staff"],
+      ["Where the policy is kept", "2 staff"]
+     ],
+     "weak": [
+      ["Incident reporting", "4 gaps"],
+      ["Medication", "2 gaps"]
+     ]
+    }
+   }
+  ]
+ },
+ "talk": {
+  "heading": "The questions managers ask, and how CareStream answers them",
+  "sub": "Read this as a conversation. The questions are the ones we hear most.",
+  "items": [
+   {
+    "q": "What do I actually get for free?",
+    "a": "A free account lets you upload up to five policies in total and run all four checks on them: regulation coverage, out of date content, consistency between policies and wording. Re-runs are limited, and you can open three example wordings. It is a proper first look, not a full service."
+   },
+   {
+    "q": "Is this the same for everyone on every plan?",
+    "a": "No. The free allowance is a separate entry route. It is not part of Starter. Gap detection, consistency checking, wording alignment, adopting fixes and the approval chain are on Professional and above. See <a href=\"/pricing\">the pricing page</a> for current plans."
+   },
+   {
+    "q": "What does the coverage check compare my policies against?",
+    "a": "A set of regulations and good practice requirements chosen for your type of service, each with a checklist of what a good policy should contain. A policy is marked covered, partly covered or missing against that checklist. It is a guide to look at, not a verdict."
+   },
+   {
+    "q": "How does it know a policy is out of date?",
+    "a": "That check is a fixed scan with no AI. It looks for things like replaced legislation, bodies and frameworks, wording from the pandemic era, unfilled placeholders and missing review dates. It uses none of your allowance."
+   },
+   {
+    "q": "Will it rewrite my policies for me?",
+    "a": "No. It suggests example wording, and on the paid plans an admin can adopt a suggestion, which is recorded as a tracked change. It then goes through approval before staff see it. Your original upload is never overwritten."
+   },
+   {
+    "q": "Does it tell me whether I am compliant?",
+    "a": "No. It shows where your documents look thin, old or inconsistent. It does not give legal advice, guarantee compliance or predict a CQC rating. Your judgement and your own review still decide."
+   },
+   {
+    "q": "Can staff be checked on a policy once it is fixed?",
+    "a": "Yes, on the paid plans. You allocate a short <a href=\"/uses/adhoc-training\">adhoc training module</a> on the topic, staff answer in the Staff Hub, and a wrong answer goes to their Follow-up tab. You see the pattern in Knowledge gaps. The adhoc screen is not on the Free plan."
+   },
+   {
+    "q": "How do I try it, and what does it cost?",
+    "a": "Create a free account at <a href=\"/register\">the sign up page</a> and upload your first policies. The paid plans have a 14 day free trial. Current prices are on <a href=\"/pricing\">the pricing page</a>."
+   }
+  ]
+ },
+ "limits": {
+  "heading": "A first look, not a full policy review",
+  "cards": [
+   {
+    "title": "Five policies in total, for life",
+    "body": "The free allowance is five policies, counted over the life of the account. Deleting one does not give the place back. Choose the five that worry you most."
+   },
+   {
+    "title": "Not on Starter, and fixes need Professional",
+    "body": "The free allowance is its own route. Starter does not include it. Adopting fixes, the approval chain and the CQC report need Professional or above."
+   },
+   {
+    "title": "Suggestions, never automatic edits or advice",
+    "body": "Findings and example wording are for you to review. They are not legal advice, they do not guarantee compliance and they do not predict a rating."
+   }
+  ]
+ },
+ "feature_links": [
+  {
+   "title": "Training built from your own policies",
+   "body": "Short training from your own policies, with wrong answers turned into lessons.",
+   "action": "See the feature",
+   "href": "/training-platform"
+  },
+  {
+   "title": "Policy gap detection",
+   "body": "Coverage, out of date wording, contradictions and wording checks across your policy set.",
+   "action": "See gap detection",
+   "href": "/policy-gap-detection"
+  },
+  {
+   "title": "CQC and compliance",
+   "body": "Evidence that builds itself, and a readiness report for your next inspection.",
+   "action": "See CQC and compliance",
+   "href": "/cqc-compliance"
+  }
+ ],
+ "read_next": [
+  "policy-gap-analysis-for-care-homes",
+  "six-signs-your-policy-set-has-quietly-drifted-out-of-date",
+  "why-downloaded-care-policy-templates-create-contradictions"
+ ],
+ "faqs": {
+  "heading": "Free policy checks, answered",
+  "groups": [
+   {
+    "group": "About the free check",
+    "items": [
+     { "q": "What is a policy gap analysis?", "a": "It compares your policies with what they should cover, and shows what is missing, old or in conflict. The <a href=\"/blog/policy-gap-analysis-for-care-homes\">care home guide</a> explains the idea in detail." },
+     { "q": "Is there a free policy review for care homes?", "a": "On the Free plan you can upload up to five policies and run the four checks on them, with limited re-runs and three example wordings. It is a first look. The full set of fixes is on the paid plans." },
+     { "q": "Which care home policies should I upload first?", "a": "Choose the five you feel least sure about, or the ones an inspector is most likely to ask about, such as safeguarding, medication, infection control, incident reporting and complaints. You can see our <a href=\"/blog/policies-required-by-cqc-for-a-care-home\">guide to policies required for a care home</a>." },
+     { "q": "Does the compliance gap analysis tell me I am compliant?", "a": "No. A compliance gap analysis shows where documents look weak. It cannot judge how you work in practice, and it does not guarantee compliance or a rating." },
+     { "q": "Is the free allowance on Starter?", "a": "No. It is a separate entry route. Starter does not include gap detection. Professional and above do." },
+     { "q": "What file types can I upload?", "a": "PDF, Word (DOCX), ODT and plain text files. Scanned images and spreadsheets are not supported, and a scanned PDF may be read poorly." }
+    ]
+   },
+   {
+    "group": "About inspections",
+    "items": [
+     { "q": "What do CQC policies need to show?", "a": "Under Regulation 17, <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/17\">good governance</a> means systems and processes to assess, monitor and improve the quality and safety of the service. The <a href=\"https://www.cqc.org.uk/guidance-regulation/providers/regulations-service-providers-and-managers/health-social-care-act/regulation-17\">CQC guidance on Regulation 17</a> lists policies and procedures among governance arrangements." },
+     { "q": "How often should a policy review happen?", "a": "Many services review each policy yearly and after any change in practice, but you decide what suits your service. Our guide to <a href=\"/blog/how-often-should-care-policies-be-reviewed\">how often care policies should be reviewed</a> covers it. CareStream lets you set a review date and reminds you when one is due." }
+    ]
+   }
+  ]
+ },
+ "guide": {
+  "heading": "How to run a quick policy audit on your own",
+  "lede": "Whether or not you use software, a small first pass tells you more than a large plan you never start. Here is a way to do it in an afternoon.",
+  "sections": [
+   {
+    "h3": "Start with the five that matter most",
+    "paragraphs": [
+     "A policy review does not have to cover everything at once. Pick the policies where a mistake would hurt people or where an inspector is most likely to look. Read them for three things: is anything missing, is anything old, and does anything contradict another policy.",
+     "Regulation 17 on <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/17\">good governance</a> asks providers to run systems that assess, monitor and improve the quality and safety of the service. A simple, regular look at your own documents is one way to show you do that."
+    ],
+    "checklist": [
+     "Choose five policies and check each has a review date.",
+     "Look for old names of bodies, frameworks or forms, and leftover placeholders.",
+     "Compare timings, roles and escalation steps across policies on the same topic.",
+     "Write down what you would change, then decide what to do first."
+    ]
+   },
+   {
+    "h3": "Then decide whether to go further",
+    "paragraphs": [
+     "If the first five show only small points, you have learned something useful for nothing. If they show real problems, you know where to put your time and whether a paid plan is worth it. Either way, you decide with evidence."
+    ]
+   }
+  ],
+  "note": "<b>For the inspector.</b> Keep a dated note of what you checked, what you found and what you changed. It shows your governance is active, not just a date in the diary. See our <a href=\"/cqc-compliance\">CQC and compliance</a> page."
+ }
+}

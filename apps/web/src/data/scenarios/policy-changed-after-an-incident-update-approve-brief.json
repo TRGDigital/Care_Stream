@@ -1,0 +1,324 @@
+{
+  "slug": "policy-changed-after-an-incident-update-approve-brief",
+  "status": "draft",
+  "order": 41,
+  "title": "After an incident, policy change management is more than a new version. <em>Do staff understand it?</em>",
+  "meta_title": "Policy Change Management After an Incident | CareStreamAI",
+  "meta_description": "An incident changes a policy. Take the policy update through approval and sign off, then check staff understood it with short training from your own policies.",
+  "eyebrow": "Scenario",
+  "lede": "A resident falls, the policy changes, and the new version goes live. Good policy change management does not stop there. CareStream takes the update through your approval chain, then lets you brief staff with <a href=\"/training-platform\">short training built from your own policies</a>, so you can see who understood the change.",
+  "fine": "14 day free trial · Set up in a day · UK data residency",
+  "panel": {
+    "title": "After the incident",
+    "pill": "Illustration",
+    "rows": [
+      { "label": "Falls policy updated", "note": "Day 2", "done": true },
+      { "label": "Approved and live", "note": "Day 5", "done": true },
+      { "label": "Staff briefed on the change", "note": "Not yet", "done": false },
+      { "label": "Understanding checked", "note": "Not yet", "done": false }
+    ],
+    "meter": 50
+  },
+  "image": "https://api.carestreamai.com/public/policy-shop/image/f5656873-b014-4e5b-976a-4dae52481091.webp",
+  "image_alt": "A manager and a senior carer sitting at a table with a cup of tea each, calmly reviewing a revised policy page together after a hard day",
+  "card_title": "An incident changed the policy. Has the change reached the floor?",
+  "card_snippet": "A new policy version is only half the job. Take the change through approval and sign off, then check staff understood it with short training built from your own policies.",
+  "primary_keyword": "policy change management",
+  "secondary_keywords": [
+    "policy update",
+    "policy approval",
+    "policy sign off",
+    "policy version control",
+    "policy governance",
+    "policy training"
+  ],
+  "feature_links": [
+    {
+      "title": "Training built from your own policies",
+      "body": "Short training from your policies, checked by questions, with wrong answers that become lessons.",
+      "action": "See the feature",
+      "href": "/training-platform"
+    },
+    {
+      "title": "Turn an incident into adhoc training",
+      "body": "Pick a topic module after something goes wrong and see who understood it.",
+      "action": "See adhoc training",
+      "href": "/uses/adhoc-training"
+    },
+    {
+      "title": "Policy gap detection",
+      "body": "Find out of date wording and gaps, then adopt fixes through your approval chain.",
+      "action": "See policy gap detection",
+      "href": "/policy-gap-detection"
+    }
+  ],
+  "intro": {
+    "heading": "The policy is right now. Is the practice?",
+    "sub": "A scenario we see in many care settings.",
+    "paragraph": "A resident fell in the lounge late one evening and was found by a carer on a routine round. She was not badly hurt, but the manager looked hard at what happened and decided the falls prevention policy needed a clearer first step after a fall. She drafted the change, a second pair of eyes read it, and it went through the approval your service has set up. The new version is live. It is a good result, and it is not the end. A policy only protects people when the team who use it know what changed, and at the moment nobody can say whether they do."
+  },
+  "trail": [
+    { "when": "Evening", "text": "A resident falls in the lounge and is found on a routine round.", "kind": "ok" },
+    { "when": "Next day", "text": "The manager reviews what happened and decides the policy needs a clearer first step.", "kind": "ok" },
+    { "when": "Day 5", "text": "The change is approved and the new version goes live.", "kind": "ok" },
+    { "when": "A week on", "text": "The new version is on the system. Nobody has checked who has read it.", "kind": "gap" },
+    { "when": "Who might not know", "text": "Two night carers and a bank carer who have not been on shift since the change.", "kind": "gap" },
+    { "when": "And another", "text": "A newer carer who reads the policy once and mixes up the old step with the new one.", "kind": "gap" },
+    { "when": "What the manager has", "text": "An approved version and a date. Nothing that shows the team understood it.", "kind": "gap" },
+    { "when": "Another fall", "text": "“What do you do first?” The answer is the old one.", "kind": "end" }
+  ],
+  "trail_close": "<b>The approval was never the problem.</b> The gap sits between a signed off policy and what staff do on shift. Here is how CareStream handles the route from incident to understanding, without pretending the system does your thinking for you.",
+  "why": {
+    "heading": "A new version is a document. Understanding is the outcome.",
+    "sub": "After an incident, the question that matters is whether practice changed.",
+    "cards": [
+      {
+        "icon": "chat",
+        "title": "A version number tells nobody what changed",
+        "body": "Staff who open the new policy may not spot the one step that moved. The change that came from a real incident is easy to read past."
+      },
+      {
+        "icon": "tick",
+        "title": "Approval proves the paperwork, not the team",
+        "body": "Sign off shows the right people reviewed the text. It cannot show that the night team, or a carer on their second week, understood it."
+      },
+      {
+        "icon": "alert",
+        "title": "Briefing by hand is patchy",
+        "body": "A talk at handover reaches whoever is in the room. People on other shifts miss it, and nobody records what anyone took away."
+      }
+    ]
+  },
+  "how": {
+    "heading": "Incident to approval to understanding",
+    "sub": "This is how <a href=\"/training-platform\">Training built from your own policies</a> and your policy approval route work together. See also <a href=\"/uses/out-of-date-policies\">keeping policies up to date</a> and <a href=\"/uses/adhoc-training\">turning an incident into adhoc training</a>.",
+    "blocks": [
+      {
+        "heading": "Take the policy update through your approval chain",
+        "bullets": [
+          "Adopt a change as a tracked edit on a draft. The uploaded original stays untouched, and a full policy version history is kept as part of your policy version control",
+          "The draft goes to an admin, then to the care manager, and to an external reviewer by one off link if you switch that on. Policy approval and sign off sit in one trail, on Professional and above",
+          "A reviewer who asks for changes sends it back to draft with a note, and publishing updates what the staff assistant answers from"
+        ],
+        "tags": [
+          { "label": "Policy gap detection", "href": "/policy-gap-detection" },
+          { "label": "Out of date policies", "href": "/uses/out-of-date-policies" }
+        ],
+        "mock": {
+          "type": "training",
+          "module": "Falls Prevention (policy update)",
+          "questions": [
+            "Illustration of the approval route: Draft, With care manager, Awaiting external, Live",
+            "Illustration of a typo fix: minor edit, no approval chain, nothing reset"
+          ],
+          "staff_count": 18
+        }
+      },
+      {
+        "heading": "Brief staff with short training on the changed policy",
+        "bullets": [
+          "Pick the Falls Prevention topic module and CareStream builds the lessons and questions from your own policies, which now hold the new wording",
+          "You choose the module by topic, not by single policy, so review and preview it before anyone sees it",
+          "Staff complete it in the Staff Hub, and a wrong answer goes to their Follow-up tab as a short lesson they open with Learn &amp; retry"
+        ],
+        "tags": [
+          { "label": "Wrong answers become lessons", "href": "/training-platform" },
+          { "label": "How CareStream works", "href": "/how-it-works" }
+        ],
+        "mock": {
+          "type": "followup",
+          "module": "Falls Prevention",
+          "question": "A resident has fallen. What is the first thing you should do under the updated policy?",
+          "why": "Checking for injury before anyone moves the person keeps them safe, because moving someone with a hidden injury can make it worse.",
+          "remember": [
+            "Stay with the person and call for help",
+            "Check for injury before moving them",
+            "Record what happened and who you told"
+          ],
+          "picture": "You find a resident on the floor beside their bed during a night round."
+        }
+      },
+      {
+        "heading": "Reach carers in the language they think in",
+        "bullets": [
+          "A carer who misses a word in a new policy update can open the follow up lesson in their own language",
+          "Your admin sets their second language and they switch to it in the hub",
+          "Policy training in different languages is part of the paid plans"
+        ],
+        "tags": [
+          { "label": "Training in 60+ languages", "href": "/languages" },
+          { "label": "Staff Hub in 60+ languages", "href": "/uses/multilingual-staff-hub" }
+        ],
+        "mock": { "type": "language", "second_language": "Romanian" }
+      },
+      {
+        "heading": "See whether the change landed, across the team",
+        "bullets": [
+          "The Knowledge gaps view shows the most missed questions and the weakest topics, so you see which part of the change is still unclear",
+          "See how gaps are being closed, and mark a person's record as reviewed",
+          "A Monday digest email brings the picture to you, which supports your policy governance"
+        ],
+        "tags": [
+          { "label": "Reporting that runs itself", "href": "/training-platform" },
+          { "label": "CQC and compliance evidence", "href": "/cqc-compliance" }
+        ],
+        "mock": {
+          "type": "gaps",
+          "stats": { "open": 5, "affected": 4, "closed": 11, "engaged": 68 },
+          "missed": [
+            ["First step after a fall", "4 staff"],
+            ["When to call the nurse", "3 staff"],
+            ["Recording the fall", "2 staff"]
+          ],
+          "weak": [
+            ["Falls Prevention", "5 gaps"],
+            ["Moving and Handling", "2 gaps"]
+          ]
+        }
+      }
+    ]
+  },
+  "talk": {
+    "heading": "The questions managers ask, and how CareStream answers them",
+    "sub": "Read this as a conversation. The questions are the ones we hear most.",
+    "items": [
+      {
+        "q": "Our policy changed after an incident. What does CareStream do with the change?",
+        "a": "You adopt the change as a tracked edit on a draft, and it goes through your approval chain before it is published. Once it is live, staff reading and the staff assistant use the new text. Approval and sign off are on Professional and above."
+      },
+      {
+        "q": "Who has to approve a policy change?",
+        "a": "It depends on how you set it up. An admin approves first, then the care manager step is on by default, and an external reviewer by one off link is an option you can switch on. If nothing else is switched on, it publishes straight away after the admin."
+      },
+      {
+        "q": "What if I only fix a typo?",
+        "a": "A typo or proofreading fix can be made as a minor edit. It skips the approval chain, is recorded as a tracked change and does not reset anything. A real change to what staff do goes through approval."
+      },
+      {
+        "q": "Does CareStream tell staff when a policy changes?",
+        "a": "Not automatically. A new version going live does not send staff a message. To brief your team you allocate short training on the topic, which is the step that makes sure people have seen and understood the change."
+      },
+      {
+        "q": "How do I check people understood the change?",
+        "a": "You allocate a topic module, such as Falls Prevention, built from your own policies. Each carer completes it in the Staff Hub, and a wrong answer goes to their Follow-up tab. They open a short lesson with Learn &amp; retry, then answer a fresh question. They can retry as often as they like."
+      },
+      {
+        "q": "Can I choose the exact policy that changed?",
+        "a": "No. You choose a topic module and CareStream draws on your policies for that topic. Because the new version is the live one, the training reflects the changed wording. You can edit and preview the module before staff see it."
+      },
+      {
+        "q": "What do I see across the team?",
+        "a": "The Knowledge gaps view shows the questions most often missed, the weakest topics and how gaps are being closed, and a digest arrives on Monday. That tells you whether one person needs a conversation or the policy wording needs another look."
+      },
+      {
+        "q": "Can I try it?",
+        "a": "Yes. There is a 14 day free trial on the paid plans, and you can <a href=\"/register\">create a free account</a> to look around. The <a href=\"/demo\">demo</a> shows the approval and training flow end to end."
+      }
+    ]
+  },
+  "limits": {
+    "heading": "Support for good policy governance, not a substitute for it",
+    "cards": [
+      {
+        "title": "It does not decide what the change should be",
+        "body": "Suggested wording is a starting point your admin adopts, edits and sends through approval. Nothing is changed automatically, and it is not legal advice."
+      },
+      {
+        "title": "It does not message staff when a version goes live",
+        "body": "A new version does not alert your team by itself. CareStream records reading sessions, not signatures, so you brief people through allocated training."
+      },
+      {
+        "title": "The approval chain and gap fixes need Professional",
+        "body": "Adopting changes and the approval trail are on Professional and above. Allocating adhoc training is on the paid plans, and the free plan does not include it."
+      }
+    ]
+  },
+  "read_next": [
+    "policy-changed-who-needs-retraining-a-four-question-framework-for-care-managers",
+    "care-policy-version-control",
+    "updating-covid-policies-in-care-homes"
+  ],
+  "faqs": {
+    "heading": "Policy change management, answered",
+    "groups": [
+      {
+        "group": "Changing and approving a policy",
+        "items": [
+          {
+            "q": "What is policy change management in a care service?",
+            "a": "It is the route a policy takes from a reason to change, such as an incident, through drafting, review, approval and publishing, to staff understanding the change. The last step is the one most services skip."
+          },
+          {
+            "q": "How does policy approval work in CareStream?",
+            "a": "A change is adopted onto a draft, an admin approves it, then the care manager step applies unless you switch it off, and an external reviewer can be added by one off link. Rejected changes go back to draft with a note. This is on Professional and above."
+          },
+          {
+            "q": "What does policy sign off involve?",
+            "a": "Your own approval chain is the sign off, and the trail is kept. You can also print a policy on your letterhead with a sign off block for registered manager, approved by, date approved and next review."
+          },
+          {
+            "q": "How does policy version control work?",
+            "a": "Real changes create a new major version with a read only snapshot, and the History tab lists earlier versions. Document version history is on every plan. A minor edit, such as a typo, does not start a new approval."
+          },
+          {
+            "q": "Who is responsible for policy governance?",
+            "a": "The provider is. The law asks registered providers to operate systems to assess, monitor and improve quality and safety, and to keep the records needed. See <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/17\">Regulation 17 on good governance</a>. CareStream gives you a place to run that process, not the duty itself."
+          }
+        ]
+      },
+      {
+        "group": "Briefing staff after the change",
+        "items": [
+          {
+            "q": "What is policy training, and does CareStream do it?",
+            "a": "Policy training means making sure staff know and can apply the policy. CareStream builds short training from your own policies, checks it with questions and turns wrong answers into short lessons. A competent person still shows practical skills."
+          },
+          {
+            "q": "Does an incident mean staff need retraining?",
+            "a": "Not always. If the change affects what people do, a short check is sensible. Our guide on <a href=\"/blog/policy-changed-who-needs-retraining-a-four-question-framework-for-care-managers\">who needs retraining</a> gives four questions to decide."
+          },
+          {
+            "q": "What does the law say about training and risk?",
+            "a": "Providers must assess risks and do all that is reasonably practicable to mitigate them, and make sure staff have the competence and skills to provide care safely. See <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/12\">Regulation 12 on safe care and treatment</a>. Staff must also receive the support and training they need, in <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/18\">Regulation 18</a>."
+          },
+          {
+            "q": "Can I use this for a falls prevention policy change?",
+            "a": "Yes, it is a good fit. The Falls Prevention topic module is built from your policies once the new version is live. Pair it with the <a href=\"/staff-training/moving-and-handling-of-people\">moving and handling course</a> for the hands on side."
+          }
+        ]
+      }
+    ]
+  },
+  "guide": {
+    "heading": "A practical route from incident to understanding",
+    "lede": "Whatever tools you use, these steps keep policy change management clear and calm after something goes wrong.",
+    "sections": [
+      {
+        "h3": "Decide what the incident really changes",
+        "paragraphs": [
+          "Start with the fact, not the fix. Write one plain sentence on what happened and one on what staff should now do differently. If you cannot write the second sentence, the policy may not need to change yet.",
+          "Keep the change small and specific. A policy that moves one step is easier to brief and easier to check than one that was rewritten end to end."
+        ]
+      },
+      {
+        "h3": "Run the change through the right approval",
+        "paragraphs": [
+          "Match the level of approval to the size of the change. A typo is a minor edit. A change to what carers do deserves a second reader, and your care manager or an outside reviewer where you use one. Keep the reason for the change on the record. See <a href=\"/blog/care-policy-version-control\">policy version control</a> for the habits that stop old versions circulating."
+        ],
+        "checklist": [
+          "Name the incident and the date in the change note",
+          "Have the change read by someone who did not write it",
+          "Approve it through the chain your service has set up",
+          "Publish it and confirm staff can see the new version"
+        ]
+      },
+      {
+        "h3": "Brief people and check it landed",
+        "paragraphs": [
+          "Publishing is not briefing. Within a few days, give every affected carer, including nights and part time staff, a short check on the change. Look at the most missed questions, and go back to the policy wording if the same point trips several people. For more, see our <a href=\"/blog/incident-led-training-in-care\">guide to incident led training</a> and <a href=\"/blog/updating-covid-policies-in-care-homes\">updating policies after big changes</a>."
+        ]
+      }
+    ],
+    "note": "This guide is general good practice, not legal advice. Check your own duties and your regulator's guidance for your service."
+  }
+}

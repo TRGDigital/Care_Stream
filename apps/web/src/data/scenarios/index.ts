@@ -37,9 +37,22 @@ import s35 from './agency-worker-arrives-tomorrow.json'
 import s36 from './controlling-agency-spend.json'
 import s37 from './care-certificate-for-new-carers-observation-sign-off.json'
 import s38 from './probation-review-what-has-the-new-starter-learned.json'
+import s39 from './screen-your-first-five-policies-free.json'
+import s40 from './which-of-your-policies-are-out-of-date.json'
+import s41 from './policy-changed-after-an-incident-update-approve-brief.json'
+import s42 from './policy-does-not-match-the-regulation.json'
+import s43 from './two-policies-say-different-things.json'
+import s44 from './policy-wording-does-not-match-cqc-language.json'
+import s45 from './a-policy-you-did-not-know-you-needed.json'
+import s46 from './buy-a-policy-written-for-your-service.json'
+import s47 from './who-signs-a-policy-off.json'
+import s48 from './new-registered-manager-inherits-the-policies.json'
+import s49 from './named-leads-for-policies.json'
+import s50 from './everyone-has-read-it-what-read-records-show.json'
+import s51 from './turn-a-policy-into-questions-staff-answer.json'
 
 // One import per page, sorted by `order`. status 'published' pages are public; 'draft' pages are admin preview only.
-export const ALL_SCENARIOS = [s01, s02, s03, s04, s05, s06, s07, s08, s09, s10, s11, s12, s13, s14, s15, s16, s17, s18, s19, s20, s21, s22, s23, s24, s25, s26, s27, s28, s29, s30, s31, s32, s33, s34, s35, s36, s37, s38] as unknown as Scenario[]
+export const ALL_SCENARIOS = [s01, s02, s03, s04, s05, s06, s07, s08, s09, s10, s11, s12, s13, s14, s15, s16, s17, s18, s19, s20, s21, s22, s23, s24, s25, s26, s27, s28, s29, s30, s31, s32, s33, s34, s35, s36, s37, s38, s39, s40, s41, s42, s43, s44, s45, s46, s47, s48, s49, s50, s51] as unknown as Scenario[]
 
 export const publishedScenarios = () =>
   ALL_SCENARIOS.filter(s => s.status === 'published').sort((a, b) => a.order - b.order)

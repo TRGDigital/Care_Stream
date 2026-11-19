@@ -1,0 +1,405 @@
+{
+ "slug": "who-signs-a-policy-off",
+ "status": "draft",
+ "order": 47,
+ "title": "Who signs it off? A clear <em>policy approval process</em>, in the right order",
+ "meta_title": "Policy Approval Process for Care Services | CareStreamAI",
+ "meta_description": "Who approves policies in your service? Set a care manager step, an optional external reviewer and a record of every version, then brief staff on the result.",
+ "eyebrow": "Scenario",
+ "lede": "A good <b>policy approval process</b> answers one question: who has to say yes before staff see the new wording? CareStream lets you set that order, with a care manager step and an optional external reviewer. It sits inside <a href=\"/training-platform\">training built from your own policies</a>, so the approved policy can then reach staff.",
+ "fine": "14 day free trial · Set up in a day · UK data residency",
+ "panel": {
+  "title": "A policy change, step by step",
+  "pill": "Illustration",
+  "rows": [
+   {
+    "label": "Wording changed and adopted as a draft",
+    "note": "Monday",
+    "done": true
+   },
+   {
+    "label": "Care manager step",
+    "note": "Tuesday",
+    "done": true
+   },
+   {
+    "label": "External reviewer step",
+    "note": "Waiting",
+    "done": false
+   },
+   {
+    "label": "Live for staff, with the history kept",
+    "note": "Not yet",
+    "done": false
+   }
+  ],
+  "meter": 50
+ },
+ "image": "https://api.carestreamai.com/public/policy-shop/image/3f8e9278-ec2c-4511-8cc5-364613eebd3a.webp",
+ "image_alt": "A care manager hands a policy folder across a table to a smiling external reviewer, both seated in a calm office with plants",
+ "card_title": "Who signs a policy off in your service, and in what order?",
+ "card_snippet": "A policy changes, and nobody is sure who has to approve it. Set a care manager step and an optional external reviewer, then keep a clear history of every version.",
+ "primary_keyword": "policy approval process",
+ "secondary_keywords": [
+  "policy sign off",
+  "who approves policies",
+  "policy approval",
+  "policy governance",
+  "policy version control"
+ ],
+ "feature_links": [
+  {
+   "title": "Training built from your own policies",
+   "body": "Policies you approve become the source for short training and staff questions.",
+   "action": "See the feature",
+   "href": "/training-platform"
+  },
+  {
+   "title": "Policy gap detection",
+   "body": "Find missing, out of date and conflicting policies, then adopt suggested fixes through approval.",
+   "action": "See gap detection",
+   "href": "/policy-gap-detection"
+  },
+  {
+   "title": "Policy changed, who needs a briefing?",
+   "body": "Turn a policy change into short adhoc training for the staff it affects.",
+   "action": "See the use case",
+   "href": "/uses/adhoc-training"
+  }
+ ],
+ "intro": {
+  "heading": "The policy is rewritten. Then nobody is sure who has to say yes.",
+  "sub": "A scenario we see in many care settings.",
+  "paragraph": "A registered manager rewrites the falls policy after an incident and emails the draft to the deputy. The deputy likes it and replies with a thumbs up. The owner wants the provider's external consultant to look at it too, but that email gets buried. Three weeks on, the old version is still in the shared folder and the new one is in an inbox. Staff are following whichever one they find first. Nobody can say who approved what, or in what order, and the manager has to piece it together from messages."
+ },
+ "trail": [
+  {
+   "when": "Monday",
+   "text": "The manager rewrites the falls policy after an incident.",
+   "kind": "ok"
+  },
+  {
+   "when": "Monday",
+   "text": "The deputy reads it and replies with a thumbs up.",
+   "kind": "ok"
+  },
+  {
+   "when": "Tuesday",
+   "text": "The owner asks for the external consultant to see it too.",
+   "kind": "ok"
+  },
+  {
+   "when": "Week two",
+   "text": "The consultant's email is buried. Nobody chases it.",
+   "kind": "gap"
+  },
+  {
+   "when": "Week three",
+   "text": "The old version is still in the shared folder.",
+   "kind": "gap"
+  },
+  {
+   "when": "On the floor",
+   "text": "Staff use whichever version they find first.",
+   "kind": "gap"
+  },
+  {
+   "when": "Later",
+   "text": "No one can say which version was live on a given date.",
+   "kind": "gap"
+  },
+  {
+   "when": "The inspection",
+   "text": "\"Who approved this policy, and when did staff see it?\"",
+   "kind": "end"
+  }
+ ],
+ "trail_close": "<b>The policy was never the problem.</b> The gap is the order of approval and the record of it. Here is how CareStream sets that order, keeps the history and then helps you brief staff.",
+ "why": {
+  "heading": "A thumbs up in an email is not a policy approval process",
+  "sub": "Good policy governance means everyone knows who approves, in what order, and where the proof is.",
+  "cards": [
+   {
+    "icon": "chat",
+    "title": "Approval lives in inboxes",
+    "body": "A yes by email, a comment on a printout and a verbal word in the corridor are all real decisions. None of them is easy to find later."
+   },
+   {
+    "icon": "tick",
+    "title": "Two versions run side by side",
+    "body": "Without policy version control, an old file and a new file can both look current. Staff cannot tell which one the service actually stands behind."
+   },
+   {
+    "icon": "alert",
+    "title": "The external step gets lost",
+    "body": "If a consultant or provider lead has to review a policy, the request needs a clear route in, a clear answer and a note when changes are asked for."
+   }
+  ]
+ },
+ "how": {
+  "heading": "One policy approval process, from draft to live.",
+  "sub": "This is part of the <a href=\"/training-platform\">Training built from your own policies</a> feature. For finding what needs changing in the first place, see <a href=\"/policy-gap-detection\">policy gap detection</a>.",
+  "blocks": [
+   {
+    "heading": "Set who approves policies, and in what order",
+    "bullets": [
+     "Suggested fixes and wording changes are only suggestions until an admin adopts them. Adopted text becomes tracked changes on a draft, and your uploaded original is untouched",
+     "After the admin approves, the draft can go to a care manager step, and then to an optional external reviewer, or straight to live, depending on your settings",
+     "The approval chain is on the Professional and Enterprise plans, and nothing changes for staff until the chain finishes"
+    ],
+    "tags": [
+     {
+      "label": "Policy gap detection",
+      "href": "/policy-gap-detection"
+     },
+     {
+      "label": "How CareStream works",
+      "href": "/how-it-works"
+     }
+    ],
+    "mock": {
+     "type": "training",
+     "module": "Falls Prevention",
+     "questions": [
+      "Who do you tell straight away if a resident has an unwitnessed fall?",
+      "Where do you record what happened after a fall?"
+     ],
+     "staff_count": 18
+    }
+   },
+   {
+    "heading": "Brief staff once the new version is live",
+    "bullets": [
+     "Once the policy is live, allocate an adhoc training module on the topic. It is built from your own policies where they cover it, with general good practice as the fallback, and you can edit and preview it first",
+     "Staff complete it in the Staff Hub. A wrong answer goes into their Follow-up tab and they get an email, at most once a day",
+     "They choose Learn &amp; retry for a short lesson and a fresh question, or Just retry the same one. Nothing alerts you on each wrong answer"
+    ],
+    "tags": [
+     {
+      "label": "Adhoc training",
+      "href": "/uses/adhoc-training"
+     },
+     {
+      "label": "Policy gap detection",
+      "href": "/uses/policy-gaps"
+     }
+    ],
+    "mock": {
+     "type": "followup",
+     "module": "Falls Prevention",
+     "question": "Who do you tell straight away if a resident has an unwitnessed fall?",
+     "why": "The senior on shift needs to know at once so the resident can be checked and the right people informed.",
+     "remember": [
+      "Stay with the resident and call for help",
+      "Do not move them until checked",
+      "Record what you saw and did"
+     ],
+     "picture": "You find a resident on the floor at the start of a night shift."
+    }
+   },
+   {
+    "heading": "Staff can ask about the approved policy in their own language",
+    "bullets": [
+     "Staff ask the hub assistant a question and it replies in the language they asked in, while the policy stays in English underneath",
+     "The answer draws on your own approved policies, so it follows the version you published",
+     "Translation is part of the paid plans"
+    ],
+    "tags": [
+     {
+      "label": "Staff Hub in 60+ languages",
+      "href": "/uses/multilingual-staff-hub"
+     },
+     {
+      "label": "Languages",
+      "href": "/languages"
+     }
+    ],
+    "mock": {
+     "type": "language",
+     "second_language": "Polish"
+    }
+   },
+   {
+    "heading": "See which parts of the new policy people miss",
+    "bullets": [
+     "The Knowledge gaps view shows the most missed questions and the weakest topics after a policy briefing",
+     "See how gaps are being closed, so a rewrite that confuses people shows up fast",
+     "A Monday digest email brings the picture to you"
+    ],
+    "tags": [
+     {
+      "label": "Reporting that runs itself",
+      "href": "/training-platform"
+     },
+     {
+      "label": "CQC and compliance",
+      "href": "/cqc-compliance"
+     }
+    ],
+    "mock": {
+     "type": "gaps",
+     "stats": {
+      "open": 6,
+      "affected": 5,
+      "closed": 11,
+      "engaged": 68
+     },
+     "missed": [
+      [
+       "Who to tell after a fall",
+       "4 staff"
+      ],
+      [
+       "Where to record it",
+       "3 staff"
+      ],
+      [
+       "When to call 999",
+       "2 staff"
+      ]
+     ],
+     "weak": [
+      [
+       "Falls Prevention",
+       "5 gaps"
+      ],
+      [
+       "Incident Reporting",
+       "2 gaps"
+      ]
+     ]
+    }
+   }
+  ]
+ },
+ "talk": {
+  "heading": "The questions managers ask, and how CareStream answers them",
+  "sub": "Read this as a conversation. The questions are the ones we hear most.",
+  "items": [
+   {
+    "q": "Who approves policies in CareStream?",
+    "a": "You decide. An admin adopts the change as a draft. It can then go to a care manager step and, if you switch it on, to an external reviewer. If neither is switched on, it can go straight to live. The care manager step is on by default."
+   },
+   {
+    "q": "What does an external reviewer see?",
+    "a": "They get a one off emailed link, with no account needed. They can approve or ask for changes, and a note is required when they ask for changes. The link runs out after 30 days, and you can revoke it or send a new one."
+   },
+   {
+    "q": "What if someone only fixes a typo?",
+    "a": "Minor edits such as typos can be applied without the full chain. They are recorded as a tracked change and go straight into the published text."
+   },
+   {
+    "q": "Do I get a record of who approved what?",
+    "a": "Yes. You get a version history, with each published edit saved as a read only version. Edited policies move to 2.0, 3.0 and so on. This is the policy version control most managers want when asked which version was live."
+   },
+   {
+    "q": "Does it write or change policies on its own?",
+    "a": "No. Gap fixes, wording rewrites and regulation updates are suggestions. They only reach staff after an admin adopts them and the approval chain finishes. Example wording is drafted by our own machine learning, so review it carefully."
+   },
+   {
+    "q": "Is it a signed register of who read the policy?",
+    "a": "No. CareStream records reading sessions, which show time spent, how far someone scrolled and whether they pressed Mark as read. It does not collect signatures."
+   },
+   {
+    "q": "Once the policy is live, how do staff learn it?",
+    "a": "You allocate an adhoc training module on the topic from the Training screen. Staff complete it in the Staff Hub, and a wrong answer becomes a short lesson they open themselves. You see the picture in Knowledge gaps."
+   },
+   {
+    "q": "How do I try it, and what does it cost?",
+    "a": "You can try it free for 14 days by <a href=\"/register\">creating a free account</a>. The <a href=\"/pricing\">pricing page</a> shows which plan includes the approval chain."
+   }
+  ]
+ },
+ "limits": {
+  "heading": "A clear order of approval, not a decision maker",
+  "cards": [
+   {
+    "title": "It does not decide for you",
+    "body": "Suggestions are guidance to review, adapt and approve for your service. It is not legal advice and cannot guarantee compliance or a CQC rating."
+   },
+   {
+    "title": "It does not collect signatures",
+    "body": "You get a version history and reading sessions. There is no signed register and no policy version number recorded against each read."
+   },
+   {
+    "title": "The approval chain needs a higher plan",
+    "body": "The care manager and external steps are on Professional and Enterprise. Nothing alerts you on each wrong answer in the training that follows."
+   }
+  ]
+ },
+ "read_next": [
+  "care-policy-version-control",
+  "policy-changed-who-needs-retraining-a-four-question-framework-for-care-managers",
+  "how-often-should-care-policies-be-reviewed"
+ ],
+ "faqs": {
+  "heading": "Policy sign off in care services, answered",
+  "groups": [
+   {
+    "group": "The approval order",
+    "items": [
+     {
+      "q": "What is a policy approval process in a care service?",
+      "a": "It is the agreed order of steps a policy change goes through before staff rely on it. In CareStream that can be an admin, a care manager step and an optional external reviewer. See <a href=\"/how-it-works\">how CareStream works</a>."
+     },
+     {
+      "q": "Who approves policies in a care home?",
+      "a": "That is a decision for the provider. Many services have the registered manager, a senior or the owner involved, and some add an outside consultant. CareStream lets you set the steps to match."
+     },
+     {
+      "q": "Can policy sign off be skipped for small changes?",
+      "a": "Minor edits such as typos can bypass the chain and are recorded as tracked changes. Real changes to meaning should go through the full order."
+     },
+     {
+      "q": "Does the external reviewer need a login?",
+      "a": "No. They receive an emailed link that lasts 30 days. They can approve or request changes, and must add a note if they request changes."
+     }
+    ]
+   },
+   {
+    "group": "Records and training",
+    "items": [
+     {
+      "q": "How do I keep policy version control without a shared folder?",
+      "a": "Each time an edit is published, CareStream saves a read only version and the policy moves to a new major version. The old version stays in the history. <a href=\"/blog/care-policy-version-control\">Read our guide to version control</a>."
+     },
+     {
+      "q": "Is approval the same as staff reading it?",
+      "a": "No. Approval is the leadership decision. Reading is recorded separately as sessions, and training questions show whether staff understood the policy. See <a href=\"/uses/adhoc-training\">adhoc training</a>."
+     },
+     {
+      "q": "What does good policy governance look like to an inspector?",
+      "a": "Under <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/17\">Regulation 17 on good governance</a>, systems and processes must be established and operated effectively. Clear approval, kept records and evidence staff understood the policy all support that."
+     },
+     {
+      "q": "Is it free to try?",
+      "a": "Yes, you can try CareStream free for 14 days. <a href=\"/register\">Create a free account</a> to see the approval chain in your own settings."
+     }
+    ]
+   }
+  ]
+ },
+ "guide": {
+  "heading": "A practical way to set up policy sign off",
+  "lede": "You do not need a heavy system. You need an order that people follow and a place where the record sits.",
+  "sections": [
+   {
+    "h3": "Write down who signs what",
+    "paragraphs": [
+     "Start with a one page note that lists each type of policy and who approves it. Clinical and safeguarding policies might need the registered manager and an external reviewer. A housekeeping procedure might need only a manager. Under <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/17\">Regulation 17 of the Health and Social Care Act 2008 (Regulated Activities) Regulations 2014</a>, a registered person must establish and operate systems to assess, monitor and improve the quality and safety of the services. A written order of approval is one simple part of that.",
+     "Staff also need to be ready to follow the result. <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/18\">Regulation 18</a> says staff must receive the support and training they need to carry out their duties, which is why a briefing after approval matters."
+    ]
+   },
+   {
+    "h3": "Four steps for a clean policy change",
+    "checklist": [
+     "Draft: adopt or write the change as a draft and leave the live policy alone.",
+     "Review: send it through the care manager step and, where needed, the external reviewer.",
+     "Publish: check the new version is live and the old one sits in the history.",
+     "Brief: allocate a short adhoc module on the topic and look at Knowledge gaps a week later."
+    ]
+   }
+  ],
+  "note": "<b>For the inspector.</b> Keep the approval order, the version history and the briefing results together, so you can show how a policy became live and whether staff understood it."
+ }
+}

@@ -1,0 +1,411 @@
+{
+ "slug": "turn-a-policy-into-questions-staff-answer",
+ "status": "draft",
+ "order": 51,
+ "title": "Everyone has read the new policy. <em>Does your policy training show they understood it?</em>",
+ "meta_title": "Policy Training: Turn a Policy Into Questions | CareStreamAI",
+ "meta_description": "Turn your own policies into short questions staff answer on their phones. Wrong answers become a short lesson, and you see the gaps. Try it free for 14 days.",
+ "eyebrow": "Scenario",
+ "lede": "A policy that is reviewed, updated and marked as read has only been delivered. With CareStream, <a href=\"/training-platform\">policy training built from your own policies</a> turns the text into short questions your staff answer on their phones. Wrong answers become a short lesson, and you see where the gaps are.",
+ "fine": "14 day free trial · Set up in a day · UK data residency",
+ "panel": {
+  "title": "After the safeguarding policy review",
+  "pill": "Illustration",
+  "rows": [
+   {
+    "label": "Policy reviewed and updated",
+    "note": "Week 1",
+    "done": true
+   },
+   {
+    "label": "Staff open and read it",
+    "note": "Week 2",
+    "done": true
+   },
+   {
+    "label": "Understanding checked with questions",
+    "note": "Not yet",
+    "done": false
+   },
+   {
+    "label": "Gaps closed with a short lesson",
+    "note": "Not yet",
+    "done": false
+   }
+  ],
+  "meter": 50
+ },
+ "image": "https://api.carestreamai.com/public/policy-shop/image/f479e7c0-cd86-4d8e-886d-5858d98c2841.webp",
+ "image_alt": "A manager at a desk marking key lines in a printed policy while a team leader beside her writes a question on a card, both smiling",
+ "card_title": "The policy is updated and read. Can staff answer questions on it?",
+ "card_snippet": "Reading a policy is not the same as understanding it. CareStream turns your own policies into short questions staff answer on their phones, and a wrong answer becomes a short lesson.",
+ "primary_keyword": "policy training",
+ "secondary_keywords": [
+  "policy quiz",
+  "policy review",
+  "read and understood",
+  "knowledge check",
+  "policy compliance"
+ ],
+ "feature_links": [
+  {
+   "title": "Training built from your own policies",
+   "body": "Short training and questions from the policies you already have, with wrong answers that become lessons.",
+   "action": "See the feature",
+   "href": "/training-platform"
+  },
+  {
+   "title": "Turn an incident into adhoc training",
+   "body": "Allocate short, targeted training on a topic whenever something happens on the floor.",
+   "action": "See adhoc training",
+   "href": "/uses/adhoc-training"
+  },
+  {
+   "title": "Find the gaps in your policies",
+   "body": "Check your policy set against regulation and see what is missing, out of date or contradictory.",
+   "action": "See policy gap detection",
+   "href": "/policy-gap-detection"
+  }
+ ],
+ "intro": {
+  "heading": "Everyone has read the policy. Nobody has checked what stayed with them.",
+  "sub": "A scenario we see in many care settings.",
+  "paragraph": "After a routine policy review, a registered manager rewrites the safeguarding policy. A new section explains what to do when a person asks you to keep a disclosure secret. She shares it, and by the end of the fortnight every carer has opened it and marked it as read. A team leader asks over coffee who the safeguarding lead is, and gets three different answers. Nobody did anything wrong. The policy was long, the shifts were busy and the reading was quick. The manager knows who opened the policy, but not who could act on it."
+ },
+ "trail": [
+  {
+   "when": "Week 1",
+   "text": "The manager finishes a policy review and rewrites the safeguarding policy.",
+   "kind": "ok"
+  },
+  {
+   "when": "Week 1",
+   "text": "A new section covers disclosures and who to tell.",
+   "kind": "ok"
+  },
+  {
+   "when": "Week 2",
+   "text": "Every carer opens the policy and marks it as read.",
+   "kind": "ok"
+  },
+  {
+   "when": "Week 4",
+   "text": "A team leader asks who the safeguarding lead is and gets three answers.",
+   "kind": "gap"
+  },
+  {
+   "when": "Who it might be",
+   "text": "A carer who skimmed it between a call bell and a medication round.",
+   "kind": "gap"
+  },
+  {
+   "when": "And another",
+   "text": "A newer carer who read it but was unsure what some phrases meant.",
+   "kind": "gap"
+  },
+  {
+   "when": "What the manager has",
+   "text": "A list of who opened it. Nothing that shows who could act on it.",
+   "kind": "gap"
+  },
+  {
+   "when": "Inspection day",
+   "text": "“What would you do if a resident asked you to keep something secret?” The policy is on the shelf. The answer is not.",
+   "kind": "end"
+  }
+ ],
+ "trail_close": "<b>The policy was never the problem.</b> The gap is between reading it and being able to use it. Here is how CareStream fills that gap, starting from the policies you already have.",
+ "why": {
+  "heading": "Marked as read does not mean read and understood",
+  "sub": "A policy only protects people if staff remember it at the moment they need it.",
+  "cards": [
+   {
+    "icon": "chat",
+    "title": "Reading is quick, remembering is not",
+    "body": "People skim long documents between tasks. A carer can open every page and still be unsure what the policy asks of them."
+   },
+   {
+    "icon": "tick",
+    "title": "A read count is not a knowledge check",
+    "body": "Knowing who opened a policy tells you it reached them. It does not tell you whether a carer could answer a simple question about it."
+   },
+   {
+    "icon": "alert",
+    "title": "Writing questions by hand rarely happens",
+    "body": "A good policy quiz takes time to write and mark, so most managers never get round to it. The gap stays unseen until a resident or an inspector finds it."
+   }
+  ]
+ },
+ "how": {
+  "heading": "Your policy in, the questions out.",
+  "sub": "This is the <a href=\"/training-platform\">Training built from your own policies</a> feature, in the order a manager and a carer meet it. If the trigger is an event instead of a policy, see <a href=\"/uses/adhoc-training\">turning an incident into adhoc training</a>.",
+  "blocks": [
+   {
+    "heading": "Pick the topic and generate a lesson and questions from your policies",
+    "bullets": [
+     "In the Training screen, open the adhoc training modules and choose the topic module, such as safeguarding. CareStream searches your own policies on that topic",
+     "Where your policies do not cover a point, it falls back on general good practice, which is a prompt to improve the policy",
+     "Edit the lesson and questions, preview them as staff will see them, and lock the questions when you are happy"
+    ],
+    "tags": [
+     {
+      "label": "Training built from your own policies",
+      "href": "/training-platform"
+     },
+     {
+      "label": "How CareStream works",
+      "href": "/how-it-works"
+     }
+    ],
+    "mock": {
+     "type": "training",
+     "module": "Safeguarding Adults",
+     "questions": [
+      "Who is the safeguarding lead in our service?",
+      "What should you do if a person asks you to keep a disclosure secret?",
+      "Where do you record a safeguarding concern?"
+     ],
+     "staff_count": 24
+    }
+   },
+   {
+    "heading": "A wrong answer becomes a short lesson on that exact point",
+    "bullets": [
+     "Allocate the module to staff. They complete it in the Staff Hub, on their own phone",
+     "A wrong answer goes into the carer's Follow-up tab, and they get an email about it, at most once a day and in English",
+     "They choose Learn &amp; retry, a short lesson then a fresh question, or Just retry the same question. They can retry as often as they need"
+    ],
+    "tags": [
+     {
+      "label": "Wrong answers become lessons",
+      "href": "/training-platform"
+     },
+     {
+      "label": "Annual training",
+      "href": "/uses/annual-training"
+     }
+    ],
+    "mock": {
+     "type": "followup",
+     "module": "Safeguarding Adults",
+     "question": "What should you do if a person asks you to keep a disclosure secret?",
+     "why": "You cannot promise to keep a safeguarding disclosure secret, because the person may be at risk.",
+     "remember": [
+      "Listen and stay calm",
+      "Explain who you must tell",
+      "Record what was said"
+     ],
+     "picture": "A resident says something worrying and asks you not to tell anyone."
+    }
+   },
+   {
+    "heading": "See which parts of the policy people missed",
+    "bullets": [
+     "The Knowledge gaps view shows open gaps, staff affected and gaps closed in the last 30 days",
+     "It lists the most missed questions and the weakest topics, so you see which part of the policy is not landing",
+     "A Monday digest email brings the picture to you, and you can mark a person's record as reviewed"
+    ],
+    "tags": [
+     {
+      "label": "Reporting that runs itself",
+      "href": "/training-platform"
+     },
+     {
+      "label": "CQC and compliance evidence",
+      "href": "/cqc-compliance"
+     }
+    ],
+    "mock": {
+     "type": "gaps",
+     "stats": {
+      "open": 9,
+      "affected": 6,
+      "closed": 14,
+      "engaged": 68
+     },
+     "missed": [
+      [
+       "Keeping a disclosure secret",
+       "5 staff"
+      ],
+      [
+       "Who is the safeguarding lead",
+       "4 staff"
+      ],
+      [
+       "Where to record a concern",
+       "2 staff"
+      ]
+     ],
+     "weak": [
+      [
+       "Safeguarding Adults",
+       "6 gaps"
+      ],
+      [
+       "Whistleblowing",
+       "3 gaps"
+      ]
+     ]
+    }
+   },
+   {
+    "heading": "Close the loop on the policy itself",
+    "bullets": [
+     "If many people miss the same point, the policy may be unclear. Treat the gap as a prompt to reword it, not only to retrain",
+     "<a href=\"/policy-gap-detection\">Policy gap detection</a> checks your uploaded policies against regulation and suggests what to add. On the paid plans from Professional, you decide what to adopt",
+     "Gap fixes are suggestions until an admin adopts them and your approval steps finish. Nothing edits itself"
+    ],
+    "tags": [
+     {
+      "label": "Policy gap detection",
+      "href": "/policy-gap-detection"
+     },
+     {
+      "label": "Out of date policies",
+      "href": "/uses/out-of-date-policies"
+     }
+    ],
+    "mock": {
+     "type": "training",
+     "module": "Safeguarding Adults (reworded policy)",
+     "questions": [
+      "Who do you tell first if you suspect a person is being abused?",
+      "When must a concern be reported, and to whom?"
+     ],
+     "staff_count": 24
+    }
+   }
+  ]
+ },
+ "talk": {
+  "heading": "The questions managers ask, and how CareStream answers them",
+  "sub": "Read this as a conversation. The questions are the ones we hear most.",
+  "items": [
+   {
+    "q": "We already ask staff to read new policies. What would this add?",
+    "a": "Reading shows that a policy reached someone. Questions show whether it stayed with them. CareStream records that staff opened and read a policy. This adds a short <a href=\"/training-platform\">check built from your own policies</a>, so you can see who could answer and who could not."
+   },
+   {
+    "q": "Can I choose one policy and turn it into questions?",
+    "a": "Not quite. You choose a topic module, such as safeguarding, and CareStream searches your own policies on that topic to build the lesson and questions. You cannot pick a single policy or section. Where your policies do not cover a point, it falls back on general good practice, and you can edit everything before staff see it."
+   },
+   {
+    "q": "Will I see the questions before staff do?",
+    "a": "Yes. You can edit the lesson and questions, preview them exactly as staff will see them, and lock the questions. Nothing goes to staff until you allocate the module, and you can add an optional due date."
+   },
+   {
+    "q": "What happens when someone gets a question wrong?",
+    "a": "It goes into that carer's Follow-up tab in the Staff Hub, and they get an email, at most once a day and in English. They choose Learn &amp; retry, a short lesson on that exact point and then a fresh question, or Just retry the same question. They can retry as often as they need."
+   },
+   {
+    "q": "Do I get an alert every time someone slips?",
+    "a": "No. Nothing alerts you on each wrong answer. You see the pattern in the Knowledge gaps view, in the most missed questions and the weakest topics, and in a Monday digest email."
+   },
+   {
+    "q": "Does this prove our policy compliance?",
+    "a": "It does not prove it, and no software can. It gives you evidence of what staff were asked, what they got wrong and whether it then closed. That sits alongside your wider <a href=\"/cqc-compliance\">CQC evidence</a>. It is not legal advice and it does not guarantee a rating."
+   },
+   {
+    "q": "What if my policies are out of date, or have gaps?",
+    "a": "Then the questions will reflect that. <a href=\"/policy-gap-detection\">Policy gap detection</a> checks your uploaded policies against regulation. From the Professional plan you can adopt suggested fixes through your own approval steps. The free plan screens up to 5 uploaded policies in total with the same four analyses. Nothing changes without an admin adopting it."
+   },
+   {
+    "q": "How do I try it, and does it cost anything to start?",
+    "a": "You can start a 14 day free trial by <a href=\"/register\">creating a free account</a>. Adhoc training is part of the paid plans. The free plan does not include it. Check the <a href=\"/pricing\">pricing page</a> for what each plan includes."
+   }
+  ]
+ },
+ "limits": {
+  "heading": "A check on understanding, not a legal review",
+  "cards": [
+   {
+    "title": "It does not pick a single policy",
+    "body": "You choose a topic module and CareStream searches your policies on that topic. It cannot build a quiz from one named policy or section."
+   },
+   {
+    "title": "It does not record signatures",
+    "body": "CareStream records that staff opened and read a policy, not a signature. It does not replace a signed read register if your service keeps one."
+   },
+   {
+    "title": "Adhoc training is on the paid plans",
+    "body": "The adhoc training screen is part of the paid plans, and the free plan does not include it. Translation is also paid plans only, and the reminder emails are in English."
+   }
+  ]
+ },
+ "read_next": [
+  "policy-changed-who-needs-retraining-a-four-question-framework-for-care-managers",
+  "safeguarding-policy-care-home",
+  "how-often-should-care-policies-be-reviewed"
+ ],
+ "faqs": {
+  "heading": "Policy training and CareStream, answered",
+  "groups": [
+   {
+    "group": "About policy training",
+    "items": [
+     {
+      "q": "How do I turn a policy into a knowledge check?",
+      "a": "In the Training screen you choose the topic module, and CareStream builds a lesson and a bank of questions from your own policies on that topic. You edit and preview them, then allocate the module to staff, who answer in the Staff Hub. See <a href=\"/training-platform\">how it works</a>."
+     },
+     {
+      "q": "What makes a good policy quiz for care staff?",
+      "a": "Ask about actions, not wording. A good question describes a real situation, such as a resident asking you to keep a disclosure secret, and asks what you would do. Three or four questions per policy is plenty. Avoid trick questions."
+     },
+     {
+      "q": "How is this different from asking staff to read and sign?",
+      "a": "Reading shows a policy was opened. A knowledge check shows whether someone can use it. CareStream records read sessions, not signatures, so it adds the second layer rather than replacing the first."
+     },
+     {
+      "q": "Is policy training the same as annual training?",
+      "a": "No. <a href=\"/uses/annual-training\">Annual training</a> is the yearly refresh on set topics. Policy training is a short, targeted check after a policy changes or when you want to test one. They work well together."
+     },
+     {
+      "q": "How do I tell staff what changed after a policy update?",
+      "a": "Record what changed and why, update the policy, then check the people who need to know. Our guide to <a href=\"/blog/policy-changed-who-needs-retraining-a-four-question-framework-for-care-managers\">who needs retraining when a policy changes</a> sets out a four question framework."
+     },
+     {
+      "q": "How can I be sure staff have read and understood a policy?",
+      "a": "You cannot be certain from a tick box. Staff reading it is the first step. Short questions on the key points are the second, and a conversation at supervision is the third."
+     }
+    ]
+   },
+   {
+    "group": "About inspections",
+    "items": [
+     {
+      "q": "Does this help with policy compliance for CQC?",
+      "a": "It gives you evidence that staff were asked about your policies and what happened next. Regulation 17 asks for systems to <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/17\">assess, monitor and improve the quality and safety of services</a>. It does not guarantee a rating."
+     },
+     {
+      "q": "What does the law say about staff training?",
+      "a": "<a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/18\">Regulation 18</a> says staff must receive the support, training, professional development, supervision and appraisal they need to carry out their duties. It does not list courses, so each provider decides what its staff need and must be able to show it."
+     }
+    ]
+   }
+  ]
+ },
+ "guide": {
+  "heading": "A practical way to check understanding after a policy review",
+  "lede": "A policy review ends with a better document, but the document only helps if staff can use it. This is a simple routine for turning an updated policy into a check that fits a busy service.",
+  "sections": [
+   {
+    "h3": "Write questions about actions, not wording",
+    "paragraphs": [
+     "A good knowledge check asks what someone would do. Start from the one or two points in the policy that carry the most risk, such as who to tell and how to record a concern. Describe a short situation, then ask for the next step. If the answer could be copied from the page without thinking, rewrite the question.",
+     "Keep it short. Three or four questions on a policy is enough to show where understanding is thin, and short checks are far more likely to be finished on a shift."
+    ]
+   },
+   {
+    "h3": "Four steps after a policy review",
+    "checklist": [
+     "Within a week of the update: allocate a short module on the topic, built from your policies.",
+     "When an answer is wrong: the carer opens a short lesson on that point, then a fresh question.",
+     "Each month: look at the most missed questions and the weakest topics.",
+     "If many people miss the same point: reword the policy, then check again."
+    ]
+   }
+  ],
+  "note": "<b>For the inspector.</b> Keep the policy, the questions, the lessons and the results together, so you can show that staff were asked and that gaps were closed."
+ }
+}

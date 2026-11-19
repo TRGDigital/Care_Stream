@@ -1,0 +1,416 @@
+{
+ "slug": "two-policies-say-different-things",
+ "status": "draft",
+ "order": 43,
+ "title": "Policy consistency: two policies say different things. <em>Find it before an inspector does.</em>",
+ "meta_title": "Policy Consistency Check for Care Services | CareStreamAI",
+ "meta_description": "Two policies give different timeframes and nobody has noticed. Check policy consistency across your library and flag likely conflicts for you to judge.",
+ "eyebrow": "Scenario",
+ "lede": "Policy consistency is easy to assume and hard to see. Your safeguarding policy says one thing, your staff handbook says another, and each was fine when it was written. CareStream reads your <a href=\"/training-platform\">policies and the training built from them</a>, and flags the places where they seem to disagree, so a person can decide which is right.",
+ "fine": "14 day free trial · Set up in a day · UK data residency",
+ "panel": {
+  "title": "Two policies, two timeframes",
+  "pill": "Illustration",
+  "rows": [
+   {
+    "label": "Safeguarding policy: tell the manager straight away",
+    "note": "Written 2023",
+    "done": true
+   },
+   {
+    "label": "Staff handbook: tell the manager by the end of the shift",
+    "note": "Written 2021",
+    "done": true
+   },
+   {
+    "label": "Conflict noticed",
+    "note": "Not yet",
+    "done": false
+   },
+   {
+    "label": "One agreed wording, approved and published",
+    "note": "Not yet",
+    "done": false
+   }
+  ],
+  "meter": 50
+ },
+ "image": "https://api.carestreamai.com/public/policy-shop/image/a0d6fc05-2001-4535-8a65-e20b5ca46138.webp",
+ "image_alt": "Two printed policies lie side by side on a table while a manager and a team leader compare them, one pointing at a number on each page",
+ "card_title": "Two of your policies say different things. Who has noticed?",
+ "card_snippet": "Policies written years apart can quietly disagree on timeframes, roles and thresholds. CareStream compares them, quotes each side and suggests one agreed wording for a person to approve.",
+ "primary_keyword": "policy consistency",
+ "secondary_keywords": [
+  "conflicting policies",
+  "policy alignment",
+  "policy audit",
+  "care home policies",
+  "policy governance"
+ ],
+ "feature_links": [
+  {
+   "title": "Training built from your own policies",
+   "body": "Short training and knowledge checks built from the policies you have written.",
+   "action": "See the feature",
+   "href": "/training-platform"
+  },
+  {
+   "title": "Policy gap detection",
+   "body": "Check your policy set against regulations, out of date wording and each other.",
+   "action": "See gap detection",
+   "href": "/policy-gap-detection"
+  },
+  {
+   "title": "Out of date policies",
+   "body": "Find old names, dead references and unfinished placeholders before they are read.",
+   "action": "See the scenario",
+   "href": "/uses/out-of-date-policies"
+  }
+ ],
+ "intro": {
+  "heading": "Each policy was right when it was written.",
+  "sub": "A scenario we see in many care settings.",
+  "paragraph": "A registered manager has a shelf of policies built up over years. Some came from a template pack, some were rewritten after an incident, and one was copied into the staff handbook with a few changes. Nobody sat down and read them side by side. Then a team leader, checking a point for a new carer, finds that the safeguarding policy says to tell the manager straight away, while the handbook says by the end of the shift. Both are signed off. Both are on the shared drive. Here is how that plays out."
+ },
+ "trail": [
+  {
+   "when": "2021",
+   "text": "The staff handbook is written, with a reporting timeframe in it.",
+   "kind": "ok"
+  },
+  {
+   "when": "2023",
+   "text": "The safeguarding policy is rewritten and approved.",
+   "kind": "ok"
+  },
+  {
+   "when": "Each year",
+   "text": "Both documents are reviewed on their own, and each looks fine.",
+   "kind": "ok"
+  },
+  {
+   "when": "Nobody's job",
+   "text": "No one reads the two side by side.",
+   "kind": "gap"
+  },
+  {
+   "when": "On shift",
+   "text": "A carer follows the handbook and waits until the end of the shift.",
+   "kind": "gap"
+  },
+  {
+   "when": "Another carer",
+   "text": "Follows the safeguarding policy and tells the manager at once.",
+   "kind": "gap"
+  },
+  {
+   "when": "What the manager has",
+   "text": "Two approved documents that give two answers.",
+   "kind": "gap"
+  },
+  {
+   "when": "Inspection day",
+   "text": "“Which of these do your staff follow?” Both are in front of the inspector.",
+   "kind": "end"
+  }
+ ],
+ "trail_close": "<b>The policies were never careless.</b> The gap sits between them, in the place nobody reads. Here is how CareStream looks in that gap, and where a person still has to decide.",
+ "why": {
+  "heading": "A policy set can disagree with itself without anyone doing anything wrong",
+  "sub": "Contradictions grow slowly, one reasonable edit at a time.",
+  "cards": [
+   {
+    "icon": "chat",
+    "title": "Documents are reviewed one at a time",
+    "body": "A yearly review reads one policy. The conflict lives in the space between two, so a careful review of each can still miss it. <a href=\"/blog/why-downloaded-care-policy-templates-create-contradictions\">Downloaded templates make this worse</a>."
+   },
+   {
+    "icon": "tick",
+    "title": "Edits drift apart",
+    "body": "A copy in the handbook is changed once, the original is changed later, and soon the two no longer match. Small differences in timeframes, roles and thresholds are the ones that matter on shift."
+   },
+   {
+    "icon": "alert",
+    "title": "Staff pick the version they find first",
+    "body": "When two documents disagree, a carer follows whichever they read last or whichever a colleague showed them. That makes practice uneven, and uneven practice is what an inspector tests."
+   }
+  ]
+ },
+ "how": {
+  "heading": "Your policies in, the conflicts out.",
+  "sub": "This is part of <a href=\"/policy-gap-detection\">policy gap detection</a>, alongside the <a href=\"/training-platform\">training built from your own policies</a>. See also <a href=\"/uses/policy-gaps\">finding gaps in your policy set</a>.",
+  "blocks": [
+   {
+    "heading": "Run the consistency check across your care home policies",
+    "bullets": [
+     "Upload your policies, then run the cross policy consistency step on the Policy Gap Detection page, one of four steps you can run in any order",
+     "CareStream groups policies that could contradict: near duplicates that have drifted apart, and different policies on the same topic",
+     "It pulls out the claims you can check, such as timeframes, roles, locations, frequencies, thresholds, escalation and definitions, and compares them"
+    ],
+    "tags": [
+     {
+      "label": "Policy gap detection",
+      "href": "/policy-gap-detection"
+     },
+     {
+      "label": "How CareStream works",
+      "href": "/how-it-works"
+     }
+    ],
+    "mock": {
+     "type": "training",
+     "module": "Consistency check: reporting a concern to the manager",
+     "questions": [
+      "Safeguarding policy: “Tell the manager straight away.” Staff handbook: “Tell the manager by the end of the shift.”",
+      "Both quotes are shown word for word, with a suggested single wording to replace the passage in each policy"
+     ],
+     "staff_count": 2
+    }
+   },
+   {
+    "heading": "Judge each flagged conflict, then adopt one wording",
+    "bullets": [
+     "Each conflict shows a topic, a short summary and a severity, with the conflicting policies and a quote from each",
+     "Some conflicts are marked as legal, with what the law requires, and others as organisational, where your service chooses",
+     "The suggested wording is a suggestion only. You resolve or dismiss each one, and an adopted change goes through your approval steps before staff see it"
+    ],
+    "tags": [
+     {
+      "label": "Policy governance and approval",
+      "href": "/policy-gap-detection"
+     },
+     {
+      "label": "Out of date policies",
+      "href": "/uses/out-of-date-policies"
+     }
+    ],
+    "mock": {
+     "type": "followup",
+     "module": "Reporting a concern",
+     "question": "A carer notices a bruise on a resident and is unsure when to tell the manager. What do you do?",
+     "why": "Your published policy says to tell the manager straight away, so waiting until the end of the shift leaves the resident at risk for longer.",
+     "remember": [
+      "Tell the manager straight away",
+      "Write down what you saw",
+      "Do not wait for the end of the shift"
+     ],
+     "picture": "You see a mark you cannot explain, and the handover is two hours away."
+    }
+   },
+   {
+    "heading": "Brief staff on the agreed wording with adhoc training",
+    "bullets": [
+     "Once the policy is published, allocate adhoc training on the topic from the Training screen. It draws on your own policies, and you can edit and preview it first",
+     "Staff complete it in the Staff Hub on their own phone. A wrong answer goes into their Follow-up tab, where they choose Learn &amp; retry or Just retry",
+     "This is the optional part. The consistency check does not trigger training by itself, so you decide when to brief staff"
+    ],
+    "tags": [
+     {
+      "label": "Adhoc training",
+      "href": "/uses/adhoc-training"
+     },
+     {
+      "label": "Safeguarding course",
+      "href": "/staff-training/safeguarding-adults-and-children"
+     }
+    ],
+    "mock": {
+     "type": "training",
+     "module": "Reporting a concern to the manager",
+     "questions": [
+      "When should you tell the manager about a concern?",
+      "What should you write down, and when?",
+      "Who do you tell if the manager is not on shift?"
+     ],
+     "staff_count": 18
+    }
+   },
+   {
+    "heading": "See where staff still follow the old wording",
+    "bullets": [
+     "The Knowledge gaps view shows open gaps, staff affected and the most missed questions, so a lingering old habit shows up",
+     "You see weakest topics and how gaps are being closed, and a Monday digest email brings the picture to you",
+     "Nothing alerts you to each wrong answer, so look at the view and the digest as part of your regular policy audit"
+    ],
+    "tags": [
+     {
+      "label": "Reporting that runs itself",
+      "href": "/training-platform"
+     },
+     {
+      "label": "CQC and compliance",
+      "href": "/cqc-compliance"
+     }
+    ],
+    "mock": {
+     "type": "gaps",
+     "stats": {
+      "open": 6,
+      "affected": 4,
+      "closed": 11,
+      "engaged": 68
+     },
+     "missed": [
+      [
+       "When to tell the manager",
+       "4 staff"
+      ],
+      [
+       "Who to tell out of hours",
+       "2 staff"
+      ],
+      [
+       "What to write down",
+       "2 staff"
+      ]
+     ],
+     "weak": [
+      [
+       "Reporting a concern",
+       "6 gaps"
+      ],
+      [
+       "Escalation",
+       "2 gaps"
+      ]
+     ]
+    }
+   }
+  ]
+ },
+ "talk": {
+  "heading": "The questions managers ask, and how CareStream answers them",
+  "sub": "Read this as a conversation. The questions are the ones we hear most.",
+  "items": [
+   {
+    "q": "What does CareStream actually compare?",
+    "a": "It groups policies that could contradict each other, then pulls out claims that can be checked, such as timeframes, roles, locations, frequencies, thresholds, escalation steps and definitions. It compares those claims across the group and flags where they disagree."
+   },
+   {
+    "q": "What do I see when it finds a conflict?",
+    "a": "A topic, a short summary and a severity of high, medium or low. You see the policies involved with a word for word quote from each, and one suggested wording to replace the passage in every policy. A second pass checks the finding before it reaches you."
+   },
+   {
+    "q": "Does it tell me which policy is right?",
+    "a": "No. It flags likely conflicts for a person to judge. Some are marked as legal, with what the law requires, and some as organisational, where it is your choice. In both cases the wording is a suggestion written by our own machine learning, so you read it, edit it and decide."
+   },
+   {
+    "q": "Will it change my policies without asking?",
+    "a": "Never. Nothing changes until an admin adopts a suggestion, and nothing reaches staff until it passes your approval steps and is published. You can also dismiss a flag if you judge the two documents are fine as they are."
+   },
+   {
+    "q": "How does it relate to the rest of the policy checks?",
+    "a": "It is one of four steps on the <a href=\"/policy-gap-detection\">Policy Gap Detection</a> page: regulation coverage, out of date content, consistency and CQC wording. You can run them in any order. The out of date scan is a plain check that uses no AI. The <a href=\"/uses/out-of-date-policies\">out of date policies</a> page covers it."
+   },
+   {
+    "q": "How do I make sure staff know about the agreed wording?",
+    "a": "Allocate adhoc training on the topic once the policy is published. It is <a href=\"/uses/adhoc-training\">built from your own policies</a>, so it teaches the wording you adopted. A wrong answer goes into the carer's Follow-up tab, and you see the pattern in the Knowledge gaps view."
+   },
+   {
+    "q": "Is it any good for a first look at my policies?",
+    "a": "Yes. The Free plan checks up to 5 uploaded policies in total, with all four analyses, though re runs and example wording are limited. The full consistency check across a whole library is on Professional and above, and it is not on Starter."
+   },
+   {
+    "q": "How do I try it?",
+    "a": "Create a free account on the <a href=\"/register\">register page</a> and upload a few policies. Paid plans have a 14 day free trial, and the <a href=\"/pricing\">pricing page</a> shows which plan includes what."
+   }
+  ]
+ },
+ "limits": {
+  "heading": "A second pair of eyes, not a decision maker",
+  "cards": [
+   {
+    "title": "It flags likely conflicts, you judge them",
+    "body": "The check can miss a conflict and can flag two statements that are actually compatible. A person who knows the service has to read each one."
+   },
+   {
+    "title": "It does not edit your policies for you",
+    "body": "Suggested wording stays a suggestion until an admin adopts it and your approval steps finish. It is not legal advice and does not guarantee compliance or a CQC rating."
+   },
+   {
+    "title": "It checks text, not what happens on shift",
+    "body": "It compares written policies. Whether staff follow them is a question for observation, supervision and your own audits. Cross policy checking is on Professional and above."
+   }
+  ]
+ },
+ "read_next": [
+  "why-downloaded-care-policy-templates-create-contradictions",
+  "six-signs-your-policy-set-has-quietly-drifted-out-of-date",
+  "policy-gap-analysis-for-care-homes"
+ ],
+ "faqs": {
+  "heading": "Policy consistency, answered",
+  "groups": [
+   {
+    "group": "About conflicting policies",
+    "items": [
+     {
+      "q": "How do I find conflicting policies in a care home?",
+      "a": "Read policies on the same topic side by side and compare timeframes, roles, thresholds and escalation steps. That works for a handful. For a whole library, CareStream groups policies that could contradict and flags disagreements with a quote from each, for a person to judge."
+     },
+     {
+      "q": "What causes conflicting policies?",
+      "a": "Usually slow drift. A passage is copied into a handbook, one copy is edited later, or a template pack arrives with its own timeframes. Each policy is sensible alone. The <a href=\"/blog/why-downloaded-care-policy-templates-create-contradictions\">blog on downloaded templates</a> explains how it happens."
+     },
+     {
+      "q": "What is policy alignment?",
+      "a": "It means your policies agree with each other and say the same thing in the same place. CareStream also has a separate wording alignment step that compares each policy against the person centred qualities in the CQC quality statements. That is a different check from consistency."
+     },
+     {
+      "q": "Can the check tell me which wording to keep?",
+      "a": "It suggests one reconciled wording and marks each conflict as legal or organisational. You choose. For anything the law decides, check the source yourself or take advice."
+     }
+    ]
+   },
+   {
+    "group": "About governance and inspections",
+    "items": [
+     {
+      "q": "What is policy governance in a care service?",
+      "a": "It is the way you write, approve, review and retire policies so the set stays accurate. <a href=\"https://www.cqc.org.uk/guidance-regulation/providers/regulations-service-providers-and-managers/health-social-care-act/regulation-17\">CQC guidance on Regulation 17</a> lists policies and procedures among governance arrangements and says systems should be continually reviewed to remain fit for purpose."
+     },
+     {
+      "q": "What does the law say about good governance?",
+      "a": "<a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/17\">Regulation 17</a> says systems or processes must be established and operated effectively to ensure compliance, and must help you assess, monitor and improve the quality and safety of the service. It does not mention policy consistency by name."
+     },
+     {
+      "q": "How often should I run a policy audit?",
+      "a": "There is no set interval for a policy audit in Regulation 17. A sensible habit is to run the checks when you add or rewrite a policy, and at your regular review, so conflicts do not build up unseen."
+     },
+     {
+      "q": "Which plan includes the consistency check?",
+      "a": "Professional and Enterprise. The Free plan screens up to 5 uploaded policies in total with all four analyses, and Starter does not include gap detection. Check the <a href=\"/pricing\">pricing page</a> for current details."
+     }
+    ]
+   }
+  ]
+ },
+ "guide": {
+  "heading": "A practical way to keep your policies in agreement",
+  "lede": "You do not need a full rewrite to get your care home policies in line. You need to know where they disagree, choose one answer and tell the people who use it.",
+  "sections": [
+   {
+    "h3": "Where policies tend to disagree",
+    "paragraphs": [
+     "Conflicts cluster around the details staff actually act on. Timeframes for reporting, who to tell, who covers when the manager is away, how often a check happens, and what counts as serious enough to escalate. Definitions are another place: two policies using the same word to mean different things. Start your policy audit with the topics where a wrong answer on shift matters most, such as safeguarding, medication and falls."
+    ]
+   },
+   {
+    "h3": "A routine that stays small",
+    "checklist": [
+     "Pick one topic and gather every policy, handbook page and form that mentions it.",
+     "Compare timeframes, roles and escalation steps, and write down every difference.",
+     "Decide which wording is right, asking for advice where the law decides it, and update every document, not just one.",
+     "Tell staff what changed, and check a week later that they know it."
+    ]
+   },
+   {
+    "h3": "Check your own reading against the source",
+    "paragraphs": [
+     "For what governance asks of you, read <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/17\">Regulation 17 on good governance</a> and the <a href=\"https://www.cqc.org.uk/guidance-regulation/providers/regulations-service-providers-and-managers/health-social-care-act/regulation-17\">CQC guidance on it</a>. Neither tells you what your policies must say, only that your systems must work and be kept under review. Our post on <a href=\"/blog/policy-gap-analysis-for-care-homes\">policy gap analysis</a> covers the wider picture."
+    ]
+   }
+  ],
+  "note": "<b>For the inspector.</b> Keep a note of the conflicts you found, what you decided, who approved it and when staff were told. It shows your policy governance working, not only a shelf of documents."
+ }
+}

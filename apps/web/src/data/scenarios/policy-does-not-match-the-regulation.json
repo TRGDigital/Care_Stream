@@ -1,0 +1,319 @@
+{
+ "slug": "policy-does-not-match-the-regulation",
+ "status": "draft",
+ "order": 42,
+ "title": "A compliance gap analysis for the policy that looks fine. <em>Does it match the regulation?</em>",
+ "meta_title": "Compliance Gap Analysis for Care Policies | CareStreamAI",
+ "meta_description": "Your medicines policy is signed off, but does it cover what the regulation asks? Run a compliance gap analysis and approve the fixes yourself.",
+ "eyebrow": "Scenario",
+ "lede": "Your policy has a date, a signature and a place on the shelf. That does not tell you whether it covers what the regulation asks. A <a href=\"/policy-gap-detection\">compliance gap analysis</a> checks your policies against the regulations that apply to your service, then suggests wording you can accept, change or ignore.",
+ "fine": "14 day free trial · Set up in a day · UK data residency",
+ "panel": {
+  "title": "The medicines policy, as it stands",
+  "pill": "Illustration",
+  "rows": [
+   { "label": "Policy written and signed off", "note": "Years ago", "done": true },
+   { "label": "Review date logged", "note": "Last year", "done": true },
+   { "label": "Checked against the regulation", "note": "Not yet", "done": false },
+   { "label": "Gaps fixed and approved", "note": "Not yet", "done": false }
+  ],
+  "meter": 50
+ },
+ "image": "https://api.carestreamai.com/public/policy-shop/image/80cd7456-42d2-4fda-92a3-1896fe3d4efc.webp",
+ "image_alt": "A manager reads a policy page with a pencil in hand while a colleague points at a highlighted line, a regulation folder open between them",
+ "card_title": "Your policy is signed off. Does it match the regulation?",
+ "card_snippet": "A policy can be dated, signed and still miss something the regulation expects. A gap analysis compares your policies with the rules that apply to you and suggests fixes you approve.",
+ "primary_keyword": "compliance gap analysis",
+ "secondary_keywords": [
+  "policy gap analysis",
+  "cqc regulations",
+  "policy compliance",
+  "care home policies",
+  "policy review"
+ ],
+ "feature_links": [
+  {
+   "title": "Training built from your own policies",
+   "body": "Ad hoc training from your policies, face to face training organised, and wrong answers that become lessons.",
+   "action": "See the feature",
+   "href": "/training-platform"
+  },
+  {
+   "title": "Policy gap detection",
+   "body": "Coverage, out of date wording, conflicts between policies and wording checks, with fixes you approve.",
+   "action": "See gap detection",
+   "href": "/policy-gap-detection"
+  },
+  {
+   "title": "CQC and compliance",
+   "body": "Evidence that builds itself, and a readiness report for your next inspection.",
+   "action": "See CQC and compliance",
+   "href": "/cqc-compliance"
+  }
+ ],
+ "intro": {
+  "heading": "The policy exists. Nobody has held it up against the rules.",
+  "sub": "A scenario we see in many care settings.",
+  "paragraph": "A registered manager is tidying the policy folder before the year end. The medicines policy was written three managers ago. It has a date, a signature and a review stamp from last year, so it feels finished. Then a colleague asks a simple question: does it actually cover everything the regulation expects? Nobody knows. The review was a read through for typos, not a comparison with the requirements. The manager has a policy that looks right and no way to say that it is. Here is how that plays out."
+ },
+ "trail": [
+  { "when": "Years ago", "text": "The medicines policy is written and signed off.", "kind": "ok" },
+  { "when": "Every year", "text": "A review date is logged and the policy gets a quick read.", "kind": "ok" },
+  { "when": "Last year", "text": "It is filed with the other care home policies. The folder looks complete.", "kind": "ok" },
+  { "when": "This week", "text": "A colleague asks whether it covers everything the regulation expects.", "kind": "gap" },
+  { "when": "What the review checked", "text": "Spelling, dates and names. Not the requirements themselves.", "kind": "gap" },
+  { "when": "What nobody knows", "text": "Which required points are missing, and which are covered in another policy.", "kind": "gap" },
+  { "when": "What the manager has", "text": "A signed policy and a feeling that it is probably fine.", "kind": "gap" },
+  { "when": "Inspection day", "text": "“Show me how this policy meets the regulation.” A signature is not a comparison.", "kind": "end" }
+ ],
+ "trail_close": "<b>The policy was never the problem.</b> The gap is between the policy and the check. Here is how CareStream does that check for you, and leaves every decision with you.",
+ "why": {
+  "heading": "A signed policy is not the same as a checked policy",
+  "sub": "A policy review that only looks for typos cannot tell you what the policy leaves out.",
+  "cards": [
+   {
+    "icon": "chat",
+    "title": "Nobody reads every regulation against every policy",
+    "body": "The rules that apply to your service run to many pages. Few managers have an afternoon to compare each one with each policy, so the comparison rarely happens."
+   },
+   {
+    "icon": "tick",
+    "title": "A policy review often checks the wrong thing",
+    "body": "A review that confirms the dates and names are right is useful. It does not show whether a required point is missing, or whether the wording has drifted from what is expected now."
+   },
+   {
+    "icon": "alert",
+    "title": "Gaps stay hidden until someone asks",
+    "body": "A missing point causes no trouble for years. It shows up when an inspector, a family member or an incident asks a question the policy cannot answer."
+   }
+  ]
+ },
+ "how": {
+  "heading": "Your policies in, a checked and improved policy out.",
+  "sub": "This is <a href=\"/policy-gap-detection\">policy gap detection</a> followed by the <a href=\"/training-platform\">Training built from your own policies</a> feature, in the order a manager meets them. See also <a href=\"/uses/policy-gaps\">finding a policy that is missing altogether</a>.",
+  "blocks": [
+   {
+    "heading": "Find the gap, adopt the fix, then brief your staff",
+    "bullets": [
+     "Run the coverage analysis. It reads your policies against the regulations that apply to your service and shows progress as it goes, in the form “Checked X of Y regulations”",
+     "Open any gap to see what to add, whether it is a legal requirement or recommended good practice, which policy it belongs in and example wording to adapt. You choose Adopt, edit the text first if you like, and the change goes to a draft with the edits highlighted",
+     "Once the revised policy is approved and live, allocate the Medicines module so staff are checked on the change. It is built from your own policies, and you can edit and preview it first"
+    ],
+    "tags": [
+     { "label": "Policy gap detection", "href": "/policy-gap-detection" },
+     { "label": "How CareStream works", "href": "/how-it-works" }
+    ],
+    "mock": {
+     "type": "training",
+     "module": "Medicines",
+     "questions": [
+      "Who may give a resident a medicine that is not on their current record?",
+      "What do you do when a resident refuses a prescribed medicine?",
+      "Where is a missed dose recorded, and who is told?"
+     ],
+     "staff_count": 18
+    }
+   },
+   {
+    "heading": "A wrong answer becomes a short lesson on that point",
+    "bullets": [
+     "A wrong answer goes into the carer's Follow-up tab in the Staff Hub, and they get an email, at most once a day and in English",
+     "They choose Learn &amp; retry, a short lesson (why it matters, what to remember, a realistic situation) then a fresh question, or Just retry the same question",
+     "The lesson reflects your updated policy, so staff learn the wording you have just approved"
+    ],
+    "tags": [
+     { "label": "Wrong answers become lessons", "href": "/training-platform" },
+     { "label": "Adhoc training", "href": "/uses/adhoc-training" }
+    ],
+    "mock": {
+     "type": "followup",
+     "module": "Medicines",
+     "question": "What do you do when a resident refuses a prescribed medicine?",
+     "why": "A refusal is a decision the person is entitled to make, and it must be recorded and reported so the right people can review it.",
+     "remember": [
+      "Do not hide medicine in food or drink",
+      "Record the refusal on the chart",
+      "Tell the senior on shift"
+     ],
+     "picture": "A resident turns away from the cup at the morning round and says they do not want their tablet."
+    }
+   },
+   {
+    "heading": "Staff read the change in the language they think in",
+    "bullets": [
+     "A carer who gets a medicines question wrong because of a missed word can open the lesson in their own language",
+     "Your admin sets their second language, and they switch to it in the hub",
+     "Translation is part of the paid plans, so it suits a team where policy compliance has to reach everyone"
+    ],
+    "tags": [
+     { "label": "Training in 60+ languages", "href": "/languages" },
+     { "label": "Staff Hub in 60+ languages", "href": "/uses/multilingual-staff-hub" }
+    ],
+    "mock": {
+     "type": "language",
+     "second_language": "Polish"
+    }
+   },
+   {
+    "heading": "See whether the updated policy has landed",
+    "bullets": [
+     "The Knowledge gaps view shows the most missed questions and the weakest topics, so you see where the new wording is not yet understood",
+     "See how gaps are being closed, and a Monday digest email brings the picture to you",
+     "Nothing alerts you on each wrong answer, so the view and the digest are where you look"
+    ],
+    "tags": [
+     { "label": "Reporting that runs itself", "href": "/training-platform" },
+     { "label": "CQC and compliance evidence", "href": "/cqc-compliance" }
+    ],
+    "mock": {
+     "type": "gaps",
+     "stats": { "open": 6, "affected": 5, "closed": 14, "engaged": 68 },
+     "missed": [
+      ["Recording a refused medicine", "4 staff"],
+      ["Missed dose, who is told", "3 staff"],
+      ["Medicine not on the record", "2 staff"]
+     ],
+     "weak": [
+      ["Medicines", "6 gaps"],
+      ["Infection Prevention", "1 gap"]
+     ]
+    }
+   }
+  ]
+ },
+ "talk": {
+  "heading": "The questions managers ask, and how CareStream answers them",
+  "sub": "Read this as a conversation. The questions are the ones we hear most.",
+  "items": [
+   {
+    "q": "What does a compliance gap analysis actually do?",
+    "a": "It compares your uploaded policies with the regulations that apply to your type of service. For each regulation it asks whether a policy is about it, and if one is, whether it contains the points a policy on that subject should. You get covered, partly covered or a gap, with reasons. It is a check you would otherwise do by hand."
+   },
+   {
+    "q": "Which regulations does it check against?",
+    "a": "A set that CareStream maintains, scoped to your care setting and service profile. That is why the first run asks for details such as your registered address and provider ID. It helps with policy compliance, but it is not a statement that you meet the law. The regulations themselves remain the authority."
+   },
+   {
+    "q": "What do I see when a policy falls short?",
+    "a": "A split screen. On one side the regulation, labelled as a legal requirement or recommended good practice. On the other your policy, with a checklist of requirements marked missing or already covered, and if one is covered in another policy, it says which. You also see example wording and where it belongs, including the target policy."
+   },
+   {
+    "q": "Does it change my policies by itself?",
+    "a": "No. Every suggestion is a suggestion. You choose Adopt, you can edit the wording first, and unchanged text is refused. The change goes into a draft with highlighted edits, and it only reaches staff after your approval steps finish and you publish. You can also ignore a suggestion."
+   },
+   {
+    "q": "Who writes the example wording?",
+    "a": "It is drafted by our own machine learning, in the voice of the policy you are improving. Treat it as a first draft to read, adapt and approve for your service. It is guidance, not legal advice."
+   },
+   {
+    "q": "How do I get staff to learn the new wording?",
+    "a": "Once the revised policy is live, allocate adhoc training on the topic, <a href=\"/training-platform\">built from your own policies</a>. Staff complete it in the Staff Hub, a wrong answer becomes a short follow up lesson, and you see the result in Knowledge gaps. It is a separate step, so nothing is allocated for you."
+   },
+   {
+    "q": "Is it only the medicines policy?",
+    "a": "No. Medicines is the example here. The analysis runs across all your policies, and it also scans for out of date wording, conflicts between policies and wording that falls short of the person centred language CQC expects. See <a href=\"/uses/out-of-date-policies\">out of date policies</a> for that scan."
+   },
+   {
+    "q": "What does it cost to try?",
+    "a": "You can create a free account and screen up to five of your policies, with all four analyses. Adopting fixes and the approval steps are on Professional and above, with a 14 day free trial on paid plans. See <a href=\"/pricing\">pricing</a> for the plans, or <a href=\"/register\">create a free account</a>."
+   }
+  ]
+ },
+ "limits": {
+  "heading": "A way to find the gaps, not a way to sign off your policies",
+  "cards": [
+   {
+    "title": "It is not legal advice and guarantees nothing",
+    "body": "The analysis and the example wording are a starting point to read and adapt. It does not promise compliance, and it does not predict an inspection rating."
+   },
+   {
+    "title": "Nothing is edited without you",
+    "body": "Suggestions wait until you adopt them and your approval steps finish. A policy that you leave alone stays exactly as it was."
+   },
+   {
+    "title": "Fixes and approvals are on the higher plans",
+    "body": "The free plan screens up to five policies. Adopting a fix, the approval steps and the readiness report are on Professional and above. Adhoc training and translation are on the paid plans."
+   }
+  ]
+ },
+ "read_next": [
+  "policy-gap-analysis-for-care-homes",
+  "keeping-care-policies-current-with-cqc-regulation",
+  "policies-required-by-cqc-for-a-care-home"
+ ],
+ "faqs": {
+  "heading": "Compliance gap analysis and CareStream, answered",
+  "groups": [
+   {
+    "group": "About the analysis",
+    "items": [
+     {
+      "q": "What is a policy gap analysis?",
+      "a": "It is a comparison between what your policies say and what the rules expect. The aim is to find points that are missing, out of date or contradict another policy. Our <a href=\"/blog/policy-gap-analysis-for-care-homes\">step by step guide</a> shows how to do it by hand, and CareStream does the comparison for you."
+     },
+     {
+      "q": "Which CQC regulations should my care home policies cover?",
+      "a": "It depends on your service. Our guide lists the <a href=\"/blog/policies-required-by-cqc-for-a-care-home\">policies required by CQC for a care home</a>, and the analysis checks the set that applies to your setting. The regulations are published on legislation.gov.uk, and your policies should match them."
+     },
+     {
+      "q": "How often should a policy review happen?",
+      "a": "Pick an interval for each policy, such as every 6 or 12 months, and log it. CareStream lists policies that are due and emails admins a reminder. A policy review should also follow any change to the rules. See <a href=\"/blog/keeping-care-policies-current-with-cqc-regulation\">keeping policies current</a>."
+     },
+     {
+      "q": "Can I use it on a policy I did not write in CareStream?",
+      "a": "Yes. You upload your own policies as PDF, Word, ODT or text files, and the analysis reads them. Replacing a policy with a newer version is supported."
+     },
+     {
+      "q": "Does it find a policy I do not have at all?",
+      "a": "Yes. If a regulation has no policy behind it, it is listed as a gap with a suggested policy title. You can write it yourself or buy a written version. See <a href=\"/uses/policy-gaps\">finding policy gaps</a>."
+     },
+     {
+      "q": "What happens to a suggestion I do not want?",
+      "a": "You can ignore it. Nothing changes in your policy, and the original upload is never altered."
+     }
+    ]
+   },
+   {
+    "group": "About the regulations",
+    "items": [
+     {
+      "q": "What do the CQC regulations say about policies and records?",
+      "a": "<a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/17\">Regulation 17 on good governance</a> says systems or processes must be established and operated effectively to ensure compliance, and that they must enable the provider to assess, monitor and improve the quality and safety of the service. Policies are one part of that, and the regulation does not set a list of policies."
+     },
+     {
+      "q": "What does the regulation say about medicines?",
+      "a": "<a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/12\">Regulation 12 on safe care and treatment</a> includes the proper and safe management of medicines. It does not write your policy for you, so each provider decides how its policy meets that. Our <a href=\"/staff-training/medication-administration-and-competency\">medication course</a> covers the practice."
+     }
+    ]
+   }
+  ]
+ },
+ "guide": {
+  "heading": "A practical way to run a policy gap analysis",
+  "lede": "A compliance gap analysis does not need a week of reading. It needs a clear order, one policy at a time, and a record of what you decided.",
+  "sections": [
+   {
+    "h3": "Start with the policy that carries the most risk",
+    "paragraphs": [
+     "Medicines is a sensible first choice, because mistakes in it affect people directly. Take the regulation behind it, such as <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/12\">Regulation 12</a>, and list what a policy on that subject needs to say. Then compare. Do the same for each of your care home policies in turn, and treat the result as a living policy review, not a one off."
+    ]
+   },
+   {
+    "h3": "Four checks for each policy",
+    "checklist": [
+     "Coverage: does the policy contain each point the regulation expects, or is it covered in another policy?",
+     "Currency: does it use names, bodies and frameworks that are still in use today?",
+     "Consistency: does it agree with your other policies on timeframes, roles and who to tell?",
+     "Wording: does it describe how you treat people, in plain person centred language?"
+    ]
+   },
+   {
+    "h3": "Record what you decided",
+    "paragraphs": [
+     "For each gap, note whether you adopted a fix, changed it or chose to ignore it, and why. Then tell staff what changed, and check that they understood it. That record shows an inspector how you assess and improve, which is what <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/17\">Regulation 17</a> asks for."
+    ]
+   }
+  ],
+  "note": "<b>For the inspector.</b> Keep the analysis, your decisions and the approved policy together, so you can show how a policy was checked and not just that it exists."
+ }
+}

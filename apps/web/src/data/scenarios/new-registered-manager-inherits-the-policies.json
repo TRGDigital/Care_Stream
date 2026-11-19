@@ -1,0 +1,322 @@
+{
+  "slug": "new-registered-manager-inherits-the-policies",
+  "status": "draft",
+  "order": 48,
+  "title": "A policy review in week one: <em>what did you inherit?</em>",
+  "meta_title": "Policy Review for a New Care Manager | CareStreamAI",
+  "meta_description": "New manager, a full shelf of policies. Run a policy review in week one: a free screening of up to 5 policies and a scan for outdated policies.",
+  "eyebrow": "Scenario",
+  "lede": "You start on Monday and the policies are already there. A first policy review tells you what you are really holding. CareStream screens up to five of your policies on the Free plan and scans for outdated wording, and a <a href=\"/training-platform\">training platform built on your own policies</a> then helps you brief the team.",
+  "fine": "14 day free trial · Set up in a day · UK data residency",
+  "panel": {
+    "title": "Your first week with the policy set",
+    "pill": "Illustration",
+    "rows": [
+      { "label": "Policies found on the shelf and the shared drive", "note": "Day 1", "done": true },
+      { "label": "Out of date scan run", "note": "Day 2", "done": true },
+      { "label": "Gaps and contradictions understood", "note": "Not yet", "done": false },
+      { "label": "Team briefed on what changes", "note": "Not yet", "done": false }
+    ],
+    "meter": 50
+  },
+  "image": "https://api.carestreamai.com/public/policy-shop/image/ffe9f012-bde9-449e-9db6-f2f33d7a1910.webp",
+  "image_alt": "A new manager standing in a bright office with a stack of policy folders and a notebook, while a long serving deputy beside her opens the first folder",
+  "card_title": "New manager, full shelf of policies. What did you inherit?",
+  "card_snippet": "Starting a new role means inheriting a policy set nobody has summarised for you. Screen up to five policies for free, scan for outdated wording and see where to look first.",
+  "primary_keyword": "policy review",
+  "secondary_keywords": [
+    "care home policies",
+    "policy audit",
+    "new manager checklist",
+    "policy gap analysis",
+    "outdated policies"
+  ],
+  "feature_links": [
+    {
+      "title": "Training built from your own policies",
+      "body": "Short training from your own policies, with wrong answers turned into short lessons.",
+      "action": "See the feature",
+      "href": "/training-platform"
+    },
+    {
+      "title": "Policy gap detection",
+      "body": "Check your policies against the regulations, for outdated wording and for contradictions.",
+      "action": "See policy gap detection",
+      "href": "/policy-gap-detection"
+    },
+    {
+      "title": "Outdated policies, found early",
+      "body": "See which policies have drifted and what to fix first.",
+      "action": "See out of date policies",
+      "href": "/uses/out-of-date-policies"
+    }
+  ],
+  "intro": {
+    "heading": "Day one: the policies are all there. Nobody has told you which ones to trust.",
+    "sub": "A scenario we see in many care settings.",
+    "paragraph": "A new registered manager starts on a Monday. The deputy has been there for years and hands over the first folder with pride. There are policies in ring binders, more on a shared drive, and a handbook that nobody can date. The previous manager has left a kind note but no summary. The new manager has a week to form a view, and a notebook that keeps filling with questions. Which policies are current, which contradict each other, and what has quietly gone missing? Here is how that week can go."
+  },
+  "trail": [
+    { "when": "Monday", "text": "A warm welcome, a tour and a stack of folders.", "kind": "ok" },
+    { "when": "Tuesday", "text": "The deputy talks through how things work on the floor.", "kind": "ok" },
+    { "when": "Wednesday", "text": "The manager reads the first ten policies and takes notes.", "kind": "ok" },
+    { "when": "Thursday", "text": "Two policies give different timescales for the same task.", "kind": "gap" },
+    { "when": "Also Thursday", "text": "One still names a body that no longer exists.", "kind": "gap" },
+    { "when": "Friday", "text": "Nobody can say when half of them were last reviewed.", "kind": "gap" },
+    { "when": "Week two", "text": "Reading every policy by hand would take weeks, and there is a home to run.", "kind": "gap" },
+    { "when": "Inspection day", "text": "“When did you last review this policy?” You started three weeks ago.", "kind": "end" }
+  ],
+  "trail_close": "<b>The shelf is not the problem. Not knowing its state is.</b> Here is how a manager can get a first picture fast, with the limits stated plainly.",
+  "why": {
+    "heading": "You are accountable for a set you did not write",
+    "sub": "A new manager gets the responsibility on day one and the history only slowly.",
+    "cards": [
+      {
+        "icon": "chat",
+        "title": "Handovers share stories, not status",
+        "body": "A long serving deputy knows how things work in practice. That is useful, but it is not the same as knowing what the written policy says or how recently anyone checked it."
+      },
+      {
+        "icon": "alert",
+        "title": "Drift is invisible from the shelf",
+        "body": "Old terms, a missing review date or two policies that disagree look fine in a binder. You only notice when someone asks, and that someone may be an inspector."
+      },
+      {
+        "icon": "tick",
+        "title": "Reading everything by hand does not scale",
+        "body": "A careful read of the whole set is a job for weeks. A quick screen first tells you where to spend those hours."
+      }
+    ]
+  },
+  "how": {
+    "heading": "A policy review you can start this week.",
+    "sub": "This is the <a href=\"/policy-gap-detection\">policy gap detection</a> and <a href=\"/training-platform\">training from your own policies</a>, in the order a new manager might use them. See also <a href=\"/uses/policy-gaps\">finding gaps in your policy set</a>.",
+    "blocks": [
+      {
+        "heading": "Screen your first five policies, then brief the team",
+        "bullets": [
+          "Upload up to five care home policies on the Free plan. All four checks run on them: regulation coverage, out of date wording, contradictions between policies and CQC wording",
+          "The out of date scan is a plain rule based check. It uses no AI and no credits, so run it as often as you like",
+          "When you know what matters, allocate adhoc training on that topic to staff, built from your own policies. You can edit and preview it first. Adhoc training is on the paid plans"
+        ],
+        "tags": [
+          { "label": "Policy gap detection", "href": "/policy-gap-detection" },
+          { "label": "Training built from your own policies", "href": "/training-platform" }
+        ],
+        "mock": {
+          "type": "training",
+          "module": "Medication errors and reporting",
+          "questions": [
+            "Who must you tell straight away if you notice a medication error?",
+            "Where do you record a missed dose?"
+          ],
+          "staff_count": 18
+        }
+      },
+      {
+        "heading": "If someone misses the point, they get a short lesson",
+        "bullets": [
+          "A wrong answer goes into the carer's Follow-up tab in the Staff Hub, and they get an email, at most one a day, in English",
+          "They choose Learn &amp; retry, a short lesson then a fresh question, or Just retry the same question, as often as they need",
+          "Nothing alerts you each time. You see the pattern in the Knowledge gaps view"
+        ],
+        "tags": [
+          { "label": "Wrong answers become lessons", "href": "/training-platform" },
+          { "label": "Adhoc training", "href": "/uses/adhoc-training" }
+        ],
+        "mock": {
+          "type": "followup",
+          "module": "Medication errors and reporting",
+          "question": "Who must you tell straight away if you notice a medication error?",
+          "why": "The person needs checking quickly, and the team needs to know so that it can be put right.",
+          "remember": [
+            "Tell the senior on shift straight away",
+            "Make sure the person is safe",
+            "Record it as your policy says"
+          ],
+          "picture": "You find that a morning dose was missed and the person is now asleep."
+        }
+      },
+      {
+        "heading": "Staff read policies in the language they think in",
+        "bullets": [
+          "Once a policy is updated, staff can read it and ask questions about it in the Staff Hub",
+          "Your admin sets a carer's second language and they switch to it in the hub",
+          "Translation is on the paid plans only, and the Free plan is English only"
+        ],
+        "tags": [
+          { "label": "Training in 60+ languages", "href": "/languages" },
+          { "label": "Staff Hub in 60+ languages", "href": "/uses/multilingual-staff-hub" }
+        ],
+        "mock": {
+          "type": "language",
+          "second_language": "Polish"
+        }
+      },
+      {
+        "heading": "See what the team is still unsure about",
+        "bullets": [
+          "The Knowledge gaps view shows open gaps, the most missed questions and the weakest topics",
+          "It shows how gaps are being closed, so your first month has a visible before and after",
+          "A Monday digest email brings the picture to you without you asking"
+        ],
+        "tags": [
+          { "label": "Reporting that runs itself", "href": "/training-platform" },
+          { "label": "CQC and compliance evidence", "href": "/cqc-compliance" }
+        ],
+        "mock": {
+          "type": "gaps",
+          "stats": { "open": 9, "affected": 6, "closed": 12, "engaged": 64 },
+          "missed": [
+            ["Reporting a medication error", "4 staff"],
+            ["Where the policy is kept", "3 staff"],
+            ["Who the lead is", "2 staff"]
+          ],
+          "weak": [
+            ["Medication", "5 gaps"],
+            ["Infection control", "3 gaps"]
+          ]
+        }
+      }
+    ]
+  },
+  "talk": {
+    "heading": "The questions new managers ask, and how CareStream answers them",
+    "sub": "Read this as a conversation. The questions are the ones we hear most.",
+    "items": [
+      {
+        "q": "I have a week. What is the quickest way to see the state of our policies?",
+        "a": "Upload your first policies and run the checks. On the Free plan CareStream screens up to five uploaded policies in total, with regulation coverage, out of date wording, contradictions and CQC wording. It gives you a first picture and a list of where to look. It does not replace reading the policies that matter most."
+      },
+      {
+        "q": "How does it spot outdated policies?",
+        "a": "The out of date scan is a rule based check with no AI. It looks for things such as superseded legislation or bodies, wording from the pandemic, unfilled placeholders like TBC, very thin policies and policies that are overdue for review or have no review date. Each finding comes with a suggested fix you can review."
+      },
+      {
+        "q": "What can I do on the Free plan, and what needs a paid plan?",
+        "a": "The Free plan screens up to five policies, and opens three examples of suggested wording. For the whole set, <a href=\"/policy-gap-detection\">policy gap detection</a> and the full set of fixes, including adopting a suggestion through approval, are on Professional and above. The Free plan has no adhoc training and no translation."
+      },
+      {
+        "q": "Does it change our policies automatically?",
+        "a": "No. Gap fixes, wording suggestions and regulation updates are suggestions until an admin adopts them and your approval steps finish. The uploaded original stays untouched. The example wording is drafted by our own machine learning, so read it and adapt it to your service."
+      },
+      {
+        "q": "Can it tell me what a new manager must do by law?",
+        "a": "No. CareStream does not give legal advice, and it does not guarantee compliance or a rating. For your duties as a registered manager, go to the <a href=\"https://www.cqc.org.uk/guidance-regulation/providers/regulations-service-providers-and-managers/health-social-care-act/regulation-17\">CQC guidance on Regulation 17</a>."
+      },
+      {
+        "q": "Once I know what needs fixing, how do I get the team to follow it?",
+        "a": "Allocate short adhoc training on the topic, built from your own policies where they cover it. Staff complete it in the Staff Hub. A wrong answer becomes a short lesson in their Follow-up tab, and you see the pattern in <a href=\"/training-platform\">the training reporting</a>."
+      },
+      {
+        "q": "Will it show which staff have read a policy?",
+        "a": "It records reading sessions: time spent, how far someone scrolled and whether they marked it as read. It does not record signatures. It is evidence that staff opened and used a policy, not a signed register."
+      },
+      {
+        "q": "How do I try it?",
+        "a": "You can create a free account and screen your first policies. The paid plans have a 14 day free trial. See <a href=\"/pricing\">pricing</a> for what each plan includes, or <a href=\"/register\">create your account</a>."
+      }
+    ]
+  },
+  "limits": {
+    "heading": "A first picture, not a verdict on your policies",
+    "cards": [
+      {
+        "title": "It does not give legal advice",
+        "body": "Suggestions are guidance to review, adapt and approve for your service. It does not guarantee compliance or a CQC rating."
+      },
+      {
+        "title": "The Free plan covers five policies, not the whole shelf",
+        "body": "A larger set, with the full gap fixes and approval steps, needs Professional or above. Starter does not include gap analysis."
+      },
+      {
+        "title": "It does not rewrite anything without you",
+        "body": "Every fix is a suggestion until an admin adopts it and the approval steps finish. It does not edit your policies automatically."
+      }
+    ]
+  },
+  "read_next": [
+    "policy-gap-analysis-for-care-homes",
+    "six-signs-your-policy-set-has-quietly-drifted-out-of-date",
+    "cqc-inspection-day-what-to-expect-and-how-to-be-ready"
+  ],
+  "faqs": {
+    "heading": "Reviewing inherited policies, answered",
+    "groups": [
+      {
+        "group": "Starting the review",
+        "items": [
+          {
+            "q": "How do I do a policy review when I start a new job?",
+            "a": "Start with a quick screen, then read in depth. List the policies, note when each was last reviewed, run a scan for outdated wording and read the ones that carry the most risk first. CareStream does the screening and scanning, and you do the judging."
+          },
+          {
+            "q": "What should be on a new manager checklist for policies?",
+            "a": "A short new manager checklist: a full list of policies, a review date for each, the policy owner, any contradictions and what staff actually do. The <a href=\"/blog/policy-gap-analysis-for-care-homes\">policy gap analysis guide</a> shows how to go further."
+          },
+          {
+            "q": "How often should care home policies be reviewed?",
+            "a": "There is no single rule that fits every policy, so set an interval that suits each one. CareStream lets you record 6 months, 12 months, 2 years or 3 years, and it can email you a reminder when policies fall due."
+          },
+          {
+            "q": "What is a policy audit?",
+            "a": "A policy audit checks each policy for age, accuracy and use in practice. Our scan covers wording and review dates, and a manager still has to check against what happens on the floor. For practice, see <a href=\"/care-audits\">care audits</a>."
+          },
+          {
+            "q": "What is a policy gap analysis?",
+            "a": "A policy gap analysis compares your policies with the regulations to find what is missing or only partly covered. It is on Professional and above, and the Free plan runs it on up to five policies."
+          },
+          {
+            "q": "Can I check care home policies we bought or inherited?",
+            "a": "Yes. Upload them as they are. The uploaded file is not altered, and suggestions only change anything once an admin adopts them."
+          }
+        ]
+      },
+      {
+        "group": "Inspections",
+        "items": [
+          {
+            "q": "What does the law say about good governance?",
+            "a": "<a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/17\">Regulation 17</a> requires systems or processes that are established and operated effectively, including to assess, monitor and improve the quality and safety of services. It does not say how often to review each policy."
+          },
+          {
+            "q": "What does CQC expect from governance?",
+            "a": "The <a href=\"https://www.cqc.org.uk/guidance-regulation/providers/regulations-service-providers-and-managers/health-social-care-act/regulation-17\">CQC guidance on Regulation 17</a> says providers should run regular audits and review their systems regularly to check they stay fit for purpose. A dated record of your own policy review fits that."
+          },
+          {
+            "q": "Will CareStream get us a better rating?",
+            "a": "No tool can promise that. It shows you the state of your policies and records how staff use them. What you do with it is up to you."
+          }
+        ]
+      }
+    ]
+  },
+  "guide": {
+    "heading": "A practical first week with an inherited policy set",
+    "lede": "The aim of the week is not to fix everything. It is to know what you have, what is risky and what to do first, so that you can say so with confidence when someone asks.",
+    "sections": [
+      {
+        "h3": "Build your own picture before you change anything",
+        "paragraphs": [
+          "Begin with a list: every policy, where it lives, who owns it and when it was last reviewed. You will find duplicates and policies with no review date. Treat that as information. A dated, written policy review in your first month also shows a systematic approach, which is what the <a href=\"https://www.cqc.org.uk/guidance-regulation/providers/regulations-service-providers-and-managers/health-social-care-act/regulation-17\">CQC governance guidance</a> asks providers to have."
+        ]
+      },
+      {
+        "h3": "A first week checklist",
+        "checklist": [
+          "Day 1 to 2: list every policy and note its last review date, or the fact it has none.",
+          "Day 3: screen the first five policies and run the scan for outdated policies.",
+          "Day 4: read the highest risk policies in full, such as safeguarding, medication and infection control.",
+          "Day 5: choose three fixes, tell the deputy and book the review dates."
+        ]
+      },
+      {
+        "h3": "Ask the people who use the policies",
+        "paragraphs": [
+          "Your deputy and senior carers know where a policy and practice have drifted apart. Ask them. Then compare their answers with the written policy, and with what <a href=\"/blog/six-signs-your-policy-set-has-quietly-drifted-out-of-date\">a drifting policy set</a> looks like."
+        ]
+      }
+    ],
+    "note": "<b>For the inspector.</b> Keep a dated note of what you checked in week one, what you found and what you changed. It shows that a new manager took the policy set seriously from day one."
+  }
+}

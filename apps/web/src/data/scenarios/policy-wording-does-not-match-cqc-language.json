@@ -1,0 +1,416 @@
+{
+ "slug": "policy-wording-does-not-match-cqc-language",
+ "status": "draft",
+ "order": 44,
+ "title": "Your policies are right. <em>Do they use the language of the CQC quality statements?</em>",
+ "meta_title": "CQC Quality Statements and Your Policy Wording | CareStreamAI",
+ "meta_description": "Check your policy wording against person centred qualities from the CQC quality statements, in your own voice. You review and adopt every change.",
+ "eyebrow": "Scenario",
+ "lede": "Your policies may be sound and still read like a different era. CareStream checks each one against person centred qualities taken from the <b>CQC quality statements</b> and suggests wording only where something is missing. It is part of <a href=\"/training-platform\">training and policies built around your own service</a>, and you decide what goes in.",
+ "fine": "14 day free trial · Set up in a day · UK data residency",
+ "panel": {
+  "title": "One dignity policy, reviewed",
+  "pill": "Illustration",
+  "rows": [
+   {
+    "label": "Policy written and approved",
+    "note": "Years ago",
+    "done": true
+   },
+   {
+    "label": "Staff read it",
+    "note": "Last spring",
+    "done": true
+   },
+   {
+    "label": "Wording checked against person centred qualities",
+    "note": "Not yet",
+    "done": false
+   },
+   {
+    "label": "Changes adopted and approved",
+    "note": "Not yet",
+    "done": false
+   }
+  ],
+  "meter": 50
+ },
+ "image": "https://api.carestreamai.com/public/policy-shop/image/3741e4f0-d7be-4225-98ff-5fcda451ec1f.webp",
+ "image_alt": "A manager and a carer sit at a bright table with a policy page and a highlighter, talking through the words together and both looking relaxed",
+ "card_title": "Your policies are right, but do they use the words inspectors look for?",
+ "card_snippet": "Many care policies were written years ago in a different voice. CareStream checks each one against person centred qualities from the CQC quality statements and suggests wording you can accept, change or ignore.",
+ "primary_keyword": "cqc quality statements",
+ "secondary_keywords": [
+  "person centred language",
+  "cqc single assessment framework",
+  "cqc policies",
+  "policy compliance",
+  "cqc key lines of enquiry"
+ ],
+ "feature_links": [
+  {
+   "title": "Training built from your own policies",
+   "body": "Short training and checks built from the policies you already have.",
+   "action": "See the feature",
+   "href": "/training-platform"
+  },
+  {
+   "title": "Policy gap detection",
+   "body": "Find missing policies, old wording, contradictions and wording that needs a lift.",
+   "action": "See gap detection",
+   "href": "/policy-gap-detection"
+  },
+  {
+   "title": "CQC and compliance",
+   "body": "Evidence that builds itself, and a readiness report for your next inspection.",
+   "action": "See CQC and compliance",
+   "href": "/cqc-compliance"
+  }
+ ],
+ "intro": {
+  "heading": "Nobody did anything wrong. The policy just sounds old.",
+  "sub": "A scenario we see in many care settings.",
+  "paragraph": "A registered manager is preparing for an inspection and rereads the dignity policy. It is accurate. It is also written in the third person, full of phrases like \"service users will be provided with\" and \"staff must ensure\". The care on the floor is warm and personal, and the carers talk about people by name, yet the document describes something colder. A deputy points out that nobody can say what the policy has to do with how people are actually asked about their preferences. The manager is not worried about the care. The worry is that the paperwork does not show it."
+ },
+ "trail": [
+  {
+   "when": "Years ago",
+   "text": "The dignity policy is written from a template and approved.",
+   "kind": "ok"
+  },
+  {
+   "when": "Each year",
+   "text": "It is reviewed, the date is updated and nothing is wrong.",
+   "kind": "ok"
+  },
+  {
+   "when": "On the floor",
+   "text": "Carers ask people how they like to be addressed and what matters to them.",
+   "kind": "ok"
+  },
+  {
+   "when": "Before the visit",
+   "text": "The manager rereads the policy and it sounds nothing like the care.",
+   "kind": "gap"
+  },
+  {
+   "when": "The wording",
+   "text": "\"Service users will be provided with\" in place of \"we will ask you\".",
+   "kind": "gap"
+  },
+  {
+   "when": "The old terms",
+   "text": "A reference to key lines of enquiry that nobody has looked at in years.",
+   "kind": "gap"
+  },
+  {
+   "when": "Rewriting it",
+   "text": "Fifty policies, one manager and no spare weekend.",
+   "kind": "gap"
+  },
+  {
+   "when": "Inspection day",
+   "text": "\"How do your policies reflect what people tell you matters to them?\"",
+   "kind": "end"
+  }
+ ],
+ "trail_close": "<b>The care and the paperwork have drifted apart.</b> That is a wording problem, and wording problems can be found and fixed one policy at a time. Here is how CareStream helps, with every change in your hands.",
+ "why": {
+  "heading": "Policies that sound unlike your service are hard to defend",
+  "sub": "An inspector reads what you have written and then listens to what staff say.",
+  "cards": [
+   {
+    "icon": "chat",
+    "title": "Template language is not your voice",
+    "body": "Policies adapted from downloaded templates tend to speak about people in the third person. Your care is personal, so the words should be too."
+   },
+   {
+    "icon": "tick",
+    "title": "Nobody has time to reread everything",
+    "body": "Checking every policy against what a good one says about dignity, choice and involvement is slow work, so it gets pushed to the next review."
+   },
+   {
+    "icon": "alert",
+    "title": "Rewriting by hand risks breaking what works",
+    "body": "A rewrite can lose a legal requirement or contradict another policy. Changes need a careful look before they reach staff."
+   }
+  ]
+ },
+ "how": {
+  "heading": "Check the wording, then change only what you choose.",
+  "sub": "This is the policy side of <a href=\"/policy-gap-detection\">policy gap detection</a>. The same upload also feeds <a href=\"/training-platform\">training built from your own policies</a>. See also <a href=\"/uses/out-of-date-policies\">finding out of date policies</a>.",
+  "blocks": [
+   {
+    "heading": "Each policy is checked against person centred qualities",
+    "bullets": [
+     "For each policy, CareStream looks at its wording against person centred qualities drawn from the <a href=\"/blog/cqc-quality-single-assessment-framework\">CQC quality statements</a>",
+     "Step 1 assesses each quality on its own, with a not applicable option when a quality does not belong in that policy",
+     "Step 2 drafts wording only where something is genuinely missing, and prefers to amend a sentence you already have, in the policy's own voice"
+    ],
+    "tags": [
+     {
+      "label": "Policy gap detection",
+      "href": "/policy-gap-detection"
+     },
+     {
+      "label": "Policy gaps in practice",
+      "href": "/uses/policy-gaps"
+     }
+    ],
+    "mock": {
+     "type": "training",
+     "module": "Dignity policy: wording review (example)",
+     "questions": [
+      "Does the policy say people are asked how they like to be addressed?",
+      "Does it describe how people take part in decisions about their care?",
+      "Is anything here written about people rather than with them?"
+     ]
+    }
+   },
+   {
+    "heading": "You adopt, edit or ignore each suggestion",
+    "bullets": [
+     "Suggestions are numbered and highlighted in a split screen beside the policy, so you see exactly where each would go",
+     "Nothing changes until you adopt it, and you can edit the wording first",
+     "Adopted changes go through your approval steps before staff see them, so a suggestion is never an automatic edit"
+    ],
+    "tags": [
+     {
+      "label": "How CareStream works",
+      "href": "/how-it-works"
+     },
+     {
+      "label": "CQC and compliance",
+      "href": "/cqc-compliance"
+     }
+    ],
+    "mock": {
+     "type": "training",
+     "module": "Dignity and Person Centred Care",
+     "questions": [
+      "What can you ask a person to find out how they like to be addressed?",
+      "A person says no to a wash. What do you do next?",
+      "Where would you record what matters most to someone?"
+     ]
+    }
+   },
+   {
+    "heading": "Brief staff on the updated policy and see who needs more",
+    "bullets": [
+     "Once the policy is approved, allocate short adhoc training on the topic, built from your own policies where they cover it",
+     "A wrong answer lands in the carer's Follow-up tab, and they choose Learn &amp; retry or Just retry",
+     "This does not trigger on its own. You allocate it, and a policy being approved does not send anything to staff by itself"
+    ],
+    "tags": [
+     {
+      "label": "Adhoc training",
+      "href": "/uses/adhoc-training"
+     },
+     {
+      "label": "Training built from your own policies",
+      "href": "/training-platform"
+     }
+    ],
+    "mock": {
+     "type": "followup",
+     "module": "Dignity and Person Centred Care",
+     "question": "A person says no to a wash. What do you do next?",
+     "why": "A person has the right to make choices about their own care, so a refusal is the start of a conversation and not the end of one.",
+     "remember": [
+      "Stay calm and ask why",
+      "Offer a choice of time or approach",
+      "Record what was agreed"
+     ],
+     "picture": "A resident says they do not want help this morning, and you have a full round to get through."
+    }
+   },
+   {
+    "heading": "See where the picture is still patchy",
+    "bullets": [
+     "The Knowledge gaps view shows the most missed questions and the weakest topics once staff have been briefed",
+     "The out of date scan is separate, runs instantly and uses none of your AI tokens",
+     "Read sessions are recorded, so you can see who has opened a policy, though not a signature"
+    ],
+    "tags": [
+     {
+      "label": "Reporting that runs itself",
+      "href": "/training-platform"
+     },
+     {
+      "label": "Out of date policies",
+      "href": "/uses/out-of-date-policies"
+     }
+    ],
+    "mock": {
+     "type": "gaps",
+     "stats": {
+      "open": 6,
+      "affected": 4,
+      "closed": 11,
+      "engaged": 67
+     },
+     "missed": [
+      [
+       "Asking how someone likes to be addressed",
+       "3 staff"
+      ],
+      [
+       "Recording what matters to a person",
+       "3 staff"
+      ],
+      [
+       "Handling a refusal of care",
+       "2 staff"
+      ]
+     ],
+     "weak": [
+      [
+       "Dignity and Person Centred Care",
+       "4 gaps"
+      ],
+      [
+       "Consent",
+       "2 gaps"
+      ]
+     ]
+    }
+   }
+  ]
+ },
+ "talk": {
+  "heading": "The questions managers ask, and how CareStream answers them",
+  "sub": "Read this as a conversation. The questions are the ones we hear most.",
+  "items": [
+   {
+    "q": "What does the wording check actually do?",
+    "a": "For each policy, it looks at the wording against person centred qualities taken from the CQC quality statements. It assesses each quality, and where something is genuinely missing it drafts wording in the voice your policy already uses. It is one of four checks in <a href=\"/policy-gap-detection\">policy gap detection</a>."
+   },
+   {
+    "q": "Will it rewrite my policies without asking?",
+    "a": "No. Everything is a suggestion until you adopt it. You can edit the wording first, and an adopted change still goes through your approval steps before staff see it. Wording and rewrites are drafted by our own machine learning, so read them as drafts."
+   },
+   {
+    "q": "Does it tell me if my policy is compliant?",
+    "a": "No. It does not give legal advice and it does not say your policy is compliant or predict a rating. It shows where the wording could better reflect person centred care, and the suggestions carry a note to review, adapt and approve them for your service."
+   },
+   {
+    "q": "My policies mention CQC key lines of enquiry. Does it spot that?",
+    "a": "The separate out of date scan looks for older wording, including references to older frameworks such as key lines of enquiry, as well as placeholder text and policies overdue a review. It is a fixed check, not machine learning, and it runs instantly. It flags what to look at and you decide what to change."
+   },
+   {
+    "q": "What if two policies now say different things?",
+    "a": "A consistency check looks for policies that may contradict each other and offers one reconciled wording for you to consider. Run it alongside the wording check, so a lift in one policy does not create a clash with another."
+   },
+   {
+    "q": "How do my staff learn the new wording?",
+    "a": "Once the policy is approved, you allocate short adhoc training on the topic from the Training screen, built from <a href=\"/training-platform\">your own policies</a> where they cover it. A wrong answer goes into the carer's Follow-up tab, where they can use Learn &amp; retry. It does not happen on its own."
+   },
+   {
+    "q": "Is this on every plan?",
+    "a": "The wording check, adopting changes and the approval steps are on Professional and above. There is also a free plan that screens up to five of your uploaded policies with all four checks, which is a good way to see a real result. Check the <a href=\"/pricing\">pricing page</a> for what each plan includes."
+   },
+   {
+    "q": "Can I try it on my own policies?",
+    "a": "Yes. Create a free account at <a href=\"/register\">the sign up page</a>, upload a policy and run the checks. Paid plans start with a 14 day free trial. If you would like a walkthrough first, you can <a href=\"/demo\">book a demo</a>."
+   }
+  ]
+ },
+ "limits": {
+  "heading": "A check and a set of drafts, not a ruling",
+  "cards": [
+   {
+    "title": "It does not guarantee a rating",
+    "body": "Matching the language of the quality statements does not decide how your service is rated. Inspectors look at what people experience, and a good policy is one part of that."
+   },
+   {
+    "title": "It does not change anything by itself",
+    "body": "Every suggestion waits for an administrator to adopt it, and then for your approval steps. Nothing reaches staff until it is approved and published."
+   },
+   {
+    "title": "It records reading, not signatures",
+    "body": "CareStream shows who has opened and read a policy. It does not collect signatures or tell you a version has been formally accepted."
+   }
+  ]
+ },
+ "read_next": [
+  "policies-aligned-to-cqc-quality-statements-a-writers-guide",
+  "cqc-terminology-for-care-providers",
+  "cqc-quality-single-assessment-framework"
+ ],
+ "faqs": {
+  "heading": "Policy wording and the CQC quality statements, answered",
+  "groups": [
+   {
+    "group": "About the wording check",
+    "items": [
+     {
+      "q": "What are the CQC quality statements and why do they matter for policies?",
+      "a": "They are the statements CQC uses within its assessment framework. Writing policies so they reflect the person centred qualities in them helps your documents match the way your service describes its care. Our <a href=\"/blog/policies-aligned-to-cqc-quality-statements-a-writers-guide\">writer's guide</a> goes through it in detail."
+     },
+     {
+      "q": "What is person centred language in a care policy?",
+      "a": "It is wording that speaks to and about people as individuals with choices, such as \"we will ask you how you like to be supported\" in place of \"service users will be provided with\". The law asks the same of care itself: <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/9\">Regulation 9</a> says care and treatment must be appropriate, meet people's needs and reflect their preferences."
+     },
+     {
+      "q": "Does CareStream use the CQC single assessment framework?",
+      "a": "The wording check uses person centred qualities taken from the quality statements within the CQC single assessment framework. Read our <a href=\"/blog/cqc-single-assessment-framework-explained\">plain explanation of the framework</a> if it is new to you."
+     },
+     {
+      "q": "Which CQC policies do I need to check first?",
+      "a": "A good start is the policies that touch most directly on how people are treated, such as dignity, consent, and involving people in decisions. Our guide to <a href=\"/blog/policies-required-by-cqc-for-a-care-home\">the policies a care home needs</a> lists the rest."
+     },
+     {
+      "q": "Can I run it on one policy to see what it does?",
+      "a": "Yes. Wording is assessed policy by policy, so you can start with a single one and decide whether the suggestions are useful before going further."
+     }
+    ]
+   },
+   {
+    "group": "About trust and the law",
+    "items": [
+     {
+      "q": "Does the law say anything about dignity?",
+      "a": "Yes. <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/10\">Regulation 10</a> says service users must be treated with dignity and respect. How you word that in a policy is up to you, and the wording check helps you see whether the policy describes it in a way your own staff would recognise."
+     },
+     {
+      "q": "What does policy compliance mean for a care service?",
+      "a": "It means your policies cover what they need to, say what you actually do, and are followed. The wording check helps with the second of those. Gap detection looks at coverage, and training and read sessions show whether policies are known. <a href=\"/cqc-compliance\">CQC and compliance</a> brings the evidence together."
+     },
+     {
+      "q": "Is the suggested wording legal advice?",
+      "a": "No. It is drafted by our own machine learning as example wording to review, adapt and approve for your service. It is guidance and not legal or compliance advice."
+     }
+    ]
+   }
+  ]
+ },
+ "guide": {
+  "heading": "A practical way to bring your policy wording up to date",
+  "lede": "You do not need to rewrite everything. Start with the policies that shape how people are treated, change what is worth changing, and tell staff what is new.",
+  "sections": [
+   {
+    "h3": "What a person centred policy sounds like",
+    "paragraphs": [
+     "A person centred policy talks about what you will do with people, not what will be done to them. It names choices, says how people are asked what matters, and describes how staff respond when a person says no. Read your dignity policy aloud. If a carer would not say it, it probably needs another look.",
+     "Do the same for the policies that sit beside it, such as consent and safeguarding. Policy compliance is not only about covering the right topics. It is also about whether the document describes your service as it really runs."
+    ]
+   },
+   {
+    "h3": "Four steps for each policy",
+    "checklist": [
+     "Read the policy aloud and mark the sentences that sound like a template.",
+     "Run the wording check and look at each numbered suggestion beside the original.",
+     "Adopt, edit or ignore each one, then send the draft through your approval steps.",
+     "Allocate short training on the topic, so staff meet the new wording and you can see where it has not landed."
+    ]
+   },
+   {
+    "h3": "Check for older wording as you go",
+    "paragraphs": [
+     "While you are in the policy, look for terms from older frameworks, including key lines of enquiry, and for placeholder text or a review date that has passed. The out of date scan flags these without using any AI, so it is a quick way to find them."
+    ]
+   }
+  ],
+  "note": "<b>For the inspector.</b> Keep the original, the suggestion you adopted, your approval and the training that followed together, so you can show how a policy changed and how staff were told."
+ }
+}

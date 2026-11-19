@@ -9,7 +9,7 @@ const course = (o: Partial<CourseDetail> = {}): CourseDetail => ({ enrollment_id
   answered: 8, total_questions: 8, correct: 6, score_pct: 75, attempts: 1, learn_minutes: 12, relearn_required: false, baseline: null, reflection: null, incorrect: [], ...o })
 const q = (t: string) => ({ question: t, their_answer: { letter: 'B', text: 'x' }, correct_answer: { letter: 'A', text: 'y' } })
 const detail = (courses: CourseDetail[], o: Partial<TrainingDetail> = {}): TrainingDetail => ({ person: { id: 'u', name: 'Blessing', job_role: null }, supervision: null,
-  linked: courses.map((c, i) => ({ action_id: `a${i}`, description: 'x', action_status: 'open', added_on: null, course: c })), others: [], follow_up: [], suggestions: [], since: null, generated_at: now.toISOString(), ...o })
+  linked: courses.map((c, i) => ({ action_id: `a${i}`, description: 'x', action_status: 'open', added_on: null, course: c })), others: [], follow_up: [], suggestions: [], outstanding: [], since: null, generated_at: now.toISOString(), ...o })
 const ids = (d: TrainingDetail) => suggestionsFor(d, now).map((s) => s.id.split(':')[0])
 
 test('a low score names the questions and what to do', () => {

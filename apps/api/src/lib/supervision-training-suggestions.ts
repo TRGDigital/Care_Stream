@@ -7,6 +7,7 @@ export type Suggestion = {
   id: string                                  // stable: rule + enrolment, so the same suggestion can be recognised again
   tone: 'concern' | 'check' | 'praise'
   course: string | null                       // null for a pattern across courses
+  enrollment_id: string | null                // the course it belongs to, so it can sit inside that course's accordion; null for a pattern
   title: string
   evidence: string[]                          // what it is based on, in plain words
   suggestion: string                          // what the supervisor might do
@@ -24,7 +25,7 @@ function forCourse(c: CourseDetail, now: Date): Suggestion[] {
   const out: Suggestion[] = []
   const name = c.module_name
   const lowConf = c.answered < SHORT_COURSE
-  const add = (rule: string, s: Omit<Suggestion, 'id' | 'course' | 'low_confidence'>, lc = false) => out.push({ id: `${rule}:${c.enrollment_id}`, course: name, low_confidence: lc, ...s })
+  const add = (rule: string, s: Omit<Suggestion, 'id' | 'course' | 'enrollment_id' | 'low_confidence'>, lc = false) => out.push({ id: `${rule}:${c.enrollment_id}`, course: name, enrollment_id: c.enrollment_id, low_confidence: lc, ...s })
   const wrongQs = c.incorrect.map((q) => q.question)
 
   // ── Not done yet ──
@@ -86,12 +87,12 @@ export function suggestionsFor(d: TrainingDetail, now: Date = new Date()): Sugge
   // ── Patterns across courses ──
   const started = courses.filter((c) => c.answered > 0)
   const lows = started.filter((c) => (c.score_pct ?? 100) < LOW)
-  if (lows.length >= 2) out.push({ id: 'pattern_low:all', tone: 'check', course: null, low_confidence: false, title: 'Low scores on more than one course', evidence: [`Under ${LOW}% on ${lows.map((c) => c.module_name).join(', ')}.`],
+  if (lows.length >= 2) out.push({ id: 'pattern_low:all', tone: 'check', course: null, enrollment_id: null, low_confidence: false, title: 'Low scores on more than one course', evidence: [`Under ${LOW}% on ${lows.map((c) => c.module_name).join(', ')}.`],
     suggestion: 'When several courses go the same way it is worth asking about more than the content: workload, time to concentrate, confidence, or whether the way training is delivered suits them.', action_text: 'Talk through what would help them get the most from training and agree one change' })
   const late = courses.filter((c) => c.overdue && c.status !== 'complete')
-  if (late.length >= 2) out.push({ id: 'pattern_late:all', tone: 'concern', course: null, low_confidence: false, title: 'More than one course overdue', evidence: [`Overdue: ${late.map((c) => c.module_name).join(', ')}.`], suggestion: 'Several overdue courses together usually point to time or access, not attitude. Ask, and agree protected time.', action_text: 'Agree protected time on shift to finish the overdue training' })
+  if (late.length >= 2) out.push({ id: 'pattern_late:all', tone: 'concern', course: null, enrollment_id: null, low_confidence: false, title: 'More than one course overdue', evidence: [`Overdue: ${late.map((c) => c.module_name).join(', ')}.`], suggestion: 'Several overdue courses together usually point to time or access, not attitude. Ask, and agree protected time.', action_text: 'Agree protected time on shift to finish the overdue training' })
   const retries = d.follow_up.filter((f) => f.method === 'retry').length, learns = d.follow_up.filter((f) => f.method === 'learn').length
-  if (retries >= 3 && learns === 0) out.push({ id: 'pattern_retry:all', tone: 'check', course: null, low_confidence: false, title: 'Retries straight away without the lesson', evidence: [`${plural(retries, 'question', 'questions')} retried immediately, none after going through the lesson.`], suggestion: 'Encourage them to choose Learn and retry. Going through the lesson first is what makes the answer stick.', action_text: 'Use Learn and retry on the follow up questions, not just retry' })
+  if (retries >= 3 && learns === 0) out.push({ id: 'pattern_retry:all', tone: 'check', course: null, enrollment_id: null, low_confidence: false, title: 'Retries straight away without the lesson', evidence: [`${plural(retries, 'question', 'questions')} retried immediately, none after going through the lesson.`], suggestion: 'Encourage them to choose Learn and retry. Going through the lesson first is what makes the answer stick.', action_text: 'Use Learn and retry on the follow up questions, not just retry' })
 
   return out.sort((a, b) => ORDER[a.tone] - ORDER[b.tone]).slice(0, 8)
 }

@@ -26,8 +26,9 @@ export default function ScenarioDraftPreview() {
   useEffect(() => {
     const token = getPlatformToken()
     if (!token) { setState('noauth'); return }
-    // A valid platform token is required: this call fails for anything else.
-    createPlatformClient(token).blog.posts().then(async () => {
+    // A valid platform token is required: this call fails for anything else. It is a small
+    // admin call on purpose (the blog list took about 20 seconds and left this page loading).
+    createPlatformClient(token).searchMisses.list(1).then(async () => {
       const mod = await import('@/data/scenarios')
       const found = mod.getAnyScenario(slug)
       setS(found); setState(found ? 'ok' : 'missing')

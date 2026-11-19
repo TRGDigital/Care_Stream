@@ -5,7 +5,7 @@
 // For the supervisor and admins. Plain facts from their training records: nothing here is scored or judged by AI.
 import { useEffect, useState } from 'react'
 import { X, Loader2, CheckCircle2, CircleDashed, PlayCircle, AlertTriangle, Clock, BookOpen, RotateCcw, Printer, Mail, ChevronDown, Lightbulb, Plus } from 'lucide-react'
-import type { TrainingDetail, TrainingCourseDetail, TrainingSuggestion } from '@/lib/api-client'
+import type { TrainingDetail, TrainingCourseDetail, TrainingSuggestion, TrainingOutstandingItem } from '@/lib/api-client'
 import { CPD_CERTIFIED_LOGO } from '@/lib/cpd'
 
 const d = (iso: string | null) => iso ? new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : ''
@@ -17,7 +17,7 @@ const STATUS: Record<string, { label: string; cls: string; Icon: React.ElementTy
   expired:     { label: 'Expired',     cls: 'bg-red-50 text-red-700', Icon: AlertTriangle },
 }
 
-function CourseCard({ c, actionStatus, actionText, collapsible = false, open = true, onToggle }: { c: TrainingCourseDetail; actionStatus?: string; actionText?: string; collapsible?: boolean; open?: boolean; onToggle?: () => void }) {
+function CourseCard({ c, actionStatus, actionText, collapsible = false, open = true, onToggle, suggestions = [], sug }: { c: TrainingCourseDetail; actionStatus?: string; actionText?: string; collapsible?: boolean; open?: boolean; onToggle?: () => void; suggestions?: TrainingSuggestion[]; sug?: Sug }) {
   const s = STATUS[c.status]
   const header = (
       <div className="flex flex-wrap items-start justify-between gap-2">
@@ -37,7 +37,7 @@ function CourseCard({ c, actionStatus, actionText, collapsible = false, open = t
       </div>
   )
   // The one line you can read without opening it: how it is going.
-  const summary = [c.score_pct != null ? `Score ${c.score_pct}%` : c.status === 'not_started' ? 'Nothing opened yet' : 'No score yet', c.incorrect.length ? `${c.incorrect.length} answered incorrectly` : (c.answered > 0 ? 'Nothing wrong so far' : ''), c.overdue ? 'Overdue' : ''].filter(Boolean).join(' · ')
+  const summary = [c.score_pct != null ? `Score ${c.score_pct}%` : c.status === 'not_started' ? 'Nothing opened yet' : 'No score yet', c.incorrect.length ? `${c.incorrect.length} answered incorrectly` : (c.answered > 0 ? 'Nothing wrong so far' : ''), c.overdue ? 'Overdue' : '', suggestions.length ? `${suggestions.length} ${suggestions.length === 1 ? 'suggestion' : 'suggestions'}` : ''].filter(Boolean).join(' · ')
   return (
     <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
       {collapsible
@@ -81,6 +81,12 @@ function CourseCard({ c, actionStatus, actionText, collapsible = false, open = t
       )}
       {c.status !== 'not_started' && c.answered > 0 && c.incorrect.length === 0 && <p className="mt-3 flex items-center gap-1.5 text-xs text-green-700"><CheckCircle2 size={13} /> Everything answered so far was right.</p>}
       {c.reflection && <p className="mt-3 rounded-lg bg-teal-light/20 px-3 py-2 text-xs text-neutral-dark"><span className="font-semibold">Their reflection: </span>{c.reflection}</p>}
+      {sug && suggestions.length > 0 && (
+        <div className="mt-4 rounded-lg border border-teal/25 bg-teal-light/10 p-3">
+          <h4 className="mb-2 flex items-center gap-1.5 text-xs font-semibold text-neutral-dark"><Lightbulb size={13} className="text-teal" /> Suggestions for this supervision</h4>
+          <SuggestionList suggestions={suggestions} sug={sug} />
+        </div>
+      )}
       </div>
       )}
     </div>
@@ -104,42 +110,113 @@ const TONE: Record<string, { bar: string; label: string; cls: string }> = {
 }
 
 // Ideas for the conversation, from how they did on the training. Rules on the real scores and answers (no AI): each shows what it is based on.
-// "Add as agreed action" puts it on the supervision; nothing is added unless the supervisor chooses it.
-function SuggestionsBox({ suggestions, onAdd }: { suggestions: TrainingSuggestion[]; onAdd?: (id: string) => Promise<'added' | 'already'> }) {
-  const [state, setState] = useState<Record<string, 'busy' | 'added' | 'already' | 'error'>>({})
-  if (suggestions.length === 0) return null
+// "Add as agreed action" puts it on the supervision; nothing is added unless the supervisor chooses it. The "added" state lives in the page,
+// not in each card, so closing and reopening a course does not forget what was added.
+type SugState = Record<string, 'busy' | 'added' | 'already' | 'error'>
+type Sug = { state: SugState; add: (id: string) => void; canAdd: boolean }
+function useSuggestionActions(onAdd?: (id: string) => Promise<'added' | 'already'>): Sug {
+  const [state, setState] = useState<SugState>({})
   async function add(id: string) {
     if (!onAdd) return
     setState(s => ({ ...s, [id]: 'busy' }))
     try { const r = await onAdd(id); setState(s => ({ ...s, [id]: r })) } catch { setState(s => ({ ...s, [id]: 'error' })) }
   }
+  return { state, add, canAdd: !!onAdd }
+}
+
+function SuggestionList({ suggestions, sug }: { suggestions: TrainingSuggestion[]; sug: Sug }) {
+  return (
+    <div className="space-y-2.5">
+      {suggestions.map(s => {
+        const t = TONE[s.tone], st = sug.state[s.id]
+        return (
+          <div key={s.id} className={`rounded-lg border border-gray-200 border-l-4 bg-white p-3 ${t.bar}`}>
+            <p className={`text-[10px] font-semibold uppercase tracking-wide ${t.cls}`}>{t.label}</p>
+            <p className="text-sm font-semibold text-neutral-dark">{s.title}</p>
+            <ul className="mt-1 space-y-0.5 text-xs text-neutral-mid">{s.evidence.map((e, i) => <li key={i}>{e}</li>)}</ul>
+            <p className="mt-1.5 text-sm text-neutral-dark">{s.suggestion}</p>
+            {sug.canAdd && (
+              <div className="mt-2">
+                {st === 'added' || st === 'already'
+                  ? <span className="inline-flex items-center gap-1 text-xs font-medium text-green-700"><CheckCircle2 size={13} /> {st === 'added' ? 'Added as an agreed action' : 'Already an agreed action'}</span>
+                  : <button type="button" onClick={() => sug.add(s.id)} disabled={st === 'busy'} className="inline-flex items-center gap-1 rounded-md border border-teal/40 px-2.5 py-1 text-xs font-semibold text-teal hover:bg-teal/5 disabled:opacity-60">
+                      {st === 'busy' ? <Loader2 size={12} className="animate-spin" /> : <Plus size={12} />} Add as agreed action
+                    </button>}
+                {st === 'error' && <span className="ml-2 text-xs text-red-700">Could not add it, try again.</span>}
+              </div>
+            )}
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+// Suggestions that are about more than one course (a pattern), or whose course is not on the page. The rest sit inside their own course.
+function SuggestionsBox({ suggestions, sug }: { suggestions: TrainingSuggestion[]; sug: Sug }) {
+  if (suggestions.length === 0) return null
   return (
     <div className="rounded-xl border border-teal/25 bg-teal-light/10 p-4">
-      <h3 className="flex items-center gap-1.5 text-sm font-semibold text-neutral-dark"><Lightbulb size={15} className="text-teal" /> Suggestions for this supervision</h3>
-      <p className="mb-3 mt-0.5 text-xs text-neutral-mid">Ideas for the conversation, based on how they did on this training. They are prompts, not judgements, and each shows what it is based on.</p>
-      <div className="space-y-2.5">
-        {suggestions.map(s => {
-          const t = TONE[s.tone], st = state[s.id]
-          return (
-            <div key={s.id} className={`rounded-lg border border-gray-200 border-l-4 bg-white p-3 ${t.bar}`}>
-              <p className={`text-[10px] font-semibold uppercase tracking-wide ${t.cls}`}>{t.label}</p>
-              <p className="text-sm font-semibold text-neutral-dark">{s.title}</p>
-              <ul className="mt-1 space-y-0.5 text-xs text-neutral-mid">{s.evidence.map((e, i) => <li key={i}>{e}</li>)}</ul>
-              <p className="mt-1.5 text-sm text-neutral-dark">{s.suggestion}</p>
-              {onAdd && (
-                <div className="mt-2">
-                  {st === 'added' || st === 'already'
-                    ? <span className="inline-flex items-center gap-1 text-xs font-medium text-green-700"><CheckCircle2 size={13} /> {st === 'added' ? 'Added as an agreed action' : 'Already an agreed action'}</span>
-                    : <button type="button" onClick={() => add(s.id)} disabled={st === 'busy'} className="inline-flex items-center gap-1 rounded-md border border-teal/40 px-2.5 py-1 text-xs font-semibold text-teal hover:bg-teal/5 disabled:opacity-60">
-                        {st === 'busy' ? <Loader2 size={12} className="animate-spin" /> : <Plus size={12} />} Add as agreed action
-                      </button>}
-                  {st === 'error' && <span className="ml-2 text-xs text-red-700">Could not add it, try again.</span>}
-                </div>
-              )}
-            </div>
-          )
-        })}
-      </div>
+      <h3 className="flex items-center gap-1.5 text-sm font-semibold text-neutral-dark"><Lightbulb size={15} className="text-teal" /> Suggestions across their training</h3>
+      <p className="mb-3 mt-0.5 text-xs text-neutral-mid">Patterns across more than one course. Suggestions about a single course are inside that course. They are prompts, not judgements, and each shows what it is based on.</p>
+      <SuggestionList suggestions={suggestions} sug={sug} />
+    </div>
+  )
+}
+
+const OUT_STATE: Record<TrainingOutstandingItem['state'], { label: string; cls: string; Icon: React.ElementType; blurb: string }> = {
+  missed:       { label: 'Missed',        cls: 'bg-red-50 text-red-700',    Icon: AlertTriangle, blurb: 'Past the due date, or a face to face session they did not attend.' },
+  partial:      { label: 'Part done',     cls: 'bg-blue-50 text-blue-700',  Icon: PlayCircle,    blurb: 'Opened but not finished.' },
+  not_started:  { label: 'Not started',   cls: 'bg-gray-100 text-gray-700', Icon: CircleDashed,  blurb: 'Allocated and nothing opened yet.' },
+  not_recorded: { label: 'Not recorded',  cls: 'bg-amber-50 text-amber-700', Icon: Clock,        blurb: 'A face to face session that has passed with no attendance marked.' },
+}
+const OUT_TYPE: Record<TrainingOutstandingItem['type'], string> = { cpd: 'CPD course', annual: 'Annual training', adhoc: 'Ad hoc training', f2f: 'Face to face' }
+
+// Everything allocated that is still not done, of every kind (CPD, annual, ad hoc, face to face). Closed by default: the heading says how many.
+function OutstandingBox({ items }: { items: TrainingOutstandingItem[] }) {
+  const [open, setOpen] = useState(false)
+  if (items.length === 0) return null
+  const counts = (['missed', 'partial', 'not_started', 'not_recorded'] as const).map(k => ({ k, n: items.filter(i => i.state === k).length })).filter(x => x.n > 0)
+  return (
+    <div className="rounded-xl border border-gray-200 bg-white">
+      <button type="button" onClick={() => setOpen(o => !o)} aria-expanded={open} className="block w-full p-4 text-left hover:bg-neutral-light/40">
+        <span className="flex items-center justify-between gap-2">
+          <span className="flex items-center gap-1.5 text-sm font-semibold text-neutral-dark"><AlertTriangle size={15} className="text-amber-600" /> Allocated training still to do ({items.length})</span>
+          <ChevronDown size={18} className={`shrink-0 text-neutral-mid transition-transform ${open ? 'rotate-180' : ''}`} />
+        </span>
+        <span className="mt-1.5 flex flex-wrap gap-1.5">
+          {counts.map(({ k, n }) => <span key={k} className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold ${OUT_STATE[k].cls}`}>{n} {OUT_STATE[k].label.toLowerCase()}</span>)}
+        </span>
+      </button>
+      {open && (
+        <div className="border-t border-gray-100 p-4 pt-3">
+          <p className="mb-3 text-xs text-neutral-mid">Every kind of training allocated to them that is not finished: CPD, annual, ad hoc and face to face. Training that has been renewed or made up since is not listed.</p>
+          {(['missed', 'partial', 'not_started', 'not_recorded'] as const).map(k => {
+            const rows = items.filter(i => i.state === k)
+            if (!rows.length) return null
+            const S = OUT_STATE[k]
+            return (
+              <div key={k} className="mb-3 last:mb-0">
+                <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-neutral-mid"><S.Icon size={12} className="mr-1 inline" />{S.label} ({rows.length}) <span className="font-normal normal-case tracking-normal">· {S.blurb}</span></p>
+                <ul className="space-y-1.5">
+                  {rows.map(i => (
+                    <li key={i.key} className="flex items-start gap-2 rounded-lg border border-gray-100 px-3 py-2">
+                      {/* The mark is shown exactly as supplied, and only on a certified course. */}
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      {i.cpd && <img src={CPD_CERTIFIED_LOGO} alt="CPD Certified" width={33} height={30} className="mt-0.5 h-[30px] w-[33px] shrink-0" />}
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-medium text-neutral-dark">{i.title}</p>
+                        <p className={`text-xs ${i.overdue ? 'text-red-700' : 'text-neutral-mid'}`}>{i.note}</p>
+                      </div>
+                      <span className="shrink-0 rounded-full bg-neutral-light px-2 py-0.5 text-[11px] font-medium text-neutral-mid">{OUT_TYPE[i.type]}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )
+          })}
+        </div>
+      )}
     </div>
   )
 }
@@ -152,9 +229,14 @@ export function TrainingDetailView({ detail, onAddSuggestion }: { detail: Traini
   const [openIds, setOpenIds] = useState<Set<string>>(new Set())
   const toggle = (id: string) => setOpenIds(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n })
   const allOpen = many && all.every(id => openIds.has(id))
+  const sug = useSuggestionActions(detail.supervision ? onAddSuggestion : undefined)
+  const shown = new Set(all)
+  const mine = (enrId: string) => (detail.suggestions ?? []).filter(s => s.enrollment_id === enrId)
+  const general = (detail.suggestions ?? []).filter(s => !s.enrollment_id || !shown.has(s.enrollment_id))
   return (
     <div className="space-y-5">
-      <SuggestionsBox suggestions={detail.suggestions ?? []} onAdd={detail.supervision ? onAddSuggestion : undefined} />
+      <SuggestionsBox suggestions={general} sug={sug} />
+      <OutstandingBox items={detail.outstanding ?? []} />
       {many && (
         <div className="flex items-center justify-between text-xs text-neutral-mid">
           <span>{all.length} courses. Open one to see the questions answered wrongly and the detail.</span>
@@ -166,14 +248,14 @@ export function TrainingDetailView({ detail, onAddSuggestion }: { detail: Traini
         {detail.linked.length === 0
           ? <p className="rounded-lg border border-dashed border-gray-300 px-4 py-5 text-center text-sm text-neutral-mid">No training has been allocated against this {detail.supervision?.type ?? 'supervision'} yet. Tick &ldquo;Also add to their next supervision&rdquo; when you assign a course, or choose training against an agreed action.</p>
           : <div className="space-y-3">{detail.linked.map(l => l.course
-              ? <CourseCard key={l.action_id} c={l.course} actionStatus={l.action_status} actionText={l.description} collapsible={many} open={openIds.has(l.course.enrollment_id)} onToggle={() => toggle(l.course!.enrollment_id)} />
+              ? <CourseCard key={l.action_id} c={l.course} actionStatus={l.action_status} actionText={l.description} collapsible={many} open={openIds.has(l.course.enrollment_id)} onToggle={() => toggle(l.course!.enrollment_id)} suggestions={mine(l.course.enrollment_id)} sug={sug} />
               : <p key={l.action_id} className="rounded-lg border border-gray-200 px-3 py-2 text-sm text-neutral-mid">{l.description}: the course allocation can no longer be found.</p>)}</div>}
       </div>
 
       {detail.others.length > 0 && (
         <div>
           <h3 className="mb-2 text-sm font-semibold text-neutral-dark">Also allocated since {detail.since ? d(detail.since) : 'the last supervision'}</h3>
-          <div className="space-y-3">{detail.others.map(c => <CourseCard key={c.enrollment_id} c={c} collapsible={many} open={openIds.has(c.enrollment_id)} onToggle={() => toggle(c.enrollment_id)} />)}</div>
+          <div className="space-y-3">{detail.others.map(c => <CourseCard key={c.enrollment_id} c={c} collapsible={many} open={openIds.has(c.enrollment_id)} onToggle={() => toggle(c.enrollment_id)} suggestions={mine(c.enrollment_id)} sug={sug} />)}</div>
         </div>
       )}
 

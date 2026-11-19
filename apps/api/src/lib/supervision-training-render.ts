@@ -1,7 +1,8 @@
 // The training detail as a document: one renderer for the email and the printed page, so they always say the same thing.
 // Pure (detail in, HTML out). House style: plain words, no dashes. The CPD Certified mark is deliberately not used here: it may only be
 // shown on carestreamai.com, so a printout or an email carries the words only.
-import type { TrainingDetail, CourseDetail } from './supervision-training'
+import type { TrainingDetail, CourseDetail, OutstandingItem } from './supervision-training'
+import type { Suggestion } from './supervision-training-suggestions'
 import { siteUrl } from './urls'
 
 const DARK = '#1A1530', BODY = '#374151', MUTED = '#6b7280', RED = '#b91c1c', GREEN = '#15803d', LINE = '#e5e7eb'
@@ -9,7 +10,14 @@ const esc = (s: unknown) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&
 const day = (iso: string | null) => (iso ? new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Europe/London' }) : '')
 const STATUS: Record<string, string> = { not_started: 'Not started', started: 'Started', complete: 'Completed', expired: 'Expired' }
 
-function course(c: CourseDetail, action?: { status: string; text: string }): string {
+const TONE_COL = { concern: '#b91c1c', check: '#b45309', praise: '#15803d' } as const
+function suggestionCards(list: Suggestion[]): string {
+  return list.map((s) =>
+    `<div style="margin:0 0 8px;padding:8px 10px;border:1px solid ${LINE};border-left:4px solid ${TONE_COL[s.tone]};border-radius:6px;page-break-inside:avoid;break-inside:avoid"><div style="font-size:13px;font-weight:700;color:${DARK}">${esc(s.title)}</div>` +
+    s.evidence.map((e) => `<div style="font-size:12px;color:${MUTED}">${esc(e)}</div>`).join('') + `<div style="font-size:13px;color:${BODY};margin-top:4px">${esc(s.suggestion)}</div></div>`).join('')
+}
+
+function course(c: CourseDetail, action?: { status: string; text: string }, sugs: Suggestion[] = []): string {
   const dates = [`Allocated ${day(c.allocated_at)}`, c.due_date ? `due ${day(c.due_date)}${c.overdue ? ' (overdue)' : ''}` : '', c.started_at ? `started ${day(c.started_at)}` : '', c.completed_at ? `completed ${day(c.completed_at)}` : ''].filter(Boolean).join(', ')
   const facts = c.status === 'not_started'
     ? `<p style="margin:8px 0 0;font-size:13px;color:${BODY}">Nothing has been opened yet.</p>`
@@ -26,6 +34,7 @@ function course(c: CourseDetail, action?: { status: string; text: string }): str
     ${action ? `<div style="font-size:12px;color:${MUTED};margin-top:2px">Supervision action: &ldquo;${esc(action.text)}&rdquo; (${action.status === 'done' ? 'done' : action.status === 'in_progress' ? 'in progress' : 'open'})</div>` : ''}
     ${facts}${wrong}
     ${c.reflection ? `<p style="margin:8px 0 0;font-size:12px;color:${BODY}"><strong>Their reflection:</strong> ${esc(c.reflection)}</p>` : ''}
+    ${sugs.length ? `<p style="margin:12px 0 6px;font-size:12px;font-weight:700;color:${DARK}">Suggestions for this supervision</p>${suggestionCards(sugs)}` : ''}
   </div>`
 }
 
@@ -33,21 +42,33 @@ function course(c: CourseDetail, action?: { status: string; text: string }): str
 export function renderDetailBody(d: TrainingDetail): string {
   const kind = d.supervision?.type ?? 'supervision'
   const heading = (t: string) => `<h3 style="margin:18px 0 8px;font-size:14px;color:${DARK}">${esc(t)}</h3>`
+  // A suggestion about one course prints inside that course; a pattern across courses (or one whose course is not shown) prints on its own.
+  const shownIds = new Set([...d.linked.map((l) => l.course?.enrollment_id), ...d.others.map((c) => c.enrollment_id)].filter(Boolean) as string[])
+  const mine = (id: string) => d.suggestions.filter((s) => s.enrollment_id === id)
   const linked = d.linked.length
-    ? d.linked.map((l) => (l.course ? course(l.course, { status: l.action_status, text: l.description }) : `<p style="font-size:13px;color:${MUTED}">${esc(l.description)}: the course allocation can no longer be found.</p>`)).join('')
+    ? d.linked.map((l) => (l.course ? course(l.course, { status: l.action_status, text: l.description }, mine(l.course.enrollment_id)) : `<p style="font-size:13px;color:${MUTED}">${esc(l.description)}: the course allocation can no longer be found.</p>`)).join('')
     : `<p style="font-size:13px;color:${MUTED}">No training has been allocated against this ${esc(kind)} yet.</p>`
-  const tone = { concern: '#b91c1c', check: '#b45309', praise: '#15803d' } as const
-  const sugg = d.suggestions.length
-    ? heading('Suggestions for this ' + kind) + `<p style="margin:0 0 8px;font-size:12px;color:${MUTED}">Ideas for the conversation, based on how they did. They are prompts, not judgements.</p>` + d.suggestions.map((s) =>
-        `<div style="margin:0 0 8px;padding:8px 10px;border:1px solid ${LINE};border-left:4px solid ${tone[s.tone]};border-radius:6px;page-break-inside:avoid"><div style="font-size:13px;font-weight:700;color:${DARK}">${esc(s.title)}</div>` +
-        s.evidence.map((e) => `<div style="font-size:12px;color:${MUTED}">${esc(e)}</div>`).join('') + `<div style="font-size:13px;color:${BODY};margin-top:4px">${esc(s.suggestion)}</div></div>`).join('')
+  const general = d.suggestions.filter((s) => !s.enrollment_id || !shownIds.has(s.enrollment_id))
+  const sugg = general.length
+    ? heading('Suggestions for this ' + kind) + `<p style="margin:0 0 8px;font-size:12px;color:${MUTED}">Ideas for the conversation, based on how they did. They are prompts, not judgements.</p>` + suggestionCards(general)
     : ''
-  const others = d.others.length ? heading(`Also allocated since ${d.since ? day(d.since) : 'the last supervision'}`) + d.others.map((c) => course(c)).join('') : ''
+  const stateLabel = { missed: 'Missed', partial: 'Part done', not_started: 'Not started', not_recorded: 'Not recorded' } as const
+  const typeLabel = { cpd: 'CPD course', annual: 'Annual training', adhoc: 'Ad hoc training', f2f: 'Face to face' } as const
+  const out = (d.outstanding ?? []) as OutstandingItem[]
+  const outstanding = out.length
+    ? heading(`Allocated training still to do (${out.length})`) + `<p style="margin:0 0 8px;font-size:12px;color:${MUTED}">Allocated to them and not finished: CPD, annual, ad hoc and face to face. Training renewed or made up since is not listed.</p>` +
+      (['missed', 'partial', 'not_started', 'not_recorded'] as const).map((k) => {
+        const rows = out.filter((i) => i.state === k)
+        return rows.length ? `<p style="margin:8px 0 4px;font-size:12px;font-weight:700;color:${k === 'missed' ? RED : DARK};text-transform:uppercase;letter-spacing:.04em">${stateLabel[k]} (${rows.length})</p><ul style="margin:0;padding-left:18px;font-size:13px;color:${BODY}">` +
+          rows.map((i) => `<li style="margin:0 0 3px;page-break-inside:avoid"><strong>${esc(i.title)}</strong> (${typeLabel[i.type]}). ${esc(i.note)}</li>`).join('') + '</ul>' : ''
+      }).join('')
+    : ''
+  const others = d.others.length ? heading(`Also allocated since ${d.since ? day(d.since) : 'the last supervision'}`) + d.others.map((c) => course(c, undefined, mine(c.enrollment_id))).join('') : ''
   const follow = d.follow_up.length
     ? heading('Gaps they went back over') + `<ul style="margin:0;padding-left:18px;font-size:13px;color:${BODY}">` + d.follow_up.map((f) => `<li>${esc(f.label ?? 'A question they had got wrong')} (${f.method === 'learn' ? 'went through the lesson, then retried' : 'retried straight away'}, ${esc(day(f.when))})</li>`).join('') + '</ul>'
     : ''
   return `<p style="margin:0 0 4px;font-size:13px;color:${MUTED}">${esc(d.person.job_role ?? '')}${d.supervision ? ` &middot; ${esc(kind)} on ${esc(day(d.supervision.held_on))}` : ''}</p>` +
-    sugg + heading(`Training for this ${kind}`) + linked + others + follow +
+    sugg + outstanding + heading(`Training for this ${kind}`) + linked + others + follow +
     `<p style="margin:16px 0 0;font-size:11px;color:${MUTED}">Built from their training records on ${esc(day(d.generated_at))}. Confidential: this contains a member of staff's training records, so keep it securely and share it only with people who need it.</p>`
 }
 

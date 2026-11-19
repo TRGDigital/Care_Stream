@@ -3019,6 +3019,17 @@ export default function HelpPage() {
     setOpenId(id)
     requestAnimationFrame(() => document.getElementById(id)?.scrollIntoView({ block: 'start' }))
   }, [])
+  // Search results link to /guides#id while this page may already be open: follow the hash as it changes.
+  useEffect(() => {
+    const onHash = () => {
+      const id = window.location.hash.slice(1)
+      if (!id || !GUIDE_SECTIONS.some(s => s.id === id)) return
+      setOpenId(id)
+      requestAnimationFrame(() => document.getElementById(id)?.scrollIntoView({ block: 'start' }))
+    }
+    window.addEventListener('hashchange', onHash)
+    return () => window.removeEventListener('hashchange', onHash)
+  }, [])
   const q = query.trim().toLowerCase()
   const filtered = q
     ? GUIDE_SECTIONS.filter(s => s.title.toLowerCase().includes(q) || s.summary.toLowerCase().includes(q))

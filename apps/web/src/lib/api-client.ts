@@ -177,6 +177,8 @@ export interface LicenseUsage {
 }
 
 // Plan feature flags + licence usage, used to grey out / unlock features.
+export type SearchRecord = { id: string; title: string; sub: string | null }
+
 export interface PlanFeatures {
   plan_name:              string | null
   price_monthly_pence:    number | null
@@ -648,8 +650,13 @@ export function createApiClient(token: string) {
           method: 'POST', body: JSON.stringify({ session_id }),
         }),
     },
+    adminSearch: {
+      records: (q: string) =>
+        apiFetch<{ policies: SearchRecord[]; staff: SearchRecord[]; knowledge: SearchRecord[]; audits: SearchRecord[]; training: SearchRecord[] }>(`/admin-search?q=${encodeURIComponent(q)}`, token),
+      miss: (q: string) => apiFetch<{ logged: boolean }>('/admin-search/miss', token, { method: 'POST', body: JSON.stringify({ q }) }),
+    },
     settings: {
-      get: () => apiFetch<{ inbound_email: string; account_number: string; policy_sections: string[]; policy_categories: string[]; email_allowlist: string[]; phone_allowlist: string[]; facility_type: string; service_profile: Record<string, boolean>; service_triggers: Array<{ key: string; label: string; desc: string }>; logo_url: string | null; email_preferences: Record<string, boolean>; staff_roles: string[]; specialist_roles: string[]; response_style: 'standard' | 'concise'; branding_signoff: string; languages?: Array<{ code: string; name: string }>; default_language_codes?: string[]; language_catalog?: Array<{ code: string; name: string }>; translation_glossary?: Array<{ term: string; keep: boolean; note: string }>; glossary_excludes?: string[]; platform_glossary?: Array<{ term: string; keep: boolean; note: string }>; translation_suggestions_auto_approve?: boolean; room_count?: number }>('/settings', token),
+      get: () => apiFetch<{ inbound_email: string; account_number: string; policy_sections: string[]; policy_categories: string[]; email_allowlist: string[]; phone_allowlist: string[]; facility_type: string; service_profile: Record<string, boolean>; service_triggers: Array<{ key: string; label: string; desc: string }>; logo_url: string | null; email_preferences: Record<string, boolean>; staff_roles: string[]; specialist_roles: string[]; response_style: 'standard' | 'concise'; branding_signoff: string; languages?: Array<{ code: string; name: string }>; default_language_codes?: string[]; language_catalog?: Array<{ code: string; name: string }>; translation_glossary?: Array<{ term: string; keep: boolean; note: string }>; glossary_excludes?: string[]; platform_glossary?: Array<{ term: string; keep: boolean; note: string }>; translation_suggestions_auto_approve?: boolean; room_count?: number; feature_flags?: Record<string, boolean> }>('/settings', token),
       update: (data: { email_allowlist?: string[]; phone_allowlist?: string[]; facility_type?: string; service_profile?: Record<string, boolean>; email_preferences?: Record<string, boolean>; staff_roles?: string[]; specialist_roles?: string[]; policy_sections?: string[]; policy_categories?: string[]; response_style?: 'standard' | 'concise'; branding_signoff?: string; add_language?: string; remove_language?: string; translation_glossary?: Array<{ term: string; keep?: boolean; note?: string; exclude?: boolean }>; translation_suggestions_auto_approve?: boolean; room_count?: number }) =>
         apiFetch<{ email_allowlist: string[]; phone_allowlist: string[]; facility_type: string; email_preferences: Record<string, boolean>; staff_roles: string[]; specialist_roles: string[]; policy_sections: string[]; policy_categories: string[]; response_style: 'standard' | 'concise'; languages?: Array<{ code: string; name: string }>; added_language?: { code: string; name: string; resolved: boolean } | null; translation_glossary?: Array<{ term: string; keep: boolean; note: string }>; glossary_excludes?: string[]; room_count?: number }>('/settings', token, {
           method: 'PATCH',

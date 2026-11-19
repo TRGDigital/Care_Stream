@@ -15,6 +15,7 @@ import { FEATURES, PLAN_NOTE, type FeatureEntry } from '@/lib/admin-search/featu
 import { searchFeatures, searchGuides, tokens, type GuideEntry } from '@/lib/admin-search/search'
 import { tierLock, basePath, type AccountKind } from '@/lib/admin-search/access'
 import { runIntent } from '@/lib/admin-search/intents'
+import { CPD_CERTIFIED_LOGO } from '@/lib/cpd'
 
 type Item = {
   key: string; group: string; title: string; sub?: string | null; href: string
@@ -23,6 +24,7 @@ type Item = {
   openPolicy?: { id: string; name: string }       // policies: the main action opens this policy itself
   cta?: string                                    // what the main action does, in a few words
   tag?: string                                    // what kind of thing it is: Policy, Staff, Action…
+  cpdCertified?: boolean                          // a course The CPD Certification Service has certified: shows their logo, unaltered
   Icon: React.ElementType
 }
 
@@ -114,14 +116,14 @@ export function AdminSearch({ account, onLocked }: { account: AccountKind; onLoc
     ;(records?.training ?? []).forEach(r => {
       const path = r.annual ? '/training/annual' : '/training'
       const href = r.annual ? `/training/annual?do=assign-cpd&module=${encodeURIComponent(r.id)}&name=${encodeURIComponent(r.title)}` : `/training?do=assign-training&module=${encodeURIComponent(r.id)}`
-      out.push({ key: `training-${r.id}`, group: 'Training courses', title: r.title, sub: r.sub, Icon: GraduationCap, locked: lockOf(path), href, cta: 'Assign to staff', alt: { label: r.annual ? 'CPD page' : 'Training page', href: path } })
+      out.push({ key: `training-${r.id}`, group: 'Training courses', title: r.title, sub: r.sub, Icon: GraduationCap, cpdCertified: r.cpd === true, tag: r.cpd ? undefined : r.annual ? 'Standard course' : 'Ad hoc course', locked: lockOf(path), href, cta: 'Assign to staff', alt: { label: r.annual ? 'CPD page' : 'Training page', href: path } })
     })
     rec('onboarding', 'Staff onboarding flows', UserPlus, '/onboarding', false, id => `/onboarding?do=allocate-flow&flow=${encodeURIComponent(id)}`, 'Allocate to staff', { label: 'Onboarding page', href: () => '/onboarding' })
     // Order: actions and the person's own records first, then pages and features, then help and guides.
     const TAG: Record<string, string> = { 'Do something': 'Action', 'Your policies': 'Policy', 'Your staff': 'Staff', 'Your residents': 'Resident', 'Your knowledge base': 'Knowledge', Audits: 'Audit', 'Training courses': 'Course', 'Staff onboarding flows': 'Onboarding flow' }
     const rank = (it: Item) => it.group === 'Pages and features' ? 1 : it.group === 'Help and guides' ? 2 : 0
     return out
-      .map(it => rank(it) === 0 ? { ...it, tag: TAG[it.group], group: 'Actions and specifics' } : it)
+      .map(it => rank(it) === 0 ? { ...it, tag: it.tag ?? (it.cpdCertified ? undefined : TAG[it.group]), group: 'Actions and specifics' } : it)
       .sort((a, b) => rank(a) - rank(b))
   }, [q, guides, records, lockOf])
 
@@ -207,7 +209,11 @@ export function AdminSearch({ account, onLocked }: { account: AccountKind; onLoc
                     <div className={`flex items-start ${i === active ? 'bg-teal/5' : ''}`}>
                     <button type="button" onClick={() => go(it)} onMouseEnter={() => setActive(i)}
                       className="flex min-w-0 flex-1 items-start gap-3 py-2 pl-4 pr-2 text-left">
-                      <it.Icon size={16} className={`mt-0.5 shrink-0 ${it.locked ? 'text-neutral-mid/60' : 'text-teal'}`} />
+                      {it.cpdCertified
+                        // The mark is shown exactly as supplied: no border, tint, crop or added text, original proportions (132 x 120).
+                        // eslint-disable-next-line @next/next/no-img-element
+                        ? <img src={CPD_CERTIFIED_LOGO} alt="CPD Certified" width={33} height={30} className="mt-0.5 h-[30px] w-[33px] shrink-0" />
+                        : <it.Icon size={16} className={`mt-0.5 shrink-0 ${it.locked ? 'text-neutral-mid/60' : 'text-teal'}`} />}
                       <span className="min-w-0 flex-1">
                         <span className={`flex flex-wrap items-center gap-2 text-sm font-medium ${it.locked ? 'text-neutral-mid' : 'text-neutral-dark'}`}>
                           {it.title}

@@ -177,7 +177,7 @@ export interface LicenseUsage {
 }
 
 // Plan feature flags + licence usage, used to grey out / unlock features.
-export type SearchRecord = { id: string; title: string; sub: string | null; annual?: boolean }
+export type SearchRecord = { id: string; title: string; sub: string | null; annual?: boolean; cpd?: boolean }
 
 export interface PlanFeatures {
   plan_name:              string | null

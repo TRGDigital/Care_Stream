@@ -29,7 +29,7 @@ adminSearchRouter.get('/', async (req: Request, res: Response) => {
       tier === 'policies_only' ? [] : db.user.findMany({ where: { tenant_id: tenantId, is_active: true, OR: [{ name: like(q) }, { email: like(q) }] }, select: { id: true, name: true, email: true, role: true, job_role: true }, orderBy: { name: 'asc' }, take: 6 }),
       full ? db.knowledgeEntry.findMany({ where: { tenant_id: tenantId, source_type: 'manual', question: like(q) }, select: { id: true, question: true }, take: 5 }) : [],
       tier === 'policies_only' || tier === 'training_only' ? [] : db.auditTemplate.findMany({ where: { is_active: true, name: like(q), OR: [{ tenant_id: tenantId }, { tenant_id: null }] }, select: { id: true, name: true }, orderBy: { name: 'asc' }, take: 6 }),
-      tier === 'policies_only' ? [] : db.trainingModule.findMany({ where: { is_active: true, name: like(q), OR: [{ tenant_id: tenantId }, { tenant_id: null }] }, select: { id: true, name: true, is_annual: true, tier: true }, orderBy: { name: 'asc' }, take: 6 }),
+      tier === 'policies_only' ? [] : db.trainingModule.findMany({ where: { is_active: true, name: like(q), OR: [{ tenant_id: tenantId }, { tenant_id: null }] }, select: { id: true, name: true, is_annual: true, tier: true, cpd_accredited: true }, orderBy: { name: 'asc' }, take: 6 }),
       residentsOn ? db.resident.findMany({ where: { tenant_id: tenantId, status: 'living', OR: [{ first_name: like(q) }, { last_name: like(q) }, { preferred_name: like(q) }] }, select: { id: true, first_name: true, last_name: true, preferred_name: true, room: true }, orderBy: { last_name: 'asc' }, take: 6 }) : [],
       // Onboarding flows this account has (its own copies, not the shared templates): only on a full account.
       full ? db.onboardingFlow.findMany({ where: { tenant_id: tenantId, is_active: true, name: like(q) }, select: { id: true, name: true }, orderBy: { name: 'asc' }, take: 5 }) : [],
@@ -40,7 +40,7 @@ adminSearchRouter.get('/', async (req: Request, res: Response) => {
       knowledge: knowledge.map((k: any) => ({ id: k.id, title: k.question, sub: null })),
       audits: audits.map((a: any) => ({ id: a.id, title: a.name, sub: null })),
       residents: residents.map((r: any) => ({ id: r.id, title: `${r.preferred_name || r.first_name} ${r.last_name}`, sub: r.room ? `Room ${r.room}` : null })),
-      training: training.map((m: any) => ({ id: m.id, title: m.name, sub: m.is_annual ? 'Annual training' : null, annual: !!m.is_annual })),
+      training: training.map((m: any) => ({ id: m.id, title: m.name, sub: m.is_annual ? 'Annual training' : null, annual: !!m.is_annual, cpd: m.cpd_accredited === true })),
       onboarding: onboarding.map((o: any) => ({ id: o.id, title: o.name, sub: null })),
     })
   } catch (e: any) { err(res, 'SEARCH_FAILED', 'Search could not run.', 500) }

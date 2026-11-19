@@ -1,11 +1,11 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
-import { FEATURES } from './features.ts'
-import { searchFeatures, searchGuides } from './search.ts'
+import { FEATURES } from './features'
+import { searchFeatures, searchGuides } from './search'
 
 const guides = JSON.parse(readFileSync(new URL('./guides-index.json', import.meta.url), 'utf8'))
-const top = (q) => searchFeatures(q, FEATURES)[0]?.entry.id
+const top = (q: string) => searchFeatures(q, FEATURES)[0]?.entry.id
 
 test('people find features by the words they use', () => {
   assert.equal(top('incentives'), 'incentives')
@@ -31,7 +31,7 @@ test('guide text is searched, with a snippet', () => {
 })
 test('every entry has a unique id, a real guide and a path', () => {
   const ids = new Set(FEATURES.map(f => f.id)); assert.equal(ids.size, FEATURES.length)
-  const gids = new Set(guides.map(g => g.id))
+  const gids = new Set(guides.map((g: any) => g.id))
   for (const f of FEATURES) { assert.ok(f.href.startsWith('/'), f.id); if (f.guide) assert.ok(gids.has(f.guide), `${f.id}: guide ${f.guide} does not exist`) }
   for (const f of FEATURES) for (const w of [f.title, f.about, ...f.words]) assert.doesNotMatch(w, /[—–]/, `${f.id}: no dashes in copy`)
 })
@@ -57,4 +57,16 @@ test('every action in the map is performed by a page (no dead links)', async () 
     const name = new URL(f.href, 'http://x').searchParams.get('do')
     assert.ok(src.includes(`'${name}'`), `${f.id}: no page handles do=${name}`)
   }
+})
+
+test('shorthand, typos and everyday words still find the right thing', () => {
+  const cases: Array<[string, string]> = [
+    ['f2f', 'face-to-face'], ['f2f session', 'do-new-f2f'], ['incentivs', 'incentives'], ['supervison', 'supervisions'],
+    ['new starter', 'onboarding'], ['kb', 'knowledge'], ['rewards', 'incentives'], ['invoice', 'billing'],
+    ['dbs', 'workforce'], ['rtw', 'workforce'], ['1:1', 'supervisions'], ['appraisals', 'supervisions'],
+    ['hr', 'workforce'], ['cqc inspection', 'cqc-report'], ['mock inspection', 'cqc-prep'], ['audt', 'audits'],
+    ['reset password', 'staff'], ['bulk add staff', 'do-import-staff'], ['hub', 'do-hub-invites'], ['family', 'residents'],
+  ]
+  const wrong = cases.filter(([q, id]) => top(q) !== id).map(([q, id]) => `${q} -> ${top(q)} (wanted ${id})`)
+  assert.deepEqual(wrong, [])
 })

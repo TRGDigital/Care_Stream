@@ -1,6 +1,7 @@
 // Pure search: no React, no network. Score a query against feature entries and guide text.
 // Order of value: exact title, title words, the words people type, the one line description, then guide text.
 import type { FeatureEntry } from './features'
+import { variants } from './query'
 
 export type GuideEntry = { id: string; title: string; summary: string; text: string; blocks: Array<{ title: string; text: string }> }
 export type Hit =
@@ -12,6 +13,23 @@ export const norm = (s: string) => s.toLowerCase().replace(/[’']/g, '').replac
 // Light stemming so "invites", "inviting", "invited" meet "invite".
 const stem = (w: string) => w.length > 4 ? w.replace(/(ing|ed|es|s)$/, '') : w.replace(/s$/, '')
 export const tokens = (s: string) => norm(s).split(' ').filter(w => w && !STOP.has(w)).map(stem)
+
+// One typo is forgiven in a word of 4 or more letters, two in a word of 9 or more ("incentivs", "supervison").
+function near(a: string, b: string): boolean {
+  const max = a.length >= 9 ? 2 : a.length >= 4 ? 1 : 0
+  if (!max || Math.abs(a.length - b.length) > max || a[0] !== b[0]) return false   // same first letter: people rarely get that wrong
+  const prev = Array.from({ length: b.length + 1 }, (_, j) => j)
+  for (let i = 1; i <= a.length; i++) {
+    let diag = prev[0]; prev[0] = i; let best = prev[0]
+    for (let j = 1; j <= b.length; j++) {
+      const tmp = prev[j]
+      prev[j] = Math.min(prev[j] + 1, prev[j - 1] + 1, diag + (a[i - 1] === b[j - 1] ? 0 : 1))
+      diag = tmp; if (prev[j] < best) best = prev[j]
+    }
+    if (best > max) return false
+  }
+  return prev[b.length] <= max
+}
 
 function hay(s: string) { return { n: norm(s), t: new Set(tokens(s)) } }
 
@@ -31,6 +49,7 @@ function scoreText(q: string, qt: string[], h: { n: string; t: Set<string> }, we
     const wt = weightOf(w); total += wt
     if (h.t.has(w)) hits += wt
     else if (w.length >= 3 && [...h.t].some(x => x.startsWith(w) || (x.length >= 4 && w.startsWith(x)))) hits += wt * 0.6
+    else if (w.length >= 4 && [...h.t].some(x => near(w, x))) hits += wt * 0.5
   }
   if (hits === 0) return 0
   const cover = hits / total
@@ -41,8 +60,21 @@ function scoreText(q: string, qt: string[], h: { n: string; t: Set<string> }, we
   return s
 }
 
+// The same search for each spelling of the query (abbreviations swapped for what they stand for), best score wins.
 export function searchFeatures(query: string, features: FeatureEntry[]): Array<{ entry: FeatureEntry; score: number }> {
   if (IDF.size === 0) setIdf(features)
+  const best = new Map<string, { entry: FeatureEntry; score: number }>()
+  variants(query).forEach((v, i) => {
+    for (const r of searchFeaturesOne(v, features)) {
+      const s = i === 0 ? r.score : r.score * 0.92
+      const cur = best.get(r.entry.id)
+      if (!cur || s > cur.score) best.set(r.entry.id, { entry: r.entry, score: s })
+    }
+  })
+  return [...best.values()].sort((a, b) => b.score - a.score)
+}
+
+function searchFeaturesOne(query: string, features: FeatureEntry[]): Array<{ entry: FeatureEntry; score: number }> {
   const q = norm(query), qt = tokens(query)
   if (!q) return []
   const out: Array<{ entry: FeatureEntry; score: number }> = []
@@ -66,6 +98,19 @@ export function snippetOf(text: string, qt: string[], len = 140): string {
 }
 
 export function searchGuides(query: string, guides: GuideEntry[]): Array<Extract<Hit, { kind: 'guide' }>> {
+  const best = new Map<string, Extract<Hit, { kind: 'guide' }>>()
+  variants(query).forEach((v, i) => {
+    for (const r of searchGuidesOne(v, guides)) {
+      const s = i === 0 ? r.score : r.score * 0.92
+      const key = r.guide.id + (r.block ?? '')
+      const cur = best.get(key)
+      if (!cur || s > cur.score) best.set(key, { ...r, score: s })
+    }
+  })
+  return [...best.values()].sort((a, b) => b.score - a.score)
+}
+
+function searchGuidesOne(query: string, guides: GuideEntry[]): Array<Extract<Hit, { kind: 'guide' }>> {
   const q = norm(query), qt = tokens(query)
   if (!q) return []
   const out: Array<Extract<Hit, { kind: 'guide' }>> = []

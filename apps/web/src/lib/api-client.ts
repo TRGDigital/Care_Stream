@@ -652,7 +652,7 @@ export function createApiClient(token: string) {
     },
     adminSearch: {
       records: (q: string) =>
-        apiFetch<{ policies: SearchRecord[]; staff: SearchRecord[]; knowledge: SearchRecord[]; audits: SearchRecord[]; training: SearchRecord[]; residents: SearchRecord[]; onboarding: SearchRecord[] }>(`/admin-search?q=${encodeURIComponent(q)}`, token),
+        apiFetch<{ topics?: string[]; policies: SearchRecord[]; staff: SearchRecord[]; knowledge: SearchRecord[]; audits: SearchRecord[]; training: SearchRecord[]; residents: SearchRecord[]; onboarding: SearchRecord[] }>(`/admin-search?q=${encodeURIComponent(q)}`, token),
       miss: (q: string) => apiFetch<{ logged: boolean }>('/admin-search/miss', token, { method: 'POST', body: JSON.stringify({ q }) }),
     },
     settings: {

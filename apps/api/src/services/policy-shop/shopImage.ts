@@ -278,6 +278,21 @@ People have simple, friendly, stylised faces with OPEN, clearly visible eyes (a 
 Compose for a WIDE landscape frame: keep the subject centred and away from the top and bottom edges, which are cropped.
 Professional and reassuring.`
 
+/**
+ * One scene illustration as raw image bytes (not stored), in the same house style, model and cast logic as
+ * generateContentImage. For callers that keep the file somewhere else, such as the training module images.
+ * `key` picks the cast (a different person in each position), so use a distinct key per picture.
+ */
+export async function generateSceneBuffer(topic: string, scene: string, key: string): Promise<Buffer> {
+  const cast = castFor(key).replace('without drawing realistic facial detail', 'with simple, friendly, stylised faces that have open, clearly visible eyes')
+  const template = await promptFor(BLOG_IMAGE_PROMPT_USAGE, DEFAULT_BLOG_IMAGE_PROMPT)
+  const result = await openai.images.generate({ model: IMAGE_MODEL(), prompt: build(template, topic, scene) + cast, size: SIZE })
+  recordCostUsd(IMAGE_MODEL(), imageCostUsd((result as any).usage))
+  const b64 = result.data?.[0]?.b64_json
+  if (!b64) throw new Error('Image generation returned no data')
+  return Buffer.from(b64, 'base64')
+}
+
 /** Generate one article illustration and return its public URL path (served by /public/policy-shop/image/:file). */
 export async function generateContentImage(topic: string, scene: string, key: string): Promise<string> {
   // The shared cast line asks for no facial detail, which gave blank faces here, so it is swapped for open, visible eyes.

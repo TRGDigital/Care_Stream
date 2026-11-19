@@ -1,98 +1,69 @@
-// AI cover-illustration generation for annual training modules.
+// Cover and lesson images for standard and CPD training modules (see the notes below).
 //
-// One illustration per module, generated from the module's topic + learning
-// summary. Style is a flat, warm vector illustration (NO realistic faces, NO
-// text) so it's safe, on-brand and reusable. The image is stored privately in
-// S3 and served through the public /public/training/image/:file endpoint.
-//
-// Platform standard modules generate images free (platform-side). Tenants
-// trigger generation explicitly via a button that consumes one AI credit.
+// They use the same generator as the blog and scenario pictures (house style: flat illustration, people
+// with friendly faces and open eyes, a different and varied cast in each picture, wide frame, no text and no
+// screens), so the training pages match the rest of the site. Each picture shows ONE moment from the
+// section it sits on, written for that section by Claude from its teaching text and its care scenario.
+// Platform standard modules generate images free (platform side). Only the image changes: the lesson text,
+// questions and settings are never touched, and the previous image key is kept (cover_key_prev,
+// image_key_prev) so a picture can be put back.
 
-import OpenAI from 'openai'
 import { prisma } from '../../db/client'
 import { uploadTrainingImage } from '../storage/s3'
-import { recordCostUsd } from '../../lib/token-usage'
+import { callClaude } from '../ai/claude'
+import { generateSceneBuffer } from '../policy-shop/shopImage'
 
-// gpt-image-1 cost. Priced from the returned usage tokens (image output tokens dominate):
-// text input $5, image input $10, image output $40 per 1M tokens. Falls back to a per-image
-// estimate for a 1024x1024 image at default (medium) quality when usage is absent.
-function imageCostUsd(usage: any): number {
-  if (usage && (usage.input_tokens || usage.output_tokens)) {
-    const textIn  = usage.input_tokens_details?.text_tokens ?? usage.input_tokens ?? 0
-    const imageIn = usage.input_tokens_details?.image_tokens ?? 0
-    const out     = usage.output_tokens ?? 0
-    return (textIn * 5 + imageIn * 10 + out * 40) / 1_000_000
-  }
-  return 0.042
-}
-
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY! })
-
-// Editable in the Platform Console → AI Prompts ("Annual Training — Cover Image").
-// {{topic}} and {{summary}} are substituted per module before the image is generated.
+// The AI Prompts console lists this usage. Training pictures now share the house style prompt used for blog
+// and scenario pictures (edit it under "blog_image_generation"), so this default simply mirrors that one.
 export const TRAINING_IMAGE_PROMPT_USAGE = 'training_image_generation'
-export const DEFAULT_TRAINING_IMAGE_PROMPT = `Create a cover illustration for a UK care-home staff training module.
-Topic: "{{topic}}".
-Context: {{summary}}
+export { DEFAULT_BLOG_IMAGE_PROMPT as DEFAULT_TRAINING_IMAGE_PROMPT } from '../policy-shop/shopImage'
 
-Style: flat modern vector illustration, soft rounded shapes, warm and friendly, gentle teal and warm-neutral palette, plenty of clean negative space. A calm UK care-home setting.
-Do NOT include any text, words, letters or logos.
-Do NOT show realistic human faces — keep any people stylised, simple and abstract.
-Professional, reassuring, suitable for staff training.`
+const SCENE_SYSTEM = `You write the scene for ONE flat illustration in a UK care home training course.
+Reply with ONE or TWO sentences only, no preamble. Describe ONE ordinary, believable moment that shows the lesson being applied in a care setting: who is there (their roles and what they are doing, one to three people), where, and a few small props.
+Never mention ethnicity, skin tone or age. No text, signs, labels, screens, charts, symbols or icons. Nothing distressing, coercive or undignified: people are calm, engaged and treated with dignity. Do not describe the picture style.`
 
-async function getImagePrompt(): Promise<string> {
+function asText(v: unknown, max: number): string {
+  if (!v) return ''
+  const t = typeof v === 'string' ? v : JSON.stringify(v)
+  return t.replace(/\s+/g, ' ').trim().slice(0, max)
+}
+
+async function sceneFor(courseName: string, label: string, teaching: string, scenario: string, idea: string): Promise<string> {
+  const user = `Course: ${courseName}\nPicture for: ${label}\nWhat it teaches: ${teaching}\n${scenario ? `Care scenario in the lesson: ${scenario}\n` : ''}${idea ? `Earlier scene idea (improve it, keep what fits): ${idea}\n` : ''}Write the scene.`
   try {
-    const row = await (prisma as any).aiPrompt.findUnique({ where: { usage: TRAINING_IMAGE_PROMPT_USAGE } })
-    if (row?.content) return row.content
-  } catch { /* fall through */ }
-  return DEFAULT_TRAINING_IMAGE_PROMPT
+    const out = (await callClaude(SCENE_SYSTEM, user, { maxTokens: 220, temperature: 0.7 })).replace(/^["'\s]+|["'\s]+$/g, '')
+    if (out.length > 25) return out
+  } catch { /* fall back to the teaching text */ }
+  return `An everyday moment in a UK care home showing ${label.toLowerCase()}.`
 }
 
-function buildPrompt(template: string, name: string, summary?: string | null): string {
-  const ctx = (summary && summary.trim().length > 10)
-    ? summary.trim().slice(0, 300)
-    : `An annual refresher training module on ${name} for care-home staff.`
-  return template.replace(/\{\{\s*topic\s*\}\}/g, name).replace(/\{\{\s*summary\s*\}\}/g, ctx)
-}
-
-// Generate one flat illustration for a topic + context and store it in S3.
-// Returns the S3 key. Shared by the module cover and per-section images.
-async function generateImageKey(name: string, context?: string | null): Promise<string> {
-  const template = await getImagePrompt()
-  const result = await openai.images.generate({
-    model:  'gpt-image-1',
-    prompt: buildPrompt(template, name, context),
-    size:   '1024x1024',
-  })
-  recordCostUsd('gpt-image-1', imageCostUsd((result as any).usage))
-  const b64 = result.data?.[0]?.b64_json
-  if (!b64) throw new Error('Image generation returned no data')
-  return uploadTrainingImage(Buffer.from(b64, 'base64'))
+async function sceneKey(courseName: string, scene: string, key: string): Promise<string> {
+  const buf = await generateSceneBuffer(courseName, scene, key)
+  return uploadTrainingImage(buf)
 }
 
 // Generate the module COVER illustration and persist its key on the module.
 export async function generateModuleIllustration(moduleId: string): Promise<string> {
   const module = await (prisma as any).trainingModule.findUnique({
     where:  { id: moduleId },
-    select: { id: true, name: true, learning_content: true },
+    select: { id: true, name: true, illustration_key: true, learning_content: true },
   })
   if (!module) throw new Error('Module not found')
-
-  const summary = (module.learning_content && typeof module.learning_content === 'object')
-    ? (module.learning_content.summary as string | undefined)
-    : undefined
-
-  const key = await generateImageKey(module.name, summary)
-  await (prisma as any).trainingModule.update({ where: { id: moduleId }, data: { illustration_key: key } })
+  const lc = (module.learning_content && typeof module.learning_content === 'object') ? { ...module.learning_content } : {}
+  const summary = asText((lc as any).summary, 600)
+  const scene = await sceneFor(module.name, 'the course cover: a welcoming, representative moment for the whole topic', summary, '', '')
+  const key = await sceneKey(module.name, scene, `trn-cover-${moduleId}`)
+  // keep the first previous cover so the original can always be put back
+  if (module.illustration_key && !(lc as any).cover_key_prev) (lc as any).cover_key_prev = module.illustration_key
+  await (prisma as any).trainingModule.update({ where: { id: moduleId }, data: { illustration_key: key, learning_content: lc } })
   return key
 }
 
-// Generate an image for ONE lesson section (using the same prompt approach as the
-// cover, seeded from the section's heading + body) and store it in that section.
+// Generate an image for ONE lesson section and store it in that section.
 export async function generateSectionImage(moduleId: string, sectionIndex: number): Promise<string> {
   const module = await (prisma as any).trainingModule.findUnique({
     where:  { id: moduleId },
-    select: { id: true, learning_content: true },
+    select: { id: true, name: true, learning_content: true },
   })
   if (!module) throw new Error('Module not found')
   const lc = (module.learning_content && typeof module.learning_content === 'object') ? { ...module.learning_content } : {}
@@ -100,10 +71,9 @@ export async function generateSectionImage(moduleId: string, sectionIndex: numbe
   const sec = sections[sectionIndex]
   if (!sec) throw new Error('Section not found')
 
-  // A CPD course section carries its own scene (image_prompt) so each image shows
-  // what that section teaches; older sections fall back to their body text.
-  const key = await generateImageKey(String(sec.heading || 'Care-home training'), String(sec.image_prompt || sec.body || ''))
-  sections[sectionIndex] = { ...sec, image_key: key }
+  const scene = await sceneFor(module.name, String(sec.heading || 'a lesson section'), asText(sec.body, 700), asText(sec.scenario, 500), asText(sec.image_prompt, 300))
+  const key = await sceneKey(module.name, scene, `trn-${moduleId}-${sectionIndex}`)
+  sections[sectionIndex] = { ...sec, image_key: key, ...(sec.image_key && !sec.image_key_prev ? { image_key_prev: sec.image_key } : {}) }
   ;(lc as any).sections = sections
   await (prisma as any).trainingModule.update({ where: { id: moduleId }, data: { learning_content: lc } })
   return key

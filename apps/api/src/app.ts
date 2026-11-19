@@ -60,6 +60,7 @@ import { marketingPublicRouter } from './routes/marketing-public'
 import { publicWebsiteChatRouter, websiteChatAdminRouter } from './routes/website-chat'
 import { onboardingPublicRouter } from './routes/onboarding-public'
 import { lpPublicRouter } from './routes/lp-public'
+import { siteVisitsRouter } from './routes/site-visits'
 import { policyShopPublicRouter } from './routes/policy-shop-public'
 import { agentActionsRouter } from './routes/agent-actions'
 import { cronRouter } from './routes/cron'
@@ -177,6 +178,7 @@ app.use('/feedback', feedbackRouter)
 app.use('/onboarding', onboardingPublicRouter)
 
 // Public marketing blog — published posts only, no auth. Must be mounted BEFORE requireAuth.
+app.use('/public/page-visit', siteVisitsRouter)
 app.use('/public/blog', publicBlogRouter)
 app.use('/public/user-cases', publicUserCasesRouter)
 app.use('/public/service-pages', publicServicePagesRouter)

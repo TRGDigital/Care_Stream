@@ -3499,3 +3499,35 @@ model UserActiveSeconds {
   @@index([tenant_id, day])
   @@map("user_active_seconds")
 }
+
+
+// One row per page view on the public site, for visitors who accepted analytics cookies (see docs/sql/2026-11-20_site_visits.sql).
+model SiteVisit {
+  id              String    @id @db.Uuid
+  visitor_id      String?
+  session_id      String?
+  path            String
+  page_type       String?
+  referrer        String?
+  utm_source      String?
+  utm_medium      String?
+  utm_campaign    String?
+  device          String?
+  is_return       Boolean   @default(false)
+  started_at      DateTime  @default(now()) @db.Timestamptz(6)
+  ended_at        DateTime? @db.Timestamptz(6)
+  active_seconds  Int       @default(0)
+  elapsed_seconds Int       @default(0)
+  max_scroll_pct  Int       @default(0)
+  interactions    Int       @default(0)
+  clicks          Json?
+  conversions     String[]  @default([])
+  next_path       String?
+  created_at      DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime  @updatedAt @db.Timestamptz(6)
+
+  @@index([started_at])
+  @@index([visitor_id, started_at])
+  @@index([path, started_at])
+  @@map("site_visits")
+}

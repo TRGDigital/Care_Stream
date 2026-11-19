@@ -698,6 +698,22 @@ export type RegulationChange = {
 }
 
 
+/** What visitors do on the public site (api lib/site-activity.ts). Only visitors who accepted analytics cookies are in the page views. */
+export type SiteActivityData = {
+  range_days: number; since: string; recording_since: string | null
+  real: { accounts_created: number; demo_requests: number; contact_enquiries: number }
+  totals: { visitors: number; sessions: number; page_views: number; avg_active_seconds: number; bounce_pct: number; returning_pct: number; pages_per_session: number }
+  live_visitors: number
+  funnel: Array<{ key: string; label: string; visitors: number }>
+  conversions: Array<{ key: string; label: string; visitors: number; events: number }>
+  pages: Array<{ path: string; views: number; visitors: number; avg_active_seconds: number; avg_scroll_pct: number; conversions: number; conv_rate: number }>
+  clicks: Array<{ label: string; href: string | null; count: number; pages: number }>
+  referrers: Array<{ source: string; visitors: number }>
+  devices: Record<string, number>
+  daily: Array<{ day: string; visitors: number; page_views: number; conversions: number }>
+  recent: Array<{ id: string; started_at: string; device: string | null; source: string; returning: boolean; visitor: string; conversions: string[]; pages: Array<{ path: string; active_seconds: number; scroll_pct: number; clicks: string[] }> }>
+}
+
 /** A company's Super User: measures over the 60 days, colleague engagement, eligibility and the voucher (api lib/super-user.ts). */
 export type SuperUserMeasure = { count: number; days: number }
 export type SuperUserDetail = {
@@ -722,6 +738,7 @@ export type SuperUserCard = { super_user: SuperUserDetail | null; voucher: { sta
 
 export function createPlatformClient(token: string) {
   return {
+    siteActivity: (days: number) => adminFetch<SiteActivityData>(`/site-activity?days=${days}`, token),
     stats: () =>
       adminFetch<PlatformStats>('/stats', token),
 

@@ -4,6 +4,7 @@ import { MarketingNav } from '@/components/marketing/nav'
 import { WebsiteChat } from '@/components/marketing/website-chat'
 import { HomeFaq, type Faq } from '@/components/marketing/home-faq'
 import { Typewriter } from '@/components/marketing/typewriter'
+import { SiteTracker } from '@/components/marketing/site-tracker'
 
 export const metadata: Metadata = {
   alternates: { canonical: 'https://www.carestreamai.com' },
@@ -1095,6 +1096,7 @@ export default async function HomePage(
         <JsonLd data={webApplicationSchema()} />
         <MarketingNav />
         <HomePageV2 s={makeSlot(HOME_V2_SLOTS, slots)} showFree={await freeLive(searchParams)} />
+        <SiteTracker />
         <MarketingFooter />
         <WebsiteChat />
       </div>
@@ -1123,6 +1125,7 @@ export default async function HomePage(
         <FinalCta s={s} />
         <HomeBlogSection posts={featuredPosts} />
       </main>
+      <SiteTracker />
       <MarketingFooter />
       <WebsiteChat />
     </div>

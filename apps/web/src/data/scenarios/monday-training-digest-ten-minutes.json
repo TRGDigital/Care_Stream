@@ -1,0 +1,414 @@
+{
+ "slug": "monday-training-digest-ten-minutes",
+ "status": "draft",
+ "order": 18,
+ "title": "You have ten minutes on Monday. <em>The weekly digest tells you where to look.</em>",
+ "meta_title": "Weekly Digest of Training Gaps for Managers | CareStreamAI",
+ "meta_description": "A weekly digest lands in your inbox every Monday and shows open knowledge gaps, who is affected and what staff keep missing. Ten minutes, not a hunt.",
+ "eyebrow": "Scenario",
+ "lede": "Most managers do not need another dashboard to remember to open. They need a short note that arrives by itself. Once you have allocated <a href=\"/training-platform\">short training built from your own policies</a>, a weekly digest reaches your inbox on Monday and shows where staff are still unsure.",
+ "fine": "14 day free trial · Set up in a day · UK data residency",
+ "panel": {
+  "title": "A Monday with the digest",
+  "pill": "Illustration",
+  "rows": [
+   {
+    "label": "Digest arrives in your inbox",
+    "note": "Monday, 07:30",
+    "done": true
+   },
+   {
+    "label": "Top missed questions read",
+    "note": "Monday, 07:35",
+    "done": true
+   },
+   {
+    "label": "Gaps view opened for the detail",
+    "note": "Not yet",
+    "done": false
+   },
+   {
+    "label": "Handover note written for the seniors",
+    "note": "Not yet",
+    "done": false
+   }
+  ],
+  "meter": 50
+ },
+ "image": "https://api.carestreamai.com/public/policy-shop/image/077deae0-7677-4622-b9cc-b21f5001d4de.webp",
+ "image_alt": "A care home manager at her desk early on a Monday morning with a mug of tea and a notebook, calm and organised, in bright morning light from the window",
+ "card_title": "Ten minutes on Monday: what did staff get wrong last week?",
+ "card_snippet": "You do not need to go looking for training gaps. A weekly digest tells you how many are open, who is affected and which questions staff keep missing, before the week gets busy.",
+ "primary_keyword": "weekly digest",
+ "secondary_keywords": [
+  "training compliance report",
+  "training compliance",
+  "training records",
+  "knowledge check"
+ ],
+ "feature_links": [
+  {
+   "title": "Training built from your own policies",
+   "body": "Ad hoc training from your policies, a check after it, and wrong answers that become lessons.",
+   "action": "See the feature",
+   "href": "/training-platform"
+  },
+  {
+   "title": "Adhoc training from a real event",
+   "body": "Turn something that happened on shift into short training and a follow up for the people involved.",
+   "action": "See adhoc training",
+   "href": "/uses/adhoc-training"
+  },
+  {
+   "title": "CQC and compliance",
+   "body": "Evidence that builds itself, and a readiness report for your next inspection.",
+   "action": "See CQC and compliance",
+   "href": "/cqc-compliance"
+  }
+ ],
+ "intro": {
+  "heading": "Monday morning is short. The picture should already be waiting.",
+  "sub": "A scenario we see in many care homes.",
+  "paragraph": "A registered manager starts at half past seven. Handover, a staffing gap, two phone calls and a family visit are already on the list. Last Thursday she set a short safeguarding check for the team, and she wants to know how it went. She does not want to log in somewhere, find the right tab and work it out. She has ten minutes before the day swallows her. In the first version of this story, nothing reaches her and she forgets. In the second, a weekly digest is already in her inbox. Here is how the first version plays out."
+ },
+ "trail": [
+  {
+   "when": "Thursday",
+   "text": "The manager sets a short safeguarding check for the whole team.",
+   "kind": "ok"
+  },
+  {
+   "when": "Thursday to Sunday",
+   "text": "Most staff finish it on their own phones between shifts.",
+   "kind": "ok"
+  },
+  {
+   "when": "Weekend",
+   "text": "Everyone who finished has a result against their name.",
+   "kind": "ok"
+  },
+  {
+   "when": "Monday, 07:30",
+   "text": "Handover, a staffing gap and a family visit take the first hour.",
+   "kind": "gap"
+  },
+  {
+   "when": "Monday, 10:00",
+   "text": "She means to look at the results. The dashboard is a tab she has to remember.",
+   "kind": "gap"
+  },
+  {
+   "when": "Midweek",
+   "text": "Nobody has looked. A question four carers got wrong is still unanswered.",
+   "kind": "gap"
+  },
+  {
+   "when": "Three weeks on",
+   "text": "The same weak point shows up in a supervision, and nobody can say when it first appeared.",
+   "kind": "gap"
+  },
+  {
+   "when": "Inspection day",
+   "text": "“How do you know staff understood?” The answer is in a tab nobody opened.",
+   "kind": "end"
+  }
+ ],
+ "trail_close": "<b>The training was never the problem.</b> The gap is between the results and your attention. Here is how CareStream closes it, and what it does not do.",
+ "why": {
+  "heading": "Information only helps if it reaches you",
+  "sub": "A good report that nobody opens is the same as no report.",
+  "cards": [
+   {
+    "icon": "chat",
+    "title": "A tab you have to remember is a tab you forget",
+    "body": "Managers are interrupted all day. Anything that depends on you remembering to look gets looked at in a quiet week, and quiet weeks are rare."
+   },
+   {
+    "icon": "tick",
+    "title": "Small gaps are cheap, old gaps are not",
+    "body": "A question four people missed is easy to fix this week. Left for a month, it becomes a habit on the floor and a harder conversation."
+   },
+   {
+    "icon": "alert",
+    "title": "Alerts on every slip would be too much",
+    "body": "A message for each wrong answer would bury you. A single weekly summary lets you see the pattern without the noise."
+   }
+  ]
+ },
+ "how": {
+  "heading": "From a short check to your inbox, in four steps.",
+  "sub": "This is the <a href=\"/training-platform\">Training built from your own policies</a> feature, in the order the work reaches you. See also <a href=\"/uses/adhoc-training\">turning an incident into adhoc training</a> and <a href=\"/how-it-works\">how CareStream works</a>.",
+  "blocks": [
+   {
+    "heading": "Allocate a short module and the knowledge check comes with it",
+    "bullets": [
+     "In the Training screen, pick a topic named module such as Safeguarding Adults and tick the staff you want. A due date is optional",
+     "CareStream builds the lessons and a knowledge check from your own policies, with general good practice where they are silent. You can edit and preview it before anyone sees it",
+     "Staff complete it in the Staff Hub, the installable app on their own phone. Adhoc training is on the paid plans"
+    ],
+    "tags": [
+     {
+      "label": "Training built from your own policies",
+      "href": "/training-platform"
+     },
+     {
+      "label": "Adhoc training",
+      "href": "/uses/adhoc-training"
+     }
+    ],
+    "mock": {
+     "type": "training",
+     "module": "Safeguarding Adults",
+     "questions": [
+      "Who do you tell first if you suspect a person is being abused?",
+      "What should you do if a resident asks you to keep a worry secret?",
+      "Where do you record what you were told?"
+     ],
+     "staff_count": 18
+    }
+   },
+   {
+    "heading": "A wrong answer goes to the carer, not to your inbox",
+    "bullets": [
+     "The wrong answer lands in the carer's Follow-up tab, and they get one email at most every 24 hours, in English",
+     "They choose Learn &amp; retry, a short lesson then a fresh question, or Just retry the same question, as often as they need",
+     "Nothing alerts you at that moment. The picture comes to you in the Monday digest and the Knowledge gaps view"
+    ],
+    "tags": [
+     {
+      "label": "Wrong answers become lessons",
+      "href": "/training-platform"
+     },
+     {
+      "label": "Staff training courses",
+      "href": "/staff-training"
+     }
+    ],
+    "mock": {
+     "type": "followup",
+     "module": "Safeguarding Adults",
+     "question": "What should you do if a resident asks you to keep a worry secret?",
+     "why": "You cannot promise to keep a safeguarding worry secret, because the person may be at risk and others need to know.",
+     "remember": [
+      "Stay calm and listen",
+      "Tell them who you must pass it to",
+      "Write down what was said"
+     ],
+     "picture": "A resident says something that worries you and asks you not to tell anyone."
+    }
+   },
+   {
+    "heading": "Staff who think in another language can follow up in it",
+    "bullets": [
+     "Your admin sets a carer's second language and they switch to it in the hub",
+     "A wrong answer can then point to a gap in knowledge and not in vocabulary, so your digest means more",
+     "Translation is on the paid plans only, and the reminder emails stay in English"
+    ],
+    "tags": [
+     {
+      "label": "Training in 60+ languages",
+      "href": "/languages"
+     },
+     {
+      "label": "Staff Hub in 60+ languages",
+      "href": "/uses/multilingual-staff-hub"
+     }
+    ],
+    "mock": {
+     "type": "language",
+     "second_language": "Polish"
+    }
+   },
+   {
+    "heading": "The Monday digest and the view behind it",
+    "bullets": [
+     "Every Monday the digest email goes to admins and managers. It shows open gaps with the change since last week, staff affected, gaps closed, how many are engaging with the lessons, and the top missed questions and weakest topics",
+     "A button takes you to the Knowledge gaps view for the full detail, and you can mark a person's record as reviewed",
+     "If there are no open gaps and none closed that week, the digest is skipped, so it only arrives when it has something to say"
+    ],
+    "tags": [
+     {
+      "label": "Reporting that runs itself",
+      "href": "/training-platform"
+     },
+     {
+      "label": "CQC and compliance evidence",
+      "href": "/cqc-compliance"
+     }
+    ],
+    "mock": {
+     "type": "gaps",
+     "stats": {
+      "open": 9,
+      "affected": 6,
+      "closed": 14,
+      "engaged": 68
+     },
+     "missed": [
+      [
+       "Keeping a worry secret",
+       "4 staff"
+      ],
+      [
+       "Recording what was said",
+       "3 staff"
+      ],
+      [
+       "Who to tell first",
+       "2 staff"
+      ]
+     ],
+     "weak": [
+      [
+       "Safeguarding Adults",
+       "6 gaps"
+      ],
+      [
+       "Infection Control",
+       "3 gaps"
+      ]
+     ]
+    }
+   }
+  ]
+ },
+ "talk": {
+  "heading": "The questions managers ask, and how CareStream answers them",
+  "sub": "Read this as a conversation. The questions are the ones we hear most.",
+  "items": [
+   {
+    "q": "What actually lands in my inbox on a Monday?",
+    "a": "A short email called Knowledge gaps this week. It shows how many gaps are open and the change since last week, how many staff are affected, how many were closed, how many are engaging with the lessons, the five most missed questions and the five weakest topics. A button opens the full view."
+   },
+   {
+    "q": "Will I get a message every time someone gets a question wrong?",
+    "a": "No, and that is deliberate. The carer is told, because the wrong answer goes to their own Follow-up tab. You see the pattern once a week in the digest, and any time you like in the Knowledge gaps view."
+   },
+   {
+    "q": "How does a gap get there in the first place?",
+    "a": "You allocate a short module on a topic, <a href=\"/training-platform\">built from your own policies</a>. Staff do it in the Staff Hub. A wrong answer becomes a gap, and it stays open until the carer gets it right, through Learn &amp; retry or Just retry."
+   },
+   {
+    "q": "Do staff get a reminder as well?",
+    "a": "Yes. On Mondays a staff member with open follow ups gets an email saying how many things they have to revisit, with a button into their Follow-up tab. It is a nudge, not a telling off. Email preferences apply to both the digest and the nudge."
+   },
+   {
+    "q": "Is this my training compliance report?",
+    "a": "No. It is a Monday digest of knowledge gaps, which is about understanding, not about who has done which course. It does not replace the records you already keep for <a href=\"/cqc-compliance\">CQC evidence</a>. Think of it as the Monday prompt that tells you where to look."
+   },
+   {
+    "q": "What if there is nothing to report?",
+    "a": "Then you do not get an email. The digest is skipped when there are no open gaps and none were closed that week. A quiet inbox on Monday is good news, though the Knowledge gaps view is always there if you want to check."
+   },
+   {
+    "q": "Can I see it before Monday?",
+    "a": "Yes. The Knowledge gaps view in Analytics is open any time, and an admin can send the digest on demand. Monday is the habit, not a limit."
+   },
+   {
+    "q": "How do I try it, and what does it cost?",
+    "a": "You can start a 14 day free trial on a paid plan, or create a free account and look around. Adhoc training is on the paid plans, so check the <a href=\"/pricing\">pricing page</a> for what each includes, or <a href=\"/register\">register</a> to begin."
+   }
+  ]
+ },
+ "limits": {
+  "heading": "A Monday prompt, not a monitoring service",
+  "cards": [
+   {
+    "title": "It does not alert you to each wrong answer",
+    "body": "Nothing is sent to you when a carer slips. You see the picture in the Monday digest and the Knowledge gaps view, so a serious concern still needs your own judgement and the usual routes."
+   },
+   {
+    "title": "It does not cover everything in your training records",
+    "body": "The digest summarises knowledge gaps from the short modules you allocate. It is not a full view of every course, certificate or renewal, so keep your usual records alongside it."
+   },
+   {
+    "title": "It will not read your mind about priorities",
+    "body": "It shows counts and the most missed questions. Whether a gap is a person who needs support, or a session that needs rewriting, is a call only you can make."
+   }
+  ]
+ },
+ "read_next": [
+  "the-care-compliance-dashboard-nobody-opens-and-how-to-fix-it",
+  "chasing-staff-training-completions",
+  "how-do-you-use-a-training-matrix-for-safe-staffing-not-just-compliance"
+ ],
+ "faqs": {
+  "heading": "The weekly digest and CareStream, answered",
+  "groups": [
+   {
+    "group": "About the digest",
+    "items": [
+     {
+      "q": "What is in the Monday digest?",
+      "a": "Open knowledge gaps with the change since last week, staff affected, gaps closed this week, how many staff are engaging with the lessons, and the top five most missed questions and weakest topics. A button opens the full Knowledge gaps view."
+     },
+     {
+      "q": "Who receives the Monday digest?",
+      "a": "Admins and managers receive it every Monday. Staff do not get this one. They get their own short nudge if they have follow ups still open."
+     },
+     {
+      "q": "Can I turn the Monday email off?",
+      "a": "It follows an email preference called knowledge gap digest in Settings. Staff nudges follow the same preference on their side, so each person can choose what reaches them."
+     },
+     {
+      "q": "Is the weekly digest a training compliance report?",
+      "a": "Not in the usual sense. A training compliance report lists who has completed which course and when. This digest is about understanding: where staff are unsure after a short check. Keep your training records and renewals separately and use the digest to see where to look."
+     },
+     {
+      "q": "How is a knowledge check different from a quiz at the end of a course?",
+      "a": "A knowledge check here is part of short training you allocate. A wrong answer is not just marked down. It goes to the carer's Follow-up tab as a short lesson and fresh question, and it counts as an open gap until they get it right."
+     },
+     {
+      "q": "Does the digest show me staff training records?",
+      "a": "No. It summarises knowledge gaps. Individual results, the lessons staff opened and reviews you have marked sit on each person's staff record and in the Knowledge gaps view, but it is not a full export of every course and certificate."
+     },
+     {
+      "q": "How do I keep training compliance on track week to week?",
+      "a": "Pick a regular slot, such as ten minutes on Monday. Read the digest, open the Knowledge gaps view if a number has jumped, and decide whether to speak to a person or tweak the training. Our guide on <a href=\"/blog/chasing-staff-training-completions\">chasing staff training completions</a> has more ideas."
+     }
+    ]
+   },
+   {
+    "group": "About inspections",
+    "items": [
+     {
+      "q": "Will an inspector accept this as evidence?",
+      "a": "The Care Quality Commission looks for staff who can do their jobs, not only people who were present. A record of questions, lessons and results helps show that. See <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/18\">Regulation 18 on staffing</a> for the wording."
+     },
+     {
+      "q": "What does CQC say about monitoring staff training?",
+      "a": "The <a href=\"https://www.cqc.org.uk/guidance-regulation/providers/regulations-service-providers-and-managers/health-social-care-act/regulation-18\">CQC guidance on Regulation 18</a> says required training should be monitored and that providers should act quickly when training requirements are not met. A regular habit such as a Monday check is one way to show that."
+     }
+    ]
+   }
+  ]
+ },
+ "guide": {
+  "heading": "A practical ten minute Monday routine",
+  "lede": "A report only helps if it changes what you do. Here is a routine that fits into the first hour of a busy week without becoming one more job.",
+  "sections": [
+   {
+    "h3": "What to look at first",
+    "paragraphs": [
+     "Start with the change since last week, not the total. A number that is rising tells you something is happening. Then read the most missed questions. If several people miss the same question, the cause is usually the training or the policy wording, not the people. If one person misses many, a quiet conversation is a better fit than another module."
+    ]
+   },
+   {
+    "h3": "A ten minute routine",
+    "checklist": [
+     "Read the digest and note whether open gaps went up or down.",
+     "Look at the top missed question and decide if it needs a word at handover.",
+     "Open the Knowledge gaps view only if a number surprised you.",
+     "Write one line in your notebook: who you will speak to, or what you will change."
+    ]
+   },
+   {
+    "h3": "What to keep outside the digest",
+    "paragraphs": [
+     "The digest does not replace your full records of who has done which course, when it expires and what certificates are held. Keep those where you already keep them, and treat the digest as the prompt that tells you where to look. Checking your records from time to time against the <a href=\"/care-audits\">audits you already run</a> keeps the whole picture honest."
+    ]
+   }
+  ],
+  "note": "<b>For the inspector.</b> A habit you can describe is easier to evidence than a report you hope someone opens. Write down the day, the person and what you changed."
+ }
+}

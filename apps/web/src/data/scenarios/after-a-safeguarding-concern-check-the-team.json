@@ -1,0 +1,411 @@
+{
+ "slug": "after-a-safeguarding-concern-check-the-team",
+ "status": "draft",
+ "order": 22,
+ "title": "After a safeguarding concern, the whole team needs the same answer. <em>Do they have it?</em>",
+ "meta_title": "After a Safeguarding Concern, Check the Team | CareStreamAI",
+ "meta_description": "A safeguarding concern has been raised and handled. Now check the whole team shares the same understanding, without singling anyone out.",
+ "eyebrow": "Scenario",
+ "lede": "Once a <b>safeguarding concern</b> has been raised and dealt with under your safeguarding policy, the team still needs to share one clear understanding. This page is about that second step. After the session or the team talk, you allocate <a href=\"/training-platform\">short training built from your own policies</a> to everyone, so the check is about the whole team and not one person.",
+ "fine": "14 day free trial · Set up in a day · UK data residency",
+ "panel": {
+  "title": "After a safeguarding concern was handled",
+  "pill": "Illustration",
+  "rows": [
+   {
+    "label": "Concern raised and passed to the safeguarding lead",
+    "note": "Day 0",
+    "done": true
+   },
+   {
+    "label": "Team talk held in the staff room",
+    "note": "Day 2",
+    "done": true
+   },
+   {
+    "label": "Shared understanding checked",
+    "note": "Not yet",
+    "done": false
+   },
+   {
+    "label": "Any gaps closed with a short lesson",
+    "note": "Not yet",
+    "done": false
+   }
+  ],
+  "meter": 50
+ },
+ "image": "https://api.carestreamai.com/public/policy-shop/image/de8cd675-dc52-41f4-bdad-6ce9ca716587.webp",
+ "image_alt": "A manager in a staff room listening to a carer during a calm team talk, with a few carers sitting around with mugs",
+ "card_title": "A concern was raised. Does the whole team share the same understanding?",
+ "card_snippet": "After a safeguarding concern is handled, a team talk is not proof everyone took it in. Allocate short training built from your own policies to the whole team, so nobody is singled out.",
+ "primary_keyword": "safeguarding concern",
+ "secondary_keywords": [
+  "safeguarding adult review",
+  "safeguarding training",
+  "check for understanding",
+  "learning from mistakes"
+ ],
+ "feature_links": [
+  {
+   "title": "Training built from your own policies",
+   "body": "Ad hoc training from your policies, face to face training organised, and wrong answers that become lessons.",
+   "action": "See the feature",
+   "href": "/training-platform"
+  },
+  {
+   "title": "Turn an incident into adhoc training",
+   "body": "Allocate a short module to the whole team after something has happened, then see where the gaps are.",
+   "action": "See adhoc training",
+   "href": "/uses/adhoc-training"
+  },
+  {
+   "title": "Safeguarding Adults and Children course",
+   "body": "The full course on the topic, to sit beside your own policy and your team talks.",
+   "action": "See the course",
+   "href": "/staff-training/safeguarding-adults-and-children"
+  }
+ ],
+ "intro": {
+  "heading": "The concern is handled. Now the team needs to be on the same page.",
+  "sub": "A scenario we see in many care homes.",
+  "paragraph": "A carer raised a concern, told the safeguarding lead, and the matter was dealt with under the home's safeguarding policy. A few days later the manager gathers the team in the staff room for a calm talk about what the home can learn. People listen, a few share their own experience and the talk ends well. Afterwards the manager is left wondering whether everyone, including the quieter carers and the night staff who could not attend, now knows who to tell and what to write down. Asking each person in turn would feel like an interrogation. This is how that plays out."
+ },
+ "trail": [
+  {
+   "when": "Day 0",
+   "text": "A carer raises a concern and the safeguarding lead is told straight away.",
+   "kind": "ok"
+  },
+  {
+   "when": "Same week",
+   "text": "The matter is handled under the safeguarding policy.",
+   "kind": "ok"
+  },
+  {
+   "when": "Day 2",
+   "text": "The manager holds a calm team talk. People listen and share.",
+   "kind": "ok"
+  },
+  {
+   "when": "A week later",
+   "text": "The manager cannot say whether the whole team took it in.",
+   "kind": "gap"
+  },
+  {
+   "when": "Who was not there",
+   "text": "Night staff and part timers missed the talk and heard it second hand.",
+   "kind": "gap"
+  },
+  {
+   "when": "Who said little",
+   "text": "A new starter nodded along and asked nothing.",
+   "kind": "gap"
+  },
+  {
+   "when": "What the manager has",
+   "text": "A date on a note. Nothing that shows shared understanding.",
+   "kind": "gap"
+  },
+  {
+   "when": "Later, a question",
+   "text": "“What changed in the team afterwards?” The note does not say.",
+   "kind": "end"
+  }
+ ],
+ "trail_close": "<b>The team talk was the right thing to do.</b> The gap is between the talk and knowing it landed with everyone. Here is how a short follow up closes it, and what it does not do.",
+ "why": {
+  "heading": "A good talk is not the same as shared understanding",
+  "sub": "Learning from mistakes only works if everyone gets the same message, not just the people in the room.",
+  "cards": [
+   {
+    "icon": "chat",
+    "title": "Not everyone hears it the same way",
+    "body": "Some carers were on shift, some were asleep after nights, and some hold back in a group. A talk reaches the room, and the room is not the whole team."
+   },
+   {
+    "icon": "tick",
+    "title": "A check for understanding must feel safe",
+    "body": "If it feels like a test of one person, people go quiet. A short question set for everyone is about the team, not about who was involved."
+   },
+   {
+    "icon": "alert",
+    "title": "The detail fades",
+    "body": "Within weeks, who to tell can blur, and the worst moment to find a gap is the next concern."
+   }
+  ]
+ },
+ "how": {
+  "heading": "One short module for the whole team, then the follow up.",
+  "sub": "This is the <a href=\"/training-platform\">Training built from your own policies</a> feature, used as a team wide check after the event. See <a href=\"/uses/adhoc-training\">adhoc training</a> for the same loop after other incidents, and <a href=\"/how-it-works\">how CareStream works</a> for the full picture.",
+  "blocks": [
+   {
+    "heading": "Allocate the safeguarding module to everyone, not to one person",
+    "bullets": [
+     "Pick the Safeguarding Adults topic module and tick the whole team, so nobody is singled out",
+     "CareStream builds the lessons and questions from your own safeguarding policy, and you can edit and preview them before anyone sees them",
+     "Keep the questions general: who to tell, what to record, where the policy is"
+    ],
+    "tags": [
+     {
+      "label": "Training built from your own policies",
+      "href": "/training-platform"
+     },
+     {
+      "label": "Safeguarding Adults and Children course",
+      "href": "/staff-training/safeguarding-adults-and-children"
+     }
+    ],
+    "mock": {
+     "type": "training",
+     "module": "Safeguarding Adults",
+     "questions": [
+      "Who do you tell first if you are worried about someone?",
+      "What should you record, and what should you leave out?",
+      "Where do you find the safeguarding policy and the lead's contact details?"
+     ],
+     "staff_count": 26
+    }
+   },
+   {
+    "heading": "A wrong answer becomes a private, short lesson",
+    "bullets": [
+     "The wrong answer goes into that carer's Follow-up tab in the Staff Hub, and they get an email, at most once a day and in English",
+     "They choose Learn &amp; retry, a short lesson then a fresh question, or Just retry the same question, as often as they need",
+     "It is private to the carer and quiet for the team, so it feels like support and not a telling off"
+    ],
+    "tags": [
+     {
+      "label": "Wrong answers become lessons",
+      "href": "/training-platform"
+     },
+     {
+      "label": "Adhoc training",
+      "href": "/uses/adhoc-training"
+     }
+    ],
+    "mock": {
+     "type": "followup",
+     "module": "Safeguarding Adults",
+     "question": "Who do you tell first if you are worried about someone?",
+     "why": "The safeguarding lead needs to know quickly, so the right people can act and the person is protected.",
+     "remember": [
+      "Tell the safeguarding lead, as your policy says",
+      "Do not wait until the end of the shift",
+      "Write down what you saw or heard, in plain words"
+     ],
+     "picture": "You are unsure whether something you noticed is worth mentioning, and the lead is on the other side of the building."
+    }
+   },
+   {
+    "heading": "Night staff and second language carers get the same chance",
+    "bullets": [
+     "Everyone completes it in the Staff Hub on their own phone, so night staff and part timers are not left out",
+     "A carer who answers wrongly because of a missed word can open the lesson in their own language",
+     "Translation is part of the paid plans, and the reminder emails stay in English"
+    ],
+    "tags": [
+     {
+      "label": "Training in 60+ languages",
+      "href": "/languages"
+     },
+     {
+      "label": "Staff Hub in 60+ languages",
+      "href": "/uses/multilingual-staff-hub"
+     }
+    ],
+    "mock": {
+     "type": "language",
+     "second_language": "Polish"
+    }
+   },
+   {
+    "heading": "See the gaps across the team, not who slipped",
+    "bullets": [
+     "The Knowledge gaps view shows the most missed questions and the weakest topics, so a gap in the team talk shows up as a pattern",
+     "See how gaps are being closed, and mark a person's record as reviewed once you have had a kind word",
+     "A Monday digest email brings the picture to you. Nothing alerts you each time someone gets a question wrong"
+    ],
+    "tags": [
+     {
+      "label": "Reporting that runs itself",
+      "href": "/training-platform"
+     },
+     {
+      "label": "CQC and compliance evidence",
+      "href": "/cqc-compliance"
+     }
+    ],
+    "mock": {
+     "type": "gaps",
+     "stats": {
+      "open": 6,
+      "affected": 5,
+      "closed": 14,
+      "engaged": 68
+     },
+     "missed": [
+      [
+       "Who to tell first",
+       "4 staff"
+      ],
+      [
+       "What to record",
+       "3 staff"
+      ],
+      [
+       "Where the policy is kept",
+       "2 staff"
+      ]
+     ],
+     "weak": [
+      [
+       "Safeguarding Adults",
+       "6 gaps"
+      ],
+      [
+       "Reporting and recording",
+       "2 gaps"
+      ]
+     ]
+    }
+   }
+  ]
+ },
+ "talk": {
+  "heading": "The questions managers ask, and how CareStream answers them",
+  "sub": "Read this as a conversation. The questions are the ones we hear most.",
+  "items": [
+   {
+    "q": "A concern was raised and handled. Why add anything now?",
+    "a": "Handling the concern is one job. Making sure the whole team knows what to do next time is another. CareStream does not manage it. You follow your safeguarding policy and tell your safeguarding lead. It helps with the second job, a short check afterwards."
+   },
+   {
+    "q": "How do I check for understanding without singling anyone out?",
+    "a": "You allocate one short module on the topic to the whole team, <a href=\"/training-platform\">built from your own policies</a>. Everyone gets the same questions on their own phone in the Staff Hub, so the check is about the team, not about who was involved."
+   },
+   {
+    "q": "What happens when someone gets a question wrong?",
+    "a": "It goes into their Follow-up tab and they get an email, at most once a day. They choose Learn &amp; retry, a short lesson then a fresh question, or Just retry the same question. They can retry as often as they like, and it clears once they get it right."
+   },
+   {
+    "q": "Will I be told every time someone gets one wrong?",
+    "a": "No. Nothing alerts you on each wrong answer, and that is deliberate here. You see the pattern in Analytics, Knowledge gaps, and in a Monday digest email."
+   },
+   {
+    "q": "Can the questions describe what actually happened?",
+    "a": "We suggest not. Keep the module general: who to tell, what to record, where the policy is. The questions come from your policies, and you can edit and preview them first, so you stay in control of what staff see."
+   },
+   {
+    "q": "Some staff work nights or speak English as a second language. Are they covered?",
+    "a": "Yes. They complete it on their own phone whenever they are working. A carer can open a lesson <a href=\"/languages\">in their own language</a> if you are on a paid plan, so a wrong answer points to a gap in knowledge and not in vocabulary."
+   },
+   {
+    "q": "Does it help if there is a safeguarding adult review?",
+    "a": "It cannot take part in one. Whether to arrange a review is for the safeguarding adults board. What CareStream gives you is a record of what the team was asked, what they got wrong, the lesson they were given and whether it landed, which is useful evidence of learning from mistakes."
+   },
+   {
+    "q": "What does it cost, and can I try it?",
+    "a": "You can create a free account and try the paid features with a 14 day free trial. The adhoc training screen and translation are on the paid plans. See <a href=\"/pricing\">the pricing page</a> for the current plans, or <a href=\"/register\">create your account</a> to look around."
+   }
+  ]
+ },
+ "limits": {
+  "heading": "A team check afterwards, not a way to manage the concern",
+  "cards": [
+   {
+    "title": "It does not manage the concern",
+    "body": "Reporting, recording and decisions stay with your safeguarding policy and your safeguarding lead. CareStream is only for the team learning afterwards."
+   },
+   {
+    "title": "It does not alert you to every wrong answer",
+    "body": "You see the picture in Knowledge gaps and the Monday digest, not as a message each time someone slips. Speak to people kindly and in person where needed."
+   },
+   {
+    "title": "Ad hoc training and translation are on the paid plans",
+    "body": "The adhoc training screen and translation come with the paid plans. The free plan does not include them, and a team talk does not trigger a module by itself."
+   }
+  ]
+ },
+ "read_next": [
+  "principles-of-safeguarding",
+  "safeguarding-policy-care-home",
+  "safeguarding-audit"
+ ],
+ "faqs": {
+  "heading": "Checking the team afterwards, answered",
+  "groups": [
+   {
+    "group": "About the follow up",
+    "items": [
+     {
+      "q": "What should a manager do after a concern has been raised?",
+      "a": "First, follow your safeguarding policy and make sure your safeguarding lead knows. This page is only about what comes after. Once the concern is handled, a team talk and a short follow up help everyone share the same understanding. Your <a href=\"/blog/safeguarding-policy-care-home\">safeguarding policy</a> remains the guide."
+     },
+     {
+      "q": "How can I check for understanding across the whole team?",
+      "a": "Allocate one short module on the topic to everyone. They answer on their own phone, and a wrong answer becomes a short lesson in their Follow-up tab. You see the team level picture in Knowledge gaps. It works as a gentle check for understanding that does not single anyone out."
+     },
+     {
+      "q": "How do we avoid blame and focus on learning from mistakes?",
+      "a": "Make the check the same for everyone, keep questions general, and treat a wrong answer as information. Retries are unlimited and private to the carer. Learning from mistakes is easier when the whole team does it together and nobody is named."
+     },
+     {
+      "q": "Does a team talk count as safeguarding training?",
+      "a": "A talk helps, but it does not show who understood. It sits beside your annual <a href=\"/staff-training/safeguarding-adults-and-children\">safeguarding course</a>. A short follow up built from your own policy shows who needs another look, and the course covers the topic itself."
+     },
+     {
+      "q": "Can I use this for staff who were not at the talk?",
+      "a": "Yes. Tick the whole team when you allocate the module. Night staff and part timers complete it in the Staff Hub when they next work, with an optional due date."
+     }
+    ]
+   },
+   {
+    "group": "About reviews and inspections",
+    "items": [
+     {
+      "q": "What is a safeguarding adult review?",
+      "a": "It is a review arranged by a safeguarding adults board. Under <a href=\"https://www.legislation.gov.uk/ukpga/2014/23/section/44\">section 44 of the Care Act 2014</a>, its aim is to identify the lessons to be learnt from the adult's case and apply them to future cases. The board decides whether one is needed, so ask your local board for current guidance."
+     },
+     {
+      "q": "Is the follow up evidence that we protect people from abuse?",
+      "a": "It is one piece of evidence. <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/13\">Regulation 13</a> says systems and processes must be established and operated effectively to prevent abuse. A record that the team was checked and gaps were closed shows part of that. It sits beside your policy, supervision and <a href=\"/care-audits\">audits</a>."
+     },
+     {
+      "q": "Does the follow up replace our own review of what happened?",
+      "a": "No. Your own review of the concern, and any decisions from your safeguarding lead or the local authority, are separate. CareStream only checks the team's understanding afterwards, and it does not record or manage the concern."
+     }
+    ]
+   }
+  ]
+ },
+ "guide": {
+  "heading": "A calm way to follow up after a concern",
+  "lede": "After a concern has been handled, the pressure drops and everyone returns to the floor. This is the moment to check, gently and for everyone, that the team shares one clear understanding. Your policy and your safeguarding lead come first.",
+  "sections": [
+   {
+    "h3": "Keep it about the team, not the people involved",
+    "paragraphs": [
+     "A follow up should not describe what happened. Staff only need the general points: who to tell, how quickly, what to write down and where the policy lives. That protects the privacy of the people involved.",
+     "Frame it as learning from mistakes, not as blame. Say plainly that the same short questions go to everyone, including you."
+    ]
+   },
+   {
+    "h3": "Four steps that fit a busy service",
+    "checklist": [
+     "Within a week of the team talk: allocate a short safeguarding module to the whole team, built from your policy.",
+     "Before anyone sees it: edit and preview the questions, and keep them general.",
+     "When an answer is wrong: the carer opens a short lesson in their Follow-up tab, then a fresh question.",
+     "Each week: look at the most missed questions and weakest topics, and decide whether the next team talk needs a change."
+    ]
+   },
+   {
+    "h3": "What to keep for later",
+    "paragraphs": [
+     "Keep the questions, the lessons and the results together. If your local safeguarding adults board ever asks what you changed, you can show what the team was asked, where the gaps were and how they closed. The board decides whether a <a href=\"/blog/principles-of-safeguarding\">review</a> is needed, so follow its current guidance rather than assuming."
+    ]
+   }
+  ],
+  "note": "<b>For the record.</b> This page is general information about team learning, not advice on handling a concern. Follow your own safeguarding policy and tell your safeguarding lead."
+ }
+}

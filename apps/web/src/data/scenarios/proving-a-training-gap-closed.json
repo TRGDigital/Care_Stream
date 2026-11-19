@@ -1,0 +1,406 @@
+{
+ "slug": "proving-a-training-gap-closed",
+ "status": "draft",
+ "order": 25,
+ "title": "Training impact is not a signature. <em>Can you show the gap closed?</em>",
+ "meta_title": "Training Impact in Care: Prove a Gap Closed | CareStreamAI",
+ "meta_description": "See the training impact in your care home: which gaps are open, which closed, and how. Wrong answers get a short lesson and a fresh question.",
+ "eyebrow": "Scenario",
+ "lede": "Training impact is about what changed after the session, not who attended. With <a href=\"/training-platform\">short training built from your own policies</a>, a wrong answer becomes a gap that stays open until the carer answers it correctly. You can see which gaps are open and which have closed.",
+ "fine": "14 day free trial · Set up in a day · UK data residency",
+ "panel": {
+  "title": "One infection control gap, start to finish",
+  "pill": "Illustration",
+  "rows": [
+   {
+    "label": "Question answered wrongly",
+    "note": "Day 1",
+    "done": true
+   },
+   {
+    "label": "Learn & retry opened",
+    "note": "Day 2",
+    "done": true
+   },
+   {
+    "label": "Fresh question answered correctly",
+    "note": "Not yet",
+    "done": false
+   },
+   {
+    "label": "Gap closed and counted",
+    "note": "Not yet",
+    "done": false
+   }
+  ],
+  "meter": 50
+ },
+ "image": "https://api.carestreamai.com/public/policy-shop/image/2043ae8b-3c70-41bb-8111-fdb786cf5c63.webp",
+ "image_alt": "A manager and a carer share a smile while the manager closes a plain folder, in a bright care office with a plant and a window",
+ "card_title": "Can you show that a training gap actually closed?",
+ "card_snippet": "Wrong answers become open gaps, and a short lesson plus a fresh question closes them. Your manager view shows what is open, what closed and how, built from your own policies.",
+ "primary_keyword": "training impact",
+ "secondary_keywords": [
+  "training effectiveness measurement",
+  "training evidence",
+  "training impact evaluation",
+  "training effectiveness",
+  "knowledge check"
+ ],
+ "feature_links": [
+  {
+   "title": "Training built from your own policies",
+   "body": "Ad hoc training from your policies, face to face training organised, and wrong answers that become lessons.",
+   "action": "See the feature",
+   "href": "/training-platform"
+  },
+  {
+   "title": "Turn an incident into adhoc training",
+   "body": "Pick the topic, allocate a short module and see who needs a second look.",
+   "action": "See adhoc training",
+   "href": "/uses/adhoc-training"
+  },
+  {
+   "title": "CQC and compliance",
+   "body": "Evidence that builds itself, and a readiness report for your next inspection.",
+   "action": "See CQC and compliance",
+   "href": "/cqc-compliance"
+  }
+ ],
+ "intro": {
+  "heading": "The gap was found. Was it ever closed?",
+  "sub": "A scenario we see in many care homes.",
+  "paragraph": "After a rough month for hand hygiene, a manager runs an infection prevention session and follows it with a short quiz. Several carers get questions wrong. The manager has a quiet word with the team and moves on. Three months later a provider review asks a fair question: you found a gap, so how do you know it closed? The manager remembers the conversation. They cannot show who was affected, what each person was given or whether anyone answered correctly afterwards. Here is how that plays out."
+ },
+ "trail": [
+  {
+   "when": "Week 1",
+   "text": "A rise in hand hygiene lapses prompts a session on infection control.",
+   "kind": "ok"
+  },
+  {
+   "when": "Week 2",
+   "text": "A short knowledge check goes out and the results come back.",
+   "kind": "ok"
+  },
+  {
+   "when": "Week 2",
+   "text": "The manager spots a few wrong answers and talks to the team.",
+   "kind": "ok"
+  },
+  {
+   "when": "Week 5",
+   "text": "Nobody is sure which carers were told what, or when.",
+   "kind": "gap"
+  },
+  {
+   "when": "Week 8",
+   "text": "No one has checked whether the wrong answers were ever put right.",
+   "kind": "gap"
+  },
+  {
+   "when": "Week 10",
+   "text": "New carers join and the original gap becomes a memory.",
+   "kind": "gap"
+  },
+  {
+   "when": "What the manager has",
+   "text": "A recollection of a chat. No dates, no names, no outcome.",
+   "kind": "gap"
+  },
+  {
+   "when": "Review day",
+   "text": "“You found a gap in March. Show me it closed.” A memory is not evidence.",
+   "kind": "end"
+  }
+ ],
+ "trail_close": "<b>Finding the gap was the easy part.</b> What is missing is a record of it closing. Here is how CareStream gives you one, without pretending a closed gap is the same as a competent carer.",
+ "why": {
+  "heading": "A gap you cannot see closing is a gap you cannot prove closed",
+  "sub": "Counting attendance tells you who was there. Counting open and closed gaps tells you what changed.",
+  "cards": [
+   {
+    "icon": "chat",
+    "title": "A quiet word leaves no trail",
+    "body": "A chat on the floor may well work. But it leaves no date, no name and no result, so a month later it cannot be shown to anyone."
+   },
+   {
+    "icon": "tick",
+    "title": "Finding a gap is not fixing it",
+    "body": "A wrong answer tells you where understanding is thin. Only a later correct answer tells you it improved."
+   },
+   {
+    "icon": "alert",
+    "title": "Chasing each gap by hand does not last",
+    "body": "With forty staff and a dozen topics, nobody keeps a tidy list of who needs what. Gaps stay open because no one is looking."
+   }
+  ]
+ },
+ "how": {
+  "heading": "From a wrong answer to a closed gap you can see.",
+  "sub": "This is the <a href=\"/training-platform\">Training built from your own policies</a> feature, followed all the way to the result. See also <a href=\"/uses/adhoc-training\">adhoc training from an incident</a> and <a href=\"/cqc-compliance\">how the record supports CQC evidence</a>.",
+  "blocks": [
+   {
+    "heading": "Allocate a short module on the topic, built from your own policies",
+    "bullets": [
+     "In the Training screen, pick the topic module, such as infection prevention and control, then edit and preview it before anyone sees it",
+     "Lessons and a knowledge check are built from your own policies, with general good practice as the fallback where your policies are silent",
+     "Staff complete it in the Staff Hub on their own phone, and each wrong answer opens a gap you can count"
+    ],
+    "tags": [
+     {
+      "label": "Training built from your own policies",
+      "href": "/training-platform"
+     },
+     {
+      "label": "Infection prevention course",
+      "href": "/staff-training/infection-prevention-and-control"
+     }
+    ],
+    "mock": {
+     "type": "training",
+     "module": "Infection Prevention and Control",
+     "questions": [
+      "When must you clean your hands during personal care?",
+      "What do you do with soiled laundry before it leaves the room?",
+      "Who do you tell if you suspect an infection on the unit?"
+     ],
+     "staff_count": 22
+    }
+   },
+   {
+    "heading": "The carer closes the gap themselves, in their own time",
+    "bullets": [
+     "The wrong answer goes into the carer's Follow-up tab, and they get one email at most each day, in English",
+     "They choose Learn &amp; retry, a short lesson then a fresh question, or Just retry the same question, as often as they need",
+     "Once the question is answered correctly the gap closes, and the closure is recorded"
+    ],
+    "tags": [
+     {
+      "label": "Wrong answers become lessons",
+      "href": "/training-platform"
+     },
+     {
+      "label": "How CareStream works",
+      "href": "/how-it-works"
+     }
+    ],
+    "mock": {
+     "type": "followup",
+     "module": "Infection Prevention and Control",
+     "question": "When must you clean your hands during personal care?",
+     "why": "Hands pick up germs from one person or task and carry them to the next, so cleaning at the right moments protects residents and you.",
+     "remember": [
+      "Before and after contact with a resident",
+      "After handling soiled items",
+      "Whenever gloves come off"
+     ],
+     "picture": "You finish changing a bed, take off your gloves, and are about to help the next resident to the dining room."
+    }
+   },
+   {
+    "heading": "Two ways to close it, and you can see which was used",
+    "bullets": [
+     "Some carers close a gap with Learn &amp; retry, others with Just retry. The manager view shows the split",
+     "A high share of Learn &amp; retry suggests people are reading the lesson, not guessing again",
+     "Translation is on the paid plans only, so a carer can open the lesson in their own language"
+    ],
+    "tags": [
+     {
+      "label": "Training in 60+ languages",
+      "href": "/languages"
+     },
+     {
+      "label": "Staff Hub in 60+ languages",
+      "href": "/uses/multilingual-staff-hub"
+     }
+    ],
+    "mock": {
+     "type": "language",
+     "second_language": "Polish"
+    }
+   },
+   {
+    "heading": "See what is open, what closed and how, in one place",
+    "bullets": [
+     "The Knowledge gaps view shows open gaps, staff affected, gaps closed in the last 30 days and how many closed through learning",
+     "Most missed questions and weakest topics show where the same questions keep catching people out",
+     "A Monday digest email brings the picture to you, so you do not have to remember to look"
+    ],
+    "tags": [
+     {
+      "label": "Reporting that runs itself",
+      "href": "/training-platform"
+     },
+     {
+      "label": "CQC and compliance evidence",
+      "href": "/cqc-compliance"
+     }
+    ],
+    "mock": {
+     "type": "gaps",
+     "stats": {
+      "open": 5,
+      "affected": 4,
+      "closed": 21,
+      "engaged": 76
+     },
+     "missed": [
+      [
+       "Hand cleaning after gloves",
+       "4 staff"
+      ],
+      [
+       "Handling soiled laundry",
+       "3 staff"
+      ],
+      [
+       "Reporting a suspected infection",
+       "2 staff"
+      ]
+     ],
+     "weak": [
+      [
+       "Infection Prevention and Control",
+       "6 gaps"
+      ],
+      [
+       "Moving and Handling",
+       "2 gaps"
+      ]
+     ]
+    }
+   }
+  ]
+ },
+ "talk": {
+  "heading": "The questions managers ask, and how CareStream answers them",
+  "sub": "Read this as a conversation. The questions are the ones we hear most.",
+  "items": [
+   {
+    "q": "What does CareStream actually count as a gap?",
+    "a": "A wrong answer to a question in a module you have allocated. It sits in that carer's Follow-up tab, and counts as open until they answer correctly. The Knowledge gaps view then shows it as closed."
+   },
+   {
+    "q": "How does a gap get closed?",
+    "a": "The carer opens it in the Staff Hub and chooses Learn &amp; retry, a short lesson (why it matters, what to remember, a realistic situation) followed by a fresh question, or Just retry the same question. They can retry as often as they need. The system does not close it for them."
+   },
+   {
+    "q": "Will I be told every time someone gets a question wrong?",
+    "a": "No, and that is deliberate. Nothing alerts you on each wrong answer. You see the pattern in the Knowledge gaps view, and a digest email arrives every Monday. The carer gets an email, at most once a day, in English."
+   },
+   {
+    "q": "What numbers will I see?",
+    "a": "Open gaps, staff affected, gaps closed in the last 30 days, and the share of closed gaps where the carer used the learning. You also see the most missed questions, the weakest topics and how gaps are being closed, split between Learn &amp; retry and Just retry."
+   },
+   {
+    "q": "Does a closed gap mean the carer is competent?",
+    "a": "No. It means they now answer that question correctly. Competence also needs observation on the floor, supervision and your own judgement. CareStream gives you the record of the check. It does not replace watching someone work."
+   },
+   {
+    "q": "Is there anything beyond that for measuring impact?",
+    "a": "On the Enterprise plan there is an Effectiveness of Training view, and a report linking audit scores to training. The first shows how many gaps are resolved and how they get closed over time. The second links audit results to training. Both are Enterprise only, so check the <a href=\"/pricing\">pricing page</a> before relying on them."
+   },
+   {
+    "q": "What could I show a reviewer or an inspector?",
+    "a": "The questions asked, the wrong answers, the lesson route taken and the date each gap closed. You can also mark a person's record as reviewed after a conversation. It sits beside the rest of your <a href=\"/cqc-compliance\">CQC evidence</a>, and supports what you tell an inspector without replacing it."
+   },
+   {
+    "q": "Can I try it before I commit?",
+    "a": "Yes. There is a 14 day free trial on the paid plans, and you can <a href=\"/register\">create a free account</a> to look around. The adhoc training screen is on the paid plans, so you would try the full loop on the trial."
+   }
+  ]
+ },
+ "limits": {
+  "heading": "A record of gaps closing, not proof of competence",
+  "cards": [
+   {
+    "title": "A closed gap is not a signed off carer",
+    "body": "It shows a question was answered correctly after a lesson. Observation, supervision and your own judgement still decide whether someone is competent."
+   },
+   {
+    "title": "It does not alert you to every wrong answer",
+    "body": "You see gaps in the Knowledge gaps view and the Monday digest, not as a message each time. A carer who does not open the lesson leaves a gap open."
+   },
+   {
+    "title": "Wider impact reporting is Enterprise only",
+    "body": "The Effectiveness of Training view and the audit linked report are on the Enterprise plan. Adhoc training and translation are on the paid plans, not the free plan."
+   }
+  ]
+ },
+ "read_next": [
+  "how-do-you-record-in-person-training-so-it-counts-as-cqc-evidence",
+  "what-compliant-actually-means-for-one-care-staff-member",
+  "cqc-evidence-categories-explained"
+ ],
+ "faqs": {
+  "heading": "Proving a training gap closed, answered",
+  "groups": [
+   {
+    "group": "Measuring what changed",
+    "items": [
+     {
+      "q": "How do you show training impact in a care home?",
+      "a": "Show what changed after the session: which questions were missed, what each carer was given to learn, and when each gap closed. A record of attendance only shows who was there. A record of gaps opened and closed shows what moved."
+     },
+     {
+      "q": "What is training effectiveness measurement?",
+      "a": "It means checking whether training did its job. A common approach looks at four levels: how people felt, what they learned, whether behaviour changed and whether outcomes improved. A short quiz covers learning. Observation and <a href=\"/care-audits\">audits</a> cover the rest."
+     },
+     {
+      "q": "What does training impact evaluation involve?",
+      "a": "You decide what you wanted to change, check it before and after, and look at the result. In a care home that might be a short quiz, then a count of gaps still open a month later. CareStream shows the gap counts. You add the floor observation."
+     },
+     {
+      "q": "How can I improve training effectiveness after a session?",
+      "a": "Check understanding soon after, and give anyone who is unsure a short lesson on that exact point. Then look at the most missed questions to see whether the session itself needs a tweak. The <a href=\"/uses/face-to-face-training\">face to face training page</a> covers the session side."
+     },
+     {
+      "q": "Is a knowledge check enough on its own?",
+      "a": "No. A knowledge check shows what someone knows on the day. It does not show what they do on a busy shift. Use it alongside observation, supervision and audits, and treat a wrong answer as a prompt to help, not a mark against the person."
+     },
+     {
+      "q": "What counts as training evidence for CQC?",
+      "a": "CQC does not publish a fixed list, so you decide what shows your staff are competent. Useful training evidence includes dates, questions, results, follow up lessons and notes from supervision. See our post on <a href=\"/blog/cqc-evidence-categories-explained\">CQC evidence categories</a>."
+     }
+    ]
+   },
+   {
+    "group": "About inspections and the law",
+    "items": [
+     {
+      "q": "What does the law say about staff training?",
+      "a": "<a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/18\">Regulation 18</a> says staff must receive the support, training, professional development, supervision and appraisal they need to do their jobs. It does not set out courses, so each provider decides and must be able to show it."
+     },
+     {
+      "q": "How does CQC look at staff competence?",
+      "a": "The <a href=\"https://www.cqc.org.uk/guidance-regulation/providers/regulations-service-providers-and-managers/health-social-care-act/regulation-18\">CQC guidance on Regulation 18</a> expects staff to be competent and skilled, with training needs assessed and reviewed. Staff are supervised until they can show acceptable competence. A closed gap supports that picture but does not replace supervision."
+     }
+    ]
+   }
+  ]
+ },
+ "guide": {
+  "heading": "A practical way to show a training gap closed",
+  "lede": "Showing impact does not need a research project. It needs a clear record that connects a gap, an action and a result. Here is a way to keep one in a busy service.",
+  "sections": [
+   {
+    "h3": "Decide what closed means before you start",
+    "paragraphs": [
+     "Write down what you want to see. For example, no open infection control gaps older than 30 days. A target gives your training effectiveness measurement something to be measured against, and stops the numbers from drifting into storytelling.",
+     "Be honest about what the number cannot tell you. A gap closing shows that a question is now answered correctly. It does not show how someone behaves on the floor, which is why observation remains part of the picture."
+    ]
+   },
+   {
+    "h3": "Four checks for each topic",
+    "checklist": [
+     "Before: note what prompted the training, such as an incident, an audit finding or a new starter.",
+     "Within a week: allocate a short module on the topic and note the date.",
+     "Each month: look at open gaps, closed gaps and the most missed questions, and talk to anyone whose gap is still open.",
+     "On the floor: watch one real example of the practice, and record it in supervision."
+    ]
+   }
+  ],
+  "note": "<b>For the reviewer.</b> Keep the gap, the lesson, the date it closed and your own observation together. That shows what changed, not just what was delivered."
+ }
+}

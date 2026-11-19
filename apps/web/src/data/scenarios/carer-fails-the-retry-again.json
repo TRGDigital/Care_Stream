@@ -1,0 +1,416 @@
+{
+ "slug": "carer-fails-the-retry-again",
+ "status": "draft",
+ "order": 24,
+ "title": "Retraining staff when a carer gets it wrong again. <em>What you see and what you do.</em>",
+ "meta_title": "Retraining Staff in Care When a Retry Fails | CareStreamAI",
+ "meta_description": "A carer gets the same question wrong on the retry. CareStream keeps the gap open and shows it to you, then you decide how to help. Here is how it works.",
+ "eyebrow": "Scenario",
+ "lede": "Retraining staff does not end when someone fails a retry. CareStream lets a carer retry as often as they need, but it will not message you when a retry is wrong again. The gap stays open in your reports, and <a href=\"/training-platform\">training built from your own policies</a> shows you where to look.",
+ "fine": "14 day free trial · Set up in a day · UK data residency",
+ "panel": {
+  "title": "One carer, one question, three tries",
+  "pill": "Illustration",
+  "rows": [
+    {
+     "label": "First answer wrong",
+     "note": "Follow-up opened",
+     "done": true
+    },
+    {
+     "label": "Second try wrong again",
+     "note": "Gap still open",
+     "done": true
+    },
+    {
+     "label": "Manager notices the open gap",
+     "note": "Not yet",
+     "done": false
+    },
+    {
+     "label": "Supportive conversation held",
+     "note": "Not yet",
+     "done": false
+    }
+  ],
+  "meter": 50
+ },
+ "image": "https://api.carestreamai.com/public/policy-shop/image/9161f022-6228-4386-ae4f-14e09d891094.webp",
+ "image_alt": "A manager and a carer walking together along a garden path at the care home, having a quiet supportive chat, the carer looking relieved, with flowerbeds beside them",
+ "card_title": "A carer keeps getting the same question wrong. What now?",
+ "card_snippet": "A retry that fails again is a signal, not a verdict. See how a gap stays open in your reports, even though nothing alerts you, and how to help the carer in person.",
+ "primary_keyword": "retraining staff",
+ "secondary_keywords": [
+  "remedial training",
+  "supervision in care",
+  "reflective supervision",
+  "learning needs analysis",
+  "knowledge retention"
+ ],
+ "feature_links": [
+  {
+   "title": "Training built from your own policies",
+   "body": "Ad hoc training from your policies, face to face training organised, and wrong answers that become lessons.",
+   "action": "See the feature",
+   "href": "/training-platform"
+  },
+  {
+   "title": "Adhoc training after an incident or a session",
+   "body": "Allocate a short module on any topic and see who still needs help.",
+   "action": "See adhoc training",
+   "href": "/uses/adhoc-training"
+  },
+  {
+   "title": "Training in over 60 languages",
+   "body": "Lessons in the language each carer thinks in, on the paid plans.",
+   "action": "See languages",
+   "href": "/languages"
+  }
+ ],
+ "intro": {
+  "heading": "The retry came back wrong again, and nobody told you.",
+  "sub": "A scenario we see in many care homes.",
+  "paragraph": "A manager allocates a short moving and handling module after a team session. One carer gets a question about checking equipment wrong, opens the lesson, retries, and gets it wrong again. The manager hears nothing, because nothing is sent. That is by design, and it has a cost. Three weeks later the manager is writing a supervision plan and realises they have no idea who is still stuck. The gap is not hidden. It is sitting in a report the manager has not opened. Here is how that plays out."
+ },
+ "trail": [
+  {
+   "when": "Monday",
+   "text": "A moving and handling module goes out to the team after a session.",
+   "kind": "ok"
+  },
+  {
+   "when": "Tuesday",
+   "text": "One carer misses a question about checking a sling and gets a Follow-up.",
+   "kind": "ok"
+  },
+  {
+   "when": "Tuesday evening",
+   "text": "She tries Learn &amp; retry on her phone. A fresh question, a calm go.",
+   "kind": "ok"
+  },
+  {
+   "when": "Wednesday",
+   "text": "Wrong again. The Follow-up stays open. No message goes to anyone.",
+   "kind": "gap"
+  },
+  {
+   "when": "That week",
+   "text": "The carer is too embarrassed to say, and the manager has no reason to ask.",
+   "kind": "gap"
+  },
+  {
+   "when": "Two weeks on",
+   "text": "She is still working shifts, using the same equipment, unsure of the answer.",
+   "kind": "gap"
+  },
+  {
+   "when": "Monday digest",
+   "text": "The open gap is in the report, but the manager skims the email.",
+   "kind": "gap"
+  },
+  {
+   "when": "A near miss",
+   "text": "“Did anyone check she knew how to check the sling?” Someone has to answer.",
+   "kind": "end"
+  }
+ ],
+ "trail_close": "<b>The retry did its job.</b> It showed a gap that a signature cannot. The question is what the manager does next, and how they find out without being told. Here is how CareStream surfaces it, and where the human part begins.",
+ "why": {
+  "heading": "A second wrong answer is information, not a verdict",
+  "sub": "Retraining staff works best when the manager sees the pattern early and responds as a person.",
+  "cards": [
+   {
+    "icon": "chat",
+    "title": "A repeat miss is rarely about attitude",
+    "body": "A carer may be tired, rushed, unsure of the wording or simply taught it differently before. A second wrong answer tells you to ask, not to assume."
+   },
+   {
+    "icon": "tick",
+    "title": "Retries give the carer room to learn",
+    "body": "They can retry as often as they need, with a short lesson or the same question again. There is no pressure to pass first time, which helps knowledge retention."
+   },
+   {
+    "icon": "alert",
+    "title": "Silence means nobody is looking",
+    "body": "Nothing alerts you to a repeat wrong answer. If you do not open the Knowledge gaps view, a carer can stay stuck for weeks without anyone noticing."
+   }
+  ]
+ },
+ "how": {
+  "heading": "How the retry loop shows you who is still stuck.",
+  "sub": "This is the <a href=\"/training-platform\">Training built from your own policies</a> feature, followed to the point where a human steps in. See also <a href=\"/uses/adhoc-training\">allocating adhoc training after an incident</a> and <a href=\"/uses/face-to-face-training\">face to face sessions on the staff record</a>.",
+  "blocks": [
+   {
+    "heading": "Allocate a short module on the topic, built from your policies",
+    "bullets": [
+     "In the Training screen you pick a topic module, such as moving and handling, and CareStream builds lessons and questions from your own policies",
+     "Where your policies do not cover a point, it falls back on general good practice, and you can edit and preview everything first",
+     "Staff complete it in the Staff Hub on their own phone, with an optional due date"
+    ],
+    "tags": [
+     {
+      "label": "Training built from your own policies",
+      "href": "/training-platform"
+     },
+     {
+      "label": "How CareStream works",
+      "href": "/how-it-works"
+     }
+    ],
+    "mock": {
+     "type": "training",
+     "module": "Moving and Handling",
+     "questions": [
+      "What should you check on a sling before you use it?",
+      "What do you do if a piece of equipment looks damaged?",
+      "When should you stop a transfer and ask for help?"
+     ],
+     "staff_count": 18
+    }
+   },
+   {
+    "heading": "A wrong answer goes to the Follow-up tab, and the carer chooses the retry",
+    "bullets": [
+     "The wrong answer lands in the carer's Follow-up tab, and they get one email at most every day, in English",
+     "They choose Learn &amp; retry, a short lesson then a fresh question, or Just retry the same question",
+     "They can retry as often as they need, and nothing is sent to you when a retry is wrong again"
+    ],
+    "tags": [
+     {
+      "label": "Wrong answers become lessons",
+      "href": "/training-platform"
+     },
+     {
+      "label": "Micro learning on a 12 hour shift",
+      "href": "/blog/micro-learning-for-care-staff-what-works-on-a-12-hour-shift"
+     }
+    ],
+    "mock": {
+     "type": "followup",
+     "module": "Moving and Handling",
+     "question": "What should you check on a sling before you use it?",
+     "why": "A worn or damaged sling can fail during a transfer, so it is checked every time before use.",
+     "remember": [
+      "Look at stitching and straps",
+      "Check the label and size",
+      "Report anything damaged"
+     ],
+     "picture": "You are about to hoist a resident and notice a frayed edge on the sling."
+    }
+   },
+   {
+    "heading": "If words are the barrier, offer the lesson in their own language",
+    "bullets": [
+     "A carer who keeps missing a question may understand the practice and still stumble on a word",
+     "Your admin sets their second language, and they switch to it in the hub",
+     "Translation is on the paid plans only, and the reminder emails stay in English"
+    ],
+    "tags": [
+     {
+      "label": "Training in 60+ languages",
+      "href": "/languages"
+     },
+     {
+      "label": "Staff Hub in 60+ languages",
+      "href": "/uses/multilingual-staff-hub"
+     }
+    ],
+    "mock": {
+     "type": "language",
+     "second_language": "Polish"
+    }
+   },
+   {
+    "heading": "Open the Knowledge gaps view to see who is still stuck",
+    "bullets": [
+     "Analytics, Knowledge gaps shows open gaps and staff affected, so a carer who is still stuck does not disappear",
+     "Most missed questions and weakest topics show whether it is one person or the module itself",
+     "A Monday digest email brings the same picture without you asking, and you can mark a person's record as reviewed"
+    ],
+    "tags": [
+     {
+      "label": "Reporting that runs itself",
+      "href": "/training-platform"
+     },
+     {
+      "label": "CQC and compliance evidence",
+      "href": "/cqc-compliance"
+     }
+    ],
+    "mock": {
+     "type": "gaps",
+     "stats": {
+      "open": 6,
+      "affected": 4,
+      "closed": 14,
+      "engaged": 68
+     },
+     "missed": [
+      [
+       "Checking a sling before use",
+       "3 staff"
+      ],
+      [
+       "Reporting damaged equipment",
+       "2 staff"
+      ],
+      [
+       "When to stop a transfer",
+       "2 staff"
+      ]
+     ],
+     "weak": [
+      [
+       "Moving and Handling",
+       "5 gaps"
+      ],
+      [
+       "Infection Control",
+       "1 gap"
+      ]
+     ]
+    }
+   }
+  ]
+ },
+ "talk": {
+  "heading": "The questions managers ask, and how CareStream answers them",
+  "sub": "Read this as a conversation. The questions are the ones we hear most.",
+  "items": [
+   {
+    "q": "What happens if a carer fails the retry as well?",
+    "a": "Nothing new happens, and that is deliberate. They can retry as often as they need. The Follow-up stays open in their tab until they get it right, and the gap stays open in your Knowledge gaps view. No message is sent to anyone."
+   },
+   {
+    "q": "So how would I ever find out?",
+    "a": "You look. Analytics, Knowledge gaps shows open gaps and staff affected, and a Monday digest email arrives each week with the same picture. The staff record also shows that person's gaps. It is a view you open, not an alert that finds you."
+   },
+   {
+    "q": "Does it flag the carer as underperforming?",
+    "a": "No. It records the gap and nothing more. It does not rate a person, score capability or start any process. What a repeat wrong answer means is for you to find out by talking to them."
+   },
+   {
+    "q": "Is it different from the first wrong answer?",
+    "a": "From the carer's side it is the same loop: the question sits in their Follow-up tab and they choose Learn &amp; retry or Just retry. A first miss and a fifth miss are treated the same way. The difference is that you can now see a pattern in your reports."
+   },
+   {
+    "q": "What should I actually do about it?",
+    "a": "Something human. A quiet word, a short observation of the task, or a face to face refresher with a competent person are all sensible. A repeat miss is a good prompt for a supervision conversation. See our <a href=\"/blog/what-compliant-actually-means-for-one-care-staff-member\">guide to what compliant means for one staff member</a>."
+   },
+   {
+    "q": "Can I send them a remedial module straight away?",
+    "a": "You can allocate another adhoc module on the topic, built from your own policies, and edit and preview it first. If you use the face to face router (Professional and above), you can also send a catch up module after a session. A face to face session does not trigger anything automatically."
+   },
+   {
+    "q": "Does it replace watching someone do the task?",
+    "a": "No. Checking how a person uses a hoist or sling needs a competent person to watch it done. CareStream checks understanding and keeps the record. It cannot see what happens on the floor."
+   },
+   {
+    "q": "How do I try it, and what does it cost?",
+    "a": "Create a <a href=\"/register\">free account</a> and start the 14 day free trial on a paid plan. The adhoc training screen is on the paid plans, and you can see the plan details on the <a href=\"/pricing\">pricing page</a>. Set up usually takes a day."
+   }
+  ]
+ },
+ "limits": {
+  "heading": "A way to see the gap, not a way to fix the person",
+  "cards": [
+   {
+    "title": "It does not alert you to a failed retry",
+    "body": "No message goes to you when a retry is wrong again. The gap stays open and shows in Knowledge gaps and the Monday digest, but you have to look."
+   },
+   {
+    "title": "It does not decide what happens next",
+    "body": "There is no automatic escalation, no capability process and no ranking. Whether the answer is a conversation, observation or a refresher is your call."
+   },
+   {
+    "title": "It does not see practice on the floor",
+    "body": "A wrong answer shows what someone knows, not how they work. Hands on skills still need a competent person to watch. Adhoc training and translation are on the paid plans."
+   }
+  ]
+ },
+ "read_next": [
+  "what-compliant-actually-means-for-one-care-staff-member",
+  "incident-led-training-in-care",
+  "micro-learning-for-care-staff-what-works-on-a-12-hour-shift"
+ ],
+ "faqs": {
+  "heading": "Retraining staff in care, answered",
+  "groups": [
+   {
+    "group": "About the retry loop",
+    "items": [
+     {
+      "q": "How many times can a carer retry a question?",
+      "a": "As often as they need. There is no limit and no lock out. They choose Learn &amp; retry for a short lesson then a fresh question, or Just retry for the same question again."
+     },
+     {
+      "q": "Does the manager get an alert when a carer gets a retry wrong?",
+      "a": "No. Nothing alerts the manager on each wrong answer. The open gap shows in Analytics, Knowledge gaps (open gaps, staff affected) and in the Monday digest email, and the staff record shows the person's gaps."
+     },
+     {
+      "q": "What is remedial training in a care home?",
+      "a": "Remedial training means extra help on a point someone has not yet grasped. In CareStream that is the lesson behind Learn &amp; retry, or another <a href=\"/uses/adhoc-training\">adhoc module</a> you allocate. For hands on skills it should include observation by a competent person."
+     },
+     {
+      "q": "Why does a carer keep getting the same question wrong?",
+      "a": "It might be a missed word, an old habit, tiredness or a point your policy words differently from what they were taught elsewhere. A short conversation usually finds out which. If language is the barrier, the lesson can be opened in their own language on the paid plans."
+     },
+     {
+      "q": "How does knowledge retention fit in?",
+      "a": "Knowledge retention is whether people still remember a point weeks after learning it. A fresh question after a lesson, repeated until it lands, is a simple way to check. <a href=\"/blog/micro-learning-for-care-staff-what-works-on-a-12-hour-shift\">Short micro learning</a> suits a long shift."
+     }
+    ]
+   },
+   {
+    "group": "About supervision and inspections",
+    "items": [
+     {
+      "q": "How does this fit with supervision in care?",
+      "a": "Use the Knowledge gaps view as a prompt. A repeat open gap is a good thing to bring to a supervision session, alongside the rest of the person's work. CareStream does not run your supervisions, it shows you what to talk about. See <a href=\"/cqc-compliance\">CQC and compliance</a> for how the evidence sits together."
+     },
+     {
+      "q": "What is reflective supervision, and how can I use a gap in it?",
+      "a": "Reflective supervision is a conversation where the carer thinks through what happened and what they would do differently, rather than being told. Ask them to talk you through the question they missed and what they would do in that situation. Then offer a short refresher if they want one."
+     },
+     {
+      "q": "What is a learning needs analysis, and is this one?",
+      "a": "A learning needs analysis works out what a person or team still needs to learn. The Knowledge gaps view gives you part of the picture: weakest topics and most missed questions. It is not a full learning needs analysis, which should also include observation and the person's own view."
+     },
+     {
+      "q": "What does the CQC expect when staff struggle with training?",
+      "a": "<a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/18\">Regulation 18</a> says staff must receive the support, training, professional development, supervision and appraisal they need to carry out their duties. The <a href=\"https://www.cqc.org.uk/guidance-regulation/providers/regulations-service-providers-and-managers/health-social-care-act/regulation-18\">CQC guidance on Regulation 18</a> says staff should receive ongoing or periodic supervision to make sure competence is maintained."
+     }
+    ]
+   }
+  ]
+ },
+ "guide": {
+  "heading": "A practical way to respond when a retry fails again",
+  "lede": "Retraining staff is mostly a conversation, and the software is there to tell you when to have it. A repeat wrong answer gives you a reason to look more closely, not a reason to worry.",
+  "sections": [
+   {
+    "h3": "Start with a gentle learning needs analysis",
+    "paragraphs": [
+     "A learning needs analysis does not have to be a form. Start by asking what is getting in the way. Is it the wording of the question, the topic itself, a gap in what they were shown before, or just a hard few weeks? Pair the open gap from your reports with what you already know about the person, and you have enough to plan the next step.",
+     "Where the question is about a hands on task, ask them to show you. Where it is about your policy, ask them to talk you through it. Either way, treat the answer as useful information for both of you."
+    ]
+   },
+   {
+    "h3": "Four steps for a carer who is still stuck",
+    "checklist": [
+     "Open Knowledge gaps weekly, or read the Monday digest, and note who has an open gap more than once.",
+     "Have a private, unhurried chat, and ask the carer to talk through the question in their own words.",
+     "Choose the help that fits: another short module, a language switch, a shadowed task, or a face to face refresher.",
+     "Record what you agreed on their staff record, then mark their gap as reviewed once they have got it right."
+    ]
+   },
+   {
+    "h3": "Bring it into supervision, kindly",
+    "paragraphs": [
+     "Reflective supervision suits this well. Ask what felt confusing, what they would do on shift, and what would help them feel sure. That keeps the focus on learning and away from blame."
+    ]
+   }
+  ],
+  "note": "<b>For the inspector.</b> Keep the open gap, the conversation you had and the follow up help together, so you can show how you supported the person. Inspectors look at support and supervision, not only training."
+ }
+}

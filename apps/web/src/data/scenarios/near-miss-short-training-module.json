@@ -1,0 +1,324 @@
+{
+  "slug": "near-miss-short-training-module",
+  "status": "draft",
+  "order": 20,
+  "title": "A near miss happened. <em>Learn from it without a blame meeting.</em>",
+  "meta_title": "Near Miss in a Care Home: Short Follow Up | CareStreamAI",
+  "meta_description": "After a near miss, allocate a short module on the topic. Staff get a calm follow up, wrong answers become short lessons, and you see the pattern.",
+  "eyebrow": "Scenario",
+  "lede": "A near miss is a gift if you use it. Nobody was hurt, but something nearly went wrong, and the people involved are still on shift. After you have recorded it, you can allocate <a href=\"/training-platform\">short training built from your own policies</a> to the team. It is learning, not a telling off.",
+  "fine": "14 day free trial · Set up in a day · UK data residency",
+  "panel": {
+    "title": "After the close call",
+    "pill": "Illustration",
+    "rows": [
+      { "label": "Close call spotted and put right", "note": "Day 0", "done": true },
+      { "label": "Recorded where you already record it", "note": "Day 0", "done": true },
+      { "label": "Short module on the topic allocated", "note": "Day 1", "done": false },
+      { "label": "Gaps seen and closed", "note": "Not yet", "done": false }
+    ],
+    "meter": 50
+  },
+  "image": "https://api.carestreamai.com/public/policy-shop/image/c770e93c-06bc-4e80-a306-e4667e686f54.webp",
+  "image_alt": "A senior carer and a carer talking calmly in a care home corridor beside a medication trolley, with the manager joining them holding a mug",
+  "card_title": "A close call on the medication round. What happens next?",
+  "card_snippet": "Nobody was harmed, so it is easy to move on. Allocate a short module on the topic, built from your own policies, and a wrong answer becomes a quiet lesson, not a blame meeting.",
+  "primary_keyword": "near miss",
+  "secondary_keywords": [
+    "near miss reporting",
+    "learning from incidents",
+    "incident learning",
+    "learning from mistakes",
+    "adhoc training"
+  ],
+  "feature_links": [
+    {
+      "title": "Training built from your own policies",
+      "body": "Ad hoc training from your policies, face to face training organised, and wrong answers that become lessons.",
+      "action": "See the feature",
+      "href": "/training-platform"
+    },
+    {
+      "title": "Turn an incident into training",
+      "body": "Allocate a short module on the topic while the event is fresh, and see whether it landed.",
+      "action": "See ad hoc training",
+      "href": "/uses/adhoc-training"
+    },
+    {
+      "title": "Find gaps in your policies",
+      "body": "When a close call shows a policy is thin, the gap analysis shows where to improve it.",
+      "action": "See policy gaps",
+      "href": "/uses/policy-gaps"
+    }
+  ],
+  "intro": {
+    "heading": "Nothing happened. That is exactly why it is easy to forget.",
+    "sub": "A scenario we see in many care homes.",
+    "paragraph": "A senior carer is doing the morning medication round when she notices a dose that was almost given at the wrong time. She stops, checks and puts it right. Nobody is harmed. She tells the manager, who records it in the home's usual way. Everyone feels relieved and a little uneasy. The manager does not want a formal meeting that makes people feel accused, but a quiet word with two people will not reach the whole team either. The close call is logged. The learning has nowhere to go. Here is how that plays out."
+  },
+  "trail": [
+    { "when": "Morning round", "text": "A carer stops herself before a dose goes out at the wrong time.", "kind": "ok" },
+    { "when": "Straight away", "text": "She tells the senior and the dose is put right. No harm done.", "kind": "ok" },
+    { "when": "Same day", "text": "The manager records the close call in the way the home always does.", "kind": "ok" },
+    { "when": "That afternoon", "text": "The manager wants the team to learn from it without anyone feeling blamed.", "kind": "gap" },
+    { "when": "The usual options", "text": "A team meeting feels heavy. A quiet word only reaches two people.", "kind": "gap" },
+    { "when": "A week later", "text": "Nobody knows who else is unsure about the same step.", "kind": "gap" },
+    { "when": "A month later", "text": "A new carer is shown the round. The close call is a line in a log.", "kind": "gap" },
+    { "when": "Inspection day", "text": "“What did you learn from your close calls?” A list is not an answer.", "kind": "end" }
+  ],
+  "trail_close": "<b>The close call was handled well. The learning is the gap.</b> Here is how CareStream helps with the part that comes after the record, without replacing how you report.",
+  "why": {
+    "heading": "A log shows what happened. It does not show what the team now knows.",
+    "sub": "Learning from mistakes works best when it feels safe, quick and specific.",
+    "cards": [
+      {
+        "icon": "chat",
+        "title": "A blame meeting teaches people to stay quiet",
+        "body": "If speaking up leads to a formal sit down, people think twice next time. A short, private check on the topic keeps the focus on the point, not the person."
+      },
+      {
+        "icon": "tick",
+        "title": "One word does not reach everyone",
+        "body": "The two people involved know what happened. Others on different shifts may share the same doubt and never hear about it."
+      },
+      {
+        "icon": "alert",
+        "title": "Writing a refresher by hand takes time",
+        "body": "Few managers can write a fresh module after each close call, so the learning stays a line in a log and the same slip can come back."
+      }
+    ]
+  },
+  "how": {
+    "heading": "Your record stays where it is. The learning follows in CareStream.",
+    "sub": "This is the <a href=\"/training-platform\">Training built from your own policies</a> feature, in the order a manager and a carer meet it. CareStream does not hold your incident records, so you keep recording wherever you do now. See also <a href=\"/uses/adhoc-training\">turning an incident into adhoc training</a>.",
+    "blocks": [
+      {
+        "heading": "Allocate a short module on the topic of the close call",
+        "bullets": [
+          "Record the close call wherever you already do. CareStream does not do near miss reporting, so nothing here replaces that step",
+          "In the Training screen pick the topic module that fits, such as medication, then preview and edit it first",
+          "Choose the staff who should see it and, if you like, a due date. They complete it in the Staff Hub on their own phone"
+        ],
+        "tags": [
+          { "label": "Training built from your own policies", "href": "/training-platform" },
+          { "label": "Turn an incident into training", "href": "/uses/adhoc-training" }
+        ],
+        "mock": {
+          "type": "training",
+          "module": "Medication",
+          "questions": [
+            "What should you do before giving a medicine that is due at a time you were not expecting?",
+            "Who do you tell if you spot a possible medication error before it reaches the resident?",
+            "Why do you check the MAR chart against the label every time?"
+          ],
+          "staff_count": 12
+        }
+      },
+      {
+        "heading": "A wrong answer becomes a quiet, private follow up",
+        "bullets": [
+          "A wrong answer goes into the carer's Follow-up tab in the Staff Hub, and they get an email, at most once a day and in English",
+          "They choose Learn &amp; retry, a short lesson (why it matters, what to remember, a realistic situation) then a fresh question, or Just retry the same question",
+          "They can retry as often as they need. There is no meeting, and the lesson is built from your own policies where they cover the point"
+        ],
+        "tags": [
+          { "label": "Wrong answers become lessons", "href": "/training-platform" },
+          { "label": "Medication administration course", "href": "/staff-training/medication-administration-and-competency" }
+        ],
+        "mock": {
+          "type": "followup",
+          "module": "Medication",
+          "question": "Who do you tell if you spot a possible medication error before it reaches the resident?",
+          "why": "Telling the senior straight away lets the team put it right and learn from it, even when no harm was done.",
+          "remember": [
+            "Stop and do not give the dose",
+            "Tell the senior on shift",
+            "Record it as your home asks"
+          ],
+          "picture": "You notice a dose is about to go out at the wrong time, and you are not sure whether to say."
+        }
+      },
+      {
+        "heading": "Staff learn the lesson in the language they think in",
+        "bullets": [
+          "A carer who misses a question because of one word can open the lesson in their own language",
+          "Your admin sets their second language, and they switch to it in the hub",
+          "Training in different languages is part of the paid plans, and the reminder emails stay in English"
+        ],
+        "tags": [
+          { "label": "Training in 60+ languages", "href": "/languages" },
+          { "label": "Staff Hub in 60+ languages", "href": "/uses/multilingual-staff-hub" }
+        ],
+        "mock": {
+          "type": "language",
+          "second_language": "Romanian"
+        }
+      },
+      {
+        "heading": "See the pattern across the team, without anyone being named in a meeting",
+        "bullets": [
+          "The Knowledge gaps view shows open gaps, staff affected, gaps closed in 30 days and how many have engaged with a lesson",
+          "Most missed questions and weakest topics show whether the close call was one person's slip or a shared doubt",
+          "A Monday digest email brings the picture to you. Nothing alerts you each time a carer answers wrongly"
+        ],
+        "tags": [
+          { "label": "Reporting that runs itself", "href": "/training-platform" },
+          { "label": "CQC and compliance evidence", "href": "/cqc-compliance" }
+        ],
+        "mock": {
+          "type": "gaps",
+          "stats": { "open": 4, "affected": 3, "closed": 9, "engaged": 80 },
+          "missed": [
+            ["Telling the senior about an error caught in time", "3 staff"],
+            ["Checking the MAR chart against the label", "2 staff"],
+            ["Giving a dose outside its time window", "2 staff"]
+          ],
+          "weak": [
+            ["Medication", "4 gaps"],
+            ["Reporting concerns", "1 gap"]
+          ]
+        }
+      }
+    ]
+  },
+  "talk": {
+    "heading": "The questions managers ask, and how CareStream answers them",
+    "sub": "Read this as a conversation. The questions are the ones we hear most.",
+    "items": [
+      {
+        "q": "Does CareStream replace how we record a close call?",
+        "a": "No. CareStream does not hold your incident records or log events. You record the event wherever you do now, in your own system or on paper. CareStream is for the learning that follows, once the record is made."
+      },
+      {
+        "q": "How do I use it after a close call on the medication round?",
+        "a": "Open the Training screen and allocate an adhoc module on the topic, medication for example. It is <a href=\"/training-platform\">built from your own policies</a> where they cover it, with general good practice as the fallback. You can edit and preview it, tick the staff, and set a due date if you want one."
+      },
+      {
+        "q": "How is this different from a team meeting about it?",
+        "a": "Each carer answers a few questions privately on their own phone, so nobody is put on the spot in front of colleagues. It reaches people on every shift, not just those who were there. A wrong answer is information about a gap, not a mark against a person."
+      },
+      {
+        "q": "What happens when someone gets a question wrong?",
+        "a": "The wrong answer goes into that carer's Follow-up tab in the Staff Hub, and they get an email, at most once a day. They choose Learn &amp; retry, a short lesson then a fresh question, or Just retry the same question. They can retry as often as they like."
+      },
+      {
+        "q": "Will I be told every time someone gets one wrong?",
+        "a": "No, and that is deliberate. Nothing alerts you on each wrong answer. You see the picture in the Knowledge gaps view in Analytics and in the Monday digest email. That keeps the tone calm and shows you patterns, not individual slips."
+      },
+      {
+        "q": "What if our policy does not cover the point?",
+        "a": "Then the module falls back on general good practice. That is a useful prompt. If a close call shows your policy is thin, you can look at the gap and decide whether to improve the policy. The examples in any mock up are illustration only, not clinical advice."
+      },
+      {
+        "q": "Can staff who speak another first language follow it?",
+        "a": "Yes. They can open the lesson in <a href=\"/languages\">their own language</a>, so a wrong answer points to a gap in knowledge and not in vocabulary. Translation is on the paid plans only, and the reminder emails are in English."
+      },
+      {
+        "q": "Can I try it on a real close call?",
+        "a": "Yes. There is a 14 day free trial, and you can <a href=\"/register\">create a free account</a> to look around. The adhoc training screen is part of the paid plans, so check the <a href=\"/pricing\">pricing page</a> for what each plan includes."
+      }
+    ]
+  },
+  "limits": {
+    "heading": "The learning that follows, not the report itself",
+    "cards": [
+      {
+        "title": "It is not a place to log the event",
+        "body": "There is no way to log the event in CareStream. You keep recording wherever you do now, and use CareStream for the training that follows."
+      },
+      {
+        "title": "It does not investigate or give clinical advice",
+        "body": "It does not find the cause of a close call or decide what went wrong. That is a manager's judgement, and your own procedures and clinicians still lead."
+      },
+      {
+        "title": "It does not alert you to every wrong answer",
+        "body": "You see the picture in Knowledge gaps and the Monday digest. Adhoc training and translation are on the paid plans, and a close call does not trigger anything automatically."
+      }
+    ]
+  },
+  "read_next": [
+    "incident-led-training-in-care",
+    "riddor-reporting-care-homes",
+    "care-home-audit-schedule"
+  ],
+  "faqs": {
+    "heading": "Close calls and CareStream, answered",
+    "groups": [
+      {
+        "group": "About close calls",
+        "items": [
+          {
+            "q": "What counts as a close call in a care home?",
+            "a": "It is an event that could have caused harm but did not, because someone caught it or luck intervened. A dose nearly given at the wrong time, caught before it reached the resident, is a typical example. Your own policy should say how your home defines and records them."
+          },
+          {
+            "q": "Do I have to report a close call under RIDDOR?",
+            "a": "RIDDOR covers certain dangerous occurrences, which HSE describes as <a href=\"https://www.hse.gov.uk/riddor/key-definitions.htm\">incidents with the potential to cause harm</a>. Whether a particular event is reportable depends on the rules, so check the HSE guidance. Our post on <a href=\"/blog/riddor-reporting-care-homes\">RIDDOR reporting in care homes</a> explains more."
+          },
+          {
+            "q": "What is near miss reporting, and does CareStream do it?",
+            "a": "Close call reporting means recording events that nearly caused harm, so patterns can be seen. CareStream does not do it. Use the way your home already records them, then use CareStream for the follow up training."
+          },
+          {
+            "q": "Why does learning from incidents matter if nobody was hurt?",
+            "a": "A close call shows where the system was one step from harm. Learning from incidents at this point costs nothing but time, and it can stop the same slip becoming an injury."
+          },
+          {
+            "q": "How do I get incident learning to reach every shift?",
+            "a": "Allocate a short module to the whole team, not just the people involved. Each person completes it on their own phone when they are next on shift, and the Knowledge gaps view shows where it landed."
+          }
+        ]
+      },
+      {
+        "group": "About the training",
+        "items": [
+          {
+            "q": "Is this the same as adhoc training?",
+            "a": "Yes. Adhoc training is a short module you allocate when something happens. Here the trigger is a close call. The <a href=\"/uses/adhoc-training\">adhoc training page</a> covers the wider idea, and this page is about keeping it blame free."
+          },
+          {
+            "q": "How do I make learning from mistakes feel safe for staff?",
+            "a": "Say why you are doing it, and send it to everyone, not only those involved. Keep the questions about the topic, not the event. A wrong answer opens a short lesson, which treats it as a gap to fill. The <a href=\"/blog/incident-led-training-in-care\">incident led training post</a> has more on tone."
+          },
+          {
+            "q": "What if a carer gets a question wrong?",
+            "a": "It appears in their Follow-up tab. They can choose Learn &amp; retry, a short lesson on that point followed by a fresh question, or Just retry the same question, as often as they need."
+          },
+          {
+            "q": "Can it help with medication specifically?",
+            "a": "You can allocate a medication module and see which questions are missed. It does not replace competency checks. Our <a href=\"/staff-training/medication-administration-and-competency\">medication course</a> covers the topic itself, and a competent person still observes practice."
+          }
+        ]
+      }
+    ]
+  },
+  "guide": {
+    "heading": "A practical way to learn from a close call",
+    "lede": "A close call is the cheapest lesson a home ever gets. The skill is turning it into learning that is quick, kind and reaches everyone.",
+    "sections": [
+      {
+        "h3": "Keep the record and the learning apart",
+        "paragraphs": [
+          "Record the event first, in the way your home always does. That record is your evidence of what happened and what you did. The learning is a separate, lighter step. Keeping them apart helps staff see that a short module is about the topic, not about blame.",
+          "Good governance expects services to assess and mitigate risk. <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/12\">Regulation 12 of the 2014 regulations</a> includes assessing risks to people's health and safety, mitigating them, the proper and safe management of medicines, and staff having the competence and skills to do so safely. A close call on the medication round touches all of those."
+        ]
+      },
+      {
+        "h3": "Four steps that fit a busy day",
+        "checklist": [
+          "Same day: record the close call where you already do, and thank the person who spoke up.",
+          "Within a few days: allocate a short module on the topic to the whole team, built from your policies.",
+          "Whenever an answer is wrong: the carer opens a short lesson on that point, then a fresh question.",
+          "Each month: look at the most missed questions and decide whether the policy, the training or the process needs a change."
+        ]
+      },
+      {
+        "h3": "What to say to the team",
+        "paragraphs": [
+          "Tell people plainly why the module is coming. Something like: we had a close call, nobody was hurt, and we all want to be sure we are clear on this step. Say that wrong answers are normal and that the lesson is the point. Staff who feel safe will report the next close call sooner."
+        ]
+      }
+    ],
+    "note": "<b>For the inspector.</b> Keep the close call record, the module you allocated and the results together, so you can show what you did next as well as what happened."
+  }
+}

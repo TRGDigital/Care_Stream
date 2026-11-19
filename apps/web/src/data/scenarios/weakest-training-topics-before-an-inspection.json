@@ -1,0 +1,408 @@
+{
+ "slug": "weakest-training-topics-before-an-inspection",
+ "status": "draft",
+ "order": 17,
+ "title": "Your training records look fine. <em>Do you know your weakest topics?</em>",
+ "meta_title": "Training Records and Weakest Topics for Care Homes | CareStreamAI",
+ "meta_description": "Complete training records do not show where staff are shakiest. Find your weakest topics with a knowledge check, and fix them before an inspection.",
+ "eyebrow": "Scenario",
+ "lede": "Your training records say everyone is up to date. They do not say who is shaky on infection control. With <a href=\"/training-platform\">short training built from your own policies</a>, wrong answers become a follow up lesson, and you see the weakest topics while there is still time to fix them.",
+ "fine": "14 day free trial · Set up in a day · UK data residency",
+ "panel": {
+  "title": "Four weeks before the inspection window",
+  "pill": "Illustration",
+  "rows": [
+   {
+    "label": "Every course ticked off",
+    "note": "Checked",
+    "done": true
+   },
+   {
+    "label": "Infection control module allocated",
+    "note": "Week 1",
+    "done": true
+   },
+   {
+    "label": "Weakest topics reviewed",
+    "note": "Not yet",
+    "done": false
+   },
+   {
+    "label": "Shaky answers followed up and closed",
+    "note": "Not yet",
+    "done": false
+   }
+  ],
+  "meter": 50
+ },
+ "image": "https://api.carestreamai.com/public/policy-shop/image/bfaf2a96-4cc0-4e48-b43f-62778cab156a.webp",
+ "image_alt": "A registered manager and a deputy in a care office looking thoughtfully at a wall of coloured cards, with folders on the desk behind them",
+ "card_title": "Training is all ticked. Where are your staff actually shakiest?",
+ "card_snippet": "Green ticks show who finished a course, not who still gets the answers wrong. Use short checks built from your own policies, and see your weakest topics before an inspection does.",
+ "primary_keyword": "training records",
+ "secondary_keywords": [
+  "training compliance",
+  "staff training records",
+  "skills gap analysis",
+  "training evidence",
+  "knowledge check"
+ ],
+ "feature_links": [
+  {
+   "title": "Training built from your own policies",
+   "body": "Adhoc training from your policies, a knowledge check on each topic, and wrong answers that become short lessons.",
+   "action": "See the feature",
+   "href": "/training-platform"
+  },
+  {
+   "title": "Adhoc training after an incident or a worry",
+   "body": "Allocate a short module on any topic the day you spot a weak area.",
+   "action": "See adhoc training",
+   "href": "/uses/adhoc-training"
+  },
+  {
+   "title": "CQC and compliance",
+   "body": "Evidence that builds as your team works, and a readiness report on the higher plans.",
+   "action": "See CQC and compliance",
+   "href": "/cqc-compliance"
+  }
+ ],
+ "intro": {
+  "heading": "Everything is green. That is not the same as everything is understood.",
+  "sub": "A scenario we see in many care homes.",
+  "paragraph": "A registered manager opens the spreadsheet on a quiet Tuesday. Every course is in date, every certificate is filed and the compliance figure reads one hundred percent. Then the deputy mentions that two carers could not say when to use gloves and aprons during a recent outbreak scare. Nobody wrote that down. The manager looks at the wall of cards and folders and realises the records show what was completed, not what was remembered. An inspection could be a few weeks away. Here is how that plays out."
+ },
+ "trail": [
+  {
+   "when": "January",
+   "text": "Infection control refresher is booked for the whole team.",
+   "kind": "ok"
+  },
+  {
+   "when": "February",
+   "text": "Every carer completes the online course and passes.",
+   "kind": "ok"
+  },
+  {
+   "when": "March",
+   "text": "Certificates are filed. The records show 100 percent.",
+   "kind": "ok"
+  },
+  {
+   "when": "April",
+   "text": "The deputy overhears a carer unsure about hand hygiene steps.",
+   "kind": "gap"
+  },
+  {
+   "when": "Same week",
+   "text": "A night carer cannot say where the spill kit is kept.",
+   "kind": "gap"
+  },
+  {
+   "when": "The problem",
+   "text": "Nobody is sure how many others feel the same.",
+   "kind": "gap"
+  },
+  {
+   "when": "What the manager has",
+   "text": "A full set of certificates and no view of the weak spots.",
+   "kind": "gap"
+  },
+  {
+   "when": "The inspection call",
+   "text": "“Show us how you know your staff are confident.” Certificates are only part of it.",
+   "kind": "end"
+  }
+ ],
+ "trail_close": "The gap is not in the filing. It is between finishing a course and being sure of the answers. The rest of this page shows how to find that gap early.",
+ "why": {
+  "heading": "Why a clean record can hide a weak spot",
+  "sub": "Three things that catch good managers out.",
+  "cards": [
+   {
+    "icon": "tick",
+    "title": "Completed is not the same as understood",
+    "body": "Staff training records show who attended or finished. A person can click through a course on a tired night shift and still be unsure on the day."
+   },
+   {
+    "icon": "alert",
+    "title": "Problems surface by accident",
+    "body": "Without a regular knowledge check, weak spots come out in a chance conversation, a near miss or a visitor's question. That is a late and stressful way to find them."
+   },
+   {
+    "icon": "chat",
+    "title": "Spreadsheets cannot see answers",
+    "body": "A tracker counts dates. It cannot tell you which question six carers keep missing. A simple skills gap analysis needs the answers themselves."
+   }
+  ]
+ },
+ "how": {
+  "heading": "Your policies in, the weak spots out.",
+  "sub": "This is the <a href=\"/training-platform\">Training built from your own policies</a> feature, in the order a manager and a carer meet it. See also <a href=\"/uses/adhoc-training\">turning a worry into adhoc training</a> and <a href=\"/uses/policy-gaps\">finding gaps in your policies</a>.",
+  "blocks": [
+   {
+    "heading": "Allocate a short module on the topic you are unsure about",
+    "bullets": [
+     "In the Training screen, pick a topic module such as Infection Prevention and Control and tick the staff you want to check",
+     "CareStream builds the lessons and questions from your own policies where they cover the topic, and good practice where they do not. Edit and preview first",
+     "Staff complete it in the Staff Hub on their own phone, with an optional due date"
+    ],
+    "tags": [
+     {
+      "label": "Training built from your own policies",
+      "href": "/training-platform"
+     },
+     {
+      "label": "Infection prevention course",
+      "href": "/staff-training/infection-prevention-and-control"
+     }
+    ],
+    "mock": {
+     "type": "training",
+     "module": "Infection Prevention and Control",
+     "questions": [
+      "When should you change your gloves during personal care?",
+      "What is the first step when you find a body fluid spill?",
+      "When must you clean your hands, even if you wore gloves?"
+     ],
+     "staff_count": 22
+    }
+   },
+   {
+    "heading": "A wrong answer goes to the carer's Follow-up tab",
+    "bullets": [
+     "The wrong answer lands in the Follow-up tab in the Staff Hub, and the carer gets an email, at most once a day and in English",
+     "They choose Learn &amp; retry, a short lesson (why this matters, remember, picture this, then a fresh question), or Just retry, the same question again",
+     "They can retry as often as they need, and nothing alerts you each time. The picture comes to you through the gaps view"
+    ],
+    "tags": [
+     {
+      "label": "Wrong answers become lessons",
+      "href": "/training-platform"
+     },
+     {
+      "label": "How CareStream works",
+      "href": "/how-it-works"
+     }
+    ],
+    "mock": {
+     "type": "followup",
+     "module": "Infection Prevention and Control",
+     "question": "When should you change your gloves during personal care?",
+     "why": "Gloves can carry germs from one task to the next, so they must change between tasks and between people.",
+     "remember": [
+      "Change gloves between tasks",
+      "Clean your hands before and after",
+      "Do not reuse single use gloves"
+     ],
+     "picture": "You have just finished personal care and are about to tidy the bedside table."
+    }
+   },
+   {
+    "heading": "The same check, in the language a carer thinks in",
+    "bullets": [
+     "If a missed word caused the wrong answer, the carer can open the lesson in their second language",
+     "Your admin sets that language, and the carer switches to it in the hub",
+     "Translation is on the paid plans only, and the hub menus stay in English"
+    ],
+    "tags": [
+     {
+      "label": "Training in 60+ languages",
+      "href": "/languages"
+     },
+     {
+      "label": "Staff Hub in 60+ languages",
+      "href": "/uses/multilingual-staff-hub"
+     }
+    ],
+    "mock": {
+     "type": "language",
+     "second_language": "Polish"
+    }
+   },
+   {
+    "heading": "Open Knowledge gaps and see the weakest topics",
+    "bullets": [
+     "Analytics, Knowledge gaps shows open gaps, staff affected, gaps closed in 30 days and how many have engaged with learning",
+     "The most missed questions and weakest topics give you a simple skills gap analysis from real answers",
+     "See how gaps are being closed, and get a Monday digest email so the picture arrives without you asking"
+    ],
+    "tags": [
+     {
+      "label": "Reporting that runs itself",
+      "href": "/training-platform"
+     },
+     {
+      "label": "CQC and compliance evidence",
+      "href": "/cqc-compliance"
+     }
+    ],
+    "mock": {
+     "type": "gaps",
+     "stats": {
+      "open": 9,
+      "affected": 6,
+      "closed": 14,
+      "engaged": 67
+     },
+     "missed": [
+      [
+       "Changing gloves between tasks",
+       "4 staff"
+      ],
+      [
+       "First step with a spill",
+       "3 staff"
+      ],
+      [
+       "When to clean hands",
+       "2 staff"
+      ]
+     ],
+     "weak": [
+      [
+       "Infection Prevention and Control",
+       "7 gaps"
+      ],
+      [
+       "Fire Safety",
+       "2 gaps"
+      ]
+     ]
+    }
+   }
+  ]
+ },
+ "talk": {
+  "heading": "The questions managers ask, and how CareStream answers them",
+  "sub": "Read this as a conversation. The questions are the ones we hear most.",
+  "items": [
+   {
+    "q": "My training compliance is 100 percent. Why would I need anything else?",
+    "a": "Training compliance tells you who completed what and when. It does not tell you who is still unsure. A short knowledge check on the topic shows the difference, and costs staff a few minutes."
+   },
+   {
+    "q": "How do I find my weakest topics?",
+    "a": "Allocate short adhoc training on a topic, built from <a href=\"/training-platform\">your own policies</a>. Staff answer in the Staff Hub. In Analytics, Knowledge gaps, the weakest topics and most missed questions are listed for you."
+   },
+   {
+    "q": "What happens when a carer gets a question wrong?",
+    "a": "The question goes into their Follow-up tab in the Staff Hub and they get an email, at most once a day, in English. They choose Learn &amp; retry for a short lesson and a fresh question, or Just retry for the same one. They can retry as often as they like."
+   },
+   {
+    "q": "Will I be told every time someone gets it wrong?",
+    "a": "No. Nothing alerts you on each wrong answer. You see the pattern in Knowledge gaps and in the Monday digest email. That keeps you looking at themes, not noise."
+   },
+   {
+    "q": "Does this give me a CQC readiness score?",
+    "a": "No. Knowledge gaps shows open gaps and weak topics, not a score. A separate CQC Inspection Evidence Report is on Professional and above. See <a href=\"/cqc-compliance\">CQC and compliance</a>."
+   },
+   {
+    "q": "Where does the content come from?",
+    "a": "CareStream searches your own policies for the topic. Where they do not cover it, it falls back on general good practice. You can edit and preview the module before anyone sees it, so check it matches how your home works."
+   },
+   {
+    "q": "Can staff who speak another first language use it?",
+    "a": "Yes, on the paid plans. Your admin sets a second language and the carer opens lessons in it. The email nudge is English only, and the hub menus stay in English."
+   },
+   {
+    "q": "How can I try it?",
+    "a": "Create a free account at <a href=\"/register\">register</a> and start the 14 day free trial on a paid plan. Adhoc training is on the paid plans, not the free plan. You can also <a href=\"/demo\">book a demo</a>."
+   }
+  ]
+ },
+ "limits": {
+  "heading": "A way to see weak spots, not a verdict on your service",
+  "cards": [
+   {
+    "title": "It is not a readiness score",
+    "body": "Knowledge gaps shows gaps and weak topics from the answers staff give. It does not rate your service or predict how an inspection will go."
+   },
+   {
+    "title": "It does not alert you to each wrong answer",
+    "body": "There are no instant alerts to the manager. You look in Knowledge gaps or read the Monday digest. If you want a fast view, open the screen yourself."
+   },
+   {
+    "title": "It checks knowledge, not practice on the floor",
+    "body": "A good answer on a phone is not proof of good hand hygiene at 3am. Observation, supervision and audits still matter. Adhoc training and translation are also paid plan features."
+   }
+  ]
+ },
+ "read_next": [
+  "cqc-inspection-day-what-to-expect-and-how-to-be-ready",
+  "cqc-readiness-report-what-it-is",
+  "what-compliant-actually-means-for-one-care-staff-member"
+ ],
+ "faqs": {
+  "heading": "Weakest topics before an inspection, answered",
+  "groups": [
+   {
+    "group": "Records and compliance",
+    "items": [
+     {
+      "q": "What should staff training records show?",
+      "a": "At a minimum, who did which training and when. Regulation 18 says staff must <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/18\">receive appropriate support, training, professional development, supervision and appraisal as is necessary</a> for their duties. Records show it happened. A knowledge check shows how well it landed."
+     },
+     {
+      "q": "Is 100 percent training compliance enough?",
+      "a": "It is a good start, but it measures completion. Providers must also <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/17\">assess, monitor and improve the quality and safety of the services</a> they provide. Knowing which topics are weak helps you do that."
+     },
+     {
+      "q": "Can CareStream replace my existing records?",
+      "a": "It is not designed as a swap. Many homes keep their records and add short checks on top. See <a href=\"/uses/annual-training\">annual training</a> for how the yearly plan fits together."
+     }
+    ]
+   },
+   {
+    "group": "Finding weak topics",
+    "items": [
+     {
+      "q": "How do I do a skills gap analysis for care staff?",
+      "a": "Allocate a short module on the topic, let staff answer, then open Knowledge gaps. The most missed questions and weakest topics are your skills gap analysis, built from real answers. Then close the gaps with follow up lessons."
+     },
+     {
+      "q": "What is a knowledge check in care training?",
+      "a": "A few questions after a lesson to see what stuck. In CareStream the knowledge check is built from your own policies, and a wrong answer goes to the carer's Follow-up tab for a short lesson."
+     },
+     {
+      "q": "What counts as training evidence for an inspection?",
+      "a": "Certificates, attendance records and results from checks all help show your training evidence. Keep it honest and current. For how evidence builds up, see <a href=\"/cqc-compliance\">CQC and compliance</a> and the <a href=\"/blog/cqc-inspection-day-what-to-expect-and-how-to-be-ready\">inspection day guide</a>."
+     },
+     {
+      "q": "Do I see results as staff finish?",
+      "a": "You see them in Analytics, Knowledge gaps whenever you open it, plus a Monday digest email. There is no alert for each answer."
+     }
+    ]
+   }
+  ]
+ },
+ "guide": {
+  "heading": "A practical way to find weak topics before an inspection",
+  "lede": "Good records are the base. The extra step is to check what people remember on the topics that matter most, while you still have time to act on the results.",
+  "sections": [
+   {
+    "h3": "Look past completion",
+    "paragraphs": [
+     "Start with your staff training records and pick the three topics that carry most risk in your home, such as infection control, safeguarding and medication. For each, ask whether you have any sign of understanding beyond a completion date. If the answer is no, that topic is where a short knowledge check earns its place.",
+     "Keep it small. Ten questions on one topic is more useful than a long test on everything. Staff on a 12 hour shift will finish a short set. They may not finish a long one."
+    ]
+   },
+   {
+    "h3": "A four week plan before an inspection window",
+    "checklist": [
+     "Week 1: allocate a short module on your highest risk topic and ask everyone to finish it within the week",
+     "Week 2: open Knowledge gaps, note the most missed questions and talk to the team about them",
+     "Week 3: let staff use Learn &amp; retry, then allocate a second topic to the same group",
+     "Week 4: review how gaps are closing, record what you changed and note any topic that still needs a face to face session"
+    ]
+   },
+   {
+    "h3": "Keep the evidence honest",
+    "paragraphs": [
+     "Write down what you found and what you did about it. A manager who can say that infection control looked weak in April, and what changed after, tells a clearer story than a page of identical certificates. Do not hide weak results. They show that you check and act."
+    ]
+   }
+  ],
+  "note": "This guide is general good practice, not legal advice. Check your own policies and the current CQC guidance."
+ }
+}

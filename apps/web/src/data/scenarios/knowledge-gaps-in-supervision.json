@@ -1,0 +1,328 @@
+{
+  "slug": "knowledge-gaps-in-supervision",
+  "status": "draft",
+  "order": 19,
+  "title": "Reflective supervision works better with evidence. <em>Bring the gaps to the conversation.</em>",
+  "meta_title": "Reflective Supervision in Care, Backed by Evidence | CareStreamAI",
+  "meta_description": "Use the knowledge gaps view as a prompt in reflective supervision. See each carer's open and closed gaps, and how they closed them, before you sit down.",
+  "eyebrow": "Scenario",
+  "lede": "Reflective supervision is a conversation, and CareStream does not run it for you. What it gives you is something concrete to talk about. Allocate <a href=\"/training-platform\">short training built from your own policies</a>, and before each supervision you can see what a carer got wrong, what they did about it and what is still open.",
+  "fine": "14 day free trial · Set up in a day · UK data residency",
+  "panel": {
+    "title": "Before a supervision session",
+    "pill": "Illustration",
+    "rows": [
+      { "label": "Moving and handling check allocated", "note": "Three weeks ago", "done": true },
+      { "label": "Carer completed it in the Staff Hub", "note": "Two weeks ago", "done": true },
+      { "label": "Open and closed gaps read on the staff record", "note": "Not yet", "done": false },
+      { "label": "Conversation held, record marked as reviewed", "note": "Not yet", "done": false }
+    ],
+    "meter": 50
+  },
+  "image": "https://api.carestreamai.com/public/policy-shop/image/f1e698b7-8991-4992-9137-2cce4e823a04.webp",
+  "image_alt": "A manager and a carer sit in comfortable chairs in a quiet room for a supervision conversation, the manager listening with a notebook, with a plant and tea nearby",
+  "card_title": "Supervision with something real to talk about",
+  "card_snippet": "Before a supervision, see which questions a carer got wrong, whether they closed the gap and how. CareStream gives you the evidence, and you keep the conversation human.",
+  "primary_keyword": "reflective supervision",
+  "secondary_keywords": [
+    "supervision in care",
+    "care staff supervision",
+    "learning from mistakes",
+    "check for understanding",
+    "staff competency assessment"
+  ],
+  "feature_links": [
+    {
+      "title": "Training built from your own policies",
+      "body": "Ad hoc training from your policies, wrong answers that become short lessons, and a view of the gaps.",
+      "action": "See the feature",
+      "href": "/training-platform"
+    },
+    {
+      "title": "Adhoc training",
+      "body": "Allocate a short module on any topic after an incident, a session or a conversation.",
+      "action": "See adhoc training",
+      "href": "/uses/adhoc-training"
+    },
+    {
+      "title": "CQC and compliance",
+      "body": "Evidence that builds itself, and a readiness report for your next inspection.",
+      "action": "See CQC and compliance",
+      "href": "/cqc-compliance"
+    }
+  ],
+  "intro": {
+    "heading": "Tomorrow is Sam's supervision. What will you actually talk about?",
+    "sub": "A scenario we see in many care homes.",
+    "paragraph": "A registered manager has supervision booked with Sam, a carer of two years, for ten o'clock tomorrow. Last month she allocated a short moving and handling refresher, and Sam did it on his phone. She wants the session to be useful and kind, not a tick box. But when she opens her notes she finds a few impressions and a vague memory that Sam seemed fine. She cannot recall whether anything was missed, so she plans to ask how things are going and hope something comes up. Here is how that tends to play out."
+  },
+  "trail": [
+    { "when": "Last month", "text": "The manager allocates a short moving and handling refresher.", "kind": "ok" },
+    { "when": "Two weeks ago", "text": "Sam completes it in the Staff Hub, on his own phone.", "kind": "ok" },
+    { "when": "This week", "text": "Supervision is booked for ten o'clock tomorrow, with tea and time set aside.", "kind": "ok" },
+    { "when": "The night before", "text": "The manager opens her notes and finds impressions, not facts.", "kind": "gap" },
+    { "when": "What nobody knows", "text": "Which questions Sam got wrong, if any, and which topic they sat in.", "kind": "gap" },
+    { "when": "And another thing", "text": "Whether Sam ever went back to them, or the gap is still open.", "kind": "gap" },
+    { "when": "In the room", "text": "The talk drifts to shifts and gossip. The learning point is missed.", "kind": "gap" },
+    { "when": "Inspection day", "text": "“How do you know staff stay competent between training days?”", "kind": "end" }
+  ],
+  "trail_close": "<b>The supervision was never the problem.</b> The gap is the evidence you bring into the room. Here is how CareStream supplies it, without taking the conversation away from you.",
+  "why": {
+    "heading": "A good conversation needs something to hold on to",
+    "sub": "Supervision should help people grow. That is hard when nobody can say what the person has found difficult.",
+    "cards": [
+      {
+        "icon": "chat",
+        "title": "Memory is a poor agenda",
+        "body": "Managers carry a lot in their heads. Without a record, a supervision covers whatever came to mind that morning, and a quiet gap stays quiet."
+      },
+      {
+        "icon": "tick",
+        "title": "A wrong answer is a useful starting point",
+        "body": "Raised kindly, a missed question opens a real conversation about what the carer finds hard. That is learning from mistakes, not catching someone out."
+      },
+      {
+        "icon": "alert",
+        "title": "Nothing flags it to you as it happens",
+        "body": "CareStream does not alert you each time someone answers wrongly. You see the picture when you look, so supervision is a natural time to look."
+      }
+    ]
+  },
+  "how": {
+    "heading": "From a short check to a better conversation.",
+    "sub": "This is the <a href=\"/training-platform\">Training built from your own policies</a> feature, in the order a manager and a carer meet it. See also <a href=\"/uses/adhoc-training\">allocating adhoc training after an incident</a> and <a href=\"/how-it-works\">how CareStream works</a>.",
+    "blocks": [
+      {
+        "heading": "Allocate a short check on the topic, built from your own policies",
+        "bullets": [
+          "Pick a topic module, such as moving and handling, and tick the staff you want to include",
+          "CareStream builds the lesson and questions from your own policies, and you can edit and preview them before anyone sees them",
+          "It works as a quick check for understanding between formal training days, completed in the Staff Hub on the carer's own phone"
+        ],
+        "tags": [
+          { "label": "Training built from your own policies", "href": "/training-platform" },
+          { "label": "Moving and handling course", "href": "/staff-training/moving-and-handling-of-people" }
+        ],
+        "mock": {
+          "type": "training",
+          "module": "Moving and Handling",
+          "questions": [
+            "What should you check before using a hoist with a resident?",
+            "What do you do if a resident's mobility seems to have changed since the last assessment?"
+          ],
+          "staff_count": 12
+        }
+      },
+      {
+        "heading": "A wrong answer goes to the carer, who can learn and retry",
+        "bullets": [
+          "The wrong answer lands in the carer's Follow-up tab, and they get an email, at most once a day and in English",
+          "They choose Learn &amp; retry, a short lesson then a fresh question, or Just retry the same question, as often as they need",
+          "Nothing is sent to you at that point, so supervision becomes the natural place to talk about it"
+        ],
+        "tags": [
+          { "label": "Wrong answers become lessons", "href": "/training-platform" },
+          { "label": "Adhoc training", "href": "/uses/adhoc-training" }
+        ],
+        "mock": {
+          "type": "followup",
+          "module": "Moving and Handling",
+          "question": "What should you check before using a hoist with a resident?",
+          "why": "The sling, the hoist and the resident's care plan instructions all need checking first, because a fault or a wrong size can cause a fall.",
+          "remember": [
+            "Check the hoist and the sling before use",
+            "Use the right sling for this resident",
+            "Follow the instructions agreed for them"
+          ],
+          "picture": "You are about to hoist a resident and the sling looks frayed at one seam."
+        }
+      },
+      {
+        "heading": "Raise it in the carer's own language if that helps",
+        "bullets": [
+          "A carer who answers wrongly because of a missed word can open the lesson in their own language",
+          "Your admin sets their second language, and they switch to it in the hub",
+          "Training in different languages is part of the paid plans, which matters if care staff supervision includes people working in a second language"
+        ],
+        "tags": [
+          { "label": "Training in 60+ languages", "href": "/languages" },
+          { "label": "Staff Hub in 60+ languages", "href": "/uses/multilingual-staff-hub" }
+        ],
+        "mock": {
+          "type": "language",
+          "second_language": "Polish"
+        }
+      },
+      {
+        "heading": "Read the gaps before supervision, then mark the record as reviewed",
+        "bullets": [
+          "Each staff record shows that person's open and closed gaps, and how they were closed, by Learn &amp; retry or Just retry",
+          "The Knowledge gaps view shows most missed questions and weakest topics across the home, plus a Monday digest email",
+          "After the conversation, mark the record as reviewed, so there is a dated note that you looked at it together"
+        ],
+        "tags": [
+          { "label": "Reporting that runs itself", "href": "/training-platform" },
+          { "label": "CQC and compliance evidence", "href": "/cqc-compliance" }
+        ],
+        "mock": {
+          "type": "gaps",
+          "stats": { "open": 6, "affected": 4, "closed": 14, "engaged": 68 },
+          "missed": [
+            ["Checking the sling before a hoist", "3 staff"],
+            ["Reporting a change in mobility", "2 staff"],
+            ["Using a stand aid safely", "2 staff"]
+          ],
+          "weak": [
+            ["Moving and Handling", "5 gaps"],
+            ["Falls prevention", "1 gap"]
+          ]
+        }
+      }
+    ]
+  },
+  "talk": {
+    "heading": "The questions managers ask, and how CareStream answers them",
+    "sub": "Read this as a conversation. The questions are the ones we hear most.",
+    "items": [
+      {
+        "q": "Does CareStream run our supervisions?",
+        "a": "No. The conversation is yours, and a person has to hold it. CareStream gives you evidence to bring into it: what a carer was asked, what they got wrong and whether the gap is still open. Whether that suits your style of reflective supervision is your call."
+      },
+      {
+        "q": "What can I see about one carer before we sit down?",
+        "a": "Their staff record shows open and closed gaps, and how each was closed, by Learn &amp; retry or Just retry. You can read it in a couple of minutes and choose what is worth raising, rather than relying on memory."
+      },
+      {
+        "q": "Will I be told when a carer gets something wrong?",
+        "a": "No, and we would rather say so plainly. Nothing alerts you to each wrong answer. The carer gets the follow up and an email, and you see the picture in the Knowledge gaps view, on the staff record and in the Monday digest."
+      },
+      {
+        "q": "Isn't a wrong answer a bit of a blunt tool for a supportive conversation?",
+        "a": "It can be, if it is used to catch people out. Used well, it is a gentle way in. You can say, \"I noticed the hoist question tripped a few of us up, what do you make of it?\" That treats it as shared learning from mistakes, not blame."
+      },
+      {
+        "q": "What happens once the carer has retried?",
+        "a": "The gap closes when they get a question right, and the record shows how it was closed. If they never open it, it stays open, and that becomes its own useful conversation about time, confidence or whether the topic was clear."
+      },
+      {
+        "q": "Is the check built from our policies or generic?",
+        "a": "It is built from your own policies where they cover the topic, so it tests what your home actually does. Where they do not, it falls back on general good practice. You can edit and preview before anyone sees it."
+      },
+      {
+        "q": "Does this count as a staff competency assessment?",
+        "a": "Not on its own. Competence in practical skills, like using a hoist, still needs a competent person to watch it done. CareStream checks understanding and keeps the record. It sits beside your observations, not in place of them."
+      },
+      {
+        "q": "How do I try it, and is there a cost?",
+        "a": "You can start with a 14 day free trial on a paid plan, and <a href=\"/register\">create a free account</a> to look around first. Adhoc training sits on the paid plans, so check <a href=\"/pricing\">the pricing page</a> for what each includes."
+      }
+    ]
+  },
+  "limits": {
+    "heading": "A prompt for supervision, not a supervision tool",
+    "cards": [
+      {
+        "title": "It does not conduct or schedule your supervision",
+        "body": "The conversation, the notes of what you agreed and the tone are all yours. CareStream supplies facts to bring in, nothing more."
+      },
+      {
+        "title": "It does not alert you to every wrong answer",
+        "body": "You find the picture by looking at the staff record, the Knowledge gaps view or the Monday digest, not as a message each time someone slips."
+      },
+      {
+        "title": "It is not a full competency sign off",
+        "body": "A quiz shows what someone knows, not how they work. Practical skills still need observation by a competent person, and adhoc training and translation are on the paid plans."
+      }
+    ]
+  },
+  "read_next": [
+    "what-compliant-actually-means-for-one-care-staff-member",
+    "incident-led-training-in-care",
+    "care-certificate-assessor"
+  ],
+  "faqs": {
+    "heading": "Supervision and knowledge gaps, answered",
+    "groups": [
+      {
+        "group": "About supervision",
+        "items": [
+          {
+            "q": "What is reflective supervision in care?",
+            "a": "It is a regular, supportive conversation in which a carer thinks back over their work with someone more experienced, looks at what went well and what was hard, and decides what to try next. It is different from a performance check. CareStream does not run it, but it can supply facts to reflect on."
+          },
+          {
+            "q": "How often should supervision in care take place?",
+            "a": "The regulations do not set one interval for every home. The <a href=\"https://www.cqc.org.uk/guidance-regulation/providers/regulations-service-providers-and-managers/health-social-care-act/regulation-18\">CQC guidance on Regulation 18</a> says staff should receive appropriate ongoing or periodic supervision to make sure competence is maintained. Your home decides what that means for each role and should be able to show it."
+          },
+          {
+            "q": "What should a care staff supervision cover?",
+            "a": "Common items are how the carer is coping, what has gone well, what they found hard, their training and development, and what you both agree to do next. A knowledge gap is one item among these, not the whole agenda."
+          },
+          {
+            "q": "How do you use learning from mistakes in a supervision?",
+            "a": "Start with curiosity, not blame. Name the situation, ask the carer how it looked from their side and agree one small next step. A missed question is a safe, low stakes example, because nobody was hurt and the carer can put it right on their own phone."
+          },
+          {
+            "q": "What is a good way to check for understanding after training?",
+            "a": "Ask a few short questions soon afterwards, in a form people can answer privately, and look at the answers together later. CareStream does the first part with a short module built from your policies, and you do the second in conversation."
+          }
+        ]
+      },
+      {
+        "group": "About inspections and records",
+        "items": [
+          {
+            "q": "Do inspectors expect supervision to be recorded?",
+            "a": "Regulation 18 says staff must receive the support, training, professional development, supervision and appraisal they need to do their jobs. You can read the <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/18\">wording of Regulation 18</a>. It does not prescribe a format, so keep a record you could show someone."
+          },
+          {
+            "q": "What does Mark as reviewed actually record?",
+            "a": "It stamps the staff record to show you reviewed that person's gaps, and clears the flag until they get something new wrong. It is a dated note that you looked, not a full supervision record."
+          },
+          {
+            "q": "Can I use this as a staff competency assessment?",
+            "a": "It supports one, but does not replace it. The knowledge check shows understanding, and a competent person still observes practical skills. Together they give a fuller picture of whether someone is competent in their role."
+          },
+          {
+            "q": "Is the staff record visible to the carer too?",
+            "a": "Carers see their own Follow-up tab and progress in the Staff Hub. The manager's staff record view is the admin side."
+          }
+        ]
+      }
+    ]
+  },
+  "guide": {
+    "heading": "A practical way to bring knowledge gaps into supervision",
+    "lede": "Reflective supervision gives people room to think about their practice. A few facts about what they were asked and what they did next can make the thinking sharper, as long as the facts stay in service of the conversation.",
+    "sections": [
+      {
+        "h3": "Before the session",
+        "paragraphs": [
+          "Open the carer's staff record and read their open and closed gaps. Spend five minutes, no more. You are looking for one or two things worth raising, not a list of faults.",
+          "Notice how gaps were closed too. Learn &amp; retry and an untouched item for three weeks say different things."
+        ],
+        "checklist": [
+          "Read the open and closed gaps on the carer's staff record",
+          "Pick one or two points to raise, and keep the rest in reserve",
+          "Check whether the Monday digest showed a pattern across the team",
+          "Decide a gentle way to open each point, such as a question, not a verdict"
+        ]
+      },
+      {
+        "h3": "In the room",
+        "paragraphs": [
+          "Start with how they are, not with the data. Bring the gap in when it fits, and ask what made the question hard.",
+          "If language is part of it, offer the lesson in their own language, where your plan includes translation."
+        ]
+      },
+      {
+        "h3": "After the session",
+        "paragraphs": [
+          "Mark the record as reviewed so there is a dated note that you looked at it together. If the whole team missed the same question, take that to your next team meeting, as the training may need a tweak, not the people.",
+          "Where a practical skill is involved, arrange an observation. A quiz can tell you someone knows the steps, but only watching tells you how they work. The <a href=\"/staff-training/moving-and-handling-of-people\">moving and handling course</a> covers the topic, and observation covers the practice."
+        ]
+      }
+    ],
+    "note": "This page describes a way to use CareStream and is not legal or clinical advice. Your own policies and your regulator's guidance come first."
+  }
+}

@@ -186,12 +186,14 @@ export type TrainingCourseDetail = {
   baseline: { score: number; total: number } | null; reflection: string | null
   incorrect: Array<{ question: string; their_answer: { letter: string; text: string | null } | null; correct_answer: { letter: string; text: string | null } | null }>
 }
+export type TrainingSuggestion = { id: string; tone: 'concern' | 'check' | 'praise'; course: string | null; title: string; evidence: string[]; suggestion: string; action_text: string; low_confidence: boolean }
 export type TrainingDetail = {
   person: { id: string; name: string; job_role: string | null }
   supervision: { id: string; type: string; held_on: string; status: string } | null
   linked: Array<{ action_id: string; description: string; action_status: string; added_on: string | null; course: TrainingCourseDetail | null }>
   others: TrainingCourseDetail[]
   follow_up: Array<{ method: 'learn' | 'retry'; label: string | null; when: string }>
+  suggestions: TrainingSuggestion[]
   since: string | null; generated_at: string
 }
 
@@ -816,6 +818,8 @@ export function createApiClient(token: string) {
       // Training and supervisions, linked (feature flag supervision_training on the account, Enterprise). Whether it is on comes from billing.summary().features.supervision_training.
       trainingDetail: (userId: string, supervisionId?: string) =>
         apiFetch<{ detail: TrainingDetail }>(`/workforce/staff/${encodeURIComponent(userId)}/training-detail${supervisionId ? `?supervision_id=${encodeURIComponent(supervisionId)}` : ''}`, token),
+      addSuggestionAction: (userId: string, supervisionId: string, suggestionId: string) =>
+        apiFetch<{ result: 'added' | 'already' }>(`/workforce/staff/${encodeURIComponent(userId)}/suggestions/action`, token, { method: 'POST', body: JSON.stringify({ supervision_id: supervisionId, suggestion_id: suggestionId }) }),
       trainingDetailPrint: (userId: string, supervisionId?: string) =>
         apiFetch<{ html: string }>(`/workforce/staff/${encodeURIComponent(userId)}/training-detail/print${supervisionId ? `?supervision_id=${encodeURIComponent(supervisionId)}` : ''}`, token),
       trainingDetailEmail: (userId: string, supervisionId: string | undefined, toUserId?: string) =>
@@ -1383,6 +1387,7 @@ export function createApiClient(token: string) {
       supervisions: () => apiFetch<{ enabled: boolean; records: SupRecord[] }>('/me/supervisions', token),
       conducting: () => apiFetch<{ records: Array<{ id: string; type: string; held_on: string; status: string; next_due: string | null; completed_at: string | null; supervisee_id: string; supervisee: string; supervisee_role: string | null }> }>('/me/conducting', token),
       conductingTrainingDetail: (id: string) => apiFetch<{ enabled: boolean; detail: TrainingDetail | null }>(`/me/conducting/${encodeURIComponent(id)}/training-detail`, token),
+      addConductingSuggestion: (id: string, suggestionId: string) => apiFetch<{ result: 'added' | 'already' }>(`/me/conducting/${encodeURIComponent(id)}/suggestions/action`, token, { method: 'POST', body: JSON.stringify({ suggestion_id: suggestionId }) }),
       conductingTrainingDetailPrint: (id: string) => apiFetch<{ html: string }>(`/me/conducting/${encodeURIComponent(id)}/training-detail/print`, token),
       conductingTrainingDetailEmail: (id: string, toUserId?: string) => apiFetch<{ sent_to: string }>(`/me/conducting/${encodeURIComponent(id)}/training-detail/email`, token, { method: 'POST', body: JSON.stringify({ to_user_id: toUserId }) }),
       conductingBrief: (id: string) => apiFetch<{ enabled: boolean; brief: TrainingBrief | null }>(`/me/conducting/${encodeURIComponent(id)}/brief`, token),

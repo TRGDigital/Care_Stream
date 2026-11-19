@@ -4,8 +4,8 @@
 // wrongly with the right answer, time spent), other training allocated since the last supervision, and the gaps they went back over.
 // For the supervisor and admins. Plain facts from their training records: nothing here is scored or judged by AI.
 import { useEffect, useState } from 'react'
-import { X, Loader2, CheckCircle2, CircleDashed, PlayCircle, AlertTriangle, Clock, BookOpen, RotateCcw, Printer, Mail, ChevronDown } from 'lucide-react'
-import type { TrainingDetail, TrainingCourseDetail } from '@/lib/api-client'
+import { X, Loader2, CheckCircle2, CircleDashed, PlayCircle, AlertTriangle, Clock, BookOpen, RotateCcw, Printer, Mail, ChevronDown, Lightbulb, Plus } from 'lucide-react'
+import type { TrainingDetail, TrainingCourseDetail, TrainingSuggestion } from '@/lib/api-client'
 import { CPD_CERTIFIED_LOGO } from '@/lib/cpd'
 
 const d = (iso: string | null) => iso ? new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : ''
@@ -97,7 +97,54 @@ function Stat({ label, value, sub }: { label: string; value: string; sub?: strin
   )
 }
 
-export function TrainingDetailView({ detail }: { detail: TrainingDetail }) {
+const TONE: Record<string, { bar: string; label: string; cls: string }> = {
+  concern: { bar: 'border-l-red-500', label: 'Worth raising', cls: 'text-red-700' },
+  check:   { bar: 'border-l-amber-500', label: 'Worth checking', cls: 'text-amber-700' },
+  praise:  { bar: 'border-l-green-500', label: 'Worth recognising', cls: 'text-green-700' },
+}
+
+// Ideas for the conversation, from how they did on the training. Rules on the real scores and answers (no AI): each shows what it is based on.
+// "Add as agreed action" puts it on the supervision; nothing is added unless the supervisor chooses it.
+function SuggestionsBox({ suggestions, onAdd }: { suggestions: TrainingSuggestion[]; onAdd?: (id: string) => Promise<'added' | 'already'> }) {
+  const [state, setState] = useState<Record<string, 'busy' | 'added' | 'already' | 'error'>>({})
+  if (suggestions.length === 0) return null
+  async function add(id: string) {
+    if (!onAdd) return
+    setState(s => ({ ...s, [id]: 'busy' }))
+    try { const r = await onAdd(id); setState(s => ({ ...s, [id]: r })) } catch { setState(s => ({ ...s, [id]: 'error' })) }
+  }
+  return (
+    <div className="rounded-xl border border-teal/25 bg-teal-light/10 p-4">
+      <h3 className="flex items-center gap-1.5 text-sm font-semibold text-neutral-dark"><Lightbulb size={15} className="text-teal" /> Suggestions for this supervision</h3>
+      <p className="mb-3 mt-0.5 text-xs text-neutral-mid">Ideas for the conversation, based on how they did on this training. They are prompts, not judgements, and each shows what it is based on.</p>
+      <div className="space-y-2.5">
+        {suggestions.map(s => {
+          const t = TONE[s.tone], st = state[s.id]
+          return (
+            <div key={s.id} className={`rounded-lg border border-gray-200 border-l-4 bg-white p-3 ${t.bar}`}>
+              <p className={`text-[10px] font-semibold uppercase tracking-wide ${t.cls}`}>{t.label}</p>
+              <p className="text-sm font-semibold text-neutral-dark">{s.title}</p>
+              <ul className="mt-1 space-y-0.5 text-xs text-neutral-mid">{s.evidence.map((e, i) => <li key={i}>{e}</li>)}</ul>
+              <p className="mt-1.5 text-sm text-neutral-dark">{s.suggestion}</p>
+              {onAdd && (
+                <div className="mt-2">
+                  {st === 'added' || st === 'already'
+                    ? <span className="inline-flex items-center gap-1 text-xs font-medium text-green-700"><CheckCircle2 size={13} /> {st === 'added' ? 'Added as an agreed action' : 'Already an agreed action'}</span>
+                    : <button type="button" onClick={() => add(s.id)} disabled={st === 'busy'} className="inline-flex items-center gap-1 rounded-md border border-teal/40 px-2.5 py-1 text-xs font-semibold text-teal hover:bg-teal/5 disabled:opacity-60">
+                        {st === 'busy' ? <Loader2 size={12} className="animate-spin" /> : <Plus size={12} />} Add as agreed action
+                      </button>}
+                  {st === 'error' && <span className="ml-2 text-xs text-red-700">Could not add it, try again.</span>}
+                </div>
+              )}
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+export function TrainingDetailView({ detail, onAddSuggestion }: { detail: TrainingDetail; onAddSuggestion?: (id: string) => Promise<'added' | 'already'> }) {
   // With more than one course the page would be very long, so each course becomes an accordion that starts closed (one line each: status,
   // score, how many wrong). A single course just shows in full. Print and email always carry everything.
   const all = [...detail.linked.map(l => l.course?.enrollment_id).filter(Boolean), ...detail.others.map(c => c.enrollment_id)] as string[]
@@ -107,6 +154,7 @@ export function TrainingDetailView({ detail }: { detail: TrainingDetail }) {
   const allOpen = many && all.every(id => openIds.has(id))
   return (
     <div className="space-y-5">
+      <SuggestionsBox suggestions={detail.suggestions ?? []} onAdd={detail.supervision ? onAddSuggestion : undefined} />
       {many && (
         <div className="flex items-center justify-between text-xs text-neutral-mid">
           <span>{all.length} courses. Open one to see the questions answered wrongly and the detail.</span>
@@ -170,7 +218,10 @@ function ShareBar({ share }: { share: DetailShare }) {
     try {
       const html = await share.print()
       w.document.open(); w.document.write(html); w.document.close(); w.focus()
-      setTimeout(() => { try { w.print() } catch { /* the page is open, they can print it themselves */ } }, 400)
+      // Let the logo load before the print dialog, or it prints as a gap (but never wait more than a few seconds).
+      const imgs = Array.from(w.document.images)
+      await Promise.race([Promise.all(imgs.map(i => i.complete ? null : new Promise(r => { i.onload = i.onerror = () => r(null) }))), new Promise(r => setTimeout(r, 3000))])
+      setTimeout(() => { try { w.print() } catch { /* the page is open, they can print it themselves */ } }, 200)
     } catch { w.close(); setMsg({ ok: false, text: 'Could not prepare the page to print.' }) }
     finally { setBusy(null) }
   }
@@ -210,7 +261,7 @@ function ShareBar({ share }: { share: DetailShare }) {
   )
 }
 
-export function TrainingDetailModal({ title, load, onClose, share }: { title: string; load: () => Promise<TrainingDetail | null>; onClose: () => void; share?: DetailShare }) {
+export function TrainingDetailModal({ title, load, onClose, share, onAddSuggestion }: { title: string; load: () => Promise<TrainingDetail | null>; onClose: () => void; share?: DetailShare; onAddSuggestion?: (id: string) => Promise<'added' | 'already'> }) {
   const [detail, setDetail] = useState<TrainingDetail | null>(null)
   const [err, setErr] = useState('')
   useEffect(() => {
@@ -230,7 +281,7 @@ export function TrainingDetailModal({ title, load, onClose, share }: { title: st
         </div>
         {share && detail && <div className="border-b border-gray-100 px-6 py-2"><ShareBar share={share} /></div>}
         <div className="max-h-[80vh] overflow-y-auto px-6 py-5">
-          {err ? <p className="text-sm text-red-700">{err}</p> : detail ? <TrainingDetailView detail={detail} /> : <Loader2 size={18} className="animate-spin text-neutral-mid" />}
+          {err ? <p className="text-sm text-red-700">{err}</p> : detail ? <TrainingDetailView detail={detail} onAddSuggestion={onAddSuggestion} /> : <Loader2 size={18} className="animate-spin text-neutral-mid" />}
         </div>
         <div className="flex justify-end border-t border-gray-100 px-6 py-3"><button onClick={onClose} className="rounded-btn border border-gray-200 px-4 py-2 text-sm text-neutral-mid hover:border-gray-300">Close</button></div>
       </div>

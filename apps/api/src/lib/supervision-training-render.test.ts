@@ -7,7 +7,7 @@ const course = (o: any = {}) => ({ enrollment_id: 'e1', module_id: 'm1', module_
   answered: 4, total_questions: 5, correct: 1, score_pct: 25, attempts: 1, learn_minutes: 6, relearn_required: false, baseline: { score: 2, total: 5 }, reflection: null,
   incorrect: [{ question: 'When must you record?', their_answer: { letter: 'B', text: 'Weekly' }, correct_answer: { letter: 'A', text: 'At the time' } }], ...o })
 const detail = (o: any = {}): TrainingDetail => ({ person: { id: 'u1', name: 'Blessing Nkemdirim', job_role: 'Senior Care Assistant' }, supervision: { id: 's1', type: 'supervision', held_on: '2026-11-20T10:00:00Z', status: 'booked' },
-  linked: [{ action_id: 'a1', description: 'Complete training: Documentation and Record Keeping', action_status: 'open', added_on: null, course: course() }], others: [], follow_up: [], since: null, generated_at: '2026-11-19T11:00:00Z', ...o })
+  linked: [{ action_id: 'a1', description: 'Complete training: Documentation and Record Keeping', action_status: 'open', added_on: null, course: course() }], others: [], follow_up: [], suggestions: [], since: null, generated_at: '2026-11-19T11:00:00Z', ...o })
 
 test('the document says what the page says: score, the wrong answer and the right one', () => {
   const h = renderDetailBody(detail())
@@ -31,6 +31,21 @@ test('no CPD mark, no dashes in the wording, and the print page and email wrap t
   assert.doesNotMatch(body, /cpd-certified|CPD Certified/i)
   assert.doesNotMatch(body.replace(/<[^>]*>/g, ' '), /[—–]/)
   assert.ok(renderDetailPrintPage(detail(), 'Ferndale').includes(body))
+  assert.match(renderDetailPrintPage(detail(), 'Ferndale'), /logo-color\.png/)        // the CareStream logo heads the printed page
+  assert.doesNotMatch(body, /logo-color/)
   assert.ok(renderDetailEmailBody(detail(), 'Len Burgess').includes(body))
   assert.equal(detailTitle(detail()), 'Training detail: Blessing Nkemdirim')
+})
+
+test('suggestions appear in the printout and email, with their evidence, escaped', () => {
+  const h = renderDetailBody(detail({ suggestions: [{ id: 'low_score:e1', tone: 'concern', course: 'X', title: 'Low score on <X>', evidence: ['Scored 25%.'], suggestion: 'Go through it together.', action_text: 'a', low_confidence: false }] }))
+  assert.match(h, /Suggestions for this supervision/); assert.match(h, /Low score on &lt;X&gt;/); assert.match(h, /Scored 25%\./); assert.match(h, /prompts, not judgements/)
+  assert.doesNotMatch(renderDetailBody(detail()), /Suggestions for this/)
+})
+
+test('print layout: pages can break inside a long course, but a wrong answer is never split', () => {
+  const h = renderDetailBody(detail())
+  assert.doesNotMatch(h.split('Answered incorrectly')[0], /page-break-inside:avoid/)   // the course card itself may run over a page
+  assert.match(h, /fecaca[^"]*break-inside:avoid/)                                     // each question block stays whole
+  assert.match(renderDetailPrintPage(detail(), 'x'), /@page\{size:A4;margin:14mm\}/)
 })

@@ -2,6 +2,7 @@
 // Pure (detail in, HTML out). House style: plain words, no dashes. The CPD Certified mark is deliberately not used here: it may only be
 // shown on carestreamai.com, so a printout or an email carries the words only.
 import type { TrainingDetail, CourseDetail } from './supervision-training'
+import { siteUrl } from './urls'
 
 const DARK = '#1A1530', BODY = '#374151', MUTED = '#6b7280', RED = '#b91c1c', GREEN = '#15803d', LINE = '#e5e7eb'
 const esc = (s: unknown) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c] as string))
@@ -15,11 +16,11 @@ function course(c: CourseDetail, action?: { status: string; text: string }): str
     : `<p style="margin:8px 0 0;font-size:13px;color:${BODY}"><strong>Score:</strong> ${c.score_pct != null ? `${c.score_pct}% (${c.correct} of ${c.answered} answered right)` : 'no questions answered'}. <strong>Questions:</strong> ${c.answered} of ${c.total_questions || 'unknown'}. <strong>Time on lesson:</strong> ${c.learn_minutes ? `${c.learn_minutes} minutes` : 'none'}${c.attempts ? `, ${c.attempts} ${c.attempts === 1 ? 'attempt' : 'attempts'}` : ''}${c.baseline ? `. <strong>Before the course:</strong> ${c.baseline.score} of ${c.baseline.total}` : ''}.</p>`
   const wrong = c.incorrect.length
     ? `<p style="margin:10px 0 4px;font-size:12px;font-weight:700;color:${RED};text-transform:uppercase;letter-spacing:.04em">Answered incorrectly (${c.incorrect.length})</p>` + c.incorrect.map((q) =>
-        `<div style="margin:0 0 8px;padding:8px 10px;border:1px solid #fecaca;background:#fef2f2;border-radius:6px"><div style="font-size:13px;font-weight:600;color:${DARK}">${esc(q.question)}</div>` +
+        `<div style="margin:0 0 8px;padding:8px 10px;border:1px solid #fecaca;background:#fef2f2;border-radius:6px;page-break-inside:avoid;break-inside:avoid"><div style="font-size:13px;font-weight:600;color:${DARK}">${esc(q.question)}</div>` +
         (q.their_answer ? `<div style="font-size:12px;color:#991b1b">Their answer: ${esc(q.their_answer.letter)}${q.their_answer.text ? `. ${esc(q.their_answer.text)}` : ''}</div>` : '') +
         (q.correct_answer ? `<div style="font-size:12px;color:${GREEN}">Correct answer: ${esc(q.correct_answer.letter)}${q.correct_answer.text ? `. ${esc(q.correct_answer.text)}` : ''}</div>` : '') + '</div>').join('')
     : (c.answered > 0 ? `<p style="margin:8px 0 0;font-size:13px;color:${GREEN}">Everything answered so far was right.</p>` : '')
-  return `<div style="border:1px solid ${LINE};border-radius:8px;padding:12px 14px;margin:0 0 12px;page-break-inside:avoid">
+  return `<div style="border:1px solid ${LINE};border-radius:8px;padding:12px 14px;margin:0 0 12px">
     <div style="font-size:15px;font-weight:700;color:${DARK}">${esc(c.module_name)} <span style="font-size:12px;font-weight:600;color:${MUTED}">${esc(STATUS[c.status] ?? c.status)}</span></div>
     <div style="font-size:12px;color:${MUTED};margin-top:2px">${esc(c.kind === 'Annual' ? 'Annual training' : 'Training')}. ${esc(dates)}.</div>
     ${action ? `<div style="font-size:12px;color:${MUTED};margin-top:2px">Supervision action: &ldquo;${esc(action.text)}&rdquo; (${action.status === 'done' ? 'done' : action.status === 'in_progress' ? 'in progress' : 'open'})</div>` : ''}
@@ -35,12 +36,18 @@ export function renderDetailBody(d: TrainingDetail): string {
   const linked = d.linked.length
     ? d.linked.map((l) => (l.course ? course(l.course, { status: l.action_status, text: l.description }) : `<p style="font-size:13px;color:${MUTED}">${esc(l.description)}: the course allocation can no longer be found.</p>`)).join('')
     : `<p style="font-size:13px;color:${MUTED}">No training has been allocated against this ${esc(kind)} yet.</p>`
+  const tone = { concern: '#b91c1c', check: '#b45309', praise: '#15803d' } as const
+  const sugg = d.suggestions.length
+    ? heading('Suggestions for this ' + kind) + `<p style="margin:0 0 8px;font-size:12px;color:${MUTED}">Ideas for the conversation, based on how they did. They are prompts, not judgements.</p>` + d.suggestions.map((s) =>
+        `<div style="margin:0 0 8px;padding:8px 10px;border:1px solid ${LINE};border-left:4px solid ${tone[s.tone]};border-radius:6px;page-break-inside:avoid"><div style="font-size:13px;font-weight:700;color:${DARK}">${esc(s.title)}</div>` +
+        s.evidence.map((e) => `<div style="font-size:12px;color:${MUTED}">${esc(e)}</div>`).join('') + `<div style="font-size:13px;color:${BODY};margin-top:4px">${esc(s.suggestion)}</div></div>`).join('')
+    : ''
   const others = d.others.length ? heading(`Also allocated since ${d.since ? day(d.since) : 'the last supervision'}`) + d.others.map((c) => course(c)).join('') : ''
   const follow = d.follow_up.length
     ? heading('Gaps they went back over') + `<ul style="margin:0;padding-left:18px;font-size:13px;color:${BODY}">` + d.follow_up.map((f) => `<li>${esc(f.label ?? 'A question they had got wrong')} (${f.method === 'learn' ? 'went through the lesson, then retried' : 'retried straight away'}, ${esc(day(f.when))})</li>`).join('') + '</ul>'
     : ''
   return `<p style="margin:0 0 4px;font-size:13px;color:${MUTED}">${esc(d.person.job_role ?? '')}${d.supervision ? ` &middot; ${esc(kind)} on ${esc(day(d.supervision.held_on))}` : ''}</p>` +
-    heading(`Training for this ${kind}`) + linked + others + follow +
+    sugg + heading(`Training for this ${kind}`) + linked + others + follow +
     `<p style="margin:16px 0 0;font-size:11px;color:${MUTED}">Built from their training records on ${esc(day(d.generated_at))}. Confidential: this contains a member of staff's training records, so keep it securely and share it only with people who need it.</p>`
 }
 
@@ -49,8 +56,10 @@ export const detailTitle = (d: TrainingDetail) => `Training detail: ${d.person.n
 /** A full page for printing (opens in its own window and prints). */
 export function renderDetailPrintPage(d: TrainingDetail, orgName: string): string {
   return `<!doctype html><html lang="en-GB"><head><meta charset="utf-8"><title>${esc(detailTitle(d))}</title>
-<style>body{font-family:Inter,Arial,sans-serif;color:${BODY};max-width:780px;margin:24px auto;padding:0 16px}h1{font-size:20px;color:${DARK};margin:0 0 2px}.org{font-size:12px;color:${MUTED};margin:0 0 14px}@media print{body{margin:0;max-width:none}}</style></head>
-<body><h1>${esc(detailTitle(d))}</h1><p class="org">${esc(orgName)}</p>${renderDetailBody(d)}</body></html>`
+<style>@page{size:A4;margin:14mm}body{font-family:Inter,Arial,sans-serif;color:${BODY};max-width:780px;margin:24px auto;padding:0 16px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.top{display:flex;align-items:center;justify-content:space-between;gap:16px;border-bottom:1px solid ${LINE};padding-bottom:12px;margin-bottom:14px}.top img{height:46px;width:auto}
+h1{font-size:20px;color:${DARK};margin:0 0 2px}.org{font-size:12px;color:${MUTED};margin:0}h3{break-after:avoid;page-break-after:avoid}@media print{body{margin:0;max-width:none;padding:0}}</style></head>
+<body><div class="top"><div><h1>${esc(detailTitle(d))}</h1><p class="org">${esc(orgName)}</p></div><img src="${esc(siteUrl())}/logo-color.png" alt="CareStreamAI"></div>${renderDetailBody(d)}</body></html>`
 }
 
 /** The body of the email (the sender adds the greeting, the wrapper and the footer). */

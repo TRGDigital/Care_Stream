@@ -25,7 +25,7 @@ import { getAuditsDue } from '../services/audits/due'
 import { getPendingAuditApprovals, getRecentApprovedAudits, managerApproveAudit, rejectAudit } from '../services/audits/approval'
 import { getMyActions, countMyOpenActions, setMyActionStatus, getExternalActions, countOpenExternalActions, setExternalActionStatus } from '../services/audits/action-plan'
 import { allocateFromSupervision, type AllocationType } from '../services/supervision-allocations'
-import { supervisionTrainingEnabled, buildBrief, snapshotOf, buildTrainingDetail } from '../lib/supervision-training'
+import { supervisionTrainingEnabled, buildBrief, snapshotOf, buildTrainingDetail, addSuggestionAsAction } from '../lib/supervision-training'
 import { printPage, emailDetail } from '../lib/supervision-training-share'
 import { sendTrainingCompletionEmail } from '../services/email/outbound'
 import { generateAuditRecommendations } from './audits'
@@ -1811,7 +1811,7 @@ meRouter.get('/conducting/:id', async (req: Request, res: Response) => {
   // so completing the form does not lose them.
   const trainingLinked = await supervisionTrainingEnabled(tenantId)
   const linkedActions = trainingLinked
-    ? await (prisma as any).supervisionAction.findMany({ where: { supervision_id: r.id, tenant_id: tenantId, linked_by: 'training_assign' }, select: { id: true, description: true, module_id: true } }).catch(() => [])
+    ? await (prisma as any).supervisionAction.findMany({ where: { supervision_id: r.id, tenant_id: tenantId, linked_by: { in: ['training_assign', 'suggestion'] } }, select: { id: true, description: true, module_id: true } }).catch(() => [])
     : []
   ok(res, { training_linked: trainingLinked, linked_actions: linkedActions, record: {
     id: r.id, type: r.type, held_on: iso(r.held_on), next_due: iso(r.next_due), status: r.status, completed_at: iso(r.completed_at),
@@ -1857,6 +1857,15 @@ async function conductedDetail(req: Request, res: Response) {
   if (!detail) { err(res, 'NOT_FOUND', 'Not found.', 404); return null }
   return { detail, userId, tenantId }
 }
+meRouter.post('/conducting/:id/suggestions/action', async (req: Request, res: Response) => {
+  const userId = (req as any).user.sub, tenantId = (req as any).user.tenant_id
+  const r = await (prisma as any).staffSupervision.findFirst({ where: { id: String(req.params.id), tenant_id: tenantId, conducted_by_user_id: userId }, select: { id: true, user_id: true } }).catch(() => null)
+  if (!r) { err(res, 'NOT_FOUND', 'Supervision not found.', 404); return }
+  if (!(await supervisionTrainingEnabled(tenantId))) { err(res, 'NOT_AVAILABLE', 'Not available for this account.', 404); return }
+  const result = await addSuggestionAsAction(tenantId, r.user_id, r.id, String(req.body?.suggestion_id ?? ''))
+  if (result === 'not_found') { err(res, 'NOT_FOUND', 'That suggestion is no longer available.', 404); return }
+  ok(res, { result })
+})
 meRouter.get('/conducting/:id/training-detail/print', async (req: Request, res: Response) => {
   const x = await conductedDetail(req, res); if (!x) return
   ok(res, { html: await printPage(x.tenantId, x.userId, x.detail) })
@@ -1899,7 +1908,8 @@ meRouter.post('/conducting/:id/complete', async (req: Request, res: Response) =>
   // text edits it, and taking the row out of the form removes it. Only a form that knows about them (linked_supported) can remove them,
   // so a form opened before this went live cannot delete them by leaving them out.
   const linkedMode = trainingLinked && req.body?.linked_supported === true
-  const linkedById = new Map((existing as any[]).filter(e => e.linked_by === 'training_assign').map(e => [e.id, e]))
+  const OUTSIDE_FORM = ['training_assign', 'suggestion']   // actions added from the assign screen or from a suggestion
+  const linkedById = new Map((existing as any[]).filter(e => OUTSIDE_FORM.includes(e.linked_by)).map(e => [e.id, e]))
   const keepLinked = new Set<string>()
   const formRows: any[] = Array.isArray(form.agreed_actions) ? form.agreed_actions : []
   for (const a of formRows) {
@@ -1920,7 +1930,7 @@ meRouter.post('/conducting/:id/complete', async (req: Request, res: Response) =>
     }).catch(() => {})
   }
   // An action added from the training assign screen is removed only when a form that shows it (linked_supported) leaves its row out.
-  const toDelete = (existing as any[]).filter(e => e.linked_by === 'training_assign' ? (linkedMode && !keepLinked.has(e.id)) : !wantedSet.has(e.description.trim().toLowerCase())).map(e => e.id)
+  const toDelete = (existing as any[]).filter(e => OUTSIDE_FORM.includes(e.linked_by) ? (linkedMode && !keepLinked.has(e.id)) : !wantedSet.has(e.description.trim().toLowerCase())).map(e => e.id)
   if (toDelete.length) await (prisma as any).supervisionAction.deleteMany({ where: { id: { in: toDelete } } }).catch(() => {})
 
   // Allocate any resources chosen against an agreed action (training / induction / CQC prep) to the

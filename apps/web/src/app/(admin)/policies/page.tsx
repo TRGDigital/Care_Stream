@@ -82,7 +82,7 @@ export default function PoliciesPage() {
   const [policies,       setPolicies]       = useState<any[]>(() => persistentCache.get<any[]>(`admin-policies-${userId}`) ?? [])
   const [loading,        setLoading]        = useState(() => persistentCache.get<any[]>(`admin-policies-${userId}`) === undefined)
   const [tab,            setTab]            = useState<'active' | 'archived' | 'history' | 'new'>('active')
-  const [search,         setSearch]         = useState('')
+  const [search,         setSearch]         = useState(() => (typeof window === 'undefined' ? '' : new URLSearchParams(window.location.search).get('q') ?? ''))   // /policies?q= comes from admin search
   const [showUpload,     setShowUpload]     = useState(false)
   const [showBulkUpload, setShowBulkUpload] = useState(false)
   const [versionTarget,  setVersionTarget]  = useState<{ id: string; name: string } | null>(null)

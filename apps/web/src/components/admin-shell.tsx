@@ -22,6 +22,8 @@ import { createApiClient } from '@/lib/api-client'
 import { FreeLockOverlay } from '@/components/admin/free-tier'
 import { usePlanFeatures, hasFeature } from '@/lib/use-plan-features'
 import { pageCache, persistentCache } from '@/lib/page-cache'
+import { TRAINING_ONLY_NAV, POLICIES_ONLY_NAV, FREE_NAV, NOT_FOR_SHOP_TIERS } from '@/lib/admin-search/access'
+import { AdminSearch } from '@/components/admin/admin-search'
 
 const NAV_SECTIONS = [
   {
@@ -81,20 +83,7 @@ const NAV_SECTIONS = [
   },
 ]
 
-// Nav a training-only (gateway-tier) tenant can use. Everything else is shown
-// greyed with an "Unlock with CareStream" prompt (the upsell). /licences is added
-// once that page exists.
-const TRAINING_ONLY_NAV = new Set(['/dashboard', '/group', '/staff', '/training', '/analytics', '/settings', '/licences', '/billing'])
-// Policies-only buyers came in through the shop with no hub and no subscription. They
-// get Policies, Settings (the organisation details their policies are written from)
-// and Billing (the invoice). Everything else opens the tier overlay instead of being
-// merely greyed out: this tier has never seen CareStream, so the lock is the pitch.
-const POLICIES_ONLY_NAV = new Set(['/policies', '/settings', '/billing'])
-// Free accounts: audits, the policy library, gap analysis, staff, settings, billing and help.
-// Everything else opens the paid plans overlay.
-const FREE_NAV = new Set(['/dashboard', '/audits', '/gaps', '/policies', '/staff', '/training', '/training/annual', '/settings', '/billing', '/guides'])
-// Items that exist only for full (subscribed) and free accounts; the two shop tiers never see them.
-const NOT_FOR_SHOP_TIERS = new Set(['/training/annual'])
+// Which pages each kind of account can open lives in lib/admin-search/access.ts, shared with the admin search.
 
 interface AdminShellProps {
   userName:   string
@@ -319,6 +308,8 @@ export function AdminShell({ userName, tenantName, children }: AdminShellProps) 
       {!selfServe && session?.accessToken && (session.user as any)?.tenantId && (
             <SuggestionsButton token={session.accessToken} tenantId={(session.user as any).tenantId} />
           )}
+          {/* Search: pages, features, guides and this account's records. Switched on per account (admin_search flag). */}
+          <AdminSearch account={{ trainingOnly, policiesOnly, freeTier }} onLocked={setLockedFeature} />
           </div>
 
           <div className="flex flex-shrink-0 items-center gap-4 md:gap-5">

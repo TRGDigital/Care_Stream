@@ -4361,6 +4361,18 @@ adminRouter.get('/feature-requests', async (_req: Request, res: Response) => {
   ok(res, { requests, counts, total: (requests as any[]).length })
 })
 
+// GET /admin/search-misses?days=30 — what admins searched for in the admin search box and did not find, most asked first.
+adminRouter.get('/search-misses', async (req: Request, res: Response) => {
+  try {
+    const days = Math.min(Math.max(Number(req.query.days) || 30, 1), 365)
+    const rows = (await (prisma as any).$queryRawUnsafe(
+      `select lower(query) as query, count(*)::int as searches, count(distinct tenant_id)::int as accounts, max(created_at) as last_seen,
+              array_agg(distinct tier) as tiers
+         from admin_search_misses where created_at > now() - ($1::int * interval '1 day') group by 1 order by searches desc, last_seen desc limit 300`, days)) as any[]
+    ok(res, { days, misses: rows.map(r => ({ query: r.query, searches: r.searches, accounts: r.accounts, last_seen: r.last_seen, tiers: (r.tiers ?? []).filter(Boolean) })) })
+  } catch { ok(res, { days: 30, misses: [] }) }
+})
+
 // PATCH /admin/feature-requests/:id — update the triage status.
 adminRouter.patch('/feature-requests/:id', async (req: Request, res: Response) => {
   const status = String(req.body?.status ?? '')

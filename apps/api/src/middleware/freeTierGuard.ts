@@ -20,6 +20,7 @@ const ALLOW: RegExp[] = [
   /^\/policy-purchases(\/|$)/,                       // orders for policies bought from CareStream (read, intake details, checkout)
   /^\/users(\/|$)/,                                    // unlimited staff logins (emails are rate capped in the route)
   /^\/billing(\/|$)/,
+  /^\/admin-search(\/|$)/,                              // the admin search box (results are trimmed to what a free account has)
   /^\/settings(\/|$)/,
   /^\/sites(\/|$)/,
   /^\/feedback(\/|$)/,

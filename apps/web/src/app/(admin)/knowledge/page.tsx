@@ -97,6 +97,11 @@ export default function KnowledgePage() {
   const [openResidentId, setOpenResidentId] = useState<string | null>(null)
   const [editId, setEditId]         = useState<string | null>(null)
   const [error, setError]           = useState<string | null>(null)
+  // /knowledge?resident=<id> (from admin search) opens that resident's profile.
+  useEffect(() => {
+    const id = new URLSearchParams(window.location.search).get('resident')
+    if (id) { setOpenResidentId(id); setShowResidents(true) }
+  }, [])
 
   // Hydrate from the persistent (localStorage) cache after mount — never during
   // render, to avoid an SSR/client hydration mismatch.

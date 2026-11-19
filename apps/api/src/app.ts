@@ -5,6 +5,7 @@ import helmet from 'helmet'
 import { authRouter } from './routes/auth'
 import { feedbackRouter } from './routes/feedback'
 import { policiesRouter } from './routes/policies'
+import { adminSearchRouter } from './routes/admin-search'
 import { queryRouter } from './routes/query'
 import { usersRouter } from './routes/users'
 import { meRouter } from './routes/me'
@@ -229,6 +230,7 @@ app.use(tenantGuard)
 app.use(freeTierGuard)
 
 app.use('/policies', policiesRouter)
+app.use('/admin-search', adminSearchRouter)
 app.use('/query', queryRouter)
 app.use('/users', usersRouter)
 app.use('/me', meRouter)

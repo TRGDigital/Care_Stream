@@ -1,0 +1,408 @@
+{
+ "slug": "induction-day-one-to-day-seven-checks-understanding",
+ "status": "draft",
+ "order": 33,
+ "title": "Induction training for a new carer: day one to day seven. <em>Did any of it go in?</em>",
+ "meta_title": "Induction Training for Care Staff: Day 1 to 7 | CareStreamAI",
+ "meta_description": "A new starter reads policies all week. Give your induction training a question after each one, so by day seven you know what went in. Try it free.",
+ "eyebrow": "Scenario",
+ "lede": "Good induction training is more than a week of reading and signing. With <a href=\"/training-platform\">CareStream</a> each policy in the first week is followed by a question, so by day seven you can see what the new starter understood. You keep your own welcome, your shadow shifts and your practical checks.",
+ "fine": "14 day free trial · Set up in a day · UK data residency",
+ "panel": {
+  "title": "A new starter's first week",
+  "pill": "Illustration",
+  "rows": [
+   {
+    "label": "Day 1: welcome, tour and first policies read",
+    "note": "Day 1",
+    "done": true
+   },
+   {
+    "label": "Days 2 to 5: policies marked as read",
+    "note": "Day 5",
+    "done": true
+   },
+   {
+    "label": "A question after each policy",
+    "note": "Not yet",
+    "done": false
+   },
+   {
+    "label": "Day 7: you know what went in",
+    "note": "Not yet",
+    "done": false
+   }
+  ],
+  "meter": 50
+ },
+ "image": "https://api.carestreamai.com/public/policy-shop/image/3e695bfe-f771-4572-8ea5-1759d5f04361.webp",
+ "image_alt": "A new carer sits with a manager at a small table in a bright office on her first morning, a folder and two mugs of tea between them, both smiling",
+ "card_title": "A week of reading is not the same as a week of learning",
+ "card_snippet": "A new starter reads and signs for seven days. On day seven, nobody knows what went in. Add a question after each policy and see what they understood before they work alone.",
+ "primary_keyword": "induction training",
+ "secondary_keywords": [
+  "induction for new staff",
+  "employee induction",
+  "induction programme",
+  "staff induction checklist",
+  "induction questions",
+  "care home induction",
+  "knowledge check"
+ ],
+ "feature_links": [
+  {
+   "title": "Training built from your own policies",
+   "body": "Induction flows, adhoc training from your policies and wrong answers that become short lessons.",
+   "action": "See the feature",
+   "href": "/training-platform"
+  },
+  {
+   "title": "Questions inspectors ask staff",
+   "body": "Help new starters feel ready for the questions they may be asked on the floor.",
+   "action": "See staff questions",
+   "href": "/cqc-staff-questions"
+  },
+  {
+   "title": "Training in over 60 languages",
+   "body": "Policies and lessons in the language each new starter thinks in.",
+   "action": "See languages",
+   "href": "/languages"
+  }
+ ],
+ "intro": {
+  "heading": "You have run the week. Now you need to know it landed.",
+  "sub": "A scenario we see in many care settings.",
+  "paragraph": "Amira starts on a Monday. The manager welcomes her, shows her round and hands her a folder. Over the week she reads the safeguarding policy, the medication policy, the fire policy and a dozen more, and she shadows two experienced carers. Each policy gets a tick. By Friday the folder is full and everyone is pleased. On the following Monday, day seven, the manager is asked whether Amira is ready to work with more independence. There is a lot of paper and no real answer, because nobody has asked her a single question."
+ },
+ "trail": [
+  {
+   "when": "Day 1",
+   "text": "Amira is welcomed, shown round and given her login for the Staff Hub.",
+   "kind": "ok"
+  },
+  {
+   "when": "Days 2 and 3",
+   "text": "She shadows two carers and reads the safeguarding and fire policies.",
+   "kind": "ok"
+  },
+  {
+   "when": "Days 4 and 5",
+   "text": "She reads medication, infection control and the rest. Every one is ticked.",
+   "kind": "ok"
+  },
+  {
+   "when": "Day 6",
+   "text": "Nobody has asked her anything yet. The ticks look the same whether she read or skimmed.",
+   "kind": "gap"
+  },
+  {
+   "when": "What the ticks do not show",
+   "text": "Whether she knows who the safeguarding lead is, or what to do if a resident falls.",
+   "kind": "gap"
+  },
+  {
+   "when": "Quiet worries",
+   "text": "She is reluctant to say what she did not follow. New starters rarely do.",
+   "kind": "gap"
+  },
+  {
+   "when": "Day 7, the review",
+   "text": "A full folder. Nothing showing what went in.",
+   "kind": "gap"
+  },
+  {
+   "when": "Weeks later, a visit",
+   "text": "“How do you know new staff understood their induction?” Ticks are not an answer.",
+   "kind": "end"
+  }
+ ],
+ "trail_close": "<b>The week was never the problem.</b> The gap is between reading and knowing. Here is how CareStream adds a question after each policy, so day seven has an answer.",
+ "why": {
+  "heading": "A tick shows a policy was opened, not that it was understood",
+  "sub": "By day seven you need more than a full folder. You need to know where the gaps are while there is still time to close them.",
+  "cards": [
+   {
+    "icon": "chat",
+    "title": "New starters seldom say they are lost",
+    "body": "Everything is new and everyone seems busy. A new carer will nod and move on, so a quiet week can hide a lot of questions nobody asked."
+   },
+   {
+    "icon": "tick",
+    "title": "Reading is not the same as knowing",
+    "body": "A policy can be marked as read in a few seconds. A single question after it shows whether the key point stuck, and that is the point of a knowledge check."
+   },
+   {
+    "icon": "alert",
+    "title": "The gap shows up later, on the floor",
+    "body": "If it is not found in week one, it is found when something goes wrong with a resident. Finding it on day four costs a short lesson, not an incident."
+   }
+  ]
+ },
+ "how": {
+  "heading": "Your policies in, the checked induction out.",
+  "sub": "This is the <a href=\"/training-platform\">Training built from your own policies</a> feature, in the order a manager and a new starter meet it. See also <a href=\"/uses/annual-training\">annual training that carries on after induction</a> and <a href=\"/staff-training/care-certificate\">the Care Certificate course</a>.",
+  "blocks": [
+   {
+    "heading": "Adopt a ready made induction flow and tailor it to your policies",
+    "bullets": [
+     "In Onboarding and Induction, choose a ready made flow for the role, such as care assistant, and adopt it as your own editable flow",
+     "CareStream matches each step to your own policies and rewrites the questions to your wording, so your induction programme teaches what your service really does",
+     "A flow has two kinds of step: read a policy (Mark as read) and answer a question, and a care home induction can mix them as you choose"
+    ],
+    "tags": [
+     {
+      "label": "Training built from your own policies",
+      "href": "/training-platform"
+     },
+     {
+      "label": "How CareStream works",
+      "href": "/how-it-works"
+     }
+    ],
+    "mock": {
+     "type": "training",
+     "module": "Induction: Care Assistant",
+     "questions": [
+      "Who is the safeguarding lead in this service, and when do you tell them?",
+      "A resident tells you something worrying and asks you to keep it secret. What do you do?",
+      "Which door do you go to first if the fire alarm sounds on your shift?"
+     ],
+     "staff_count": 3
+    }
+   },
+   {
+    "heading": "A wrong answer goes to the Follow-up tab, and the starter tries again",
+    "bullets": [
+     "In an induction a wrong answer has to be retried, and it also lands in the new starter's Follow-up tab in the Staff Hub, with an email once a day at most",
+     "They choose Learn &amp; retry, a short lesson (why it matters, what to remember, a realistic situation) then a fresh question, or Just retry the same question",
+     "These induction questions are built from your own policies, so the lesson matches how your service works"
+    ],
+    "tags": [
+     {
+      "label": "Wrong answers become lessons",
+      "href": "/training-platform"
+     },
+     {
+      "label": "Adhoc training",
+      "href": "/uses/adhoc-training"
+     }
+    ],
+    "mock": {
+     "type": "followup",
+     "module": "Induction: Safeguarding Adults",
+     "question": "A resident tells you something worrying and asks you to keep it secret. What do you do?",
+     "why": "You cannot promise to keep a safeguarding concern secret, because the person may be at risk.",
+     "remember": [
+      "Listen and stay calm",
+      "Tell them who you must pass it to",
+      "Write down what was said"
+     ],
+     "picture": "On your third day a resident tells you something at tea time and says it is just between you two."
+    }
+   },
+   {
+    "heading": "New starters read and answer in the language they think in",
+    "bullets": [
+     "Induction content is shown in the starter's own language once your admin has set it",
+     "A wrong answer then points to a gap in knowledge, not in vocabulary",
+     "Training in different languages is part of the paid plans, and the reminder emails stay in English"
+    ],
+    "tags": [
+     {
+      "label": "Training in 60+ languages",
+      "href": "/languages"
+     },
+     {
+      "label": "Staff Hub in 60+ languages",
+      "href": "/uses/multilingual-staff-hub"
+     }
+    ],
+    "mock": {
+     "type": "language",
+     "second_language": "Romanian"
+    }
+   },
+   {
+    "heading": "See progress and gaps across every new starter",
+    "bullets": [
+     "An induction progress matrix shows who has done what, with an overdue flag when a due date passes",
+     "The staff record flags anyone whose induction has not started after 7 days, and shows their induction questions and results",
+     "Knowledge gaps shows the most missed questions and the weakest topics, with a Monday digest email"
+    ],
+    "tags": [
+     {
+      "label": "Reporting that runs itself",
+      "href": "/training-platform"
+     },
+     {
+      "label": "CQC and compliance evidence",
+      "href": "/cqc-compliance"
+     }
+    ],
+    "mock": {
+     "type": "gaps",
+     "stats": {
+      "open": 4,
+      "affected": 3,
+      "closed": 9,
+      "engaged": 80
+     },
+     "missed": [
+      [
+       "Who the safeguarding lead is",
+       "3 staff"
+      ],
+      [
+       "What to do after a fall",
+       "2 staff"
+      ],
+      [
+       "Reporting a medication error",
+       "2 staff"
+      ]
+     ],
+     "weak": [
+      [
+       "Safeguarding Adults",
+       "3 gaps"
+      ],
+      [
+       "Medication",
+       "2 gaps"
+      ]
+     ]
+    }
+   }
+  ]
+ },
+ "talk": {
+  "heading": "The questions managers ask, and how CareStream answers them",
+  "sub": "Read this as a conversation. The questions are the ones we hear most.",
+  "items": [
+   {
+    "q": "We already have a good induction. Why add anything?",
+    "a": "You would not replace it. Keep the welcome, the tour and the shadow shifts. CareStream adds a question after each policy, so that induction for new staff includes a check on what was understood and not only what was read."
+   },
+   {
+    "q": "Where do the induction questions come from?",
+    "a": "You adopt a ready made flow for the role, and CareStream matches each step to <a href=\"/training-platform\">your own policies</a> and rewrites the multiple choice questions to your wording. You can edit the flow after that. Where your policies do not cover a point, the ready made question stays as it is."
+   },
+   {
+    "q": "How does a new starter get onto the flow?",
+    "a": "When you add someone with the staff type New starter, they are enrolled automatically in the flows that match their job role. You can also enrol people yourself, with an optional due date, and they are emailed."
+   },
+   {
+    "q": "What happens when a new starter gets a question wrong?",
+    "a": "In an induction they have to retry it. The wrong answer also goes into their Follow-up tab in the Staff Hub, and they get an email, at most once a day. They choose Learn &amp; retry, a short lesson then a fresh question, or Just retry the same one. You do not have to chase it."
+   },
+   {
+    "q": "Do I get told every time someone answers wrongly?",
+    "a": "No. Nothing alerts you for each wrong answer. You see the picture in the induction progress matrix, on the staff record and in Knowledge gaps, plus a Monday digest email. That keeps the week calm for you and for the new starter."
+   },
+   {
+    "q": "Does the manager sign off the induction in CareStream?",
+    "a": "Not inside an induction flow. There is no signature step. A policy step is completed when the starter marks it as read, and a question step when they answer correctly. Your own observation and sign off for practical skills stays with you."
+   },
+   {
+    "q": "What if someone has not even started?",
+    "a": "The staff record carries a flag, Induction not started after 7+ days, and an overdue flag when a due date passes. So a quiet week does not turn into a quiet month."
+   },
+   {
+    "q": "How do I try it?",
+    "a": "Create a free account and use the 14 day free trial on a paid plan, then adopt a flow and add one new starter. See <a href=\"/how-it-works\">how it works</a> or <a href=\"/register\">register</a> to begin. Adhoc training and translation are on the paid plans."
+   }
+  ]
+ },
+ "limits": {
+  "heading": "A check on understanding, not a replacement for your welcome",
+  "cards": [
+   {
+    "title": "It does not replace shadowing or observation",
+    "body": "Learning how to help someone move, or how your residents like their tea, still needs an experienced colleague beside them. A flow checks understanding. It does not watch practice."
+   },
+   {
+    "title": "There is no manager sign off step in an induction flow",
+    "body": "A flow has two step types, read a policy and answer a question. There is no signature step. Keep your own sign off for practical competence."
+   },
+   {
+    "title": "It does not alert you to each wrong answer",
+    "body": "Gaps reach you through the progress matrix, the staff record, Knowledge gaps and the Monday digest, not as a message each time. Translation and adhoc training are on the paid plans only."
+   }
+  ]
+ },
+ "read_next": [
+  "onboarding-international-care-staff-4-week-induction-playbook",
+  "care-certificate-standards",
+  "how-long-does-the-care-certificate-take"
+ ],
+ "faqs": {
+  "heading": "Induction training and CareStream, answered",
+  "groups": [
+   {
+    "group": "About the induction",
+    "items": [
+     {
+      "q": "What should induction training for care staff include?",
+      "a": "Your own welcome, a tour, shadow shifts and the policies that matter most in the first week, such as safeguarding, medication and fire. The <a href=\"https://www.skillsforcare.org.uk/Developing-your-workforce/Care-Certificate/Care-Certificate.aspx\">Skills for Care Care Certificate</a> standards are designed for people new to care and can inform what an induction covers."
+     },
+     {
+      "q": "What is a good staff induction checklist?",
+      "a": "Keep it short: welcome and tour, login to the Staff Hub, key policies read, a question after each, a shadow shift with someone experienced, and a review conversation. A flow in CareStream covers the policies and questions part of that staff induction checklist."
+     },
+     {
+      "q": "What are good induction questions for new starters?",
+      "a": "Ask what they would actually do: who they tell about a concern, what they do after a fall, how they report a medication error. Multiple choice induction questions built from your own policies check that, and a wrong answer becomes a short lesson."
+     },
+     {
+      "q": "How long should an induction programme take?",
+      "a": "It depends on the role and the service. Many homes plan the first week closely and carry on over several weeks. See <a href=\"/blog/how-long-does-the-care-certificate-take\">how long the Care Certificate takes</a> for a guide."
+     },
+     {
+      "q": "Can I use the same flow for every role?",
+      "a": "You can adopt a ready made flow per role, such as care assistant or cleaner, and a flow with no roles applies to everyone. New starters are enrolled in the flows that match their job role."
+     },
+     {
+      "q": "What if a new starter is not confident in English?",
+      "a": "Induction content can be opened in their own language once your admin sets it, which is part of the paid plans. See <a href=\"/uses/multilingual-staff-hub\">the multilingual Staff Hub</a>. The emails stay in English."
+     }
+    ]
+   },
+   {
+    "group": "About inspections",
+    "items": [
+     {
+      "q": "Will an inspector accept this as evidence of induction?",
+      "a": "The regulations say staff must receive the support and training they need for their duties. See <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/18\">Regulation 18 on staffing</a>. A record of questions, results and follow up shows more than a tick. It sits with the rest of your <a href=\"/cqc-compliance\">CQC evidence</a>."
+     },
+     {
+      "q": "Is a knowledge check enough to show someone is competent?",
+      "a": "No. A knowledge check shows understanding. Competence in practical skills still needs observation by a competent person, and your own sign off. See <a href=\"/cqc-staff-questions\">staff questions for inspection</a> for what staff may be asked."
+     }
+    ]
+   }
+  ]
+ },
+ "guide": {
+  "heading": "A practical way to run the first week",
+  "lede": "Employee induction does not end when the folder is full. A week of reading is a good start. The part that tells you something is what happens when you ask the new starter a question.",
+  "sections": [
+   {
+    "h3": "Plan the week around questions, not just reading",
+    "paragraphs": [
+     "Put a question straight after each important policy, while it is fresh. Keep the questions about what the starter would do, not what the policy says. Spread the reading across the week so the first day is not a wall of paper, and keep a time in the diary on day seven to talk it through together. If a question has been missed, that conversation is easier to have in week one than in month three."
+    ]
+   },
+   {
+    "h3": "Five checks that fit a busy week",
+    "checklist": [
+     "Day one: welcome, tour, Staff Hub login and a named person to ask.",
+     "Days two to five: read each policy and answer the question that follows it.",
+     "Whenever an answer is wrong: they open the short lesson, then answer a fresh question.",
+     "Day six: look at the induction progress and any follow up still open.",
+     "Day seven: a short conversation, plus practical observation for skills that need it."
+    ]
+   }
+  ],
+  "note": "<b>For the inspector.</b> Keep the policies read, the questions answered and the follow up together on the staff record, so you can show understanding as well as attendance."
+ }
+}

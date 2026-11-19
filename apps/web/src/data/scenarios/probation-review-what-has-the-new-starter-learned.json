@@ -1,0 +1,325 @@
+{
+  "slug": "probation-review-what-has-the-new-starter-learned",
+  "status": "draft",
+  "order": 38,
+  "title": "Time for the probation review. <em>What has the new starter really learned?</em>",
+  "meta_title": "Probation Review: Evidence from the Staff Record | CareStreamAI",
+  "meta_description": "Review due? See induction, quiz results and follow ups for each new starter on one printable record, built from your own policies.",
+  "eyebrow": "Scenario",
+  "lede": "Before a probation review, most managers rely on memory and a half filled induction form. CareStream keeps a <a href=\"/training-platform\">staff record built from your own policies</a> that shows what the new starter has read, answered and got wrong. It is evidence of understanding to bring to the conversation, and the conversation stays with you.",
+  "fine": "14 day free trial · Set up in a day · UK data residency",
+  "panel": {
+    "title": "Week 12 for a new starter",
+    "pill": "Illustration",
+    "rows": [
+      { "label": "Induction policies read", "note": "Week 1 to 3", "done": true },
+      { "label": "Induction questions answered", "note": "Week 1 to 3", "done": true },
+      { "label": "Medication and safeguarding gaps closed", "note": "Not yet checked", "done": false },
+      { "label": "Review meeting prepared from the record", "note": "Friday", "done": false }
+    ],
+    "meter": 50
+  },
+  "image": "https://api.carestreamai.com/public/policy-shop/image/7bd1f8bb-86da-4f3b-b132-cd2433036326.webp",
+  "image_alt": "A manager and a new carer sitting opposite each other in a bright office for a review meeting, with a printed record on the table and the carer smiling",
+  "card_title": "Probation review: what has the new starter really learned?",
+  "card_snippet": "A new carer's review is due on Friday. Their staff record shows induction progress, quiz results and follow ups from your own policies, so the meeting starts with evidence, not memory.",
+  "primary_keyword": "probation review",
+  "secondary_keywords": [
+    "probation review meeting",
+    "probation review questions",
+    "probation period review",
+    "induction training",
+    "knowledge check"
+  ],
+  "feature_links": [
+    {
+      "title": "Training built from your own policies",
+      "body": "Induction and adhoc training from your policies, with wrong answers that become short lessons.",
+      "action": "See the feature",
+      "href": "/training-platform"
+    },
+    {
+      "title": "Adhoc training for one person or a few",
+      "body": "Allocate a short module on a topic when the record shows a gap.",
+      "action": "See adhoc training",
+      "href": "/uses/adhoc-training"
+    },
+    {
+      "title": "The multilingual Staff Hub",
+      "body": "Induction content in the language each new starter thinks in.",
+      "action": "See the Staff Hub",
+      "href": "/uses/multilingual-staff-hub"
+    }
+  ],
+  "intro": {
+    "heading": "The review is on Friday. What can you actually say about week twelve?",
+    "sub": "A scenario we see in many care settings.",
+    "paragraph": "A new carer started three months ago. She has been warm with residents, turns up on time and the team likes her. Her review is on Friday, and the manager wants to talk about more than first impressions. The induction was split across busy weeks. Some policies were read on shift, some at home. Nobody can say which ones, or whether the medication and safeguarding basics went in. The manager has opinions but no record, and a good opinion is hard to put on paper. Here is how that week plays out."
+  },
+  "trail": [
+    { "when": "Week 1", "text": "The new carer shadows two senior staff and is given the induction policies.", "kind": "ok" },
+    { "when": "Weeks 2 to 3", "text": "She reads the policies and answers the induction questions on her phone.", "kind": "ok" },
+    { "when": "Weeks 4 to 12", "text": "Shifts go well. Residents like her and colleagues say so.", "kind": "ok" },
+    { "when": "Monday", "text": "The manager opens the induction folder. It is half filled in.", "kind": "gap" },
+    { "when": "Tuesday", "text": "Nobody remembers which policies were read, or how carefully.", "kind": "gap" },
+    { "when": "Wednesday", "text": "Medication and safeguarding were covered in week one. Did they stick?", "kind": "gap" },
+    { "when": "Thursday", "text": "Opinions, but nothing printed to put on the table.", "kind": "gap" },
+    { "when": "Friday", "text": "She asks, “How have I done?” The answer is a feeling, not a record.", "kind": "end" }
+  ],
+  "trail_close": "<b>The carer may be doing well.</b> The gap is the evidence for the conversation. Here is how CareStream fills it, using your own policies, without replacing your judgement.",
+  "why": {
+    "heading": "A good feeling is not the same as a record",
+    "sub": "A fair review needs something in front of both people.",
+    "cards": [
+      {
+        "icon": "chat",
+        "title": "Impressions differ by shift",
+        "body": "The day team sees one side of a new starter and the night team another. Without a shared record, the review rests on whoever remembers most."
+      },
+      {
+        "icon": "tick",
+        "title": "Reading is not the same as understanding",
+        "body": "A tick on an induction form shows a policy was handed over. It does not show whether it was read carefully or what the carer took from it."
+      },
+      {
+        "icon": "alert",
+        "title": "Gaps are cheapest to fix early",
+        "body": "A misunderstanding found at the review can be put right in a week. One found after a medication error or a safeguarding concern is much harder."
+      }
+    ]
+  },
+  "how": {
+    "heading": "From induction to a printed record, step by step.",
+    "sub": "This is the <a href=\"/training-platform\">Training built from your own policies</a> feature, in the order a manager and a new carer meet it. See also <a href=\"/uses/adhoc-training\">adhoc training after an incident or a gap</a> and <a href=\"/staff-training\">the staff training library</a>.",
+    "blocks": [
+      {
+        "heading": "Induction training starts when the new starter is added",
+        "bullets": [
+          "Add the person as a New starter and CareStream enrols them in the induction flows that match their job role",
+          "Induction has two kinds of step: read a policy and mark it as read, or answer a question. There is no manager sign off step inside a flow",
+          "The questions come from your own policies and you can edit them before anyone sees them"
+        ],
+        "tags": [
+          { "label": "Training built from your own policies", "href": "/training-platform" },
+          { "label": "How CareStream works", "href": "/how-it-works" }
+        ],
+        "mock": {
+          "type": "training",
+          "module": "New starter induction: Medication",
+          "questions": [
+            "What should you do if a resident refuses their medication?",
+            "Who can you ask if you are unsure about a dose?",
+            "When do you sign the MAR chart?"
+          ],
+          "staff_count": 1
+        }
+      },
+      {
+        "heading": "A wrong answer becomes a short lesson, not a mark against them",
+        "bullets": [
+          "A wrong induction answer goes into the carer's Follow-up tab in the Staff Hub, and they get an email, at most once a day",
+          "They choose Learn &amp; retry, a short lesson then a fresh question, or Just retry the same question, as often as they need",
+          "Nothing alerts you each time. You see the picture on the staff record and in Analytics"
+        ],
+        "tags": [
+          { "label": "Wrong answers become lessons", "href": "/training-platform" },
+          { "label": "Safeguarding course", "href": "/staff-training/safeguarding-adults-and-children" }
+        ],
+        "mock": {
+          "type": "followup",
+          "module": "Safeguarding Adults",
+          "question": "Who do you tell first if you think a resident is being harmed?",
+          "why": "Acting quickly and telling the right person protects the resident, so you should not wait or try to deal with it alone.",
+          "remember": [
+            "Tell your safeguarding lead straight away",
+            "Write down what you saw and heard",
+            "Do not promise to keep it secret"
+          ],
+          "picture": "A resident has an unexplained bruise and seems frightened when a colleague comes near."
+        }
+      },
+      {
+        "heading": "Open the staff record before the review meeting",
+        "bullets": [
+          "The Training &amp; Induction Record shows induction progress, induction questions with results, training status and average quiz score",
+          "It also shows follow ups, how carefully each policy was read, certificates and benchmarks against the team",
+          "Print it or download it as a PDF to take into the review"
+        ],
+        "tags": [
+          { "label": "Staff records", "href": "/training-platform" },
+          { "label": "CQC and compliance", "href": "/cqc-compliance" }
+        ],
+        "mock": {
+          "type": "training",
+          "module": "Training &amp; Induction Record: new starter",
+          "questions": [
+            "Induction progress: 9 of 10 steps complete, 1 policy still unread",
+            "Average quiz score: 78%, with 2 questions retried and now correct",
+            "Risk flag: required course not yet assigned"
+          ],
+          "staff_count": 1
+        }
+      },
+      {
+        "heading": "See the gaps across the team, and whether they closed",
+        "bullets": [
+          "The Knowledge gaps view shows the most missed questions and weakest topics, so you can tell a personal gap from a weak induction question",
+          "See how gaps are being closed, and mark a person's record as reviewed",
+          "A Monday digest email brings the picture to you without asking"
+        ],
+        "tags": [
+          { "label": "Reporting that runs itself", "href": "/training-platform" },
+          { "label": "Policy gaps", "href": "/uses/policy-gaps" }
+        ],
+        "mock": {
+          "type": "gaps",
+          "stats": { "open": 4, "affected": 3, "closed": 11, "engaged": 80 },
+          "missed": [
+            ["Refusing medication", "3 staff"],
+            ["Telling the safeguarding lead", "2 staff"],
+            ["Signing the MAR chart", "1 staff"]
+          ],
+          "weak": [
+            ["Medication", "4 gaps"],
+            ["Safeguarding Adults", "2 gaps"]
+          ]
+        }
+      }
+    ]
+  },
+  "talk": {
+    "heading": "The questions managers ask, and how CareStream answers them",
+    "sub": "Read this as a conversation. The questions are the ones we hear most.",
+    "items": [
+      {
+        "q": "What can I bring to the review from CareStream?",
+        "a": "The new starter's Training &amp; Induction Record. It shows induction progress, the induction questions and their results, training status, average quiz score, follow ups, how carefully each policy was read, and certificates. You can print it or download a PDF."
+      },
+      {
+        "q": "Does it tell me whether she is doing the job well?",
+        "a": "No. It evidences understanding of your policies and training, not performance, conduct, attendance or competence in practice. How she is with residents is something you see and judge on the floor. The record is one input to the conversation."
+      },
+      {
+        "q": "How does a new starter get onto induction training?",
+        "a": "When you add them with the staff type New starter, CareStream enrols them in the induction flows that match their job role. Each flow is made of steps to read a policy or answer a question, <a href=\"/training-platform\">built from your own policies</a>."
+      },
+      {
+        "q": "What happens when she gets an induction question wrong?",
+        "a": "She cannot move on until she retries. The wrong answer goes to her Follow-up tab and she gets an email, at most once a day. She picks Learn &amp; retry, a short lesson then a fresh question, or Just retry the same question."
+      },
+      {
+        "q": "Can I see whether she actually read the policies?",
+        "a": "You can see reading engagement for each policy, such as time spent and whether she reached the end and marked it read. It shows how a policy was read, not whether it was understood, which is why the questions matter."
+      },
+      {
+        "q": "Is there a manager sign off inside the induction?",
+        "a": "No. A flow has no signature or sign off step. When a hands on skill needs sign off, such as an observed practical for some courses, you record it separately. Your observation stays with you."
+      },
+      {
+        "q": "What if the record shows a gap just before the review?",
+        "a": "Allocate a short <a href=\"/uses/adhoc-training\">adhoc training</a> module on that topic, for example medication. It is built from your policies, and you can edit and preview it first. Adhoc training is on the paid plans."
+      },
+      {
+        "q": "Can I try this before paying?",
+        "a": "Yes. Create a free account and start the 14 day free trial. You can add a new starter, see the induction flow and open their staff record. See <a href=\"/pricing\">the plans</a> for what each includes."
+      }
+    ]
+  },
+  "limits": {
+    "heading": "Evidence for the conversation, not the conversation itself",
+    "cards": [
+      {
+        "title": "It does not judge performance",
+        "body": "The record shows what was read and answered. It says nothing about kindness, reliability or practice on the floor. Your observation and supervision stay with you."
+      },
+      {
+        "title": "It does not replace your HR process",
+        "body": "CareStream gives no employment advice. Your contract, your HR support and your own procedures decide how a review is run and what follows."
+      },
+      {
+        "title": "It does not alert you to each wrong answer",
+        "body": "The picture reaches you on the staff record, in the Knowledge gaps view and in the Monday digest. Adhoc training and translation are on the paid plans."
+      }
+    ]
+  },
+  "read_next": [
+    "onboarding-international-care-staff-4-week-induction-playbook",
+    "care-home-staff-incentive-scheme",
+    "what-compliant-actually-means-for-one-care-staff-member"
+  ],
+  "faqs": {
+    "heading": "New starter reviews and CareStream, answered",
+    "groups": [
+      {
+        "group": "Preparing the review",
+        "items": [
+          {
+            "q": "What should a probation review meeting cover?",
+            "a": "That is for your own procedure to decide. A useful starting point is what the person has learned, how they have settled in, what support they need and what happens next. The staff record in CareStream can inform the first of those. See our <a href=\"/blog/onboarding-international-care-staff-4-week-induction-playbook\">induction playbook</a> for how to structure the early weeks."
+          },
+          {
+            "q": "What probation review questions can I ask about induction training?",
+            "a": "Ask what stuck and what is still unclear. For example, “What would you do if a resident refused their medication?” or “Who would you tell about a safeguarding concern?” The record shows which induction questions were missed, so you can ask about those first."
+          },
+          {
+            "q": "How do I prepare for a probation period review?",
+            "a": "Open the new starter's Training &amp; Induction Record a few days early. Check induction progress, missed questions, follow ups and any risk flags. If a gap shows, allocate a short module so it has time to close before the meeting."
+          },
+          {
+            "q": "What is a knowledge check in induction?",
+            "a": "A short set of questions on what the person has just read or learned. In CareStream, a wrong answer becomes a follow up lesson and a fresh question, so the check teaches as well as tests."
+          },
+          {
+            "q": "Does CareStream replace the induction training I already run?",
+            "a": "No. Shadowing, shift routines and the Care Certificate work stay as they are. CareStream adds induction training built from your own policies, with a knowledge check and a record. Skills for Care says workers must be assessed on <a href=\"https://www.skillsforcare.org.uk/Developing-your-workforce/Care-Certificate/Care-Certificate.aspx\">what they know and what they do</a>."
+          },
+          {
+            "q": "Is there a medication or safeguarding example I can use?",
+            "a": "Yes. Medication and safeguarding are common topics to check early. See the <a href=\"/staff-training/medication-administration-and-competency\">medication course</a> and the <a href=\"/staff-training/safeguarding-adults-and-children\">safeguarding course</a>."
+          }
+        ]
+      },
+      {
+        "group": "Records and inspections",
+        "items": [
+          {
+            "q": "Does the record show a new starter is competent?",
+            "a": "It shows understanding of policies and training. Competence in practice needs observation by a person who can judge it. The two together make a stronger picture than either alone."
+          },
+          {
+            "q": "What does the law say about training for new staff?",
+            "a": "Regulation 18 says staff must receive the support, training, professional development, supervision and appraisal necessary to carry out their duties. See <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/18\">Regulation 18 on staffing</a>. It does not describe how to run a review, so check your own procedure for that."
+          }
+        ]
+      }
+    ]
+  },
+  "guide": {
+    "heading": "A practical way to prepare for the meeting",
+    "lede": "A good review is a conversation backed by facts. This guide covers the facts you can gather about learning, and leaves the rest to you.",
+    "sections": [
+      {
+        "h3": "Gather the learning evidence a week before",
+        "paragraphs": [
+          "Open the staff record a week early, not the night before. A week gives you time to act on what you find. Look at induction progress first, then the questions the person got wrong, then how they read the policies. A policy marked as read in under a minute is worth a friendly question, not a conclusion."
+        ]
+      },
+      {
+        "h3": "Four checks before the meeting",
+        "checklist": [
+          "Induction: are all steps complete, and is anything overdue or not started?",
+          "Questions: which were missed, and did the follow up close them?",
+          "Topics that matter most: look at medication and safeguarding specifically.",
+          "On the floor: note one observed example for each skill that needs hands on practice."
+        ]
+      },
+      {
+        "h3": "Keep the record and your judgement apart",
+        "paragraphs": [
+          "Use the record to ask better questions, not to settle the answer. A low quiz score may mean a poor question, a tired night or a second language. A high score does not show good care. Your observation, supervision and procedure do the judging."
+        ]
+      }
+    ],
+    "note": "<b>For the meeting.</b> Print the record, mark the two points you want to discuss, and ask the carer what they would like more help with."
+  }
+}

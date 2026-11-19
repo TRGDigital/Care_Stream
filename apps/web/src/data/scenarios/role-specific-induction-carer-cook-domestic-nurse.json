@@ -1,0 +1,420 @@
+{
+  "slug": "role-specific-induction-carer-cook-domestic-nurse",
+  "status": "draft",
+  "order": 34,
+  "title": "Good induction for new staff is not the same for everyone. <em>Each role needs its own.</em>",
+  "meta_title": "Induction for New Staff by Role | CareStreamAI",
+  "meta_description": "A carer, a cook, a domestic and a nurse need different starts. Give each new starter a role based induction flow, with a follow up on wrong answers.",
+  "eyebrow": "Scenario",
+  "lede": "A carer, a cook, a domestic and a nurse all start this month. They should not get the same pack. With <a href=\"/training-platform\">induction flows built from your own policies</a>, induction for new staff follows the job role, and a wrong answer becomes a short lesson, not a silent gap.",
+  "fine": "14 day free trial · Set up in a day · UK data residency",
+  "panel": {
+    "title": "Four new starters, one week",
+    "pill": "Illustration",
+    "rows": [
+      {
+        "label": "Each starter enrolled in the flow for their job role",
+        "note": "Day 1",
+        "done": true
+      },
+      {
+        "label": "Policies read and marked as read",
+        "note": "Week 1",
+        "done": true
+      },
+      {
+        "label": "Questions answered, wrong ones followed up",
+        "note": "In progress",
+        "done": false
+      },
+      {
+        "label": "Manager checks who has not started",
+        "note": "Not yet",
+        "done": false
+      }
+    ],
+    "meter": 50
+  },
+  "image": "https://api.carestreamai.com/public/policy-shop/image/eb4d9183-3dde-4524-a012-a1c10ab511b0.webp",
+  "image_alt": "A bright care home corridor where a carer in teal, a cook in whites, a cleaner with a trolley and a nurse in navy stand talking together, each holding a folder",
+  "card_title": "New starters, different jobs: one induction does not fit all",
+  "card_snippet": "A cook needs food hygiene on day one. A domestic needs infection control. Give every new starter an induction flow for their own role, built from your policies, with a follow up on wrong answers.",
+  "primary_keyword": "induction for new staff",
+  "secondary_keywords": [
+    "onboarding new staff",
+    "new employee onboarding",
+    "employee induction",
+    "care assistant induction",
+    "nurse induction",
+    "induction programme"
+  ],
+  "feature_links": [
+    {
+      "title": "Training built from your own policies",
+      "body": "Role based induction flows, adhoc training, and wrong answers that become short lessons.",
+      "action": "See the feature",
+      "href": "/training-platform"
+    },
+    {
+      "title": "Adhoc training",
+      "body": "Turn a gap, an incident or a changed policy into short training on that topic.",
+      "action": "See adhoc training",
+      "href": "/uses/adhoc-training"
+    },
+    {
+      "title": "Training in over 60 languages",
+      "body": "Policies and lessons in the language each new starter thinks in.",
+      "action": "See languages",
+      "href": "/languages"
+    }
+  ],
+  "intro": {
+    "heading": "Four people start on Monday. They need four different starts.",
+    "sub": "A scenario we see in many care settings.",
+    "paragraph": "A manager has four new starters arriving together: a carer, a cook, a domestic and a nurse. The usual answer is one folder of policies and a shadow shift. The cook reads the whole safeguarding policy and never sees the allergen rules. The domestic gets the medication policy and nothing on cleaning schedules or infection prevention. The nurse is handed the carer pack. Everyone signs to say they have had their induction and the manager moves on. Here is how it plays out."
+  },
+  "trail": [
+    {
+      "when": "Monday",
+      "text": "Four new starters arrive: a carer, a cook, a domestic and a nurse.",
+      "kind": "ok"
+    },
+    {
+      "when": "Morning",
+      "text": "Each gets a tour, a lanyard and the same welcome folder.",
+      "kind": "ok"
+    },
+    {
+      "when": "Day three",
+      "text": "Everyone has shadowed someone and the forms are ticked.",
+      "kind": "ok"
+    },
+    {
+      "when": "Week two",
+      "text": "The cook never read the allergen section. It sat on page 40.",
+      "kind": "gap"
+    },
+    {
+      "when": "Same week",
+      "text": "The domestic was shown the mop but not the infection prevention policy.",
+      "kind": "gap"
+    },
+    {
+      "when": "And the nurse",
+      "text": "Was handed the carer pack. Nobody knows what they skipped.",
+      "kind": "gap"
+    },
+    {
+      "when": "What the manager has",
+      "text": "Four ticked forms. Nothing that shows who understood what.",
+      "kind": "gap"
+    },
+    {
+      "when": "Three months on",
+      "text": "“How do you know your cook was inducted on allergens?” A tick is not an answer.",
+      "kind": "end"
+    }
+  ],
+  "trail_close": "<b>The induction was never the problem.</b> The gap is between a generic folder and what each job really needs. Here is how CareStream fills it, role by role, using your own policies.",
+  "why": {
+    "heading": "One folder cannot serve four jobs",
+    "sub": "An inspector will not ask whether a form was ticked. They will ask what each person was shown and whether they understood it.",
+    "cards": [
+      {
+        "icon": "chat",
+        "title": "The cook and the carer need different things",
+        "body": "Allergens and food hygiene matter on day one for a cook. Moving a person safely matters for a carer. A single pack makes each of them wade through the other's material."
+      },
+      {
+        "icon": "tick",
+        "title": "A tick does not show understanding",
+        "body": "Someone can be shadowed and signed off without being asked a question. The gap shows later, usually when something goes wrong."
+      },
+      {
+        "icon": "alert",
+        "title": "Building four packs by hand is a lot of work",
+        "body": "Tailoring employee induction for each role, then chasing who has done what, takes time nobody has. So the generic folder wins."
+      }
+    ]
+  },
+  "how": {
+    "heading": "Your policies in, a role based induction out.",
+    "sub": "This is the <a href=\"/training-platform\">Training built from your own policies</a> feature, in the order a manager and a new starter meet it. See also <a href=\"/uses/adhoc-training\">adhoc training for a gap you spot later</a> and <a href=\"/how-it-works\">how CareStream works</a>.",
+    "blocks": [
+      {
+        "heading": "Adopt a ready made flow for the role and tailor it to your home",
+        "bullets": [
+          "In the Onboarding &amp; Induction screen, adopt a ready made flow for a common role. It is copied into your own flow, which you can edit, and its questions are matched to your policy wording",
+          "Each flow has two kinds of step: read a policy, and answer a question. You can also build or edit your own flow from scratch",
+          "A flow can be set to one or more job roles, such as care assistant, chef, kitchen porter or cleaner. A flow with no roles applies to everyone"
+        ],
+        "tags": [
+          {
+            "label": "Training built from your own policies",
+            "href": "/training-platform"
+          },
+          {
+            "label": "How CareStream works",
+            "href": "/how-it-works"
+          }
+        ],
+        "mock": {
+          "type": "training",
+          "module": "Kitchen induction: food hygiene and allergens",
+          "questions": [
+            "Read: our food hygiene and allergen policy (Mark as read)",
+            "A resident has a nut allergy. What do you check before you plate their meal?",
+            "How do you store raw and ready to eat food in the fridge?"
+          ]
+        }
+      },
+      {
+        "heading": "A wrong answer becomes a short lesson, not a silent gap",
+        "bullets": [
+          "A new starter must retry a wrong answer in their induction. It also goes into the Follow-up tab in the Staff Hub, and they get an email, at most once a day, in English",
+          "They choose Learn &amp; retry, a short lesson (why it matters, what to remember, a realistic situation) followed by a fresh question, or Just retry the same question",
+          "They can retry as often as they need"
+        ],
+        "tags": [
+          {
+            "label": "Wrong answers become lessons",
+            "href": "/training-platform"
+          },
+          {
+            "label": "Care Certificate course",
+            "href": "/staff-training/care-certificate"
+          }
+        ],
+        "mock": {
+          "type": "followup",
+          "module": "Kitchen induction: food hygiene and allergens",
+          "question": "A resident has a nut allergy. What do you check before you plate their meal?",
+          "why": "Allergen information must be checked for every meal, because a missed ingredient can cause a serious reaction.",
+          "remember": [
+            "Check the resident's allergy record",
+            "Check the recipe and the labels",
+            "Ask if you are not sure"
+          ],
+          "picture": "The usual dessert is on the trolley, but the supplier has changed the brand this week."
+        }
+      },
+      {
+        "heading": "The domestic gets infection prevention, not the carer pack",
+        "bullets": [
+          "Enrol a cleaner on a flow built around infection prevention and control, cleaning routines and safe handling of chemicals, and a carer on a care assistant induction flow instead",
+          "New starters are enrolled automatically in flows that match their job role, so there is no folder to hand out. You can also enrol someone yourself with a due date",
+          "Specialist roles add their own extra flows"
+        ],
+        "tags": [
+          {
+            "label": "Infection prevention course",
+            "href": "/staff-training/infection-prevention-and-control"
+          },
+          {
+            "label": "Staff Hub in 60+ languages",
+            "href": "/uses/multilingual-staff-hub"
+          }
+        ],
+        "mock": {
+          "type": "training",
+          "module": "Housekeeping induction: infection prevention",
+          "questions": [
+            "Read: our infection prevention and control policy (Mark as read)",
+            "In what order do you clean a resident's room and the en suite?",
+            "When must you change your gloves and wash your hands?"
+          ]
+        }
+      },
+      {
+        "heading": "See who has started, who is stuck and what is missed",
+        "bullets": [
+          "The induction progress matrix shows each new starter against their flows, with an overdue flag when a due date passes",
+          "The staff record flags anyone whose induction has not started after 7 or more days",
+          "Knowledge gaps shows the most missed questions across training and induction, so you see whether it is one person or the flow that needs a tweak"
+        ],
+        "tags": [
+          {
+            "label": "Reporting that runs itself",
+            "href": "/training-platform"
+          },
+          {
+            "label": "CQC and compliance evidence",
+            "href": "/cqc-compliance"
+          }
+        ],
+        "mock": {
+          "type": "gaps",
+          "stats": {
+            "open": 6,
+            "affected": 4,
+            "closed": 11,
+            "engaged": 64
+          },
+          "missed": [
+            [
+              "Allergen checks before plating",
+              "3 staff"
+            ],
+            [
+              "Order of cleaning a room",
+              "2 staff"
+            ],
+            [
+              "Reporting a concern",
+              "2 staff"
+            ]
+          ],
+          "weak": [
+            [
+              "Food hygiene",
+              "3 gaps"
+            ],
+            [
+              "Infection prevention",
+              "2 gaps"
+            ]
+          ]
+        }
+      }
+    ]
+  },
+  "talk": {
+    "heading": "The questions managers ask, and how CareStream answers them",
+    "sub": "Read this as a conversation. The questions are the ones we hear most.",
+    "items": [
+      {
+        "q": "Do I really need a different induction programme for each role?",
+        "a": "You need the right content for each role, not a different system. Their first week should differ. CareStream gives you ready made flows for common roles, which you adopt and tailor, and you can also build or edit your own."
+      },
+      {
+        "q": "How does a new starter get the right flow?",
+        "a": "When you add someone as a new starter and choose their job role, they are enrolled automatically in the flows that match it. A flow with no job roles applies to everyone. You can also enrol people yourself and set a due date, and they are emailed."
+      },
+      {
+        "q": "What does the new starter actually do?",
+        "a": "Two things, in the Staff Hub on their own phone. They read a policy and tap Mark as read, or they answer a multiple choice question. Nothing else is asked of them inside the flow."
+      },
+      {
+        "q": "What happens when they get a question wrong?",
+        "a": "They have to retry it, and it goes into their Follow-up tab with an email, at most once a day, in English. They choose Learn &amp; retry, a short lesson on that point and then a fresh question, or Just retry the same question. They can retry as often as they need."
+      },
+      {
+        "q": "Are the flows built from our own policies?",
+        "a": "Yes. When you adopt a ready made flow, its steps are matched to your policies and its questions are rewritten to your wording, and you can edit it. Where your policies do not cover a point, the content falls back on general good practice, which is a prompt to improve the policy."
+      },
+      {
+        "q": "How do I see who has not started?",
+        "a": "The induction progress matrix shows every new starter against their flows, with an overdue flag when a due date passes. The staff record also raises a flag when induction has not started after 7 or more days."
+      },
+      {
+        "q": "Does it replace shadowing, or signing someone off as competent?",
+        "a": "No. A competent person still needs to show and watch practical skills, and you still decide when someone is ready. An induction flow has no manager sign off step. It checks understanding of your policies and keeps the record."
+      },
+      {
+        "q": "Can I try it?",
+        "a": "Yes. There is a 14 day free trial on the paid plans, and you can <a href=\"/register\">create a free account</a> to look around. Adhoc training and translation are on the paid plans, so check the <a href=\"/pricing\">pricing page</a> for what each includes."
+      }
+    ]
+  },
+  "limits": {
+    "heading": "A way to start people well, not a replacement for the people who do it",
+    "cards": [
+      {
+        "title": "It has no manager sign off step",
+        "body": "An induction flow is read a policy and answer a question. There is no signature step, so competence on the floor, such as a nurse's clinical skills, still has to be assessed by you."
+      },
+      {
+        "title": "Not every role may have a finished flow",
+        "body": "Ready made flows cover common roles, but a flow for your exact job title may not exist yet. You can build or edit your own, or use a flow with no roles for everyone."
+      },
+      {
+        "title": "It does not alert you to every wrong answer",
+        "body": "The picture reaches you through Knowledge gaps, the progress matrix and the Monday digest, not as a message each time someone slips. Adhoc training and translation are on the paid plans only."
+      }
+    ]
+  },
+  "read_next": [
+    "onboarding-international-care-staff-4-week-induction-playbook",
+    "care-certificate-standards"
+  ],
+  "faqs": {
+    "heading": "Induction for new staff, answered",
+    "groups": [
+      {
+        "group": "Role based induction",
+        "items": [
+          {
+            "q": "What should an induction programme for care staff include?",
+            "a": "It should cover the policies and skills that matter in the role, and check that the person understood them. Regulation 18 says staff must <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/18\">receive appropriate support, training, professional development, supervision and appraisal as is necessary</a> for their work. A role based flow is one practical way to evidence the first part."
+          },
+          {
+            "q": "What is a good care assistant induction?",
+            "a": "A care assistant induction should cover your safeguarding, medication, moving and handling and dignity policies, with questions that show it landed. Many services also work through the Care Certificate, and our <a href=\"/staff-training/care-certificate\">Care Certificate course</a> covers it. CareStream flows sit alongside that, built from your own policies."
+          },
+          {
+            "q": "Is nurse induction the same as carer induction?",
+            "a": "No. A nurse has registered responsibilities and different priorities, so their induction should differ. CareStream has ready made flows for a nurse and a senior nurse among its role templates, which you can tailor to your policies. Clinical competence is still assessed by you in person."
+          },
+          {
+            "q": "Can one induction flow cover everyone?",
+            "a": "Yes, a flow with no job roles applies to everyone, which suits shared basics such as fire safety or your safeguarding policy. Add role flows on top for what is specific to each job."
+          }
+        ]
+      },
+      {
+        "group": "Onboarding and tracking",
+        "items": [
+          {
+            "q": "What is the difference between onboarding new staff and induction?",
+            "a": "Onboarding new staff is the whole welcome, including paperwork and checks. Induction is the learning part. CareStream covers induction learning. It does not replace your recruitment checks or paperwork."
+          },
+          {
+            "q": "How do I track new employee onboarding in one place?",
+            "a": "The induction progress matrix shows each new starter against their flows, and each staff record shows induction progress, overdue items and answers."
+          },
+          {
+            "q": "Does the Care Certificate replace my own induction?",
+            "a": "No. <a href=\"https://www.skillsforcare.org.uk/Learning-development/Care-Certificate/Care-Certificate.aspx\">Skills for Care says the Care Certificate standards</a> can be used by people new to care, and that workers are assessed on what they know and what they do. Your own induction still needs to cover your home and your role. See our guide to the <a href=\"/blog/care-certificate-standards\">Care Certificate standards</a>."
+          },
+          {
+            "q": "What about agency staff?",
+            "a": "Agency workers are enrolled only in flows you have marked as suitable for agency staff that also match their job role. They are time limited and do not use a seat on your plan."
+          },
+          {
+            "q": "Is induction available in other languages?",
+            "a": "Yes, on the paid plans. The content of a flow is translated to the new starter's language, while the Staff Hub menus and reminder emails stay in English. See <a href=\"/languages\">languages</a>."
+          }
+        ]
+      }
+    ]
+  },
+  "guide": {
+    "heading": "A practical way to run role based induction",
+    "lede": "Good employee induction is short, specific to the job and checked. This is a simple pattern that suits a busy service, whatever the role.",
+    "sections": [
+      {
+        "h3": "Start with what each role must know in week one",
+        "paragraphs": [
+          "List the three or four policies each job must read before working alone. For a cook it might be food hygiene and allergens. For a domestic, infection prevention and chemical safety. For a carer, safeguarding, moving and handling and medication. For a nurse, your clinical and medicines policies. Keep it short.",
+          "Our <a href=\"/blog/onboarding-international-care-staff-4-week-induction-playbook\">4 week induction playbook</a> shows how to pace the weeks that follow."
+        ]
+      },
+      {
+        "h3": "Four checks that fit a busy service",
+        "checklist": [
+          "Before day one: choose the flow for each new starter's job role.",
+          "In week one: each person reads the policies and answers the questions on their phone.",
+          "Whenever an answer is wrong: they open a short lesson on that point, then a fresh question.",
+          "After a week: look at who has not started and what was most often missed, and watch practical skills on the floor."
+        ]
+      },
+      {
+        "h3": "Keep the record together",
+        "paragraphs": [
+          "Keep the policies read, the questions and the results in one place. That evidence sits alongside the rest of your <a href=\"/cqc-compliance\">CQC evidence</a>."
+        ]
+      }
+    ],
+    "note": "<b>For the inspector.</b> A ticked form shows that induction happened. The questions, the follow ups and the results show that it worked."
+  }
+}

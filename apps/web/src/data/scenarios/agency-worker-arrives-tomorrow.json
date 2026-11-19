@@ -1,0 +1,256 @@
+{
+ "slug": "agency-worker-arrives-tomorrow",
+ "status": "draft",
+ "order": 35,
+ "title": "An agency worker arrives tomorrow. <em>Who tells them where the fire exits are?</em>",
+ "meta_title": "Agency Worker Arriving Tomorrow? Local Induction | CareStreamAI",
+ "meta_description": "An agency worker starts tomorrow. Add them with dates, give them a short local induction in the Staff Hub, and let access end itself when the booking does.",
+ "eyebrow": "Scenario",
+ "lede": "An the worker is booked for tomorrow and the agency has sent a name and a start time. They need a safe first shift, which means a local induction on how your service works. With <a href=\"/training-platform\">short training built from your own policies</a>, you add them with their dates and they can start the induction on their own phone before they arrive.",
+ "fine": "14 day free trial · Set up in a day · UK data residency",
+ "panel": {
+  "title": "An agency booking, start to finish",
+  "pill": "Illustration",
+  "rows": [
+   { "label": "Booking confirmed by the agency", "note": "Two days before", "done": true },
+   { "label": "Added with first day and last day", "note": "Day before", "done": true },
+   { "label": "Local induction read and answered", "note": "Not yet", "done": false },
+   { "label": "Access ends with the booking", "note": "Last day plus 24 hours", "done": false }
+  ],
+  "meter": 50
+ },
+ "image": "https://api.carestreamai.com/public/policy-shop/image/b9715d02-db6a-4e41-b71e-c2bbb462183e.webp",
+ "image_alt": "A care home team leader greets an agency carer wearing a lanyard at the staff entrance and hands over a visitor badge, with the day shift visible behind them",
+ "card_title": "An agency worker arrives tomorrow. Are they ready for your service?",
+ "card_snippet": "Agency staff arrive knowing their trade but not your building, your people or your policies. Add them with dates, give them a short local induction on their phone, and let access end when the booking does.",
+ "primary_keyword": "agency worker",
+ "secondary_keywords": [
+  "employee induction",
+  "induction for new staff",
+  "agency staff costs",
+  "induction training"
+ ],
+ "feature_links": [
+  { "title": "Training built from your own policies", "body": "Short lessons and questions drawn from your own policies, in the Staff Hub on any phone.", "action": "See the feature", "href": "/training-platform" },
+  { "title": "Follow up on training that did not land", "body": "Turn a wrong answer into a short lesson on that exact point, then a fresh question.", "action": "See adhoc training", "href": "/uses/adhoc-training" },
+  { "title": "Staff Hub in over 60 languages", "body": "Policies, lessons and questions in the language each person thinks in. Paid plans.", "action": "See the Staff Hub", "href": "/uses/multilingual-staff-hub" }
+ ],
+ "intro": {
+  "heading": "The booking came in at four. The shift starts at seven tomorrow.",
+  "sub": "A scenario we see in many care settings.",
+  "paragraph": "A carer rang in sick, so the manager called the agency. By late afternoon a name came back: an experienced agency carer, starting at seven tomorrow. The agency has checked who they are and what they are qualified to do. What the agency cannot do is teach them your building, your fire exits, your safeguarding lead or the way your service handles a fall. The usual answer is five minutes at the door and a hope that someone remembers to show them round. Here is how that plays out."
+ },
+ "trail": [
+  { "when": "Late afternoon", "text": "The agency confirms a worker for tomorrow's shift.", "kind": "ok" },
+  { "when": "Evening", "text": "The manager passes on the name, the unit and the start time.", "kind": "ok" },
+  { "when": "7am", "text": "The agency carer arrives on time with a lanyard and a smile.", "kind": "ok" },
+  { "when": "7.10am", "text": "The handover is busy. The tour is shortened to the kitchen and the medication room.", "kind": "gap" },
+  { "when": "Mid morning", "text": "Nobody has mentioned the fire exits, the safeguarding lead or who to call.", "kind": "gap" },
+  { "when": "End of shift", "text": "The booking is extended by a week. Nobody has noted what was covered.", "kind": "gap" },
+  { "when": "A week later", "text": "The account the worker used is still open, and no one remembers when it should end.", "kind": "gap" },
+  { "when": "Inspection day", "text": "“How do agency staff learn how your service works?” The answer is a hope.", "kind": "end" }
+ ],
+ "trail_close": "<b>Agency cover was never the problem.</b> The gap is between a worker who arrives and one who is ready for your service. Here is how CareStream closes it, without adding a seat to your plan.",
+ "why": {
+  "heading": "A good the worker still does not know your service",
+  "sub": "The agency checks the person. Only you can show them how your service works.",
+  "cards": [
+    { "icon": "chat", "title": "The first hour is the busiest hour", "body": "Handover, medication and a call bell all compete for the same minutes. The welcome is the first thing that gets squeezed." },
+    { "icon": "alert", "title": "Local rules are not on the agency CV", "body": "Where the exits are, who the safeguarding lead is and what your service does after a fall differ in every building." },
+    { "icon": "tick", "title": "Access should end when the booking does", "body": "A date set at the start removes the job of remembering." }
+  ]
+ },
+ "how": {
+  "heading": "From a name on a booking to a worker who knows your service.",
+  "sub": "This is the <a href=\"/training-platform\">Training built from your own policies</a> feature, in the order a manager and a visiting carer meet it. See also <a href=\"/uses/adhoc-training\">follow up on adhoc training</a> and <a href=\"/blog/onboarding-international-care-staff-4-week-induction-playbook\">a four week induction playbook</a>.",
+  "blocks": [
+   {
+    "heading": "Add the agency worker with their dates, and give them a local induction",
+    "bullets": [
+     "On the add staff form, choose the staff type Agency staff, then enter the agency name, first day, last day and, if you wish, a day rate",
+     "They are enrolled only in the induction flows you have ticked as suitable for agency staff and that match their job role",
+     "It is a short induction for new staff on your local arrangements: read the policy, then answer a question on it"
+    ],
+    "tags": [
+     { "label": "Training built from your own policies", "href": "/training-platform" },
+     { "label": "How CareStream works", "href": "/how-it-works" }
+    ],
+    "mock": {
+     "type": "training",
+     "module": "Agency local induction: Fire Safety",
+     "questions": [
+      "You hear the fire alarm while you are with a resident. What do you do first?",
+      "Where is the assembly point for the unit you are working on today?",
+      "Who is in charge of the evacuation on your shift?"
+     ],
+     "staff_count": 1
+    }
+   },
+   {
+    "heading": "A wrong answer becomes a short lesson, not a missed point",
+    "bullets": [
+     "In an induction flow, a wrong answer must be retried, and it also creates an item in the worker's Follow-up tab in the Staff Hub",
+     "They get an email to say so, at most once a day and in English, and choose Learn &amp; retry (a short lesson, then a fresh question) or Just retry",
+     "The lesson comes from your own policies, so the the worker learns what your service does, not what a textbook says"
+    ],
+    "tags": [
+     { "label": "Wrong answers become lessons", "href": "/training-platform" },
+     { "label": "Fire safety training", "href": "/staff-training/fire-safety" }
+    ],
+    "mock": {
+     "type": "followup",
+     "module": "Agency local induction: Fire Safety",
+     "question": "You hear the fire alarm while you are with a resident. What do you do first?",
+     "why": "In a fire you act on the plan for your service. Raising the alarm and keeping the person safe come before anything else.",
+     "remember": [
+      "Know the nearest exit from every area you work in",
+      "Follow your service's evacuation plan",
+      "Report to the person in charge at the assembly point"
+     ],
+     "picture": "You are halfway through helping a resident to dress when the alarm sounds in a unit you only met this morning."
+    }
+   },
+   {
+    "heading": "Access runs for the booking, then ends without anyone remembering",
+    "bullets": [
+     "Their Staff Hub access runs for the first day to the last day you entered, and agency staff read policies like any member of staff",
+     "Admins get an email three days before the booking ends. Extending the booking clears the warning",
+     "Access stays on for 24 hours after the last day, so a night shift is not cut off. Then the account is deactivated, not deleted, and the record is kept"
+    ],
+    "tags": [
+     { "label": "Safeguarding training", "href": "/staff-training/safeguarding-adults-and-children" },
+     { "label": "Night shift policy access", "href": "/blog/night-shift-policy-access" }
+    ],
+    "mock": {
+     "type": "training",
+     "module": "Agency local induction: Safeguarding",
+     "questions": [
+      "Who is the safeguarding lead in this service, and how do you reach them?",
+      "A resident tells you something worrying and asks you to keep it secret. What do you do?"
+     ],
+     "staff_count": 3
+    }
+   },
+   {
+    "heading": "See what agency cover costs and what the induction found",
+    "bullets": [
+     "Once you have an the worker on file, the Staff page shows agency spend for the last 12 months, by agency, from the day rates you entered. That helps you keep an eye on agency staff costs",
+     "The Knowledge gaps view shows the most missed questions and the weakest topics, so you can see what your local induction needs to explain better",
+     "A Monday digest email brings the picture to you, so you do not have to go looking"
+    ],
+    "tags": [
+     { "label": "Reporting that runs itself", "href": "/training-platform" },
+     { "label": "CQC and compliance evidence", "href": "/cqc-compliance" }
+    ],
+    "mock": {
+     "type": "gaps",
+     "stats": { "open": 4, "affected": 3, "closed": 11, "engaged": 68 },
+     "missed": [["Assembly point for your unit", "3 staff"], ["Who is the safeguarding lead", "2 staff"], ["First action on hearing the alarm", "2 staff"]],
+     "weak": [["Fire Safety", "5 gaps"], ["Safeguarding Adults", "3 gaps"]]
+    }
+   }
+  ]
+ },
+ "talk": {
+  "heading": "The questions managers ask, and how CareStream answers them",
+  "sub": "The questions we hear most.",
+  "items": [
+   {
+    "q": "An agency worker starts tomorrow. What can I do tonight?",
+    "a": "Add them on the staff form as an The worker, with the agency name, first day and last day. They can then open the Staff Hub on their own phone and start your local induction before they walk in, so the first hour is not spent on the basics."
+   },
+   {
+    "q": "What does the induction actually contain?",
+    "a": "Whatever you have ticked as suitable for agency staff and that matches their job role. Each step is either read a policy and mark it as read, or answer a multiple choice question. It is built around <a href=\"/training-platform\">your own policies</a>, so it covers your fire arrangements, your safeguarding lead and the way your service works."
+   },
+   {
+    "q": "What if they get a question wrong?",
+    "a": "They have to retry it, and it also goes into their Follow-up tab with an email, at most once a day. They choose Learn &amp; retry, a short lesson on that point and then a fresh question, or Just retry the same one. They can do so as often as they need."
+   },
+   {
+    "q": "Do agency staff use a seat on our plan?",
+    "a": "No. Agency staff do not count towards your staff limit. They use the Staff Hub and read policies like the rest of your team, but their access is time boxed to the dates you entered."
+   },
+   {
+    "q": "What happens when the booking ends?",
+    "a": "Admins are emailed three days before the last day. Extend the booking and the warning clears. If you do nothing, access stays on for 24 hours after the last day so a night shift is not cut off, and then the account is deactivated. It is not deleted, so the record survives."
+   },
+   {
+    "q": "Can I see what we spend on agency staff?",
+    "a": "Yes. Once you have agency bookings on file, the Staff page shows agency spend for the last 12 months: bookings, people, days and cost, with a breakdown by agency. Cost comes from the day rate you entered. If you leave the day rate blank, the cost shows as unknown rather than nothing."
+   },
+   {
+    "q": "Does it hold the agency worker's DBS or right to work documents?",
+    "a": "No. The agency holds those checks. CareStream does not capture them, so you will still ask the agency for what you need. What CareStream adds is the local induction and a record of what the worker read and answered."
+   },
+   {
+    "q": "Can I try this before I commit?",
+    "a": "Yes. There is a 14 day free trial on the paid plans, and you can <a href=\"/register\">create a free account</a> to look around. Adhoc training and translation are on the paid plans, so check <a href=\"/pricing\">pricing</a> for what each plan includes."
+   }
+  ]
+ },
+ "limits": {
+  "heading": "A local induction, not a compliance check on the agency",
+  "cards": [
+   { "title": "It does not hold agency checks", "body": "DBS and right to work documents stay with the agency. CareStream does not store them, and the staff record marks the checks as held by the agency." },
+   { "title": "An induction flow has no signature step", "body": "Steps are read a policy or answer a question. There is no manager sign off or signature step inside the flow, so a walk round the building still needs a person." },
+   { "title": "It does not alert you to every wrong answer", "body": "You see the picture in the Knowledge gaps view and the Monday digest. Agency staff are also left out of supervisions and staff incentives." }
+  ]
+ },
+ "read_next": [
+  "onboarding-international-care-staff-4-week-induction-playbook",
+  "night-shift-policy-access",
+  "overseas-care-workers-policy-access"
+ ],
+ "faqs": {
+  "heading": "Agency staff and CareStream, answered",
+  "groups": [
+   {
+    "group": "Setting up",
+    "items": [
+     { "q": "How do I add an agency worker to CareStream?", "a": "On the add staff form, choose The worker as the staff type. Enter the agency name, first day and last day, and a day rate if you want one. Their Staff Hub access runs for those dates." },
+     { "q": "What is employee induction for agency staff?", "a": "For an the worker it is a short local induction on your service: your policies, your fire arrangements and who to go to. In CareStream it runs in the Staff Hub, using only the induction flows you have ticked as suitable for agency staff." },
+     { "q": "Do I need a separate induction for new staff and agency staff?", "a": "You choose. Staff added as a New starter are enrolled in the flows that match their job role. Agency staff are enrolled only in flows you have marked as suitable for agency, so you can keep theirs short. That is useful induction for new staff who will be with you for a few shifts." },
+     { "q": "Is there a standard for what induction training should cover?", "a": "For people new to care, the Care Certificate standards can help plan induction. <a href=\"https://www.skillsforcare.org.uk/Developing-your-workforce/Care-Certificate/Care-Certificate.aspx\">Skills for Care says the standards can inform what is covered in induction</a>. A local induction for an the worker is a different, shorter thing: how your own service works." }
+    ]
+   },
+   {
+    "group": "Access, cost and records",
+    "items": [
+     { "q": "Do agency staff use up a seat on our plan?", "a": "No. Agency staff do not use a seat on your plan." },
+     { "q": "How do I keep track of agency staff costs?", "a": "Add the day rate when you add the booking. The Staff page then shows agency spend for the last 12 months, by agency." },
+     { "q": "What happens to their record after the last day?", "a": "The account is deactivated 24 hours after the last day. It is not deleted, so what they read and answered stays on record. If the agency sends the same person back, you can reactivate them." },
+     { "q": "Does the induction replace my duty to support staff?", "a": "No. <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/18\">Regulation 18 of the 2014 regulations</a> says staff must receive such appropriate support, training, professional development, supervision and appraisal as is necessary to carry out their duties. A short online induction supports that, but it does not replace a conversation on the floor." }
+    ]
+   }
+  ]
+ },
+ "guide": {
+  "heading": "A practical way to bring in an agency carer",
+  "lede": "Most agency shifts are arranged in a hurry. A few fixed habits make a hurried shift safer, and they cost very little time once they are set up.",
+  "sections": [
+   {
+    "h3": "What a local induction should cover",
+    "paragraphs": [
+     "Keep it to what is true only in your building. The agency covers general skills. Your induction covers the things nobody else can: where the exits are, who the safeguarding lead is, how to raise a concern and who to call at night. Four or five reads and a handful of questions is enough."
+    ]
+   },
+   {
+    "h3": "Before the shift",
+    "checklist": [
+     "Add the booking with the agency name, first day and last day.",
+     "Send the worker the Staff Hub link, so they can start the local induction on their own phone.",
+     "Keep one person to meet them at the door, show the building and introduce the team.",
+     "Check on the staff record that the induction has started, then follow up on the day."
+    ]
+   },
+   {
+    "h3": "At the end of the booking",
+    "paragraphs": [
+     "Watch for the three day warning email. If the booking is extended, update the last day so the warning clears. If it is not, let access end by itself, then keep the record."
+    ]
+   }
+  ],
+  "note": "<b>For the inspector.</b> Keep the induction, the questions and the results together, so you can show how a visiting worker learned how your service works."
+ }
+}

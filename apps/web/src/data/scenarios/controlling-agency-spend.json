@@ -1,0 +1,409 @@
+{
+ "slug": "controlling-agency-spend",
+ "status": "draft",
+ "order": 36,
+ "title": "What does your agency spend really come to? <em>Check it month by month.</em>",
+ "meta_title": "Agency Spend Tracking for Care Services | CareStreamAI",
+ "meta_description": "See your agency spend by month, by agency and by person, from the day rate and dates you enter. Add an agency worker in a minute and keep the cost visible.",
+ "eyebrow": "Scenario",
+ "lede": "Agency cover gets booked in a hurry, one phone call at a time, and the total is rarely in one place. In CareStream, once you add an agency worker with their dates and day rate, the Staff page shows your agency spend for the last 12 months. It sits alongside the rest of your <a href=\"/training-platform\">staff training and records</a>.",
+ "fine": "14 day free trial · Set up in a day · UK data residency",
+ "panel": {
+  "title": "Agency cover, week by week",
+  "pill": "Illustration",
+  "rows": [
+   {
+    "label": "Cover booked by phone",
+    "note": "Day 0",
+    "done": true
+   },
+   {
+    "label": "Booking added with dates and day rate",
+    "note": "Day 0",
+    "done": true
+   },
+   {
+    "label": "Local induction completed",
+    "note": "Not yet",
+    "done": false
+   },
+   {
+    "label": "Spend visible for the month",
+    "note": "Not yet",
+    "done": false
+   }
+  ],
+  "meter": 50
+ },
+ "image": "https://api.carestreamai.com/public/policy-shop/image/bd9000d3-61fc-48ef-8782-10ec50012bc4.webp",
+ "image_alt": "A care home manager sits at a desk with a laptop facing away, a notepad and a calculator, looking thoughtful but calm, with a window and garden behind",
+ "card_title": "Agency cover is booked by phone. What does it add up to?",
+ "card_snippet": "Add each booking with its dates and day rate, and the Staff page shows bookings, days and cost by agency for the last 12 months. Based on the figures you enter, not on invoices.",
+ "primary_keyword": "agency spend",
+ "secondary_keywords": [
+  "agency staff costs",
+  "agency worker",
+  "reduce agency spend"
+ ],
+ "feature_links": [
+  {
+   "title": "Training built from your own policies",
+   "body": "Short training and induction questions built from your own policies, for every person who works in your service.",
+   "action": "See the feature",
+   "href": "/training-platform"
+  },
+  {
+   "title": "How CareStream works",
+   "body": "From your policies to the Staff Hub and the manager's view, in the order a manager meets it.",
+   "action": "See how it works",
+   "href": "/how-it-works"
+  },
+  {
+   "title": "CQC and compliance",
+   "body": "Evidence that builds itself, and a readiness report for your next inspection.",
+   "action": "See CQC and compliance",
+   "href": "/cqc-compliance"
+  }
+ ],
+ "intro": {
+  "heading": "The cover is booked. The total is nowhere.",
+  "sub": "A scenario we see in many care settings.",
+  "paragraph": "A night nurse goes off sick on a Tuesday, so the manager rings the agency. Over the next fortnight there is a second booking for a holiday gap and a third to cover a long term absence. Each call is sensible on its own. Each is agreed by phone, and the confirmation is an email in a busy inbox. At the end of the month the owner asks how much the home spent on agency cover, and the manager can only say it feels like a lot. Here is how that plays out."
+ },
+ "trail": [
+  {
+   "when": "Tuesday morning",
+   "text": "A night shift is short. The manager rings the agency.",
+   "kind": "ok"
+  },
+  {
+   "when": "Within the hour",
+   "text": "Cover is found and the shift is safe.",
+   "kind": "ok"
+  },
+  {
+   "when": "Next fortnight",
+   "text": "Two more bookings follow, for a holiday gap and a long absence.",
+   "kind": "ok"
+  },
+  {
+   "when": "End of the month",
+   "text": "The owner asks what agency cover cost. The manager has a feeling, not a figure.",
+   "kind": "gap"
+  },
+  {
+   "when": "Where the facts are",
+   "text": "Booking emails, a diary note and three invoices that arrive later.",
+   "kind": "gap"
+  },
+  {
+   "when": "Who is on site",
+   "text": "Nobody can say at a glance who from the agency is on site this week.",
+   "kind": "gap"
+  },
+  {
+   "when": "What nobody knows",
+   "text": "Whether the same people keep coming back, and which agency costs most.",
+   "kind": "gap"
+  },
+  {
+   "when": "Budget meeting",
+   "text": "“How much did agency cover cost us last quarter?” A rough guess is not an answer.",
+   "kind": "end"
+  }
+ ],
+ "trail_close": "Nothing here is a failure. The cover was needed and it worked. The gap is that the cost lives in scattered places. Here is how CareStream gives you one place to look.",
+ "why": {
+  "heading": "You cannot control what you cannot see",
+  "sub": "The first step in managing agency staff costs is a clear, current total.",
+  "cards": [
+   {
+    "icon": "chat",
+    "title": "Bookings are made in a hurry",
+    "body": "Cover is arranged by phone at short notice, so the details end up in emails and notes. Nobody enters them in one place at the time."
+   },
+   {
+    "icon": "tick",
+    "title": "Invoices arrive late",
+    "body": "By the time the invoice lands, the month has gone. A running view from the dates and day rates you already know shows the picture while it is still useful."
+   },
+   {
+    "icon": "alert",
+    "title": "A total does not tell the story",
+    "body": "One number hides which agency is used most, how many people it covers and how many days. You need the breakdown to decide anything."
+   }
+  ]
+ },
+ "how": {
+  "heading": "Add the booking once. See the spend as it builds.",
+  "sub": "This sits within <a href=\"/how-it-works\">how CareStream works</a> for managers. Agency staff also use the Staff Hub and read your policies in the same way as your own staff, which is covered in <a href=\"/training-platform\">training built from your own policies</a>.",
+  "blocks": [
+   {
+    "heading": "Add the booking with its dates and day rate",
+    "bullets": [
+     "On the Staff page, add the person and set the staff type to Agency worker",
+     "Enter the agency name, the first day, the last day and the day rate, which is optional",
+     "Their hub access runs for those dates, and an agency worker does not use a seat on your plan"
+    ],
+    "tags": [
+     {
+      "label": "How CareStream works",
+      "href": "/how-it-works"
+     },
+     {
+      "label": "Training built from your own policies",
+      "href": "/training-platform"
+     }
+    ],
+    "mock": {
+     "type": "training",
+     "module": "Add an agency booking (illustration)",
+     "questions": [
+      "Agency: Brightway Cover. First day: Mon 3 March. Last day: Fri 7 March",
+      "Day rate: 140 pounds, entered by you. Optional, but without it the cost shows as unknown",
+      "Their hub access runs for these dates. We email you three days before it ends"
+     ],
+     "staff_count": 1
+    }
+   },
+   {
+    "heading": "A local induction and the same hub as everyone else",
+    "bullets": [
+     "They can be enrolled in the induction flows you have marked as suitable for agency staff and that match their role",
+     "A flow step is either read a policy, completed by Mark as read, or answer a question, so the manager sees the reading and the answers",
+     "A wrong answer goes into their Follow-up tab in the hub, with the daily follow-up email, so a missed point gets another look"
+    ],
+    "tags": [
+     {
+      "label": "Annual training",
+      "href": "/uses/annual-training"
+     },
+     {
+      "label": "Fire safety course",
+      "href": "/staff-training/fire-safety"
+     }
+    ],
+    "mock": {
+     "type": "followup",
+     "module": "Local induction: fire and evacuation",
+     "question": "What is the first thing to do if you discover a fire in the service?",
+     "why": "Raising the alarm quickly protects everyone and starts the evacuation, so this must be clear from the first shift.",
+     "remember": [
+      "Raise the alarm",
+      "Follow the service's own fire procedure",
+      "Do not take risks to tackle a fire"
+     ],
+     "picture": "You are new to the building and see smoke by a door at the end of a corridor. You know where the nearest alarm point is because you read it in your induction."
+    }
+   },
+   {
+    "heading": "Know who is on site now, and when their access ends",
+    "bullets": [
+     "The spend panel shows who is active now, so you can see who is currently in the building",
+     "Three days before the end date you get an email, and access stays on for 24 hours afterwards so a night shift is never cut off partway through",
+     "Extend the booking and the warning clears. Their training record stays after access ends"
+    ],
+    "tags": [
+     {
+      "label": "Staff training",
+      "href": "/staff-training"
+     },
+     {
+      "label": "Out of date policies",
+      "href": "/uses/out-of-date-policies"
+     }
+    ],
+    "mock": {
+     "type": "training",
+     "module": "Local induction for agency staff (illustration)",
+     "questions": [
+      "Where is the nearest fire alarm point to the main lounge?",
+      "Who do you tell first if a resident is distressed and you are unsure what to do?",
+      "Where are the residents' care records kept, and who may read them?"
+     ],
+     "staff_count": 3
+    }
+   },
+   {
+    "heading": "See the last 12 months of agency cover",
+    "bullets": [
+     "The 12 month panel shows bookings, people, days and cost, and a breakdown by agency. It appears once you have added your first booking",
+     "Example only: 3 bookings, 3 people and 21 days, with a known cost of 2,500 pounds from two day rates, plus one booking shown as unknown because no rate was entered",
+     "Days count the first and last day inclusive, and cost is the day rate times the days. The mock below shows the Knowledge gaps view, which also covers induction questions"
+    ],
+    "tags": [
+     {
+      "label": "CQC and compliance evidence",
+      "href": "/cqc-compliance"
+     },
+     {
+      "label": "CQC staff questions",
+      "href": "/cqc-staff-questions"
+     }
+    ],
+    "mock": {
+     "type": "gaps",
+     "stats": {
+      "open": 2,
+      "affected": 2,
+      "closed": 3,
+      "engaged": 60
+     },
+     "missed": [
+      [
+       "Where the fire alarm points are",
+       "2 staff"
+      ],
+      [
+       "Who to tell about a concern",
+       "1 staff"
+      ]
+     ],
+     "weak": [
+      [
+       "Local induction",
+       "3 gaps"
+      ],
+      [
+       "Fire safety",
+       "2 gaps"
+      ]
+     ]
+    }
+   }
+  ]
+ },
+ "talk": {
+  "heading": "The questions managers ask, and how CareStream answers them",
+  "sub": "Read this as a conversation. The questions are the ones we hear most.",
+  "items": [
+   {
+    "q": "What does CareStream actually show me about agency cover?",
+    "a": "Once you add a booking, the Staff page shows a 12 month panel. It reports bookings, people, days and cost, with a breakdown by agency, and it shows who is active now."
+   },
+   {
+    "q": "Where do the figures come from?",
+    "a": "From what you type in. When you add a booking you enter the agency, the first and last day and, if you wish, the day rate. Cost is the day rate times the days, counting both the first and the last day."
+   },
+   {
+    "q": "Does it read my agency invoices?",
+    "a": "No. It does not import invoices or timesheets, so it will not match an invoice to the penny. It is a running view built from your own bookings. Your finance records stay the record of what you paid."
+   },
+   {
+    "q": "What if I do not know the day rate?",
+    "a": "The rate is optional. If none was recorded, the cost for that booking shows as unknown and not as zero, so the total never quietly understates what you spent."
+   },
+   {
+    "q": "Will this reduce agency spend by itself?",
+    "a": "No. It shows you the spend, which is the first step to deciding what to change. What you do with the picture, such as booking differently or building your own team, is your decision."
+   },
+   {
+    "q": "Do agency staff use up a place on our plan?",
+    "a": "No. They are time boxed to the dates you set and do not use a seat on your plan. Their hub access ends 24 hours after the last day, and you get an email three days before."
+   },
+   {
+    "q": "Can agency staff do an induction in the hub?",
+    "a": "Yes. They use the Staff Hub like your own staff, and you can enrol them in the induction flows you have marked as suitable for agency staff. A flow step is read a policy or answer a question. There is no manager signature step."
+   },
+   {
+    "q": "Can I try it first?",
+    "a": "Yes. There is a 14 day free trial, and you can <a href=\"/register\">create a free account</a> to add a booking and see the panel with your own figures. The <a href=\"/pricing\">pricing page</a> shows what each plan includes."
+   }
+  ]
+ },
+ "limits": {
+  "heading": "A running view of agency cover, not a finance system",
+  "cards": [
+   {
+    "title": "It does not read invoices or timesheets",
+    "body": "The spend is the day rate times the days you enter. It will differ from an invoice that includes extras, overtime or a different rate, so keep your accounts as the record of what you paid."
+   },
+   {
+    "title": "It will not cut your bill by itself",
+    "body": "It makes the cost visible by month and by agency. Deciding to book differently, or to recruit, is a management decision and CareStream makes none of it."
+   },
+   {
+    "title": "It does not check agency documents",
+    "body": "Checks such as identity and right to work stay with the agency. CareStream does not capture them, does not give agency staff supervisions or appraisals, and it is not a rota or payroll tool."
+   }
+  ]
+ },
+ "read_next": [
+  "how-do-you-schedule-care-staff-training-around-a-rota",
+  "onboarding-international-care-staff-4-week-induction-playbook",
+  "chasing-staff-training-completions"
+ ],
+ "faqs": {
+  "heading": "Agency cover and CareStream, answered",
+  "groups": [
+   {
+    "group": "About the spend panel",
+    "items": [
+     {
+      "q": "How do I track agency cover in a care service?",
+      "a": "Add each booking on the Staff page with the agency name, first day, last day and day rate. The 12 month panel then totals bookings, people, days and cost, with a breakdown by agency."
+     },
+     {
+      "q": "What are agency staff costs based on in CareStream?",
+      "a": "The day rate and dates you enter. The cost is the day rate times the days, counting the first and last day. They are not read from invoices or timesheets, so treat the figure as a running view."
+     },
+     {
+      "q": "What happens if I leave the day rate blank?",
+      "a": "The cost for that booking shows as unknown, not zero. You can edit the booking later to add or change the day rate, extend the dates or rename the agency."
+     },
+     {
+      "q": "Can I reduce agency spend with CareStream?",
+      "a": "CareStream does not reduce it for you. It shows how much cover you use, how many days and which agency, which helps you decide what to change. Many services also look at rota planning, and our <a href=\"/blog/how-do-you-schedule-care-staff-training-around-a-rota\">guide to scheduling training around a rota</a> covers that side."
+     }
+    ]
+   },
+   {
+    "group": "About agency workers and standards",
+    "items": [
+     {
+      "q": "Does an agency worker need an induction?",
+      "a": "The <a href=\"https://www.cqc.org.uk/guidance-regulation/providers/regulations-service-providers-and-managers/health-social-care-act/regulation-18\">CQC guidance on Regulation 18</a> says providers must have an induction programme that prepares staff for their role. Whatever your service decides, CareStream lets you give them induction steps to read and questions to answer, and keeps the record."
+     },
+     {
+      "q": "Do agency staff count towards our staff limit?",
+      "a": "No. They do not use a seat on your plan. They are also left out of the compliance register, supervisions and appraisals, and staff incentives."
+     },
+     {
+      "q": "How is the number of staff on shift decided?",
+      "a": "That is your judgement as the provider. <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/18\">Regulation 18</a> requires that sufficient numbers of suitably qualified, competent, skilled and experienced persons are deployed. CareStream does not decide your staffing levels or run a rota."
+     },
+     {
+      "q": "Is the spend panel the same as a budget report?",
+      "a": "No. It is a view of your agency worker bookings from the figures you enter. It does not hold your budget, your invoices or your accounts."
+     }
+    ]
+   }
+  ]
+ },
+ "guide": {
+  "heading": "A practical way to keep agency cover under control",
+  "lede": "Agency cover is sometimes the right answer. The aim is not to avoid it but to know what it costs, who you rely on and whether each person is ready for the shift.",
+  "sections": [
+   {
+    "h3": "Start with one list of bookings",
+    "paragraphs": [
+     "Most services can tell you the agency they ring first, but not the number of days booked last quarter. Start by recording every booking in one place at the time it is made. Note the agency, the first and last day and the agreed day rate, and treat the confirmation email as the source.",
+     "Review the list monthly. Ask three questions. Which agency do we use most? Do the same people keep returning? Which bookings were long enough that a different arrangement might have suited the service better? Nothing here needs a spreadsheet to be perfect. It needs to be current."
+    ]
+   },
+   {
+    "h3": "Make the monthly check routine",
+    "paragraphs": [
+     "The <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/18\">wording of Regulation 18</a> asks for sufficient numbers of suitably qualified, competent, skilled and experienced persons to be deployed. The <a href=\"https://www.cqc.org.uk/guidance-regulation/providers/regulations-service-providers-and-managers/health-social-care-act/regulation-18\">CQC guidance</a> expects a systematic approach to working out the number of staff and the skills needed. Agency cover is one way services meet that need, so it helps to see how much you lean on it."
+    ],
+    "checklist": [
+     "Add each booking with the agency, dates and day rate on the day you make it.",
+     "Check the spend panel once a month and compare it with your own accounts.",
+     "Look at the breakdown by agency and note any you rely on more than you planned.",
+     "Make sure each person has read your key policies before or on their first shift."
+    ]
+   }
+  ],
+  "note": "<b>For the owner or the board.</b> Keep the spend view, your accounts and your staffing decisions together, so you can explain why cover was booked and what it cost."
+ }
+}

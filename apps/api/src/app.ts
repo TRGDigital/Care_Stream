@@ -65,6 +65,7 @@ import { policyShopPublicRouter } from './routes/policy-shop-public'
 import { agentActionsRouter } from './routes/agent-actions'
 import { cronRouter } from './routes/cron'
 import { contentRoutineRouter } from './routes/content-routine'
+import { publicScenariosRouter, scenariosAdminRouter } from './routes/scenarios'
 import { publicFamilyRouter, residentPhotoFileRouter } from './routes/residents-public'
 import { residentsRouter } from './routes/residents'
 import { incentivesRouter } from './routes/incentives'
@@ -144,6 +145,7 @@ app.use('/auth', authRouter)
 // Must be mounted BEFORE requireAuth so it isn't rejected as an unauthenticated request.
 app.use('/admin/onboarding-templates', onboardingTemplatesRouter)
 app.use('/admin/user-cases', userCasesAdminRouter)
+app.use('/admin/scenarios', scenariosAdminRouter)
 app.use('/admin/service-pages', servicePagesAdminRouter)
 app.use('/admin/setting-pages', settingPagesAdminRouter)
 app.use('/admin/preview', previewAdminRouter)
@@ -181,6 +183,7 @@ app.use('/onboarding', onboardingPublicRouter)
 app.use('/public/page-visit', siteVisitsRouter)
 app.use('/public/blog', publicBlogRouter)
 app.use('/public/user-cases', publicUserCasesRouter)
+app.use('/public/scenarios', publicScenariosRouter)
 app.use('/public/service-pages', publicServicePagesRouter)
 app.use('/public/setting-pages', publicSettingPagesRouter)
 app.use('/public/policy-shop', policyShopPublicRouter)

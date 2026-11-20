@@ -8,7 +8,6 @@ import { FreeBanner } from './free-banner'
 import { HomeAccordion } from './home-accordion'
 import { HomeLines } from './home-lines'
 import { HomeWhy } from './home-why'
-import { publishedScenarios } from '@/data/scenarios'
 import { REVIEWS } from '@/lib/reviews'
 import './home-page-v2.css'
 
@@ -153,9 +152,10 @@ const STEPS: [string, boolean, React.ReactNode][] = [
   ['#3B82C4', false, <I24 key="i"><path d="M4 6h16v11H9l-5 4z" {...st} strokeWidth="1.8" /></I24>],
 ]
 
-export function HomePageV2({ s, showFree = false }: { s: HomeCopy; showFree?: boolean }) {
+export interface WhySlide { slug: string; title: string; snippet: string; image: string; alt: string }
+
+export function HomePageV2({ s, showFree = false, why = [] }: { s: HomeCopy; showFree?: boolean; why?: WhySlide[] }) {
   // Published scenario pages, as slides for "Why should I use CareStream?" (nothing renders if there are none).
-  const why = publishedScenarios().map(x => ({ slug: x.slug, title: x.card_title, snippet: x.card_snippet, image: x.image, alt: x.image_alt }))
   const accordion = [1, 2, 3, 4, 5].map(n => ({ title: s(`pi.a${n}.title`), body: s(`pi.a${n}.body`) }))
   const training = [1, 2, 3, 4, 5].map(n => ({ title: s(`training.a${n}.title`), body: s(`training.a${n}.body`) }))
 

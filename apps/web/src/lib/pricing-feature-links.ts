@@ -18,6 +18,8 @@ export const PRICING_FEATURE_LINKS: Record<string, string> = {
   'Your own knowledge base, built automatically': '/features/home-knowledge-base-auto',
   'Your own knowledge base, manual entries': '/features/home-knowledge-base-manual',
   'Resident profiles (This is me)': '/features/resident-profiles-this-is-me',
+  'Family photos and video messages': '/features/family-photos-and-video-messages',
+  'Gentle family reminders': '/features/family-photos-and-video-messages',
   'Staff incentives': '/features/staff-incentives',
   'Super User (one champion per service)': '/features/super-user',
   'External regulatory knowledge base': '/features/external-regulatory-knowledge-base',

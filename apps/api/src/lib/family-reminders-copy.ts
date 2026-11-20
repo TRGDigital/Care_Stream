@@ -1,7 +1,7 @@
 // The wording of the family reminder email, in one place so it is tested. Plain service email: warm, short, no marketing.
 //
-// Video upload is not live yet, so the email must not mention video. Switch this on in the same release that turns family video on.
-export const REMINDER_OFFERS_VIDEO = false
+// Family video is live, so the email offers it. Switch this off if family video is ever turned off.
+export const REMINDER_OFFERS_VIDEO = true
 
 export function reminderCopy(o: { residentName: string; homeName: string; days: number }, offersVideo: boolean = REMINDER_OFFERS_VIDEO) {
   const what = offersVideo ? 'a few words, a photo or a short video message' : 'a few words or a photo'

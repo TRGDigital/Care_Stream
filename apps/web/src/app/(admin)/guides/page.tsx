@@ -1583,7 +1583,7 @@ const GUIDE_SECTIONS: GuideSection[] = [
           <p className="text-sm text-neutral-mid">The Knowledge Base page groups what CareStream knows into these types:</p>
           <div className="mt-2 rounded-lg border border-gray-200 divide-y divide-gray-100 text-sm">
             {[
-              ['Residents', 'On the Professional and Enterprise plans: a profile for each current resident ("This is me"), shown first in its own colour. Click a resident to open the Residents screen on them. See "Resident profiles" below.'],
+              ['Residents', 'On the Professional and Enterprise plans: a profile for each current resident ("This is me"), shown first in its own colour. Click a resident to open the Residents screen on them. Family and managers can also add photos and video messages to a profile. See "Resident profiles" below.'],
               ['Manual entries', 'Facts you type in yourself, the home and care-setting nuances unique to your service (like the COSHH cupboards above). Shown first on the page because this is where your own knowledge lives.'],
               ['From uploaded policies', 'Question-and-answer pairs CareStream generates automatically from the policy documents you upload. Use "Regenerate all" to (re)build them.'],
               ['CareStream standard entries', 'A pre-loaded library of UK care regulatory knowledge (CQC Key Questions, health & safety, infection control, medication and more), provided as a starting point. You can edit these to make them specific to your home. They do not count against your document limit.'],
@@ -1672,6 +1672,53 @@ const GUIDE_SECTIONS: GuideSection[] = [
             <Step n={4}>To check what you have approved, open the <strong>From family</strong> tab. It lists each person who answered as a drawer: open one to see what they told you, when you approved it and who approved it. If you edited an answer first, you can still see what they originally wrote.</Step>
           </div>
         </SectionBlock>
+        <SectionBlock title="Photos and video messages from family">
+          <p className="text-sm text-neutral-mid">
+            The same private link can also carry <strong>photos</strong> and <strong>short video messages</strong>. A familiar face, a
+            wedding photo or a hello from a grandchild can help staff start a conversation and settle someone. Both are on the
+            <strong> Professional</strong> and <strong>Enterprise</strong> plans, with This is me.
+          </p>
+          <p className="mt-3 text-sm font-semibold text-neutral-dark">For managers</p>
+          <div className="mt-2 space-y-3">
+            <Step n={1}>Invite family from the resident&rsquo;s <strong>Family</strong> tab, as above. Photos and videos use the same private link, so there is nothing extra to set up.</Step>
+            <Step n={2}>When they send something, a count appears on the <strong>Approvals</strong> tab. Open it and look at each photo or video. For a photo you can edit the caption. For a video you can edit the title and add a note for staff.</Step>
+            <Step n={3}>Choose <strong>Approve</strong> or <strong>Reject</strong>. Rejecting removes the file from storage straight away. Staff see nothing until you approve it.</Step>
+            <Step n={4}>To add your own, open the resident&rsquo;s <strong>Profile</strong> tab and use <strong>Add a photo</strong> or <strong>Add a video</strong>. What a manager adds is approved at once.</Step>
+            <Step n={5}>Approved photos and videos from family also appear on the <strong>From family</strong> tab, under the person who sent them. On the Profile tab, <strong>Recently played</strong> shows who played a video message and when.</Step>
+          </div>
+          <p className="mt-4 text-sm font-semibold text-neutral-dark">For family and friends</p>
+          <div className="mt-2 space-y-3">
+            <Step n={1}>Open the private link in the email. No login is needed.</Step>
+            <Step n={2}>To share a photo, choose <strong>Choose a photo</strong>. You can add a short caption and say who is in it.</Step>
+            <Step n={3}>To share a video, tap <strong>Record a message</strong> to use your phone camera, or <strong>Choose a video</strong> to pick one you already have. You can give it a short title, and remove it before you send if you change your mind.</Step>
+            <Step n={4}>Press <strong>Send</strong>. The link is then used up. The home&rsquo;s manager checks everything before staff see it.</Step>
+          </div>
+          <div className="mt-3 rounded-lg border border-gray-200 divide-y divide-gray-100 text-sm">
+            {[
+              ['Photo limits', 'Up to 5 photos per link, each up to 5 MB, as JPEG, PNG or WebP. Captions can be up to 140 characters. Each photo is checked, virus scanned and saved again without its location details.'],
+              ['Video limits', 'Up to 5 videos per link, each up to 60 seconds and 150 MB. Titles can be up to 60 characters. The upload shows progress and can carry on after a lost signal. The clip is converted so it plays on any phone, tablet or computer, and location and device details are removed.'],
+              ['Consent', 'A line above the buttons asks family to share only a message they are happy for the care team to play, and says a manager checks every video and that it is removed if the person moves on.'],
+              ['Revoking', 'Revoking an invitation stops any further uploads.'],
+            ].map(([k, v]) => (
+              <div key={k} className="grid grid-cols-[10rem_1fr] gap-3 px-4 py-3">
+                <span className="font-medium text-neutral-dark">{k}</span>
+                <span className="text-neutral-mid">{v}</span>
+              </div>
+            ))}
+          </div>
+        </SectionBlock>
+        <SectionBlock title="Gentle reminders to family">
+          <p className="text-sm text-neutral-mid">
+            You can ask a family contact, by email, to add something new from time to time. A reminder invites them to share a few words, a
+            photo or a short video message. Reminders are <strong>off by default</strong>.
+          </p>
+          <div className="mt-2 space-y-3">
+            <Step n={1}>Open the resident and go to the <strong>Family</strong> tab. Each contact has their own <strong>Gentle reminders</strong> accordion.</Step>
+            <Step n={2}>Choose <strong>How often</strong>: weekly, fortnightly or monthly. You can also pick a <strong>Preferred day</strong> and a <strong>Pause until</strong> date.</Step>
+            <Step n={3}>Each reminder carries a fresh private link that works for 14 days. Every email has a <strong>Stop these reminders</strong> link, so the family member can opt out in one click.</Step>
+          </div>
+          <Tip>If someone has not replied to 3 reminders in a row, the reminders to them stop and a manager is told. You can switch them back on from the Family tab. Reminders also stop straight away when the person dies or moves on.</Tip>
+        </SectionBlock>
         <SectionBlock title="What staff see: asking about a resident">
           <p className="text-sm text-neutral-mid">
             Once a home has at least one profile with content, staff see a <strong>This is me</strong> topic in the Chat Hub, in the sidebar
@@ -1682,6 +1729,9 @@ const GUIDE_SECTIONS: GuideSection[] = [
             {[
               ['Ask about one person', '\u201cWhat does Margaret like to drink?\u201d, \u201cWhat helps when Tom is anxious?\u201d or \u201cTell me about Peggy before I go in.\u201d'],
               ['Ask across everyone', '\u201cWho enjoys music?\u201d or \u201cWho likes being outdoors?\u201d finds the residents whose profiles mention it.'],
+              ['Ask for a photo', '\u201cDo we have a photo of Tim\u2019s wedding?\u201d The answer comes from the approved captions and notes people wrote, matched by meaning, so \u201cwedding\u201d also finds \u201cmarried\u201d. The photos appear as thumbnails under the answer, and a tap enlarges one. If no caption matches, it shows that person\u2019s photos and says none is captioned that way. If you do not name a resident and several have photos, the chat asks who you mean.'],
+              ['Ask for a video', '\u201cDo we have a video of Tim\u2019s daughter?\u201d The answer comes from the approved titles and notes. Matching videos appear under the answer with the resident\u2019s name and room number, a poster and a play button. Playing opens just the video on a dimmed backdrop.'],
+              ['Messages from family', 'In the This is me topic, the \u201cMessages from family\u201d button lists a person\u2019s approved videos, newest first, up to 10 shown for each resident.'],
               ['If it is not recorded', 'The chat says so plainly and suggests asking the person, their family or the team. It never makes something up, and it does not give medical advice: for anything clinical it points staff to the care plan.'],
             ].map(([k, v]) => (
               <div key={k} className="grid grid-cols-[10rem_1fr] gap-3 px-4 py-3">
@@ -1695,6 +1745,11 @@ const GUIDE_SECTIONS: GuideSection[] = [
             This is a fast way for a new starter, an agency worker or someone covering a shift to learn what the regular team already knows.
             Only current residents are included: when someone dies or moves on they are removed straight away.
           </p>
+          <Tip>
+            The chat never looks inside a photo or watches a video, and it cannot describe what is in one. It only knows the caption,
+            title and notes people wrote, and who sent them. Photos and videos are private: they are shown only to signed in staff of
+            your service, through short-lived links, and never at a public address. Each time a video is played it is logged with who and when.
+          </Tip>
         </SectionBlock>
         <SectionBlock title="When a resident dies or moves on">
           <p className="text-sm text-neutral-mid">
@@ -1703,7 +1758,8 @@ const GUIDE_SECTIONS: GuideSection[] = [
           </p>
           <ul className="mt-2 ml-2 list-inside list-disc space-y-1 text-sm text-neutral-mid">
             <li>They disappear from the hub and from the assistant straight away.</li>
-            <li>Any family invitations are cancelled and nothing waiting for approval can reach staff.</li>
+            <li>Any family invitations are cancelled and nothing waiting for approval can reach staff. Family reminders stop.</li>
+            <li>Photos and videos leave the hub at once. Any still waiting for approval are deleted. Approved files stay in private storage for the same retention period as the written profile, and are deleted with it.</li>
             <li>The profile moves to <strong>Archived</strong> and is kept for <strong>seven years</strong> from the day it was archived. You can extend that date but not shorten it.</li>
             <li>The admins who can action archives get an email.</li>
           </ul>
@@ -1727,7 +1783,7 @@ const GUIDE_SECTIONS: GuideSection[] = [
             Resident profiles hold personal information about the people you support, and what family members tell you about them.
             Each home is responsible for using the feature in line with its own data protection approach: telling residents
             (or those acting for them) that a profile exists, covering it in your privacy notice, and deciding what is appropriate to record.
-            Family answers are held for your approval and are never shown to staff automatically.
+            Family answers, photos and videos are held for your approval and are never shown to staff automatically.
           </p>
         </SectionBlock>
         <SectionBlock title="How your knowledge shows in chat answers, the source colours">

@@ -125,8 +125,9 @@ t('stop token: round trip, tamper and wrong secret', () => {
 })
 
 t('email wording: video is mentioned only when switched on', () => {
-  assert.equal(REMINDER_OFFERS_VIDEO, false)
-  const off = reminderCopy({ residentName: 'Tim', homeName: 'Ferndale', days: 14 })
+  assert.equal(REMINDER_OFFERS_VIDEO, true)
+  assert.ok(/short video message/.test(reminderCopy({ residentName: 'Tim', homeName: 'Ferndale', days: 14 }).intro))
+  const off = reminderCopy({ residentName: 'Tim', homeName: 'Ferndale', days: 14 }, false)
   assert.ok(!/video/i.test(Object.values(off).join(' ')))
   assert.ok(/photo/.test(off.intro))
   const on = reminderCopy({ residentName: 'Tim', homeName: 'Ferndale', days: 14 }, true)

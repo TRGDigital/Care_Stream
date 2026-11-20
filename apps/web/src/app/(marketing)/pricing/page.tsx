@@ -96,6 +96,8 @@ const MATRIX: Group[] = [
       { label: 'Home knowledge base (auto)',         values: [true, true, true] },
       { label: 'Home knowledge base (manual)',       values: ['Up to 50 entries', 'Unlimited', 'Unlimited'] },
       { label: 'Resident profiles (This is me)',     values: [false, true, true] },
+      { label: 'Family photos and video messages',   values: [false, true, true] },
+      { label: 'Gentle family reminders',            values: [false, true, true] },
       { label: 'Staff incentives',                   values: [false, true, true] },
     ],
   },

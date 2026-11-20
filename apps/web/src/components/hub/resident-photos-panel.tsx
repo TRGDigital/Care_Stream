@@ -8,11 +8,13 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Camera, ChevronDown, ChevronUp, X } from 'lucide-react'
 import { createResidentsClient, photoSrc, type HubPhoto, type HubResident } from '@/lib/residents-api'
 
-export function ResidentPhotosPanel({ token }: { token: string }) {
+export function ResidentPhotosPanel({ token, context = '' }: { token: string; context?: string }) {
   const client = useMemo(() => createResidentsClient(token), [token])
   const [residents, setResidents] = useState<HubResident[]>([])
   const [open, setOpen] = useState(false)
   const [who, setWho] = useState<string | null>(null)
+  const [find, setFind] = useState('')
+  const [followed, setFollowed] = useState('')
   const [big, setBig] = useState<{ photo: HubPhoto; name: string } | null>(null)
 
   const load = useCallback(() => {
@@ -34,9 +36,27 @@ export function ResidentPhotosPanel({ token }: { token: string }) {
     return () => document.removeEventListener('keydown', onKey)
   }, [big])
 
+  // Follow the conversation: when the chat names a person who has photos, show that person (the most recent mention wins).
+  useEffect(() => {
+    if (!context || residents.length === 0 || context === followed) return
+    const text = context.toLowerCase()
+    let best: { id: string; at: number } | null = null
+    for (const r of residents) {
+      for (const n of [r.preferred_name, r.first_name, r.display_name]) {
+        if (!n || n.trim().length < 2) continue
+        const re = new RegExp(`\\b${n.trim().toLowerCase().replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'g')
+        let m: RegExpExecArray | null
+        while ((m = re.exec(text))) if (!best || m.index > best.at) best = { id: r.id, at: m.index }
+      }
+    }
+    setFollowed(context)
+    if (best) { setWho(best.id); setOpen(true) }
+  }, [context, residents, followed])
+
   if (residents.length === 0) return null
-  const current = residents.find(r => r.id === who) ?? residents[0]
-  const name = current.preferred_name || current.first_name
+  const many = residents.length > 1
+  const current = residents.find(r => r.id === who) ?? (many ? null : residents[0])
+  const name = current ? (current.preferred_name || current.first_name) : ''
   const total = residents.reduce((n, r) => n + r.photos.length, 0)
 
   return (
@@ -50,17 +70,25 @@ export function ResidentPhotosPanel({ token }: { token: string }) {
 
         {open && (
           <div className="mt-2 space-y-2 pb-1">
-            {residents.length > 1 && (
-              <div className="flex gap-1.5 overflow-x-auto" role="group" aria-label="Choose a person">
-                {residents.map(r => (
-                  <button key={r.id} type="button" aria-pressed={r.id === current.id} onClick={() => setWho(r.id)}
-                    className={`shrink-0 rounded-full border px-3 py-1 text-xs font-medium ${r.id === current.id ? 'border-teal bg-teal/10 text-teal' : 'border-gray-200 text-neutral-mid hover:border-teal/40'}`}>
-                    {r.preferred_name || r.first_name}
-                  </button>
-                ))}
+            {many && (
+              <div className="space-y-1.5">
+                <input value={find} onChange={e => setFind(e.target.value)} placeholder="Find a person" aria-label="Find a person"
+                  className="w-full rounded-lg border border-gray-200 px-3 py-1.5 text-sm focus:border-teal focus:outline-none focus:ring-2 focus:ring-teal/30 sm:w-64" />
+                <div className="flex flex-wrap gap-1.5" role="group" aria-label="Choose a person">
+                  {residents
+                    .filter(r => !find.trim() || `${r.preferred_name ?? ''} ${r.first_name} ${r.display_name}`.toLowerCase().includes(find.trim().toLowerCase()))
+                    .slice(0, 12)
+                    .map(r => (
+                      <button key={r.id} type="button" aria-pressed={r.id === current?.id} onClick={() => setWho(r.id)}
+                        className={`shrink-0 rounded-full border px-3 py-1 text-xs font-medium ${r.id === current?.id ? 'border-teal bg-teal/10 text-teal' : 'border-gray-200 text-neutral-mid hover:border-teal/40'}`}>
+                        {r.preferred_name || r.first_name} {r.photos.length > 0 ? `(${r.photos.length})` : ''}
+                      </button>
+                    ))}
+                </div>
+                {!current && <p className="text-xs text-neutral-mid">Choose a person to see their photos, or ask about them by name and they will appear here.</p>}
               </div>
             )}
-            <ul className="flex gap-3 overflow-x-auto pb-1" aria-label={`Photos of ${name}`}>
+            {current && <ul className="flex gap-3 overflow-x-auto pb-1" aria-label={`Photos of ${name}`}>
               {current.photos.map(p => (
                 <li key={p.id} className="w-32 shrink-0">
                   <button type="button" onClick={() => setBig({ photo: p, name })} className="block w-full overflow-hidden rounded-lg border border-gray-200 hover:border-teal focus:outline-none focus:ring-2 focus:ring-teal/40"
@@ -71,7 +99,7 @@ export function ResidentPhotosPanel({ token }: { token: string }) {
                   {p.caption && <p className="mt-1 line-clamp-2 text-xs text-neutral-mid">{p.caption}</p>}
                 </li>
               ))}
-            </ul>
+            </ul>}
           </div>
         )}
       </div>

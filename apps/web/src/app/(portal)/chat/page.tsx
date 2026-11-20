@@ -1447,7 +1447,7 @@ function ChatPageInner() {
         )}
 
         {/* "This is me": approved photos of the people the home supports (only when some exist) */}
-        {view === 'chat' && category === 'resident' && session && <ResidentPhotosPanel token={session.accessToken} />}
+        {view === 'chat' && category === 'resident' && session && <ResidentPhotosPanel token={session.accessToken} context={messages.slice(-4).map(m => m.content).join(' ')} />}
 
         {/* Chat messages + input — only shown in chat view */}
         {view === 'chat' && <div

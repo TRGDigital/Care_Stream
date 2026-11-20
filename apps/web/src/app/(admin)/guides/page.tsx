@@ -392,9 +392,20 @@ const GUIDE_SECTIONS: GuideSection[] = [
           <div className="mt-3"><Tip>Right after creating a staff member you're offered a quick <strong>Assign training</strong> step, tick the modules that apply (statutory ones are pre-selected). You can always do this later from their detail card too.</Tip></div>
         </SectionBlock>
         <SectionBlock title="Adding or changing a staff picture">
-          <div className="space-y-3">
+          <div className="rounded-lg border border-teal/30 bg-teal/5 p-4 text-sm text-neutral-dark">
+            <p className="font-semibold">Why administrators should add their own picture</p>
+            <p className="mt-1">When you allocate something (training, an audit, an induction step, a supervision, CQC prep questions or an action plan), CareStream emails your colleague in <em>your</em> name, with <em>your</em> photo, your role and your home, and the details of what you have allocated underneath. It looks like the notification emails people already get from social networks, where the first thing they see is the person who got in touch.</p>
+            <ul className="mt-2 list-disc space-y-1 pl-5">
+              <li><strong>People open emails from people they know.</strong> A familiar face and name tells your team the message is genuinely from you, not a system they can ignore.</li>
+              <li><strong>It builds trust.</strong> Staff can see who allocated the task and who to ask if they have a question.</li>
+              <li><strong>It is more personal, so more gets done.</strong> A request from a named manager with a photo is more likely to be opened and acted on than a generic notification.</li>
+              <li><strong>Without a picture</strong> your initials show in a coloured circle, which works, but a photo is far more recognisable.</li>
+            </ul>
+            <p className="mt-2 text-xs text-neutral-mid">Your picture and name appear in emails to your team, so use a clear, friendly, work appropriate photo of your face. Only administrators who allocate things show up in these emails. You can change or remove your picture at any time.</p>
+          </div>
+          <div className="mt-3 space-y-3">
             <Step n={1}>When you add a staff member, use the optional <strong>Picture</strong> choice in the form to pick a photo. You can skip it and add one later.</Step>
-            <Step n={2}>To add, change or remove a picture later, click the person&apos;s name on the Staff page to open their page, then use <strong>Add a picture</strong>, <strong>Change picture</strong> or <strong>Remove</strong> in the <strong>Picture</strong> block.</Step>
+            <Step n={2}>To add, change or remove a picture later, click the person&apos;s name on the Staff page and choose <strong>Edit details</strong> (the <strong>Picture</strong> block is in that window), or open their page and use <strong>Add a picture</strong>, <strong>Change picture</strong> or <strong>Remove</strong> in the <strong>Picture</strong> block.</Step>
             <Step n={3}>Use a JPEG, PNG or WebP photo up to 5 MB. It is cropped to a square, and any location details stored in the photo are removed. Until there is a picture, the person shows with coloured initials.</Step>
           </div>
           <div className="mt-3"><Tip>Staff can add, change or remove their <strong>own</strong> picture too: in the hub, choose <strong>Your picture</strong> in the left menu. The picture shows on the Staff list, on their page and next to their name in the hub.</Tip></div>

@@ -1,0 +1,484 @@
+{
+  "slug": "a-gentle-reminder-for-families-to-send-something-new",
+  "order": 99,
+  "title": "Families send one message, then life gets busy. A gentle reminder keeps a <em>this is me passport</em> alive.",
+  "meta_title": "Gentle Family Reminders for This Is Me Profiles | CareStreamAI",
+  "meta_description": "Set a monthly email reminder for family contacts to add a few words, a photo or a video. They can stop it in one click. Professional and above.",
+  "lede": "A good this is me passport is never finished, but families send one lovely page and then stop. You do not want to chase them by phone every month. CareStream can email each family contact a gentle reminder with a fresh private link, and it stops when they say so. It sits alongside <a href=\"/training-platform\">the rest of your training and knowledge tools</a>.",
+  "panel": {
+    "title": "One manager, three family contacts",
+    "pill": "Illustration",
+    "rows": [
+      {
+        "label": "Reminders set to every month for three contacts",
+        "note": "Day 1",
+        "done": true
+      },
+      {
+        "label": "First reminders go out on a Friday",
+        "note": "Month 1",
+        "done": true
+      },
+      {
+        "label": "Replies reset the count",
+        "note": "Ongoing",
+        "done": false
+      },
+      {
+        "label": "After 3 with no reply, a notice appears for the manager",
+        "note": "If needed",
+        "done": false
+      }
+    ],
+    "meter": 50
+  },
+  "image_alt": "A manager at a desk in a bright care home office reviews a short list on a clipboard beside a calendar, a mug of tea nearby, calm and organised",
+  "card_title": "Families stop sending things after the first month. A gentle reminder helps",
+  "card_snippet": "Ask each family contact, by email, to add a few words, a photo or a short video. Set it once, every link is fresh, and it stops when you or they say so.",
+  "primary_keyword": "this is me passport",
+  "secondary_keywords": [
+    "this is me dementia document",
+    "life story work dementia"
+  ],
+  "feature_links": [
+    {
+      "title": "Training built from your own policies",
+      "body": "Ad hoc training from your policies, face to face training organised, and wrong answers that become lessons.",
+      "action": "See the feature",
+      "href": "/training-platform"
+    },
+    {
+      "title": "Resident knowledge for your team",
+      "body": "Give staff quick, short answers about the people they care for, drawn from what you have recorded and approved.",
+      "action": "See resident knowledge",
+      "href": "/uses/resident-knowledge"
+    },
+    {
+      "title": "Dementia awareness training",
+      "body": "A course that helps staff understand the person behind the diagnosis.",
+      "action": "See the course",
+      "href": "/staff-training/dementia-awareness"
+    }
+  ],
+  "intro": {
+    "heading": "The first page was lovely. Then it went quiet.",
+    "sub": "A scenario we see in many care settings.",
+    "paragraph": "Mrs Bell's this is me passport was full in her first fortnight. Her son wrote about her garden and her sister, her niece sent a photo of the Whitby trip, and her grandson said he would record something. Four months later, nobody has added a word. The manager means to ask each of them, but there are rotas to fix. She worries about nagging, and about asking someone who has said they would rather not. Mrs Bell's profile is still the one written in week one."
+  },
+  "trail": [
+    {
+      "when": "Week one",
+      "text": "Three relatives are invited to add to Mrs Bell's profile.",
+      "kind": "ok"
+    },
+    {
+      "when": "Week two",
+      "text": "Her son writes a page and her niece sends a photo.",
+      "kind": "ok"
+    },
+    {
+      "when": "Week three",
+      "text": "Her grandson says he will send a message soon.",
+      "kind": "ok"
+    },
+    {
+      "when": "Month two",
+      "text": "Nobody has added anything since. The manager plans to ask.",
+      "kind": "gap"
+    },
+    {
+      "when": "Month three",
+      "text": "A new carer reads the profile. It is already out of date.",
+      "kind": "gap"
+    },
+    {
+      "when": "Month four",
+      "text": "The grandson has forgotten. The niece does not like to ask.",
+      "kind": "gap"
+    },
+    {
+      "when": "Month five",
+      "text": "Mrs Bell's son asks if anyone reads what he wrote. Nobody can say.",
+      "kind": "gap"
+    },
+    {
+      "when": "Inspection day",
+      "text": "“How do you keep this up to date with her family?” A single page from May.",
+      "kind": "end"
+    }
+  ],
+  "trail_close": "<b>Families rarely mean to go quiet.</b> They need a nudge that is kind, easy to act on and easy to stop. Here is how CareStream sends one, and how it knows when to stop.",
+  "why": {
+    "heading": "A this is me passport only helps while it stays true",
+    "sub": "People change, and so does what matters to them.",
+    "cards": [
+      {
+        "icon": "chat",
+        "title": "Small updates keep the team close",
+        "body": "A this is me dementia document tends to describe a person on one day. A new story, a recent photo or a short hello from a grandchild keeps life story work for dementia current, and gives staff something fresh to talk about."
+      },
+      {
+        "icon": "tick",
+        "title": "Involving family is part of good practice",
+        "body": "Care must <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/9\">reflect people's preferences</a>, and under <a href=\"https://www.legislation.gov.uk/ukpga/2005/9/section/4\">section 4 of the Mental Capacity Act 2005</a> you take into account, where practicable, the views of people interested in someone's welfare. Asking again is one way to keep that going."
+      },
+      {
+        "icon": "alert",
+        "title": "Chasing can feel like nagging",
+        "body": "A reminder that cannot be stopped is irritating, and one sent forever is worse. Families need a clear way out, and a manager needs to know when someone has gone quiet, so nobody is pestered."
+      }
+    ]
+  },
+  "how": {
+    "heading": "From a setting on the Family tab to a fresh link in their inbox.",
+    "sub": "Reminders are part of the resident profiles feature, in the same system as your <a href=\"/training-platform\">policies and training</a>. They are on Professional and above. See <a href=\"/uses/resident-knowledge\">how staff use resident knowledge</a> too.",
+    "blocks": [
+      {
+        "heading": "You set it once for each contact",
+        "bullets": [
+          "On the resident's Family tab there is one accordion per contact who has an email address. Each opens to show How often, Preferred day and Pause until",
+          "You can ask them every week, every two weeks or every month. The default is No reminders, so nothing is sent unless you choose it",
+          "You can also choose a reminder when you first send an invitation, under Gentle reminders. A manager or admin can set it"
+        ],
+        "tags": [
+          {
+            "label": "Resident knowledge",
+            "href": "/uses/resident-knowledge"
+          },
+          {
+            "label": "How CareStream works",
+            "href": "/how-it-works"
+          }
+        ],
+        "mock": {
+          "type": "audit",
+          "audit": "Residents: Family tab, Gentle reminders (example)",
+          "stats": [
+            [
+              "Contacts",
+              "3"
+            ],
+            [
+              "Default",
+              "No reminders"
+            ]
+          ],
+          "blocks": [
+            [
+              "One accordion per contact (example)",
+              [
+                [
+                  "Alan, son. Next reminder shown with a date",
+                  "How often: Every month"
+                ],
+                [
+                  "Beth, niece. Preferred day: Friday",
+                  "Pause until: a date, if needed"
+                ],
+                [
+                  "Carl, grandson. Reminders off",
+                  "Save"
+                ]
+              ]
+            ]
+          ],
+          "caption": "Example only. Names and dates are illustrative."
+        }
+      },
+      {
+        "heading": "What the family member receives",
+        "bullets": [
+          "A short, warm email asking whether they would like to share something for the resident, a few words, a photo or a short video message. It says the manager reads what they send first",
+          "A button to share something, with a fresh private link that stops working after 14 days. The previous link stops working at the same time",
+          "A Stop these reminders link in every email. One click, and the reminders end. The Family tab then shows that they stopped them"
+        ],
+        "tags": [
+          {
+            "label": "CQC and compliance",
+            "href": "/cqc-compliance"
+          },
+          {
+            "label": "Dementia awareness course",
+            "href": "/staff-training/dementia-awareness"
+          }
+        ],
+        "mock": {
+          "type": "audit",
+          "audit": "Reminder email (example)",
+          "stats": [
+            [
+              "Link lasts",
+              "14 days"
+            ],
+            [
+              "Stop link",
+              "In every email"
+            ]
+          ],
+          "blocks": [
+            [
+              "What the email contains (example)",
+              [
+                [
+                  "Subject: Something for Mrs Bell?",
+                  ""
+                ],
+                [
+                  "Whatever you send is read by the manager first, and only shared once approved",
+                  ""
+                ],
+                [
+                  "Button: Share something for Mrs Bell",
+                  ""
+                ],
+                [
+                  "Stop these reminders",
+                  ""
+                ]
+              ]
+            ]
+          ],
+          "caption": "Example only. Wording summarised, not the exact email."
+        }
+      },
+      {
+        "heading": "It stops, and you are told",
+        "bullets": [
+          "No more than one reminder in any 6 days, and after 3 reminders with no reply they stop. Anything they send resets the count",
+          "When that happens a notice appears at the top of Approvals and on the Family tab, saying the contact has not replied to the last 3 reminders. You can switch them back on",
+          "Reminders stop at once when the person dies or moves on, and the same retention rules apply as for the written profile"
+        ],
+        "tags": [
+          {
+            "label": "Pricing and plans",
+            "href": "/pricing"
+          },
+          {
+            "label": "Book a demo",
+            "href": "/demo"
+          }
+        ],
+        "mock": {
+          "type": "audit",
+          "audit": "Residents: Approvals tab notice (example)",
+          "stats": [
+            [
+              "Reminders sent without reply",
+              "3"
+            ],
+            [
+              "Status",
+              "Reminders stopped"
+            ]
+          ],
+          "blocks": [
+            [
+              "Notice at the top of Approvals (example)",
+              [
+                [
+                  "Beth has not replied to the last 3 reminders, so we have stopped sending them. You can switch them back on in the Family tab",
+                  ""
+                ],
+                [
+                  "Last reply received: a date. Last reminder sent: a date",
+                  "Shown per contact"
+                ]
+              ]
+            ]
+          ],
+          "caption": "Example only. Names and dates are illustrative."
+        }
+      },
+      {
+        "heading": "What comes back still waits for approval",
+        "bullets": [
+          "Anything a relative sends through a reminder link goes to the Approvals tab like any other family contribution, and nothing is seen by staff until you approve it",
+          "Approved answers, photos and videos then appear on the From family tab, under the name of the person who gave them",
+          "Photos and videos can then be found in the Staff Hub This is me chat. Read <a href=\"/blog/this-is-me-document\">our guide to the this is me document</a> for what to record"
+        ],
+        "tags": [
+          {
+            "label": "Resident knowledge",
+            "href": "/uses/resident-knowledge"
+          },
+          {
+            "label": "Care home policies guide",
+            "href": "/blog/care-home-policies-the-complete-guide"
+          }
+        ],
+        "mock": {
+          "type": "audit",
+          "audit": "Residents: From family tab (example)",
+          "stats": [
+            [
+              "Shown to staff",
+              "Approved only"
+            ]
+          ],
+          "blocks": [
+            [
+              "Under each person (example)",
+              [
+                [
+                  "Alan, son. Approved answers",
+                  "Date and approver shown"
+                ],
+                [
+                  "Beth, niece. Photo: Whitby, 1974",
+                  "Approved"
+                ],
+                [
+                  "Carl, grandson. Video: Hello Nan",
+                  "Approved"
+                ]
+              ]
+            ]
+          ],
+          "caption": "Example only. Illustration, not a real resident."
+        }
+      }
+    ]
+  },
+  "talk": {
+    "heading": "The questions managers ask, and how CareStream answers them",
+    "sub": "Read this as a conversation. The questions are the ones we hear most.",
+    "items": [
+      {
+        "q": "How do I keep a this is me passport up to date with family?",
+        "a": "You choose how often each family contact is gently asked to add something: every week, every two weeks or every month. CareStream emails them a fresh private link. What they send waits for you to approve it."
+      },
+      {
+        "q": "Is it on by default?",
+        "a": "No. The default is No reminders. A manager or admin switches it on for each contact, and you can set a preferred weekday and a pause until date."
+      },
+      {
+        "q": "What does the email say?",
+        "a": "It is short and warm. It asks whether they would like to share a few words, a photo or a short video message for the resident, says the manager reads it first, and gives a button to a fresh private link. Every email has a Stop these reminders link."
+      },
+      {
+        "q": "Can a relative stop the reminders?",
+        "a": "Yes, with one click on the Stop these reminders link in any email. The Family tab then shows that they stopped them, and nothing more is sent."
+      },
+      {
+        "q": "What if someone never replies?",
+        "a": "After 3 reminders with no reply they stop, and a notice appears at the top of Approvals and on the Family tab. CareStream never sends more than one in 6 days. You can switch the contact back on if you wish."
+      },
+      {
+        "q": "What happens if the resident moves on?",
+        "a": "Reminders stop at once when the person dies or moves on."
+      },
+      {
+        "q": "Do I still approve what comes back?",
+        "a": "Yes. Anything sent through a reminder link waits on the Approvals tab. Staff see only what you approve."
+      },
+      {
+        "q": "Which plan is it on, and can I try it?",
+        "a": "Resident profiles and family reminders are on Professional and above. There is a 14 day free trial, and the <a href=\"/pricing\">pricing page</a> shows which plan includes it. You can <a href=\"/register\">create an account</a> or <a href=\"/demo\">book a demo</a> to see it first."
+      }
+    ]
+  },
+  "limits": {
+    "heading": "Honest limits: a nudge, not a chase",
+    "cards": [
+      {
+        "title": "It is only email",
+        "body": "Reminders go by email, to contacts who have an email address. There is no text message or phone call. A contact with no email will not be reminded."
+      },
+      {
+        "title": "It will not make anyone reply",
+        "body": "Some families will not respond, and that is their right. After 3 unanswered reminders it stops. It is up to you to talk to them in person if you wish."
+      },
+      {
+        "title": "A notice, not an alarm",
+        "body": "The notice for a quiet contact sits on the Approvals and Family tabs. It does not email you. Someone has to look, and approvals still need a manager. It is on Professional and above."
+      }
+    ]
+  },
+  "read_next": [
+    "this-is-me-document",
+    "care-home-policies-the-complete-guide",
+    "dementia-care-training-in-the-uk"
+  ],
+  "faqs": {
+    "heading": "Family reminders and this is me profiles, answered",
+    "groups": [
+      {
+        "group": "About the profile and reminders",
+        "items": [
+          {
+            "q": "What is a this is me passport?",
+            "a": "It is a short record of a person's life, likes, routines and what matters to them, used to give care that fits. Read more in our <a href=\"/blog/this-is-me-document\">guide to the this is me document</a>."
+          },
+          {
+            "q": "What is a this is me dementia document?",
+            "a": "It is the same idea used for someone living with dementia, so that staff, including new and agency staff, can see the person behind the diagnosis. A this is me dementia document is best kept current."
+          },
+          {
+            "q": "How does this help life story work in dementia care?",
+            "a": "Life story work dementia teams do is only useful if it stays fresh. Regular nudges to family help bring new stories, photos and videos into the profile."
+          },
+          {
+            "q": "Can I choose a reminder when I first invite someone?",
+            "a": "Yes. When you send an invitation there is an optional Gentle reminders choice. Otherwise you can set it later on the Family tab."
+          }
+        ]
+      },
+      {
+        "group": "About limits, privacy and the law",
+        "items": [
+          {
+            "q": "How often will a family member be emailed?",
+            "a": "At the frequency you pick: weekly, fortnightly or monthly, on the day you choose. Never more than one in 6 days."
+          },
+          {
+            "q": "How do reminders stop?",
+            "a": "By the family clicking Stop these reminders, after 3 unanswered reminders, when you pause or switch them off, or at once when the person dies or moves on."
+          },
+          {
+            "q": "Is the link safe?",
+            "a": "Each reminder carries a fresh private link that is valid for 14 days. What comes back waits for a manager to approve it before staff see it."
+          },
+          {
+            "q": "What do the regulations say?",
+            "a": "Under <a href=\"https://www.legislation.gov.uk/ukpga/2005/9/section/4\">section 4 of the Mental Capacity Act 2005</a> you take into account the views of people interested in someone's welfare where practicable, and <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/9\">regulation 9</a> requires care to reflect preferences. Check your own policies on contacting families."
+          }
+        ]
+      }
+    ]
+  },
+  "guide": {
+    "heading": "How to keep a this is me passport fresh without nagging",
+    "lede": "The aim is a warm, light touch. Ask kindly, make it easy, and let people say no.",
+    "sections": [
+      {
+        "h3": "Tell families about the reminders at the start",
+        "paragraphs": [
+          "When you invite someone, say that they may get a gentle email now and then, and that they can stop it with one click. People who expect a nudge rarely mind one."
+        ]
+      },
+      {
+        "h3": "Pick a rhythm that fits the person",
+        "paragraphs": [
+          "Monthly suits most families. Weekly can feel heavy. Use Pause until around holidays or a bereavement. A <a href=\"/staff-training/dementia-awareness\">dementia awareness course</a> helps staff see why small updates matter, and the <a href=\"/staff-training/mental-capacity-act-and-dols\">Mental Capacity Act course</a> covers wishes and best interests."
+        ],
+        "checklist": [
+          "Does each contact have a current email address?",
+          "Have they been told they can stop the reminders?",
+          "Is someone checking the Approvals tab each week?",
+          "Do you thank people when they send something?"
+        ]
+      },
+      {
+        "h3": "When someone goes quiet",
+        "paragraphs": [
+          "If a notice says a contact has not replied, ring or speak to them before you switch reminders back on. They may prefer a visit, or may want to stop. See <a href=\"/uses/resident-knowledge\">resident knowledge</a> for how approved updates reach staff."
+        ]
+      }
+    ],
+    "note": "This page describes how the software works and is not legal advice. Check your own policies and local guidance on contacting families."
+  },
+  "fine": "14 day free trial · Set up in a day · UK data residency",
+  "eyebrow": "Scenario",
+  "status": "draft",
+  "image": "https://api.carestreamai.com/public/policy-shop/image/26b17cd0-c3da-4e21-890a-3176a4bb684a.webp"
+}

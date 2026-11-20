@@ -1,0 +1,492 @@
+{
+  "slug": "family-records-a-video-message-for-a-resident",
+  "order": 97,
+  "title": "A daughter wants to record a message for a <em>dementia life story.</em> You check it before staff see it.",
+  "meta_title": "Dementia Life Story Video Messages From Family | CareStreamAI",
+  "meta_description": "Family record a short video message by private link. You preview, title and approve it before staff can play it to a resident.",
+  "lede": "A daughter would like her father to hear her voice, not just read about her. You want a dementia life story that includes the people who love him, without video clips on a personal phone. CareStream gives her a private link, holds her video for your approval, and shows approved clips to staff. It sits alongside <a href=\"/training-platform\">the rest of your training and knowledge tools</a>.",
+  "panel": {
+    "title": "One daughter's video, step by step",
+    "pill": "Illustration",
+    "rows": [
+      {
+        "label": "Daughter invited by email",
+        "note": "Day 1",
+        "done": true
+      },
+      {
+        "label": "She records a 40 second message and adds a title",
+        "note": "Day 2",
+        "done": true
+      },
+      {
+        "label": "Manager previews, edits the title, approves",
+        "note": "Not yet",
+        "done": false
+      },
+      {
+        "label": "Staff can play the approved video",
+        "note": "Not yet",
+        "done": false
+      }
+    ],
+    "meter": 50
+  },
+  "image_alt": "A daughter sits on her sofa at home recording a short video message on her phone, smiling and relaxed, a cup of tea beside her",
+  "card_title": "A daughter wants to send a video message for her father. Who checks it first?",
+  "card_snippet": "Invite family by private link to record a short video message for a resident. You preview, title and approve it before any member of the care team can play it.",
+  "primary_keyword": "dementia life story",
+  "secondary_keywords": [
+    "life history dementia",
+    "life story work dementia"
+  ],
+  "feature_links": [
+    {
+      "title": "Training built from your own policies",
+      "body": "Ad hoc training from your policies, face to face training organised, and wrong answers that become lessons.",
+      "action": "See the feature",
+      "href": "/training-platform"
+    },
+    {
+      "title": "Resident knowledge for your team",
+      "body": "Give staff quick, short answers about the people they care for, drawn from what you have recorded and approved.",
+      "action": "See resident knowledge",
+      "href": "/uses/resident-knowledge"
+    },
+    {
+      "title": "Dementia awareness training",
+      "body": "A course that helps staff understand the person behind the diagnosis.",
+      "action": "See the course",
+      "href": "/staff-training/dementia-awareness"
+    }
+  ],
+  "intro": {
+    "heading": "She has the words. She wants him to hear them.",
+    "sub": "A scenario we see in many care settings.",
+    "paragraph": "Mr Hargreaves moved in three weeks ago. His daughter, Helen, lives four hours away and cannot visit every week. She has written a page about his life for the key worker, but she says it is not the same as him hearing her say good morning. She would happily record a short hello and a story about the caravan at Filey. The home has no safe way to take it. She offers to send it to a carer's phone, and the manager is not sure that is wise."
+  },
+  "trail": [
+    {
+      "when": "Week one",
+      "text": "Mr Hargreaves moves in. Helen writes up his life story.",
+      "kind": "ok"
+    },
+    {
+      "when": "Week two",
+      "text": "The key worker reads it and learns about Filey.",
+      "kind": "ok"
+    },
+    {
+      "when": "Week three",
+      "text": "Helen asks, “Could I record him a message?”",
+      "kind": "ok"
+    },
+    {
+      "when": "Same day",
+      "text": "There is nowhere safe to send it, so the offer fades.",
+      "kind": "gap"
+    },
+    {
+      "when": "Week four",
+      "text": "A carer offers her own phone. The manager says no.",
+      "kind": "gap"
+    },
+    {
+      "when": "Week six",
+      "text": "Evenings are hard for him. His daughter's voice sits unrecorded.",
+      "kind": "gap"
+    },
+    {
+      "when": "Month three",
+      "text": "Helen asks if the family have done enough. Nobody knows.",
+      "kind": "gap"
+    },
+    {
+      "when": "Inspection day",
+      "text": "“How do you involve his family?” A written page is all you have.",
+      "kind": "end"
+    }
+  ],
+  "trail_close": "<b>The family wanted to give more.</b> The gap is between that kindness and a safe way to use it. Here is how CareStream collects the video, lets you check it, and puts only approved clips in front of staff.",
+  "why": {
+    "heading": "A dementia life story is more than a page of facts",
+    "sub": "Voices and faces carry what a document can only describe.",
+    "cards": [
+      {
+        "icon": "chat",
+        "title": "A familiar voice settles and connects",
+        "body": "Life story work with dementia is usually about knowing the person. A short message from a daughter can give staff a way into a conversation, and gives him something to answer."
+      },
+      {
+        "icon": "tick",
+        "title": "Care should reflect the person",
+        "body": "Care must <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/9\">meet needs and reflect preferences</a>. Where someone cannot decide for themselves, the <a href=\"https://www.legislation.gov.uk/ukpga/2005/9/section/4\">Mental Capacity Act asks you to consider their past and present wishes and feelings</a>, and to take into account, where practicable, the views of people interested in their welfare."
+      },
+      {
+        "icon": "alert",
+        "title": "Video needs a careful gate",
+        "body": "A clip can show other people, or something the resident would not want played. A manager should watch each one first, and the file should not live on a personal phone. <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/10\">Regulation 10</a> includes ensuring the privacy of the person."
+      }
+    ]
+  },
+  "how": {
+    "heading": "From a private link to a video the team can play.",
+    "sub": "Video messages are part of the resident profiles feature, in the same system as your <a href=\"/training-platform\">policies and training</a>. They are on Professional and above. See <a href=\"/uses/resident-knowledge\">how staff use resident knowledge</a> too.",
+    "blocks": [
+      {
+        "heading": "The family records through the same private link",
+        "bullets": [
+          "You invite the person by name and email from the resident's record. They get a private link and do not create an account",
+          "On the page they tap Record a message, which opens the phone camera, or Choose a video. Each clip can be up to 60 seconds, up to 5 on one link, and up to 150MB per upload",
+          "The upload shows progress and carries on if the signal drops. They can add a short title of up to 60 characters, and remove a clip before pressing Send"
+        ],
+        "tags": [
+          {
+            "label": "Resident knowledge",
+            "href": "/uses/resident-knowledge"
+          },
+          {
+            "label": "How CareStream works",
+            "href": "/how-it-works"
+          }
+        ],
+        "mock": {
+          "type": "audit",
+          "audit": "Family page: A video message (example)",
+          "stats": [
+            [
+              "Videos shared",
+              "1 of 5"
+            ],
+            [
+              "Login needed",
+              "None"
+            ]
+          ],
+          "blocks": [
+            [
+              "What a relative sees (example)",
+              [
+                [
+                  "Record a message",
+                  ""
+                ],
+                [
+                  "Choose a video",
+                  ""
+                ],
+                [
+                  "Title (optional): From Helen, Sunday",
+                  ""
+                ],
+                [
+                  "Ready, 0:40. Waiting for the manager once you press Send",
+                  "Remove"
+                ]
+              ]
+            ]
+          ],
+          "caption": "Example only. Names and figures are illustrative."
+        }
+      },
+      {
+        "heading": "A consent line sits above the buttons",
+        "bullets": [
+          "The page asks them to share only a message they are happy for the care team to play to the resident",
+          "It says a manager checks every video before staff see it, and that it is removed if the person moves on",
+          "It also asks them to keep other people out of the picture unless those people are happy to be in it"
+        ],
+        "tags": [
+          {
+            "label": "CQC and compliance",
+            "href": "/cqc-compliance"
+          },
+          {
+            "label": "Dementia awareness course",
+            "href": "/staff-training/dementia-awareness"
+          }
+        ],
+        "mock": {
+          "type": "audit",
+          "audit": "Family page: Before you send (example)",
+          "stats": [
+            [
+              "Shown to staff",
+              "Only after approval"
+            ]
+          ],
+          "blocks": [
+            [
+              "What the page says (example)",
+              [
+                [
+                  "Only share a message you are happy for the care team to play",
+                  ""
+                ],
+                [
+                  "A manager checks every video before staff see it",
+                  ""
+                ],
+                [
+                  "It is removed if the person moves on",
+                  ""
+                ],
+                [
+                  "Privacy: kept privately, never on a public page",
+                  ""
+                ]
+              ]
+            ]
+          ],
+          "caption": "Example only. Wording summarised, not the exact page."
+        }
+      },
+      {
+        "heading": "You preview, edit the title, then approve or reject",
+        "bullets": [
+          "A family video waits on the Approvals tab under Videos waiting for approval. You can play it there first",
+          "You can edit the title and add a note for staff, such as who is in it. Then you choose Approve or Reject. Rejecting removes the video from storage straight away",
+          "You can also add a video yourself from the resident's record, and it is approved at once. Approved family videos also show on the From family tab, under the person who sent them"
+        ],
+        "tags": [
+          {
+            "label": "Book a demo",
+            "href": "/demo"
+          },
+          {
+            "label": "Pricing and plans",
+            "href": "/pricing"
+          }
+        ],
+        "mock": {
+          "type": "audit",
+          "audit": "Residents: Approvals tab (example)",
+          "stats": [
+            [
+              "Videos waiting",
+              "2"
+            ],
+            [
+              "Approved",
+              "1"
+            ]
+          ],
+          "blocks": [
+            [
+              "Videos waiting for approval (example)",
+              [
+                [
+                  "Helen, daughter, 0:40. Title: From Helen, Sunday",
+                  "Approve, Reject"
+                ],
+                [
+                  "Helen, daughter, 0:25. Title can be edited before approving",
+                  "Approve, Reject"
+                ],
+                [
+                  "Note for staff (optional): Helen telling the Filey caravan story",
+                  ""
+                ]
+              ]
+            ]
+          ],
+          "caption": "Example only. Nothing here has reached the care team."
+        }
+      },
+      {
+        "heading": "Private, and gone when the person moves on",
+        "bullets": [
+          "Videos are private. Signed in staff of your service reach them through short lived links, only for current residents, and never through a public address",
+          "When someone dies or moves on, their videos leave the hub at once and any video still waiting is deleted",
+          "Approved files stay in private storage for the retention period, like the written profile, then are deleted with it"
+        ],
+        "tags": [
+          {
+            "label": "Resident knowledge",
+            "href": "/uses/resident-knowledge"
+          },
+          {
+            "label": "Care home policies guide",
+            "href": "/blog/care-home-policies-the-complete-guide"
+          }
+        ],
+        "mock": {
+          "type": "audit",
+          "audit": "Residents: Video messages (example)",
+          "stats": [
+            [
+              "Public address",
+              "None"
+            ],
+            [
+              "Plays",
+              "Logged"
+            ]
+          ],
+          "blocks": [
+            [
+              "Video messages (example)",
+              [
+                [
+                  "From Helen, Sunday",
+                  "Approved, Delete"
+                ],
+                [
+                  "Add a video: up to 60 seconds, approved at once",
+                  ""
+                ],
+                [
+                  "Recently played: a carer played “From Helen, Sunday”",
+                  "Time shown"
+                ]
+              ]
+            ]
+          ],
+          "caption": "Example only. Illustration, not a real resident."
+        }
+      }
+    ]
+  },
+  "talk": {
+    "heading": "The questions managers ask, and how CareStream answers them",
+    "sub": "Read this as a conversation. The questions are the ones we hear most.",
+    "items": [
+      {
+        "q": "A relative wants to send a video for a dementia life story. What do I do?",
+        "a": "You invite them from the resident's record with their name and email, and CareStream emails a private link. On that page they record or choose a short video and add a title. Nothing reaches your team until you have watched it and approved it."
+      },
+      {
+        "q": "Does the family need an account or an app?",
+        "a": "No. The link is the way in, with no login and no password. They use the phone they already have. Once they press Send, the link is spent, and if they want to add more later you send a new link."
+      },
+      {
+        "q": "How long can a video be?",
+        "a": "Up to 60 seconds, and up to 5 videos on one link, with up to 150MB per upload. If the signal drops the upload carries on from where it stopped. The clip is converted so it plays on a phone, a tablet or a computer, and location details are removed."
+      },
+      {
+        "q": "What stops an unsuitable video reaching staff?",
+        "a": "You do. Each family video waits on the Approvals tab. You preview it, edit the title, add a note for staff, and approve or reject it. Rejecting deletes the file at once. Staff only ever see approved videos."
+      },
+      {
+        "q": "Can I upload one myself?",
+        "a": "Yes. From the resident's record you can add a video with a title and a note. A video you add is approved at once, because you are the approver."
+      },
+      {
+        "q": "Does the system watch the video or describe it?",
+        "a": "No. It never watches or describes a video. It only knows the title, the note and who sent it, so a clear title matters. There are no summaries, no speech to text and no staff downloads."
+      },
+      {
+        "q": "What happens if the resident passes away or moves on?",
+        "a": "Their videos leave the hub straight away, and any still waiting are deleted. Approved files stay in private storage for the retention period, like the written profile, then are deleted with it."
+      },
+      {
+        "q": "Which plan is it on, and can I try it?",
+        "a": "Resident profiles, photos and videos are on Professional and above. There is a 14 day free trial, and the <a href=\"/pricing\">pricing page</a> shows which plan includes it. You can <a href=\"/register\">create an account</a> or <a href=\"/demo\">book a demo</a> to see it first."
+      }
+    ]
+  },
+  "limits": {
+    "heading": "Honest limits: a gathering tool, not a video call",
+    "cards": [
+      {
+        "title": "It is a message, not a conversation",
+        "body": "The family record once and the team plays it back. CareStream does not do video calls, and the resident cannot record a reply. If you want a live call, you would arrange that separately."
+      },
+      {
+        "title": "Nothing is automatic",
+        "body": "A video does not reach staff by itself. A manager has to preview and approve each one, so someone needs to check the Approvals tab. A video nobody approves stays hidden from the team."
+      },
+      {
+        "title": "Titles do the finding",
+        "body": "The system cannot watch a clip. Staff find it from the title and your note. Videos shown in the hub are the newest ten per resident, and the family cannot see the profile or message you through the link. It is on Professional and above."
+      }
+    ]
+  },
+  "read_next": [
+    "this-is-me-document",
+    "care-home-policies-the-complete-guide",
+    "dementia-care-training-in-the-uk"
+  ],
+  "faqs": {
+    "heading": "Family video and life story work, answered",
+    "groups": [
+      {
+        "group": "About video and life stories",
+        "items": [
+          {
+            "q": "What is a dementia life story?",
+            "a": "It is a record of who the person is: their family, work, places, habits and what matters to them. Staff use it to start conversations and give care that fits. Read more in our <a href=\"/blog/this-is-me-document\">guide to the this is me document</a>."
+          },
+          {
+            "q": "What is life history work in dementia care?",
+            "a": "Life history dementia work means gathering a person's past, from them and from people who know them, and using it day to day. A short video from a daughter is one way to add her voice to what you already know."
+          },
+          {
+            "q": "How does video fit with life story work for dementia?",
+            "a": "Life story work dementia teams do is often written or photographs. Video adds a voice and a face. In CareStream approved videos sit with the resident's profile, so the team can find them when they need them."
+          },
+          {
+            "q": "Can the assistant describe what is in a video?",
+            "a": "No. It never watches or describes a video. It only knows the title, the note and who sent it."
+          }
+        ]
+      },
+      {
+        "group": "About approval, privacy and limits",
+        "items": [
+          {
+            "q": "How long can a family video be?",
+            "a": "Up to 60 seconds each, up to 5 on one link, and up to 150MB per upload. The family can add a title of up to 60 characters and remove a clip before pressing Send."
+          },
+          {
+            "q": "Does a manager have to approve every video?",
+            "a": "Yes. A family video stays hidden from staff until you approve it. You can edit the title first, or reject it. Videos you add yourself are approved at once."
+          },
+          {
+            "q": "Can the family see the videos we approve?",
+            "a": "The link page lets them preview their own clip before they press Send, and after that the link is spent. It does not show the profile or other videos."
+          },
+          {
+            "q": "What do the regulations say about involving family?",
+            "a": "Under <a href=\"https://www.legislation.gov.uk/ukpga/2005/9/section/4\">section 4 of the Mental Capacity Act 2005</a>, if it is practicable and appropriate, you take into account the views of anyone interested in the person's welfare. <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/9\">Regulation 9</a> requires care to reflect people's preferences. Check your own policies on consent and recording."
+          }
+        ]
+      }
+    ]
+  },
+  "guide": {
+    "heading": "How to build a dementia life story with family video",
+    "lede": "A few habits make the difference between a clip that sits unseen and one that helps at four in the afternoon. Ask early, ask for a clear title, and check before you approve.",
+    "sections": [
+      {
+        "h3": "Ask for a short, warm message",
+        "paragraphs": [
+          "Tell the relative that 30 or 40 seconds is plenty. A hello, the person's name, and one small story is more useful than a long one. Ask them to put a clear title on it, because staff find it by its title."
+        ]
+      },
+      {
+        "h3": "Before you approve a video",
+        "paragraphs": [
+          "Watch it as a new carer would, and as the resident might feel about it. Edit the title so it is clear and kind. Reject anything that shows other people who might not want it shared, or anything the resident would find upsetting. You can read what the law says about <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/10\">dignity and respect in regulation 10</a>."
+        ],
+        "checklist": [
+          "Is the person speaking someone the resident would be glad to hear?",
+          "Does the title say who it is from?",
+          "Does it show anyone else who might not want it shared?",
+          "Would a new carer know when to use it?"
+        ]
+      },
+      {
+        "h3": "Close the loop with the team and the family",
+        "paragraphs": [
+          "Tell the key worker when a video has been approved and show them where to find it. Thank the relative personally. A <a href=\"/staff-training/dementia-awareness\">dementia awareness course</a> helps staff see why these details matter, and the <a href=\"/staff-training/mental-capacity-act-and-dols\">Mental Capacity Act course</a> covers wishes and best interests."
+        ]
+      }
+    ],
+    "note": "This page describes how the software works and is not legal advice. Check your own policies and local guidance for how you collect and share recordings of residents."
+  },
+  "fine": "14 day free trial · Set up in a day · UK data residency",
+  "eyebrow": "Scenario",
+  "status": "draft",
+  "image": "https://api.carestreamai.com/public/policy-shop/image/842aca94-35f0-4dfb-9bd2-0d9b3274322b.webp"
+}

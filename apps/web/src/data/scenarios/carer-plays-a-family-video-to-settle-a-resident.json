@@ -1,0 +1,468 @@
+{
+  "slug": "carer-plays-a-family-video-to-settle-a-resident",
+  "order": 98,
+  "title": "A resident is unsettled at four o'clock. A carer finds his daughter's video in seconds, for <em>reminiscence therapy</em> style comfort.",
+  "meta_title": "Play a Family Video to Settle a Resident | CareStreamAI",
+  "meta_description": "A carer asks the This is me chat for a family video and plays the approved clip in a moment. Titles only, plays logged, manager approved.",
+  "lede": "Late afternoon is hard for some residents, and a familiar voice can help. Many teams already use photos, music and stories in the spirit of reminiscence therapy. The gap is finding the right video fast, and knowing it is safe to play. CareStream lets a carer ask in the Staff Hub and play an approved clip. It sits alongside <a href=\"/training-platform\">the rest of your training and knowledge tools</a>.",
+  "panel": {
+    "title": "One afternoon, step by step",
+    "pill": "Illustration",
+    "rows": [
+      {
+        "label": "Mr Hargreaves becomes unsettled",
+        "note": "4.00pm",
+        "done": true
+      },
+      {
+        "label": "Carer asks the chat for his daughter's video",
+        "note": "4.02pm",
+        "done": true
+      },
+      {
+        "label": "Clip plays full screen on the tablet",
+        "note": "4.03pm",
+        "done": true
+      },
+      {
+        "label": "Manager sees the play on his record",
+        "note": "Later",
+        "done": false
+      }
+    ],
+    "meter": 50
+  },
+  "image_alt": "A carer sits beside an older man in a quiet lounge, both watching a short video together on a tablet held between them, the man smiling",
+  "card_title": "A resident is unsettled and a carer needs his daughter's video now",
+  "card_snippet": "Staff ask the This is me chat for a family video, see it under the answer with the resident's name and room number, and play it full screen. Approved by a manager first.",
+  "primary_keyword": "reminiscence therapy",
+  "secondary_keywords": [
+    "reminiscence photos",
+    "person centred care"
+  ],
+  "feature_links": [
+    {
+      "title": "Training built from your own policies",
+      "body": "Ad hoc training from your policies, face to face training organised, and wrong answers that become lessons.",
+      "action": "See the feature",
+      "href": "/training-platform"
+    },
+    {
+      "title": "Resident knowledge for your team",
+      "body": "Give staff quick, short answers about the people they care for, drawn from what you have recorded and approved.",
+      "action": "See resident knowledge",
+      "href": "/uses/resident-knowledge"
+    },
+    {
+      "title": "Dementia awareness training",
+      "body": "A course that helps staff understand the person behind the diagnosis.",
+      "action": "See the course",
+      "href": "/staff-training/dementia-awareness"
+    }
+  ],
+  "intro": {
+    "heading": "The video exists. Nobody can find it in the moment.",
+    "sub": "A scenario we see in many care settings.",
+    "paragraph": "It is ten past four and Mr Hargreaves keeps standing up and asking for his wife. Dev, a carer who started last month, has sat with him and offered tea. She remembers hearing that his daughter, Helen, sent a video message. She does not know who has it, or whether it was ever checked. She tries the office and the shared drive, then a colleague's phone. By the time anyone finds a clip, the moment has passed and he is more upset than before."
+  },
+  "trail": [
+    {
+      "when": "4.00pm",
+      "text": "Mr Hargreaves is restless and asks for his wife.",
+      "kind": "ok"
+    },
+    {
+      "when": "4.02pm",
+      "text": "Dev sits with him and offers tea.",
+      "kind": "ok"
+    },
+    {
+      "when": "4.04pm",
+      "text": "She remembers Helen's video message from last month.",
+      "kind": "ok"
+    },
+    {
+      "when": "4.08pm",
+      "text": "Nobody is sure where the clip is kept, or who approved it.",
+      "kind": "gap"
+    },
+    {
+      "when": "4.20pm",
+      "text": "A colleague finds it on a personal phone.",
+      "kind": "gap"
+    },
+    {
+      "when": "Next week",
+      "text": "The same hour is hard again, with a different carer on shift.",
+      "kind": "gap"
+    },
+    {
+      "when": "Month end",
+      "text": "Helen asks if the video helped. Nobody can say.",
+      "kind": "gap"
+    },
+    {
+      "when": "Inspection day",
+      "text": "“How do you use what his family gave you?” A personal phone is not an answer.",
+      "kind": "end"
+    }
+  ],
+  "trail_close": "<b>The family did their part.</b> The gap is between a kind gift and a clip the team can find, trust and play in a minute. Here is how CareStream gets an approved video to the carer who needs it.",
+  "why": {
+    "heading": "Why a family video can matter at the hardest hour",
+    "sub": "A familiar voice carries comfort that instructions in a care plan cannot.",
+    "cards": [
+      {
+        "icon": "chat",
+        "title": "Reminiscence needs the right thing to hand",
+        "body": "Reminiscence therapy is a broad idea, and teams use photos, music and talk about the past in different ways. Whatever you call it, a carer needs the item in front of them quickly. Reminiscence photos and short clips only help if they can be found."
+      },
+      {
+        "icon": "tick",
+        "title": "Person centred care in practice",
+        "body": "Care must <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/9\">meet needs and reflect preferences</a>. Person centred care means knowing what comforts this person, and family often know best. <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/10\">Regulation 10</a> adds privacy and dignity."
+      },
+      {
+        "icon": "alert",
+        "title": "What is played should be safe",
+        "body": "A clip nobody has checked, on a personal phone, is a risk to privacy. A clip a manager has approved, played from a private link on the team's own device, is a safer way to give comfort."
+      }
+    ]
+  },
+  "how": {
+    "heading": "From a question in the chat to a clip playing.",
+    "sub": "Video messages are part of the resident profiles feature, in the same system as your <a href=\"/training-platform\">policies and training</a>. They are on Professional and above. See <a href=\"/uses/resident-knowledge\">how staff use resident knowledge</a> too.",
+    "blocks": [
+      {
+        "heading": "A manager has approved the video first",
+        "bullets": [
+          "Family record a short message through a private link. It waits on the Approvals tab, where a manager previews it, edits the title and approves or rejects it",
+          "Staff and the hub chat never see a video that is still waiting",
+          "The assistant never watches or describes a video. It only knows the title, any note and who sent it"
+        ],
+        "tags": [
+          {
+            "label": "Resident knowledge",
+            "href": "/uses/resident-knowledge"
+          },
+          {
+            "label": "How CareStream works",
+            "href": "/how-it-works"
+          }
+        ],
+        "mock": {
+          "type": "audit",
+          "audit": "Residents: Approvals tab (example)",
+          "stats": [
+            [
+              "Videos waiting",
+              "1"
+            ],
+            [
+              "Approved",
+              "2"
+            ]
+          ],
+          "blocks": [
+            [
+              "Video waiting for approval (example)",
+              [
+                [
+                  "Helen, daughter, 0:40. Title: From Helen, Sunday",
+                  "Approve, Reject"
+                ],
+                [
+                  "Note for staff (optional): Helen telling the Filey caravan story",
+                  ""
+                ]
+              ]
+            ]
+          ],
+          "caption": "Example only. Nothing here has reached the care team."
+        }
+      },
+      {
+        "heading": "The carer asks the This is me chat",
+        "bullets": [
+          "In the Staff Hub, the carer opens the This is me chat and asks, for example, whether there is a video of the resident's daughter",
+          "The chat answers from the approved titles and notes people wrote, matched by meaning. It does not look inside the clip",
+          "Matching videos appear under the answer with the resident's name and room number, a poster picture and a play button"
+        ],
+        "tags": [
+          {
+            "label": "Dementia awareness course",
+            "href": "/staff-training/dementia-awareness"
+          },
+          {
+            "label": "Resident knowledge",
+            "href": "/uses/resident-knowledge"
+          }
+        ],
+        "mock": {
+          "type": "audit",
+          "audit": "Staff Hub: ask about a resident (example)",
+          "stats": [
+            [
+              "Source",
+              "Approved titles and notes only"
+            ]
+          ],
+          "blocks": [
+            [
+              "Example question and answer",
+              [
+                [
+                  "Staff asks: Do we have a video of Mr Hargreaves's daughter?",
+                  ""
+                ],
+                [
+                  "Answer: Yes, one titled “From Helen, Sunday”, sent by Helen, his daughter. The video appears below the answer",
+                  ""
+                ],
+                [
+                  "Under the answer: Mr Hargreaves, Room 12, with a play button",
+                  ""
+                ]
+              ]
+            ]
+          ],
+          "caption": "Example only. Illustration, not a real resident."
+        }
+      },
+      {
+        "heading": "It plays full screen, made for a tablet",
+        "bullets": [
+          "Tapping play opens just the video on a dimmed backdrop, with large controls and a Close video button",
+          "Each play is logged with who played it and when. A manager sees recent plays on the resident's record, under Recently played",
+          "There is also a Messages from family button in the This is me topic. It lists a person's approved videos, newest first, with up to 10 shown per resident"
+        ],
+        "tags": [
+          {
+            "label": "CQC and compliance",
+            "href": "/cqc-compliance"
+          },
+          {
+            "label": "Book a demo",
+            "href": "/demo"
+          }
+        ],
+        "mock": {
+          "type": "audit",
+          "audit": "Staff Hub: Messages from family (example)",
+          "stats": [
+            [
+              "Shown",
+              "Newest first"
+            ],
+            [
+              "Per resident",
+              "Up to 10"
+            ]
+          ],
+          "blocks": [
+            [
+              "Messages for Mr Hargreaves (example)",
+              [
+                [
+                  "From Helen, Sunday. From Helen, daughter",
+                  "Play"
+                ],
+                [
+                  "Garden party hello. From Sam, grandson",
+                  "Play"
+                ]
+              ]
+            ]
+          ],
+          "caption": "Example only. Illustration, not a real resident."
+        }
+      },
+      {
+        "heading": "Private, logged and gone when the person moves on",
+        "bullets": [
+          "Videos are shown only to signed in staff of your service, through short lived links, never through a public address",
+          "Only approved videos of current residents appear. When someone dies or moves on, their videos leave the hub at once",
+          "Approved files stay in private storage for the retention period, like the written profile, then are deleted with it"
+        ],
+        "tags": [
+          {
+            "label": "Pricing and plans",
+            "href": "/pricing"
+          },
+          {
+            "label": "Care home policies guide",
+            "href": "/blog/care-home-policies-the-complete-guide"
+          }
+        ],
+        "mock": {
+          "type": "audit",
+          "audit": "Residents: Recently played (example)",
+          "stats": [
+            [
+              "Plays",
+              "Logged"
+            ]
+          ],
+          "blocks": [
+            [
+              "Recently played (example)",
+              [
+                [
+                  "Dev played “From Helen, Sunday”",
+                  "Time shown"
+                ],
+                [
+                  "Nobody has played a video message yet",
+                  "Shown when empty"
+                ]
+              ]
+            ]
+          ],
+          "caption": "Example only. Illustration, not a real resident."
+        }
+      }
+    ]
+  },
+  "talk": {
+    "heading": "The questions managers ask, and how CareStream answers them",
+    "sub": "Read this as a conversation. The questions are the ones we hear most.",
+    "items": [
+      {
+        "q": "How does a carer find a family video quickly?",
+        "a": "They open the This is me chat in the Staff Hub and ask about the person, for example whether there is a video from his daughter. Matching approved videos appear under the answer, with the resident's name, room number and a play button."
+      },
+      {
+        "q": "Is this reminiscence therapy?",
+        "a": "No. CareStream is not a therapy programme. It helps your team find and play approved photos and video messages from family, which many teams use as part of their own reminiscence work. How you use them is your call."
+      },
+      {
+        "q": "How does the chat know which video to show?",
+        "a": "From the title and the note a manager approved, matched by meaning. It never watches the video. A clear title such as “From Helen, Sunday” does the work."
+      },
+      {
+        "q": "Can a carer play anything a family member sends?",
+        "a": "No. Every family video waits for a manager to preview and approve it. Staff and the chat only ever see approved videos of current residents."
+      },
+      {
+        "q": "How does it play?",
+        "a": "Tapping play opens just the video on a dimmed backdrop, with large controls, so it works well on a tablet. Tapping outside the video or the close button returns the carer to the chat."
+      },
+      {
+        "q": "Is it recorded who played a video?",
+        "a": "Yes. Each play is logged with who and when, and managers see recent plays on the resident's record. Nothing alerts the manager on each play."
+      },
+      {
+        "q": "Can staff download or share the video?",
+        "a": "No. There are no downloads for staff. The video is played from a short lived private link, and it is never on a public address."
+      },
+      {
+        "q": "Which plan is it on, and can I try it?",
+        "a": "Resident profiles, photos and videos are on Professional and above. There is a 14 day free trial, and the <a href=\"/pricing\">pricing page</a> shows which plan includes it. You can <a href=\"/register\">create an account</a> or <a href=\"/demo\">book a demo</a> to see it first."
+      }
+    ]
+  },
+  "limits": {
+    "heading": "Honest limits: a way to find and play, not a therapy",
+    "cards": [
+      {
+        "title": "It does not choose or prescribe",
+        "body": "CareStream does not decide when to play a video or whether it will help. That is the carer's judgement. Some days a clip will comfort and some days it will not, and your care plan stays where it is."
+      },
+      {
+        "title": "The chat reads titles, not clips",
+        "body": "The chat cannot watch a video or describe what is in it. A video is found from its title and note, so a vague title is hard to find. Reminiscence photos work the same way, through their captions. The hub shows up to 10 newest videos per resident."
+      },
+      {
+        "title": "Plays are logged, not alerted",
+        "body": "Managers can see who played what and when on the resident's record, but nothing tells them each time. Residents cannot record a reply, and there are no video calls. It is on Professional and above."
+      }
+    ]
+  },
+  "read_next": [
+    "this-is-me-document",
+    "care-home-policies-the-complete-guide",
+    "dementia-care-training-in-the-uk"
+  ],
+  "faqs": {
+    "heading": "Playing family video in the hub, answered",
+    "groups": [
+      {
+        "group": "About finding and playing videos",
+        "items": [
+          {
+            "q": "What is reminiscence therapy in dementia care?",
+            "a": "It is a general name for using memories, often with photos, music or objects, to prompt talk and comfort. CareStream does not provide it. It helps your team find approved family photos and video messages, which you may use in your own approach."
+          },
+          {
+            "q": "Can the chat find reminiscence photos too?",
+            "a": "Yes. Approved photos appear under an answer as small pictures, found by their captions and notes. The chat never looks inside a picture. See our <a href=\"/blog/this-is-me-document\">guide to the this is me document</a> for what to record."
+          },
+          {
+            "q": "How does this support person centred care?",
+            "a": "Person centred care starts with knowing what matters to the individual. A message from someone they love, played at the right moment, is one way to act on what the family told you."
+          },
+          {
+            "q": "Where does a carer find a person's videos?",
+            "a": "In the This is me chat, under the answer, or through the Messages from family button in the This is me topic, which lists a person's approved videos newest first."
+          }
+        ]
+      },
+      {
+        "group": "About approval, privacy and the law",
+        "items": [
+          {
+            "q": "Does a manager approve a video before staff can play it?",
+            "a": "Yes. A family video stays hidden until a manager approves it. Videos a manager adds are approved at once."
+          },
+          {
+            "q": "Who can see the plays?",
+            "a": "Managers see recent plays on the resident's record, with the name of the person who played it and the time."
+          },
+          {
+            "q": "What happens when the resident moves on?",
+            "a": "Their videos leave the hub at once, and any waiting are deleted. Approved files stay in private storage for the retention period, then are deleted with the profile."
+          },
+          {
+            "q": "What does the law say about family and best interests?",
+            "a": "Under <a href=\"https://www.legislation.gov.uk/ukpga/2005/9/section/4\">section 4 of the Mental Capacity Act 2005</a>, you consider a person's past and present wishes and feelings and, where practicable, take into account the views of people interested in their welfare. <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/10\">Regulation 10</a> includes ensuring privacy. Check your own policies."
+          }
+        ]
+      }
+    ]
+  },
+  "guide": {
+    "heading": "How to use family video well at the hardest hour",
+    "lede": "A clip works best when the team knows it is there and knows when it tends to help. A little preparation makes the difference.",
+    "sections": [
+      {
+        "h3": "Make titles easy to find",
+        "paragraphs": [
+          "The chat finds videos from titles and notes. When you approve a video, edit the title so it says who it is from and what it is about, and use the note to say who is in it. Staff will often ask in everyday words."
+        ]
+      },
+      {
+        "h3": "Before you play one",
+        "paragraphs": [
+          "Know the resident and know the moment. Sit down with the person, play the video on the tablet between you, and watch their response. Stop if it upsets them. Your <a href=\"/staff-training/dementia-awareness\">dementia awareness training</a> covers how to read distress. For wishes and best interests, see the <a href=\"/staff-training/mental-capacity-act-and-dols\">Mental Capacity Act course</a>."
+        ],
+        "checklist": [
+          "Is the video approved and shown under the resident's name and room?",
+          "Is the tablet charged and the sound set to a gentle level?",
+          "Are you sitting beside the person, not standing over them?",
+          "Will you note how they responded afterwards?"
+        ]
+      },
+      {
+        "h3": "Tell the family it helped",
+        "paragraphs": [
+          "A short thank you tells a relative their effort was used. It also makes it more likely they will send something new. See <a href=\"/uses/resident-knowledge\">resident knowledge</a> for the wider picture."
+        ]
+      }
+    ],
+    "note": "This page describes how the software works and is not legal or clinical advice. Check your own policies and local guidance for how you use recordings of residents."
+  },
+  "fine": "14 day free trial · Set up in a day · UK data residency",
+  "eyebrow": "Scenario",
+  "status": "draft",
+  "image": "https://api.carestreamai.com/public/policy-shop/image/e9e81c3c-81a1-4b9b-8692-bed799dbb679.webp"
+}

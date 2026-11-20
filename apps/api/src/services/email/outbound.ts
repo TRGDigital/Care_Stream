@@ -1479,7 +1479,7 @@ export async function sendActionPlanStaffEmail(opts: { to: string; staffName: st
   const from      = process.env.SENDGRID_FROM_ADDRESS ?? process.env.SENDGRID_FROM_EMAIL ?? `noreply@${INBOUND_DOMAIN}`
   const firstName = opts.staffName.split(' ')[0] || opts.staffName
   const n         = opts.actions.length
-  const hubUrl    = `${WEB_URL}/login`
+  const hubUrl    = `${WEB_URL}/chat?view=actions`   // opens My actions (signing in first if needed)
 
   const admin = await resolveActor(opts.actorUserId)
   if (admin) {

@@ -308,6 +308,19 @@ residentVideosRouter.get('/hub/videos', async (req: Request, res: Response) => {
   if (!(await residentsEnabled(tenantId)) || !(await tablesReady()) || !(await videosReady())) { ok(res, off); return }
   const living: any[] = await db.resident.findMany({ where: { tenant_id: tenantId, status: 'living' }, select: { id: true, first_name: true, last_name: true, preferred_name: true, room: true }, take: 500 })
   const rid = req.query.resident_id ? String(req.query.resident_id) : ''
+  const roomKey = req.query.room !== undefined ? String(req.query.room).trim() : ''
+  const normRoom = (x: any) => String(x ?? '').trim().toLowerCase()
+  // One room: the approved videos of everyone living in it (newest first). room=none is residents with no room recorded.
+  if (req.query.room !== undefined && !rid) {
+    const inRoom = living.filter(r => roomKey.toLowerCase() === 'none' ? !normRoom(r.room) : normRoom(r.room) === roomKey.toLowerCase())
+    if (!inRoom.length) { ok(res, { ...off, enabled: true, room: { key: roomKey, label: roomKey }, residents: [] }); return }
+    const rows: any[] = await db.residentVideo.findMany({ where: { tenant_id: tenantId, resident_id: { in: inRoom.map(r => r.id) }, status: 'approved', state: 'ready', s3_key: { not: '' } }, orderBy: { decided_at: 'desc' }, take: HUB_VIDEO_LIMIT * inRoom.length })
+    const perPerson = new Map<string, number>()
+    const videos = rows.filter(x => { const n = (perPerson.get(x.resident_id) ?? 0) + 1; perPerson.set(x.resident_id, n); return n <= HUB_VIDEO_LIMIT })
+      .map(x => hubVideoDto(x, inRoom.find(r => r.id === x.resident_id)))
+    ok(res, { enabled: true, people: [], resident: null, room: { key: roomKey, label: roomKey.toLowerCase() === 'none' ? 'No room recorded' : `Room ${inRoom[0].room}` }, residents: inRoom.map(r => ({ id: r.id, name: r.preferred_name || r.first_name })), videos })
+    return
+  }
   if (rid) {
     const r = living.find(x => x.id === rid)
     if (!r) { ok(res, { ...off, enabled: true }); return }
@@ -318,7 +331,20 @@ residentVideosRouter.get('/hub/videos', async (req: Request, res: Response) => {
   const g = await db.residentVideo.groupBy({ by: ['resident_id'], where: { tenant_id: tenantId, resident_id: { in: living.map(x => x.id) }, status: 'approved', state: 'ready', s3_key: { not: '' } }, _count: { _all: true } })
   const people = g.map((x: any) => { const r = living.find(l => l.id === x.resident_id); return r ? { id: r.id, name: r.preferred_name || r.first_name, display_name: displayName(r), count: Math.min(x._count._all, HUB_VIDEO_LIMIT) } : null }).filter(Boolean)
     .sort((a: any, b: any) => a.name.localeCompare(b.name))
-  ok(res, { enabled: people.length > 0, people, resident: null, videos: [] })
+  // Rooms that have at least one approved video, with how many are new (nobody has played them yet).
+  const vrows: any[] = people.length ? await db.residentVideo.findMany({ where: { tenant_id: tenantId, resident_id: { in: people.map((p: any) => p.id) }, status: 'approved', state: 'ready', s3_key: { not: '' } }, select: { resident_id: true, last_played_at: true }, take: 5000 }) : []
+  const newBy = new Map<string, number>()
+  for (const v of vrows) if (!v.last_played_at) newBy.set(v.resident_id, (newBy.get(v.resident_id) ?? 0) + 1)
+  const roomMap = new Map<string, { key: string; label: string; count: number; new_count: number; people: Array<{ id: string; name: string }> }>()
+  for (const p of people as any[]) {
+    const r = living.find(l => l.id === p.id)
+    const key = normRoom(r?.room) ? String(r.room).trim() : 'none'
+    const cur = roomMap.get(key.toLowerCase()) ?? { key, label: key === 'none' ? 'No room recorded' : `Room ${key}`, count: 0, new_count: 0, people: [] }
+    cur.count += p.count; cur.new_count += Math.min(newBy.get(p.id) ?? 0, p.count); cur.people.push({ id: p.id, name: p.name })
+    roomMap.set(key.toLowerCase(), cur)
+  }
+  const rooms = [...roomMap.values()].sort((a, b) => a.key === 'none' ? 1 : b.key === 'none' ? -1 : a.key.localeCompare(b.key, undefined, { numeric: true }))
+  ok(res, { enabled: people.length > 0, people: (people as any[]).map(p => ({ ...p, new_count: newBy.get(p.id) ?? 0 })), rooms, new_count: rooms.reduce((n, r) => n + r.new_count, 0), resident: null, videos: [] })
 })
 
 // Pressing play: logs who and when, and hands back a fresh link (so a link never goes stale in an open page).

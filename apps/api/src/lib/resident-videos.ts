@@ -109,6 +109,8 @@ export const hubVideoDto = (v: any, r?: { first_name?: string; preferred_name?: 
   resident_name: r ? (r.preferred_name || r.first_name || null) : null, room: r?.room ?? null,   // shown beside the video so staff know whose it is and where to find them
   id: v.id, title: v.title ?? null, note: v.note ?? null, uploaded_by_name: v.uploaded_by_name, relationship: v.relationship ?? null,
   submitted_at: iso(v.decided_at ?? v.submitted_at), duration_seconds: v.duration_seconds ?? null, width: v.width ?? null, height: v.height ?? null,
+  // When it was sent and when a manager approved it, and whether anyone has played it yet. "New" means nobody has played it.
+  sent_at: iso(v.submitted_at), approved_at: iso(v.decided_at), watched: !!v.last_played_at, last_played_at: iso(v.last_played_at), is_new: !v.last_played_at,
   poster_url: v.poster_key ? signedVideoPath(v.id, 'staff', 'poster') : null,
 })
 

@@ -160,6 +160,11 @@ export interface ResidentDetail extends Resident {
 export interface HubVideo {
   resident_name?: string | null
   room?: string | null
+  sent_at?: string | null
+  approved_at?: string | null
+  watched?: boolean
+  last_played_at?: string | null
+  is_new?: boolean
   id: string
   title: string | null
   note: string | null
@@ -333,6 +338,11 @@ export function createResidentsClient(token: string) {
     deleteVideo: (id: string, videoId: string) => call<{ deleted: boolean }>(`/residents/${id}/videos/${videoId}`, token, { method: 'DELETE' }),
     /** Staff hub: people with approved video messages, or one person's messages (newest first). */
     hubVideoPeople: () => call<{ enabled: boolean; people: Array<{ id: string; name: string; display_name: string; count: number }> }>('/residents/hub/videos', token),
+    /** Staff hub: the rooms that have video messages, with how many are new (nobody has played them yet). */
+    hubVideoRooms: () => call<{ enabled: boolean; new_count?: number; rooms: Array<{ key: string; label: string; count: number; new_count: number; people: Array<{ id: string; name: string }> }> }>('/residents/hub/videos', token),
+    /** One room's video messages (everyone living in it), newest first. */
+    hubRoomVideos: (room: string) =>
+      call<{ enabled: boolean; room: { key: string; label: string } | null; residents: Array<{ id: string; name: string }>; videos: HubVideo[] }>(`/residents/hub/videos?room=${encodeURIComponent(room)}`, token),
     hubVideos: (residentId: string) =>
       call<{ enabled: boolean; resident: { id: string; name: string } | null; videos: HubVideo[] }>(`/residents/hub/videos?resident_id=${encodeURIComponent(residentId)}`, token),
     /** Press play: logs who played it and returns a fresh private streaming link. */

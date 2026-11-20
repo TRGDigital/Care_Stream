@@ -9,7 +9,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { useSession } from 'next-auth/react'
-import { ArrowLeft, Clapperboard, Loader2, Play, X } from 'lucide-react'
+import { ArrowLeft, Check, Clapperboard, Loader2, Play, X } from 'lucide-react'
 import { createResidentsClient, photoSrc, type HubVideo } from '@/lib/residents-api'
 import { fmtDuration } from '@/lib/video-upload'
 
@@ -72,10 +72,14 @@ function PlayerModal({ client, video, name, onClose }: { client: Client; video: 
   )
 }
 
-function Tile({ v, onPlay }: { v: HubVideo; onPlay: () => void }) {
+function Tile({ v, onPlay, watchedAt }: { v: HubVideo; onPlay: () => void; watchedAt?: string }) {
+  // "New" means nobody has played it yet. Playing it here clears the tag at once (watchedAt), before the list is reloaded.
+  const watched = !!watchedAt || !!v.watched
+  const isNew = v.is_new !== undefined ? v.is_new && !watchedAt : false
+  const approvedDiffers = v.approved_at && v.sent_at && date(v.approved_at) !== date(v.sent_at)
   return (
     <li className="min-w-0">
-      <button type="button" onClick={onPlay} aria-label={`Play ${v.title || 'video message'}, ${from(v)}`}
+      <button type="button" onClick={onPlay} aria-label={`Play ${v.title || 'video message'}, ${from(v)}${isNew ? ', new' : ''}`}
         className="group relative block aspect-video w-full overflow-hidden rounded-xl border border-gray-200 bg-gray-100 hover:border-teal focus:outline-none focus:ring-2 focus:ring-teal/40">
         {v.poster_url && (
           // eslint-disable-next-line @next/next/no-img-element
@@ -84,42 +88,55 @@ function Tile({ v, onPlay }: { v: HubVideo; onPlay: () => void }) {
         <span className="absolute inset-0 flex items-center justify-center">
           <span className="flex h-16 w-16 items-center justify-center rounded-full bg-white/95 text-teal shadow-md group-hover:scale-105"><Play size={30} className="ml-1" aria-hidden="true" /></span>
         </span>
+        {isNew && <span className="absolute left-2 top-2 rounded-full bg-rose-500 px-2.5 py-0.5 text-xs font-bold uppercase tracking-wide text-white shadow">New</span>}
         {v.duration_seconds ? <span className="absolute bottom-1.5 right-1.5 rounded bg-white/90 px-1.5 py-0.5 text-xs font-medium text-neutral-dark">{fmtDuration(v.duration_seconds)}</span> : null}
       </button>
       {(v.resident_name || v.room) && <p className="mt-1.5 text-sm font-semibold text-teal">{[v.resident_name, v.room ? `Room ${v.room}` : ''].filter(Boolean).join(', ')}</p>}
       <p className="text-base font-medium leading-snug text-neutral-dark">{v.title || 'Video message'}</p>
       <p className="text-sm text-neutral-mid">{from(v)}</p>
-      {v.submitted_at && <p className="text-xs text-neutral-mid">{date(v.submitted_at)}</p>}
+      {(v.sent_at || v.submitted_at) && (
+        <p className="text-xs text-neutral-mid">Sent {date(v.sent_at ?? v.submitted_at)}{approvedDiffers ? `, approved ${date(v.approved_at as string)}` : ''}</p>
+      )}
+      {v.is_new !== undefined && (watched
+        ? <p className="mt-0.5 flex items-center gap-1 text-xs font-medium text-green-700"><Check size={12} aria-hidden="true" /> Watched{(watchedAt || v.last_played_at) ? ` ${date(watchedAt ?? v.last_played_at ?? null)}` : ''}</p>
+        : <p className="mt-0.5 text-xs font-medium text-amber-700">Not watched yet</p>)}
     </li>
   )
 }
 
-/** The "Messages from family" button for the This is me topic. It only shows when someone has an approved video. */
+/** The "Messages from family" button for the This is me topic. It lists the rooms that have an approved video, then that room's videos. */
 export function MessagesFromFamilyButton({ token }: { token: string }) {
   const client = useMemo(() => createResidentsClient(token), [token])
-  const [people, setPeople] = useState<Array<{ id: string; name: string; count: number }>>([])
+  type Room = { key: string; label: string; count: number; new_count: number; people: Array<{ id: string; name: string }> }
+  const [rooms, setRooms] = useState<Room[]>([])
+  const [newTotal, setNewTotal] = useState(0)
   const [open, setOpen] = useState(false)
-  const [who, setWho] = useState<{ id: string; name: string } | null>(null)
+  const [room, setRoom] = useState<Room | null>(null)
   const [videos, setVideos] = useState<HubVideo[]>([])
   const [loading, setLoading] = useState(false)
   const [playing, setPlaying] = useState<HubVideo | null>(null)
+  const [watched, setWatched] = useState<Record<string, string>>({})
   const [find, setFind] = useState('')
 
+  const loadRooms = () => client.hubVideoRooms().then(d => { setRooms(d.rooms ?? []); setNewTotal(d.new_count ?? 0) }).catch(() => { /* optional: stay quiet if the plan or table is not ready */ })
   useEffect(() => {
     let live = true
-    client.hubVideoPeople().then(d => { if (live) setPeople(d.people ?? []) }).catch(() => { /* optional: stay quiet if the plan or table is not ready */ })
-    return () => { live = false }
+    client.hubVideoRooms().then(d => { if (live) { setRooms(d.rooms ?? []); setNewTotal(d.new_count ?? 0) } }).catch(() => { /* optional */ })
+    const t = setInterval(() => { client.hubVideoRooms().then(d => { if (live) { setRooms(d.rooms ?? []); setNewTotal(d.new_count ?? 0) } }).catch(() => { /* optional */ }) }, 60_000)
+    return () => { live = false; clearInterval(t) }
   }, [client])
 
-  function choose(p: { id: string; name: string }) {
-    setWho(p); setVideos([]); setLoading(true)
-    client.hubVideos(p.id).then(d => setVideos(d.videos ?? [])).catch(() => setVideos([])).finally(() => setLoading(false))
+  function chooseRoom(r: Room) {
+    setRoom(r); setVideos([]); setLoading(true)
+    client.hubRoomVideos(r.key).then(d => setVideos(d.videos ?? [])).catch(() => setVideos([])).finally(() => setLoading(false))
   }
   function show() {
     setOpen(true)
-    if (people.length === 1) choose(people[0])
+    if (rooms.length === 1) chooseRoom(rooms[0])
   }
-  function close() { setOpen(false); setWho(null); setVideos([]); setFind('') }
+  function backToRooms() { setRoom(null); setVideos([]); void loadRooms() }
+  function close() { setOpen(false); setRoom(null); setVideos([]); setFind(''); void loadRooms() }
+  function play(v: HubVideo) { setPlaying(v); setWatched(w => (w[v.id] ? w : { ...w, [v.id]: new Date().toISOString() })) }
 
   useEffect(() => {
     if (!open || playing) return
@@ -128,49 +145,58 @@ export function MessagesFromFamilyButton({ token }: { token: string }) {
     return () => document.removeEventListener('keydown', onKey)
   }, [open, playing])
 
-  if (people.length === 0) return null
-  const shown = people.filter(p => !find.trim() || p.name.toLowerCase().includes(find.trim().toLowerCase()))
+  if (rooms.length === 0) return null
+  const q = find.trim().toLowerCase()
+  const shown = rooms.filter(r => !q || r.label.toLowerCase().includes(q) || r.people.some(p => p.name.toLowerCase().includes(q)))
 
   return (
     <>
       <button type="button" onClick={show} className="flex items-center gap-1 rounded-md border border-teal/40 bg-teal/5 px-2.5 py-1 text-xs font-semibold text-teal hover:bg-teal/10">
         <Clapperboard size={13} aria-hidden="true" /> Messages from family
+        {newTotal > 0 && <span className="ml-0.5 rounded-full bg-rose-500 px-1.5 py-px text-[10px] font-bold text-white" aria-label={`${newTotal} new`}>{newTotal} new</span>}
       </button>
       {open && (
         <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/50 p-3" onMouseDown={e => { if (e.target === e.currentTarget) close() }}>
           <div role="dialog" aria-modal="true" aria-label="Messages from family" className="flex max-h-[92vh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl bg-white shadow-xl">
             <div className="flex items-center justify-between gap-3 border-b border-gray-200 px-4 py-3">
               <div className="flex min-w-0 items-center gap-2">
-                {who && people.length > 1 && (
-                  <button type="button" onClick={() => { setWho(null); setVideos([]) }} aria-label="Back to the list of people" className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg text-neutral-mid hover:bg-neutral-light"><ArrowLeft size={20} /></button>
+                {room && rooms.length > 1 && (
+                  <button type="button" onClick={backToRooms} aria-label="Back to the list of rooms" className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg text-neutral-mid hover:bg-neutral-light"><ArrowLeft size={20} /></button>
                 )}
-                <h2 className="truncate text-lg font-semibold text-neutral-dark">{who ? `Messages for ${who.name}` : 'Messages from family'}</h2>
+                <h2 className="truncate text-lg font-semibold text-neutral-dark">{room ? room.label : 'Messages from family'}</h2>
               </div>
               <button type="button" onClick={close} aria-label="Close" className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg text-neutral-mid hover:bg-neutral-light"><X size={22} /></button>
             </div>
             <div className="min-h-0 flex-1 overflow-y-auto p-4">
-              {!who ? (
+              {!room ? (
                 <div className="space-y-3">
-                  <p className="text-base text-neutral-mid">Choose who you would like to play a message for.</p>
-                  {people.length > 8 && <input value={find} onChange={e => setFind(e.target.value)} placeholder="Find a person" aria-label="Find a person" className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-base sm:w-72" />}
+                  <p className="text-base text-neutral-mid">Choose a room to see its video messages.</p>
+                  {rooms.length > 8 && <input value={find} onChange={e => setFind(e.target.value)} placeholder="Find a room or a person" aria-label="Find a room or a person" className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-base sm:w-72" />}
                   <ul className="grid gap-2 sm:grid-cols-2">
-                    {shown.map(p => (
-                      <li key={p.id}>
-                        <button type="button" onClick={() => choose(p)} className="flex min-h-[56px] w-full items-center justify-between gap-3 rounded-xl border border-gray-200 px-4 py-3 text-left text-lg font-medium text-neutral-dark hover:border-teal hover:bg-teal/5">
-                          <span className="truncate">{p.name}</span><span className="shrink-0 text-sm font-normal text-neutral-mid">{p.count} {p.count === 1 ? 'message' : 'messages'}</span>
+                    {shown.map(r => (
+                      <li key={r.key}>
+                        <button type="button" onClick={() => chooseRoom(r)} className="flex min-h-[64px] w-full items-center justify-between gap-3 rounded-xl border border-gray-200 px-4 py-3 text-left hover:border-teal hover:bg-teal/5">
+                          <span className="min-w-0">
+                            <span className="block truncate text-lg font-semibold text-neutral-dark">{r.label}</span>
+                            <span className="block truncate text-sm text-neutral-mid">{r.people.map(p => p.name).join(', ')}</span>
+                          </span>
+                          <span className="flex shrink-0 flex-col items-end gap-1">
+                            <span className="text-sm text-neutral-mid">{r.count} {r.count === 1 ? 'message' : 'messages'}</span>
+                            {r.new_count > 0 && <span className="rounded-full bg-rose-500 px-2 py-0.5 text-xs font-bold text-white">{r.new_count} new</span>}
+                          </span>
                         </button>
                       </li>
                     ))}
                   </ul>
                 </div>
               ) : loading ? <div className="flex justify-center py-10"><Loader2 size={28} className="animate-spin text-teal" aria-label="Loading" /></div>
-                : videos.length === 0 ? <p className="text-base text-neutral-mid">There are no video messages for {who.name} just now.</p>
-                : <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3" aria-label={`Video messages for ${who.name}`}>{videos.map(v => <Tile key={v.id} v={v} onPlay={() => setPlaying(v)} />)}</ul>}
+                : videos.length === 0 ? <p className="text-base text-neutral-mid">There are no video messages for {room.label} just now.</p>
+                : <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3" aria-label={`Video messages for ${room.label}`}>{videos.map(v => <Tile key={v.id} v={v} watchedAt={watched[v.id]} onPlay={() => play(v)} />)}</ul>}
             </div>
           </div>
         </div>
       )}
-      {playing && who && <PlayerModal client={client} video={playing} name={who.name} onClose={() => setPlaying(null)} />}
+      {playing && <PlayerModal client={client} video={playing} name={playing.resident_name ?? room?.label ?? ''} onClose={() => setPlaying(null)} />}
     </>
   )
 }
@@ -181,10 +207,11 @@ export function ChatVideoRow({ videos, name = '' }: { videos: HubVideo[]; name?:
   const token = (session as any)?.accessToken as string | undefined
   const client = useMemo(() => (token ? createResidentsClient(token) : null), [token])
   const [playing, setPlaying] = useState<HubVideo | null>(null)
+  const [seen, setSeen] = useState<Record<string, string>>({})
   if (!client) return null
   return (
     <div className="mt-2 pl-10">
-      <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3" aria-label="Video messages">{videos.map(v => <Tile key={v.id} v={v} onPlay={() => setPlaying(v)} />)}</ul>
+      <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3" aria-label="Video messages">{videos.map(v => <Tile key={v.id} v={v} watchedAt={seen[v.id]} onPlay={() => { setPlaying(v); setSeen(x => (x[v.id] ? x : { ...x, [v.id]: new Date().toISOString() })) }} />)}</ul>
       {playing && <PlayerModal client={client} video={playing} name={name} onClose={() => setPlaying(null)} />}
     </div>
   )

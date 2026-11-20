@@ -335,6 +335,20 @@ queryRouter.post('/stream', async (req: Request, res: Response) => {
   }
 
   try {
+    // "This is me": a question about photos or videos is answered from the approved captions and titles. Work that out FIRST and, when it
+    // applies, answer with it straight away: running the normal answer first made it stream a "we have no images" reply before the real one.
+    const photoAns = document_category === 'resident' ? await photoAnswer(tenantId, query_text, conversation_history) : null
+    const videoAns = !photoAns && document_category === 'resident' ? await videoAnswer(tenantId, query_text, conversation_history) : null
+    if (photoAns || videoAns) {
+      const a = (photoAns ?? videoAns) as { html: string }
+      send({ type: 'paragraph', html: a.html })
+      send({
+        type: 'done', photos: photoAns?.photos, videos: videoAns?.videos, queryId: null, html: a.html,
+        citations: [], seedSources: [], manualSources: [], referenceSources: [], noMatch: false, intentType: 'resident_media', suggestedQuestions: [],
+      })
+      res.end()
+      return
+    }
     const result = await runQueryPipeline({
       queryText:           query_text,
       tenantId,
@@ -349,19 +363,15 @@ queryRouter.post('/stream', async (req: Request, res: Response) => {
       forcedLanguage,
       onText,
     })
-    const photoAns = document_category === 'resident' ? await photoAnswer(tenantId, query_text, conversation_history) : null
-    const videoAns = !photoAns && document_category === 'resident' ? await videoAnswer(tenantId, query_text, conversation_history) : null
     send({
       type:               'done',
-      photos:             photoAns?.photos,
-      videos:             videoAns?.videos,
       queryId:            result.queryId,
-      html:               photoAns ? photoAns.html : videoAns ? videoAns.html : result.responseHtml,
+      html:               result.responseHtml,
       citations:          result.citations,
       seedSources:        result.seedSources ?? [],
       manualSources:      result.manualSources ?? [],
       referenceSources:   result.referenceSources ?? [],
-      noMatch:            photoAns || videoAns ? false : result.noMatch,
+      noMatch:            result.noMatch,
       intentType:         result.intentType,
       languageDetected:   result.languageDetected,
       suggestedQuestions: result.suggestedQuestions,

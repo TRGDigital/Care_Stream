@@ -140,13 +140,13 @@ export function ChatPhotoRow({ photos }: { photos: Array<{ id: string; caption: 
         ))}
       </ul>
       {big && (
-        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/50 p-4" onMouseDown={e => { if (e.target === e.currentTarget) setBig(null) }}>
-          <div role="dialog" aria-modal="true" aria-label="Photo" className="max-h-[92vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white p-4 shadow-xl">
+        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/75 p-3" onMouseDown={e => { if (e.target === e.currentTarget) setBig(null) }}>
+          <div role="dialog" aria-modal="true" aria-label="Photo" className="max-h-[96vh] w-full max-w-6xl overflow-y-auto rounded-2xl bg-white p-3 shadow-xl sm:p-4">
             <div className="mb-2 flex justify-end">
               <button type="button" onClick={() => setBig(null)} aria-label="Close photo" className="rounded p-1 text-neutral-mid hover:bg-neutral-light"><X size={18} /></button>
             </div>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={photoSrc(big.url)} alt={big.caption || 'Photo'} className="mx-auto max-h-[65vh] w-auto max-w-full rounded-lg object-contain" />
+            <img src={photoSrc(big.url)} alt={big.caption || 'Photo'} className="mx-auto max-h-[78vh] w-auto max-w-full rounded-lg object-contain" />
             {big.caption && <p className="mt-3 text-base text-neutral-dark">{big.caption}</p>}
             {big.people_note && <p className="mt-1 text-sm text-neutral-mid">In the photo: {big.people_note}</p>}
           </div>

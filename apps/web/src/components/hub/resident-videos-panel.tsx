@@ -58,9 +58,9 @@ function PlayerModal({ client, video, name, onClose }: { client: Client; video: 
           : !src ? <div className="flex h-48 w-72 items-center justify-center rounded-xl bg-white"><Loader2 size={36} className="animate-spin text-teal" aria-label="Loading" /></div>
           : (
             <div className="flex flex-col items-center gap-2">
-              <video key={src} src={src} controls autoPlay playsInline preload="auto" poster={photoSrc(video.poster_url)} onError={expired} className={`${text ? 'max-h-[60vh]' : 'max-h-[85vh]'} max-w-[92vw] rounded-xl bg-black`} />
+              <video key={src} src={src} controls autoPlay playsInline preload="auto" poster={photoSrc(video.poster_url)} onError={expired} className={`${text ? 'h-[62vh]' : 'h-[88vh]'} w-[94vw] max-w-[1400px] rounded-xl bg-black object-contain`} />
               {text && (
-                <div className="max-h-[22vh] w-full max-w-[92vw] overflow-y-auto rounded-xl bg-white px-4 py-3" aria-label="English translation">
+                <div className="max-h-[22vh] w-full max-w-[1400px] overflow-y-auto rounded-xl bg-white px-4 py-3" aria-label="English translation">
                   <p className="text-xs font-medium text-neutral-mid">{text.label}{text.language_name ? `. Spoken in ${text.language_name}.` : ''}</p>
                   <p className="mt-1 whitespace-pre-line text-base leading-relaxed text-neutral-dark">{text.text}</p>
                 </div>

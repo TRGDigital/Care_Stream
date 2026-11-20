@@ -3402,6 +3402,56 @@ model ResidentReminderSetting {
   @@map("resident_reminder_settings")
 }
 
+// Family video messages for a "This is me" profile. See prisma/sql/2026-11-21_resident_videos.sql. Private storage only; pending until a manager approves.
+model ResidentVideo {
+  id                    String    @id @default(uuid())
+  tenant_id             String
+  resident_id           String
+  invite_id             String?
+  uploaded_by_name      String
+  relationship          String?
+  source                String    @default("family")     // family | manager
+  title                 String?
+  note                  String?
+  state                 String    @default("uploading")  // uploading | processing | ready | failed
+  status                String    @default("pending")    // pending | approved | rejected
+  s3_key                String    @default("")
+  poster_key            String    @default("")
+  mime                  String    @default("video/mp4")
+  duration_seconds      Float?
+  size_bytes            Int       @default(0)
+  width                 Int?
+  height                Int?
+  upload_id             String?
+  total_chunks          Int       @default(0)
+  scan_status           String    @default("skipped")    // clean | skipped
+  error                 String?
+  submitted_at          DateTime  @default(now())
+  processing_started_at DateTime?
+  decided_at            DateTime?
+  decided_by            String?
+  last_played_at        DateTime?
+
+  @@index([resident_id, status])
+  @@index([invite_id])
+  @@index([tenant_id])
+  @@map("resident_videos")
+}
+
+// One row each time staff press play on an approved video message (who and when). Managers see the recent ones on the resident record.
+model ResidentVideoPlay {
+  id          String   @id @default(uuid())
+  tenant_id   String
+  resident_id String
+  video_id    String
+  user_id     String
+  played_at   DateTime @default(now())
+
+  @@index([resident_id, played_at])
+  @@index([video_id])
+  @@map("resident_video_plays")
+}
+
 
 // ─── Staff incentives (Professional and Enterprise) ─────────────────────────────
 // See prisma/sql/2026-11-17_staff_incentives.sql. No relations on purpose (same as the resident tables).

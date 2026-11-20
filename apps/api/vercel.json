@@ -9,7 +9,9 @@
         "memory": 1769,
         "includeFiles": [
           "../../node_modules/pdfkit/js/standard-fonts/**",
-          "node_modules/pdfkit/js/standard-fonts/**"
+          "node_modules/pdfkit/js/standard-fonts/**",
+          "../../node_modules/ffmpeg-static/ffmpeg",
+          "node_modules/ffmpeg-static/ffmpeg"
         ]
       }
     }

@@ -69,6 +69,7 @@ import { publicScenariosRouter, scenariosAdminRouter } from './routes/scenarios'
 import { publicFamilyRouter, residentPhotoFileRouter } from './routes/residents-public'
 import { residentsRouter } from './routes/residents'
 import { familyStopRouter } from './routes/family-reminders'
+import { residentVideosRouter, publicFamilyVideosRouter, residentVideoFileRouter } from './routes/residents-videos'
 import { incentivesRouter } from './routes/incentives'
 import { superUserRouter } from './routes/super-user'
 import { standardTrainingRouter } from './routes/standard-training'
@@ -208,9 +209,12 @@ app.use('/public/collections', publicCollectionsRouter)
 
 // "This is me": the private family form (token link, no sign in). BEFORE requireAuth.
 app.use('/public/family/stop', familyStopRouter)   // the "Stop these reminders" link in family reminder emails
+app.use('/public/family', publicFamilyVideosRouter)   // video upload (chunked) for the same link
 app.use('/public/family', publicFamilyRouter)
 // "This is me" photo files: opened only with a link signed for about five minutes, re-checked on every request. BEFORE requireAuth.
 app.use('/public/resident-photo', residentPhotoFileRouter)
+// "This is me" video files: signed for about ten minutes, re-checked on every request, HTTP Range supported. BEFORE requireAuth.
+app.use('/public/resident-video', residentVideoFileRouter)
 
 // Public DB-driven feature pages (the /pricing feature list) — published only, no auth. BEFORE requireAuth.
 app.use('/public/feature-pages', publicFeaturePagesRouter)
@@ -258,6 +262,7 @@ app.use('/settings', settingsRouter)
 app.use('/policy-purchases', policyPurchasesRouter)
 app.use('/translation-suggestions', translationSuggestionsRouter)
 app.use('/knowledge', knowledgeRouter)
+app.use('/residents', residentVideosRouter)   // video messages (falls through to the router below for everything else)
 app.use('/residents', residentsRouter)
 app.use('/incentives', incentivesRouter)
 app.use('/super-user', superUserRouter)

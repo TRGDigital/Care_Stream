@@ -1,4 +1,5 @@
 import { photoAnswer } from '../lib/resident-photos'
+import { videoAnswer } from '../lib/resident-videos'
 import { Router, Request, Response } from 'express'
 import { z } from 'zod'
 import { requireAdmin } from '../middleware/auth'
@@ -100,9 +101,13 @@ queryRouter.post('/', async (req: Request, res: Response) => {
   // "This is me": a question about photos is answered from the approved captions, with the pictures shown under the answer.
   const photoAns = document_category === 'resident' ? await photoAnswer(tenantId, query_text, conversation_history) : null
   if (photoAns) result = { ...result, responseHtml: photoAns.html, noMatch: false } as typeof result
+  // The same for video messages (a question about videos or messages from family): titles and notes only, never the video itself.
+  const videoAns = !photoAns && document_category === 'resident' ? await videoAnswer(tenantId, query_text, conversation_history) : null
+  if (videoAns) result = { ...result, responseHtml: videoAns.html, noMatch: false } as typeof result
 
   ok(res, {
     photos:             photoAns?.photos,
+    videos:             videoAns?.videos,
     queryId:            result.queryId,
     responseHtml:       result.responseHtml,
     intentType:         result.intentType,
@@ -345,16 +350,18 @@ queryRouter.post('/stream', async (req: Request, res: Response) => {
       onText,
     })
     const photoAns = document_category === 'resident' ? await photoAnswer(tenantId, query_text, conversation_history) : null
+    const videoAns = !photoAns && document_category === 'resident' ? await videoAnswer(tenantId, query_text, conversation_history) : null
     send({
       type:               'done',
       photos:             photoAns?.photos,
+      videos:             videoAns?.videos,
       queryId:            result.queryId,
-      html:               photoAns ? photoAns.html : result.responseHtml,
+      html:               photoAns ? photoAns.html : videoAns ? videoAns.html : result.responseHtml,
       citations:          result.citations,
       seedSources:        result.seedSources ?? [],
       manualSources:      result.manualSources ?? [],
       referenceSources:   result.referenceSources ?? [],
-      noMatch:            photoAns ? false : result.noMatch,
+      noMatch:            photoAns || videoAns ? false : result.noMatch,
       intentType:         result.intentType,
       languageDetected:   result.languageDetected,
       suggestedQuestions: result.suggestedQuestions,

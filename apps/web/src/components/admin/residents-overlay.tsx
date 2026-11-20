@@ -13,6 +13,7 @@ import { ArchiveAccessSettings, ArchivePanel } from './residents/archive-panel'
 import { FamilyTab } from './residents/family-tab'
 import { ResidentEditor } from './residents/resident-editor'
 import { PhotoManager } from './residents/photos'
+import { VideoManager } from './residents/videos'
 import { StatusDialog } from './residents/status-dialog'
 import { ErrorBox, btnDangerOutline, btnSecondary, fmtDate, inputCls } from './residents/ui'
 
@@ -219,6 +220,7 @@ export function ResidentsOverlay({ token, userId, onClose, initialResidentId = n
                           <div className="space-y-8">
                             <ResidentEditor key={detail.data.id} client={client} sections={sections} resident={detail.data} onSaved={() => { current.reload(); detail.reload() }} />
                             <PhotoManager client={client} resident={detail.data} onChanged={refreshAll} />
+                            <VideoManager client={client} resident={detail.data} onChanged={refreshAll} />
                             <div className="rounded-lg border border-red-200 bg-red-50/50 p-4">
                               <h4 className="text-sm font-semibold text-red-900">Died or moved on</h4>
                               <p className="mb-3 mt-1 text-sm text-red-900">They will disappear from the hub and the assistant straight away. You will be asked to confirm first.</p>

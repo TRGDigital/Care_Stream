@@ -34,6 +34,7 @@ import {
 } from '../lib/resident-photos'
 import { residentRemindersRouter } from './family-reminders'
 import { cancelResidentReminders } from '../lib/family-reminders'
+import { pendingVideoCounts, adminVideosFor, retireResidentVideos, deleteResidentVideos } from '../lib/resident-videos'
 import { sendResidentFamilyInviteEmail, sendResidentArchiveTaskEmail } from '../services/email/outbound'
 
 export const residentsRouter = Router()
@@ -94,6 +95,7 @@ async function counts(tenantId: string, ids: string[]) {
     const ph = await db.residentPhoto.groupBy({ by: ['resident_id'], where: { tenant_id: tenantId, resident_id: { in: ids }, status: 'pending' }, _count: { _all: true } })
     for (const x of ph) pending.set(x.resident_id, (pending.get(x.resident_id) ?? 0) + x._count._all)
   } catch { /* photos table not created yet */ }
+  for (const [rid, c] of await pendingVideoCounts(tenantId, ids)) pending.set(rid, (pending.get(rid) ?? 0) + c)   // clips waiting too
   return {
     pending,
     invites: new Map<string, number>(i.map((x: any) => [x.resident_id, x._count._all])),
@@ -232,8 +234,9 @@ residentsRouter.get('/:id', async (req: Request, res: Response) => {
   ])
   let photos: any[] = []
   try { photos = await db.residentPhoto.findMany({ where: { tenant_id: tenantId, resident_id: r.id }, orderBy: { submitted_at: 'desc' }, take: 500 }) } catch { /* photos table not created yet */ }
-  const pending = contribs.filter((c: any) => c.status === 'pending').length + photos.filter((p: any) => p.status === 'pending').length
-  ok(res, { ...dto(r, pending, invites.filter((i: any) => !i.revoked_at).length), invites: invites.map(inviteDto), contributions: contribs.map(contribDto), photos: photos.map(adminPhotoDto) })
+  const vid = await adminVideosFor(tenantId, r.id)
+  const pending = contribs.filter((c: any) => c.status === 'pending').length + photos.filter((p: any) => p.status === 'pending').length + vid.videos.filter(v => v.status === 'pending' && v.state === 'ready').length
+  ok(res, { ...dto(r, pending, invites.filter((i: any) => !i.revoked_at).length), invites: invites.map(inviteDto), contributions: contribs.map(contribDto), photos: photos.map(adminPhotoDto), videos: vid.videos, video_plays: vid.plays })
 })
 
 residentsRouter.patch('/:id', async (req: Request, res: Response) => {
@@ -292,6 +295,7 @@ residentsRouter.post('/:id/status', async (req: Request, res: Response) => {
     for (const p of waiting) await discardPhotoFile(p)
     await db.residentPhoto.updateMany({ where: { tenant_id: tenantId, resident_id: r.id, status: 'pending' }, data: { status: 'rejected', decided_at: now, decided_by: 'system: resident archived' } })
   } catch { /* photos table not created yet */ }
+  await retireResidentVideos(tenantId, r.id, now)   // video messages: same rule as photos (approved stay private, the rest are deleted)
   await syncResidentKnowledge(tenantId, r.id)   // removes the assistant's knowledge of them
   void writeAuditLog({ tenant_id: tenantId, user_id: a.id, event_type: 'resident_archived', entity_type: 'resident', entity_id: r.id, metadata: { status: p.data.status } })
 
@@ -567,6 +571,7 @@ residentsRouter.delete('/:id', async (req: Request, res: Response) => {
   const a = await actor(req)
   await syncResidentKnowledge(ctx.tenantId, ctx.r.id)   // belt and braces: nothing of theirs left in the assistant
   await deleteResidentPhotos(ctx.tenantId, ctx.r.id)   // files from storage first, then the rows
+  await deleteResidentVideos(ctx.tenantId, ctx.r.id)   // video messages, their files and their play log
   await db.residentContribution.deleteMany({ where: { tenant_id: ctx.tenantId, resident_id: ctx.r.id } })
   await cancelResidentReminders(ctx.tenantId, ctx.r.id, true)
   await db.residentInvite.deleteMany({ where: { tenant_id: ctx.tenantId, resident_id: ctx.r.id } })

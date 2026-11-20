@@ -71,6 +71,7 @@ import { emailAvatarRouter } from './services/email/email-avatar'
 import { publicFamilyRouter, residentPhotoFileRouter } from './routes/residents-public'
 import { residentsRouter } from './routes/residents'
 import { familyStopRouter } from './routes/family-reminders'
+import { emailPreviewsAdminRouter } from './routes/email-previews-admin'
 import { residentVideosRouter, publicFamilyVideosRouter, residentVideoFileRouter } from './routes/residents-videos'
 import { incentivesRouter } from './routes/incentives'
 import { superUserRouter } from './routes/super-user'
@@ -151,6 +152,7 @@ app.use('/admin/onboarding-templates', onboardingTemplatesRouter)
 app.use('/admin/user-cases', userCasesAdminRouter)
 app.use('/admin/scenarios', scenariosAdminRouter)
 app.use('/admin/service-pages', servicePagesAdminRouter)
+app.use('/admin/email-previews', emailPreviewsAdminRouter)   // owner-only: send one sample person-led email to a team address
 app.use('/admin/setting-pages', settingPagesAdminRouter)
 app.use('/admin/preview', previewAdminRouter)
 app.use('/admin/standard-training', standardTrainingRouter)

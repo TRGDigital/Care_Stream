@@ -26,7 +26,7 @@ import { ProgressView } from '@/components/hub/progress-view'
 import { MyActionsView } from '@/components/hub/my-actions-view'
 import { SuggestTranslation } from '@/components/hub/suggest-translation'
 import { SupervisionsHubView } from '@/components/hub/supervisions-view'
-import { ResidentPhotosPanel } from '@/components/hub/resident-photos-panel'
+import { ResidentPhotosPanel, ChatPhotoRow } from '@/components/hub/resident-photos-panel'
 import { DisplaySettings } from '@/components/hub/display-settings'
 import Link from 'next/link'
 import { createApiClient, apiAssetUrl, type Citation } from '@/lib/api-client'
@@ -56,6 +56,7 @@ interface ChatMessage {
   loading?:            boolean
   suggestedQuestions?: string[]
   queryId?:            string | null
+  photos?:             Array<{ id: string; caption: string | null; people_note: string | null; url: string }>   // "This is me": approved photos shown under the answer
   // Language-switch support: the language this answer was generated in, plus a
   // cache of translated versions keyed by language code, so the toggle can flip
   // the displayed answer between the staff member's first and second language.
@@ -872,6 +873,7 @@ function ChatPageInner() {
                 loading:            false,
                 suggestedQuestions: d.suggestedQuestions?.length ? d.suggestedQuestions : undefined,
                 queryId:            d.queryId ?? null,
+                photos:             d.photos?.length ? d.photos : undefined,
                 genLang,
                 htmlByLang:         { [genLang]: finalHtml },
               } : m,
@@ -1942,6 +1944,8 @@ function MessageBubble({
           </div>
           )
         })()}
+
+        {msg.photos && msg.photos.length > 0 && !msg.loading && <ChatPhotoRow photos={msg.photos} />}
 
         {msg.suggestedQuestions && msg.suggestedQuestions.length > 0 && !msg.loading && (
           <div className="mt-3">

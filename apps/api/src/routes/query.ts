@@ -1,3 +1,4 @@
+import { photoAnswer } from '../lib/resident-photos'
 import { Router, Request, Response } from 'express'
 import { z } from 'zod'
 import { requireAdmin } from '../middleware/auth'
@@ -96,7 +97,12 @@ queryRouter.post('/', async (req: Request, res: Response) => {
     return
   }
 
+  // "This is me": a question about photos is answered from the approved captions, with the pictures shown under the answer.
+  const photoAns = document_category === 'resident' ? await photoAnswer(tenantId, query_text, conversation_history) : null
+  if (photoAns) result = { ...result, responseHtml: photoAns.html, noMatch: false } as typeof result
+
   ok(res, {
+    photos:             photoAns?.photos,
     queryId:            result.queryId,
     responseHtml:       result.responseHtml,
     intentType:         result.intentType,
@@ -338,15 +344,17 @@ queryRouter.post('/stream', async (req: Request, res: Response) => {
       forcedLanguage,
       onText,
     })
+    const photoAns = document_category === 'resident' ? await photoAnswer(tenantId, query_text, conversation_history) : null
     send({
       type:               'done',
+      photos:             photoAns?.photos,
       queryId:            result.queryId,
-      html:               result.responseHtml,
+      html:               photoAns ? photoAns.html : result.responseHtml,
       citations:          result.citations,
       seedSources:        result.seedSources ?? [],
       manualSources:      result.manualSources ?? [],
       referenceSources:   result.referenceSources ?? [],
-      noMatch:            result.noMatch,
+      noMatch:            photoAns ? false : result.noMatch,
       intentType:         result.intentType,
       languageDetected:   result.languageDetected,
       suggestedQuestions: result.suggestedQuestions,

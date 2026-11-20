@@ -121,3 +121,37 @@ export function ResidentPhotosPanel({ token, context = '' }: { token: string; co
     </div>
   )
 }
+
+// Photos shown under a chat answer. Tap one to enlarge. The links last about five minutes, so a reopened chat does not keep them.
+export function ChatPhotoRow({ photos }: { photos: Array<{ id: string; caption: string | null; people_note: string | null; url: string }> }) {
+  const [big, setBig] = useState<(typeof photos)[number] | null>(null)
+  return (
+    <div className="mt-2 pl-10">
+      <ul className="flex gap-3 overflow-x-auto pb-1" aria-label="Photos">
+        {photos.map(p => (
+          <li key={p.id} className="w-32 shrink-0">
+            <button type="button" onClick={() => setBig(p)} aria-label={`Enlarge photo${p.caption ? `: ${p.caption}` : ''}`}
+              className="block w-full overflow-hidden rounded-lg border border-gray-200 hover:border-teal focus:outline-none focus:ring-2 focus:ring-teal/40">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={photoSrc(p.url)} alt={p.caption || 'Photo'} loading="lazy" className="aspect-square w-full object-cover" />
+            </button>
+            {p.caption && <p className="mt-1 line-clamp-2 text-xs text-neutral-mid">{p.caption}</p>}
+          </li>
+        ))}
+      </ul>
+      {big && (
+        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/50 p-4" onMouseDown={e => { if (e.target === e.currentTarget) setBig(null) }}>
+          <div role="dialog" aria-modal="true" aria-label="Photo" className="max-h-[92vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white p-4 shadow-xl">
+            <div className="mb-2 flex justify-end">
+              <button type="button" onClick={() => setBig(null)} aria-label="Close photo" className="rounded p-1 text-neutral-mid hover:bg-neutral-light"><X size={18} /></button>
+            </div>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={photoSrc(big.url)} alt={big.caption || 'Photo'} className="mx-auto max-h-[65vh] w-auto max-w-full rounded-lg object-contain" />
+            {big.caption && <p className="mt-3 text-base text-neutral-dark">{big.caption}</p>}
+            {big.people_note && <p className="mt-1 text-sm text-neutral-mid">In the photo: {big.people_note}</p>}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}

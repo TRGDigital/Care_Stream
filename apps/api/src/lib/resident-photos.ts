@@ -14,7 +14,7 @@ import { createHmac, randomUUID, timingSafeEqual } from 'crypto'
 import sharp from 'sharp'
 import { prisma } from '../db/client'
 import { detectEvidenceType } from './evidence-file'
-import { cleanText } from './residents'
+import { cleanText, residentsEnabled } from './residents'
 import { scanBuffer, scannerConfigured } from '../services/security/malware-scan'
 import { uploadResidentPhoto, deleteFile } from '../services/storage/s3'
 
@@ -127,4 +127,65 @@ export async function deleteResidentPhotos(tenantId: string, residentId: string)
   for (const p of rows) if (p.s3_key) await deleteFile(p.s3_key)
   await db.residentPhoto.deleteMany({ where: { tenant_id: tenantId, resident_id: residentId } })
   return rows.length
+}
+
+// ─── Photos in the chat ─────────────────────────────────────────────────────────
+// When a question in the "This is me" topic asks about photos, the page answers from the approved photos' CAPTIONS and "who is in
+// the photo" notes (plain text people wrote), and shows the pictures themselves under the answer. The assistant never looks at an
+// image, and the signed links are the same short-lived staff links the hub uses. Living residents with approved photos only.
+const PHOTO_INTENT = /\b(photos?|photographs?|pictures?|pics?|images?)\b/i
+const STOP = new Set(['do','we','have','a','an','the','of','his','her','their','him','them','is','there','any','of','for','on','in','at','to','and','or','show','me','can','you','see','get','got','where','what','who','with','from','about','photo','photos','photograph','photographs','picture','pictures','pic','pics','image','images','that','this','it','its','are','was','were','be','have','has','please','tell','look','looking'])
+const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+const words = (s: string) => (s.toLowerCase().match(/[a-z0-9']+/g) ?? []).map(w => w.replace(/'s$/, '')).filter(w => w.length > 1)
+
+export async function photoAnswer(tenantId: string, queryText: string, history: Array<{ role: string; content: string }> = []): Promise<{ html: string; photos: ReturnType<typeof hubPhotoDto>[] } | null> {
+  if (!PHOTO_INTENT.test(queryText)) return null
+  try {
+    if (!(await residentsEnabled(tenantId)) || !(await photosReady())) return null
+    const residents: any[] = await db.resident.findMany({ where: { tenant_id: tenantId, status: 'living' }, select: { id: true, first_name: true, last_name: true, preferred_name: true }, take: 500 })
+    if (!residents.length) return null
+    const ph: any[] = await db.residentPhoto.findMany({ where: { tenant_id: tenantId, status: 'approved', s3_key: { not: '' } }, orderBy: { submitted_at: 'desc' }, take: 1000 })
+    // Which person? The question first, then the most recent mention in the last few messages.
+    const texts = [queryText, ...history.slice(-6).reverse().map(m => m.content.replace(/<[^>]+>/g, ' '))]
+    let target: any = null
+    for (const t of texts) {
+      const lower = t.toLowerCase()
+      let best: { r: any; at: number } | null = null
+      for (const r of residents) {
+        for (const n of [r.preferred_name, r.first_name, `${r.first_name} ${r.last_name}`]) {
+          const nn = (n ?? '').trim().toLowerCase()
+          if (nn.length < 2) continue
+          const re = new RegExp(`\\b${nn.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'g')
+          let m: RegExpExecArray | null
+          while ((m = re.exec(lower))) if (!best || m.index > best.at) best = { r, at: m.index }
+        }
+      }
+      if (best) { target = best.r; break }
+    }
+    if (!target) {
+      const withPhotos = new Set(ph.map(p => p.resident_id))
+      const only = residents.filter(r => withPhotos.has(r.id))
+      if (only.length === 1) target = only[0]
+      else return null   // cannot tell who the question is about: let the normal answer ask
+    }
+    const name = esc(target.preferred_name || target.first_name)
+    const mine = ph.filter(p => p.resident_id === target.id)
+    if (!mine.length) return { html: `<p>There are no photos of ${name} on their profile yet. A manager can add some, or family can send them through their private link.</p>`, photos: [] }
+
+    const skip = new Set([...STOP, ...words(`${target.first_name} ${target.last_name} ${target.preferred_name ?? ''}`)])
+    const terms = [...new Set(words(queryText).filter(w => !skip.has(w)))]
+    const scored = mine.map(p => {
+      const hay = new Set(words(`${p.caption ?? ''} ${p.people_note ?? ''}`).flatMap(w => [w, w.replace(/(ing|ed|s)$/, '')]))
+      return { p, score: terms.filter(t => hay.has(t) || hay.has(t.replace(/(ing|ed|s)$/, ''))).length }
+    })
+    const matched = terms.length ? scored.filter(x => x.score > 0).sort((a, b) => b.score - a.score) : []
+    const shown = (matched.length ? matched : scored).slice(0, 6).map(x => x.p)
+    const caps = shown.filter(p => p.caption).map(p => `<li>${esc(p.caption)}</li>`).join('')
+    let html: string
+    if (matched.length) html = `<p>Yes, there ${shown.length === 1 ? 'is a photo' : 'are photos'} of ${name} that ${shown.length === 1 ? 'fits' : 'fit'} that, shown below.</p>${caps ? `<ul>${caps}</ul>` : ''}`
+    else if (terms.length) html = `<p>${name} has ${mine.length} ${mine.length === 1 ? 'photo' : 'photos'}, shown below, but none has a caption that mentions ${esc(terms.slice(0, 3).join(', '))}.</p>${caps ? `<ul>${caps}</ul>` : ''}`
+    else html = `<p>Here ${shown.length === 1 ? 'is the photo' : 'are the photos'} of ${name}.</p>${caps ? `<ul>${caps}</ul>` : ''}`
+    html += '<p>I can only tell you what each photo is captioned. I cannot describe what is in a picture.</p>'
+    return { html, photos: shown.map(hubPhotoDto) }
+  } catch { return null }
 }

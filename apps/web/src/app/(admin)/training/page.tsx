@@ -304,7 +304,7 @@ function ModulesTab({ api, modules, staff, enrollments, onAssigned }: {
   const [saving,         setSaving]         = useState<string | null>(null)
   const [saved,          setSaved]          = useState<string | null>(null)
   const [genLoading,    setGenLoading]    = useState<Record<string, 'questions' | 'answers' | 'lesson' | null>>({})
-  const [preview,       setPreview]       = useState<{ id: string; name: string } | null>(null)
+  const [preview,       setPreview]       = useState<{ id: string; name: string; standard?: boolean } | null>(null)
   const moduleHasLesson = (m: any) => Array.isArray(m?.learning_content?.sections) && m.learning_content.sections.length > 0
   const [genError,      setGenError]      = useState<Record<string, string>>({})
   const [lockLoading,   setLockLoading]   = useState<string | null>(null)
@@ -697,7 +697,7 @@ function ModulesTab({ api, modules, staff, enrollments, onAssigned }: {
     )
   }
 
-  if (preview) return <StatutoryModulePreview api={api} id={preview.id} name={preview.name} onBack={() => setPreview(null)} />
+  if (preview) return <StatutoryModulePreview api={api} id={preview.id} name={preview.name} standard={preview.standard} onBack={() => setPreview(null)} />
 
   return (
     <div>
@@ -819,7 +819,8 @@ function ModulesTab({ api, modules, staff, enrollments, onAssigned }: {
                         <div className="min-w-0 flex-1">
                           <p className="truncate text-sm font-medium text-neutral-dark">{m.name}</p>
                           <p className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-neutral-mid">
-                            {m.duration_minutes ? <span>{m.duration_minutes} min</span> : null}
+                            <span className={`rounded-full px-1.5 py-0.5 font-medium ${m.care_setting ? 'bg-teal/10 text-teal' : 'bg-gray-100 text-neutral-mid'}`}>{m.setting_label ?? (m.care_setting ? m.care_setting : 'All services')}</span>
+                            {m.duration_minutes ? <span>· {m.duration_minutes} min</span> : null}
                             <span>· {m.question_count} questions</span>
                             {m.requires_practical && <span className="rounded-full bg-amber-50 px-1.5 py-0.5 font-medium text-amber-600">+ practical</span>}
                             {m.assigned > 0 && <span className="text-teal">· {m.complete}/{m.assigned} completed</span>}
@@ -834,6 +835,13 @@ function ModulesTab({ api, modules, staff, enrollments, onAssigned }: {
                             <ClipboardCheck size={14} /> Practical checklist
                           </button>
                         )}
+                        <button
+                          onClick={() => setPreview({ id: m.id, name: m.name, standard: true })}
+                          title="Step through the lesson and questions as staff will see them, before you allocate it."
+                          className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-1.5 text-sm font-medium text-neutral-dark hover:border-teal/40 hover:text-teal"
+                        >
+                          <Eye size={14} /> Preview
+                        </button>
                         <button
                           onClick={() => setAssignPrebuilt(m)}
                           className="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-teal px-3 py-1.5 text-sm font-medium text-white hover:bg-teal/90"
@@ -2602,9 +2610,9 @@ export default function TrainingPage() {
 
 // Admin read-only preview of a tenant statutory module — the same stepped player
 // staff/validators see (lesson sections then questions), not editable.
-function StatutoryModulePreview({ api, id, name, onBack }: { api: ReturnType<typeof createApiClient>; id: string; name: string; onBack: () => void }) {
+function StatutoryModulePreview({ api, id, name, standard, onBack }: { api: ReturnType<typeof createApiClient>; id: string; name: string; standard?: boolean; onBack: () => void }) {
   const { data: pvSession } = useSession()
-  const pvQ = useCachedQuery<any>(`admin-training-preview-${pvSession?.user?.email ?? 'guest'}-${id}`, async () => (await api.training.modulePreview(id)).module)
+  const pvQ = useCachedQuery<any>(`admin-training-preview-${standard ? 'std-' : ''}${pvSession?.user?.email ?? 'guest'}-${id}`, async () => (standard ? await api.training.standardModuleFull(id) : await api.training.modulePreview(id)).module)
   const m = pvQ.data
   const loading = pvQ.loading
   const error = m ? '' : (pvQ.error ?? '')

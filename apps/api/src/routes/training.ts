@@ -12,7 +12,7 @@ import { sendTrainingUpdateEmail, sendTrainingReminderEmail } from '../services/
 import { getTrainingReceiptUrl, createTrainingBasketCheckoutSession } from '../services/billing/stripe'
 import { requireAdmin } from '../middleware/auth'
 import { blogImagePublicUrl, siteUrl } from '../lib/urls'
-import { facilityTypeToSetting, settingFallbackOrder, settingLabelForPrompt } from '../lib/care-setting'
+import { facilityTypeToSetting, settingFallbackOrder, settingLabelForPrompt, settingLabel } from '../lib/care-setting'
 import { translateQuestionsBatch, translateTextsBatch, withTranslationBudget, hubContentLang } from '../lib/translate'
 import { languageNameForCode } from '../data/languages'
 import { generateAnnualModuleDraft, balanceAnswerPositions, homePolicyPassages, HOME_LABEL } from '../services/training/moduleGenerator'
@@ -128,7 +128,7 @@ trainingRouter.get('/prebuilt', requireAdmin, async (req: Request, res: Response
     const [modules, counts, topicsInScope] = await Promise.all([
       (prisma as any).trainingModule.findMany({
         where:   { tenant_id: null, source: 'ai_generated', tier: 'prebuilt', approved: true, is_active: true, OR: [{ care_setting: null }, { care_setting: setting }] },
-        select:  { id: true, name: true, description: true, group_key: true, frequency: true, requires_practical: true, duration_minutes: true, pass_mark: true, illustration_key: true, questions: true, learning_content: true },
+        select:  { id: true, name: true, description: true, group_key: true, care_setting: true, frequency: true, requires_practical: true, duration_minutes: true, pass_mark: true, illustration_key: true, questions: true, learning_content: true },
         orderBy: [{ group_key: 'asc' }, { name: 'asc' }],
       }),
       (prisma as any).trainingEnrollment.groupBy({
@@ -147,6 +147,8 @@ trainingRouter.get('/prebuilt', requireAdmin, async (req: Request, res: Response
       groups: TOPIC_GROUP_LABELS,
       modules: (modules as any[]).map(m => ({
         id: m.id, name: m.name, description: m.description, group_key: m.group_key,
+        // The care service this course was written for (null = every service), shown as a tag.
+        care_setting: m.care_setting ?? null, setting_label: m.care_setting ? settingLabel(m.care_setting) : 'All services',
         frequency: m.frequency, requires_practical: m.requires_practical,
         duration_minutes: m.duration_minutes, pass_mark: m.pass_mark,
         question_count: Array.isArray(m.questions) ? m.questions.length : 0,

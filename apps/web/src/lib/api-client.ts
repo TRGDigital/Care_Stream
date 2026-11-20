@@ -971,7 +971,7 @@ export function createApiClient(token: string) {
       // The pre-built standard library as this tenant sees it (read-only, assignable).
       prebuilt: () => apiFetch<{
         groups: Record<string, string>
-        modules: Array<{ id: string; name: string; description: string; group_key: string | null; frequency: string; requires_practical: boolean; duration_minutes: number | null; pass_mark: number; question_count: number; practical_checklist: string[]; illustration_url: string | null; assigned: number; complete: number }>
+        modules: Array<{ id: string; name: string; description: string; group_key: string | null; care_setting?: string | null; setting_label?: string; frequency: string; requires_practical: boolean; duration_minutes: number | null; pass_mark: number; question_count: number; practical_checklist: string[]; illustration_url: string | null; assigned: number; complete: number }>
         coverage: { published: number; topics_in_scope: number; awaiting_publish: number }
       }>('/training/prebuilt', token),
       generateModule: (topicId: string) =>

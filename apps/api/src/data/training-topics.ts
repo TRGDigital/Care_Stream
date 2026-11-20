@@ -152,6 +152,43 @@ export const TRAINING_TOPICS: TrainingTopicSeed[] = [
   { title: 'Venepuncture and Cannulation', group_key: 'care_clinical', default_frequency: 'annual', requires_practical: true, care_setting: 'nursing-homes', aliases: ['venepuncture', 'cannulation', 'phlebotomy', 'bloods'] },
   { title: 'Dementia Care', group_key: 'care_clinical', default_frequency: 'annual', care_setting: 'nursing-homes', aliases: ['dementia care', 'living well with dementia', 'person-centred dementia care', 'BPSD', 'distress reactions', 'cognitive impairment'] },
   { title: 'Cultural Diversity in Dementia Care', group_key: 'care_clinical', default_frequency: 'annual', care_setting: 'nursing-homes', aliases: ['cultural diversity dementia', 'culturally sensitive dementia care', 'cultural needs in dementia'] },
+
+  // ── Expanded setting libraries (20 Nov 2026): more specific topics for seven care services ──
+  // Domiciliary care
+  { title: 'Moving and Handling in a Domestic Home', group_key: 'health_safety', default_frequency: 'annual', requires_practical: true, care_setting: 'domiciliary-care', aliases: ['moving and handling at home', 'domestic equipment'] },
+  { title: 'Infection Control and PPE in Someone’s Home', group_key: 'health_safety', default_frequency: 'annual', care_setting: 'domiciliary-care', aliases: ['PPE at home', 'infection control at home'] },
+  { title: 'Call Cancellations and Reporting Concerns', group_key: 'conduct_governance', default_frequency: 'annual', care_setting: 'domiciliary-care', aliases: ['cancelled visit', 'reporting concerns from a visit'] },
+  { title: 'Lone Working and Personal Safety', group_key: 'health_safety', default_frequency: 'annual', care_setting: 'domiciliary-care', aliases: ['lone worker', 'personal safety'] },
+  { title: 'Financial Abuse in the Home', group_key: 'conduct_governance', default_frequency: 'annual', care_setting: 'domiciliary-care', aliases: ['financial abuse', 'handling money for a client'] },
+  // Live-in care
+  { title: 'Handover and Cover Arrangements (Live-in)', group_key: 'conduct_governance', default_frequency: 'annual', care_setting: 'live-in-care', aliases: ['live-in handover', 'cover carer'] },
+  { title: 'Managing the Client’s Home and Household', group_key: 'conduct_governance', default_frequency: 'annual', care_setting: 'live-in-care', aliases: ['household tasks', 'shopping and housework'] },
+  { title: 'Time Off and Relief Carers (Live-in)', group_key: 'conduct_governance', default_frequency: 'annual', care_setting: 'live-in-care', aliases: ['relief carer', 'time off live-in'] },
+  { title: 'Ending a Live-in Arrangement', group_key: 'conduct_governance', default_frequency: 'annual', care_setting: 'live-in-care', aliases: ['end of live-in placement', 'leaving a client’s home'] },
+  // Complex care
+  { title: 'Seizures and Epilepsy Emergencies', group_key: 'care_clinical', default_frequency: 'annual', requires_practical: true, care_setting: 'complex-care', aliases: ['epilepsy', 'seizure', 'rescue medication'] },
+  { title: 'Pressure Care in Complex Needs', group_key: 'care_clinical', default_frequency: 'annual', care_setting: 'complex-care', aliases: ['pressure ulcer', 'skin integrity complex needs'] },
+  { title: 'Recognising Deterioration and When to Escalate (Complex Care)', group_key: 'care_clinical', default_frequency: 'annual', care_setting: 'complex-care', aliases: ['deterioration', 'escalation', 'NEWS2'] },
+  { title: 'Equipment Checks and Alarms', group_key: 'care_clinical', default_frequency: 'annual', requires_practical: true, care_setting: 'complex-care', aliases: ['equipment checks', 'alarms', 'battery and backup'] },
+  // Shared lives
+  { title: 'Shared Lives Carer Approval and Ongoing Review', group_key: 'conduct_governance', default_frequency: 'annual', care_setting: 'shared-lives', aliases: ['carer approval', 'carer review'] },
+  { title: 'Financial and Tenancy Basics in Shared Lives', group_key: 'conduct_governance', default_frequency: 'annual', care_setting: 'shared-lives', aliases: ['tenancy', 'rent and board', 'personal money'] },
+  { title: 'Keeping the Person’s Own Routines', group_key: 'role_specific', default_frequency: 'annual', care_setting: 'shared-lives', aliases: ['own routines', 'person-centred routines'] },
+  // Substance misuse and rehab
+  { title: 'Safeguarding in a Rehab Setting', group_key: 'conduct_governance', default_frequency: 'annual', care_setting: 'substance-misuse', aliases: ['safeguarding rehab', 'safeguarding substance misuse'] },
+  { title: 'Mental Health and Risk in Substance Misuse Services', group_key: 'care_clinical', default_frequency: 'annual', care_setting: 'substance-misuse', aliases: ['mental health risk', 'suicide risk'] },
+  { title: 'Confidentiality in Substance Misuse Services', group_key: 'conduct_governance', default_frequency: 'annual', care_setting: 'substance-misuse', aliases: ['confidentiality', 'consent to share'] },
+  { title: 'Relapse and Leaving Treatment', group_key: 'care_clinical', default_frequency: 'annual', care_setting: 'substance-misuse', aliases: ['relapse', 'unplanned discharge', 'leaving treatment'] },
+  // Hospices
+  { title: 'Last Offices', group_key: 'care_clinical', default_frequency: 'annual', requires_practical: true, care_setting: 'hospices', aliases: ['last offices', 'care after death'] },
+  { title: 'Advance Care Planning and DNACPR', group_key: 'care_clinical', default_frequency: 'annual', care_setting: 'hospices', aliases: ['advance care planning', 'DNACPR', 'ReSPECT'] },
+  { title: 'Syringe Driver Checks at End of Life', group_key: 'care_clinical', default_frequency: 'annual', requires_practical: true, care_setting: 'hospices', aliases: ['syringe driver checks', 'driver safety checks'] },
+  { title: 'Supporting Families Through the Last Days', group_key: 'care_clinical', default_frequency: 'annual', care_setting: 'hospices', aliases: ['family support end of life', 'supporting relatives'] },
+  // Independent hospitals
+  { title: 'Infection Prevention in Clinical Areas', group_key: 'health_safety', default_frequency: 'annual', care_setting: 'independent-hospitals', aliases: ['infection prevention clinical', 'aseptic technique'] },
+  { title: 'Recognising and Escalating the Deteriorating Patient', group_key: 'care_clinical', default_frequency: 'annual', care_setting: 'independent-hospitals', aliases: ['deteriorating patient', 'NEWS2', 'escalation'] },
+  { title: 'Medication and Controlled Drugs in Hospital', group_key: 'care_clinical', default_frequency: 'annual', requires_practical: true, care_setting: 'independent-hospitals', aliases: ['controlled drugs', 'medicines in hospital'] },
+  { title: 'Duty of Candour', group_key: 'conduct_governance', default_frequency: 'annual', care_setting: 'independent-hospitals', aliases: ['duty of candour', 'being open'] },
 ]
 
 export function renewalMonthsFor(frequency: string): number | null {

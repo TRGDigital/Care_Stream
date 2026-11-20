@@ -28,7 +28,12 @@ emailPreviewsAdminRouter.post('/send', async (req: Request, res: Response) => {
   const fn = cases[name]
   if (!fn) { err(res, 'VALIDATION_ERROR', `Choose one of: ${Object.keys(cases).join(', ')}`); return }
   try { await fn() } catch (e: any) { err(res, 'EMAIL_FAILED', String(e?.message ?? e).slice(0, 200)); return }
-  ok(res, { sent: true, name, to, sender: actor.name })
+  // Test only: with `with_notice` the same sample also appears as an overlay on the sender's own hub, so email click through can be tried.
+  let notice = false
+  if (req.body?.with_notice && personNoticeCases('x')[name]) {
+    notice = (await recordNotices({ tenantId: actor.tenant_id, userIds: [actor.id], actorUserId: actor.id, kind: `sample_${name}`, allowSelf: true, build: adminName => personNoticeCases(adminName)[name] })) > 0
+  }
+  ok(res, { sent: true, name, to, sender: actor.name, notice })
 })
 
 // POST /admin/email-previews/notice  { name, user_email, actor_email }

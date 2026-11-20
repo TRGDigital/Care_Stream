@@ -174,7 +174,7 @@ export async function photoAnswer(tenantId: string, queryText: string, history: 
         for (const n of [r.preferred_name, r.first_name, `${r.first_name} ${r.last_name}`]) {
           const nn = (n ?? '').trim().toLowerCase()
           if (nn.length < 2) continue
-          const re = new RegExp(`\\b${nn.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'g')
+          const re = new RegExp(`\\b${nn.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?:['\u2019]?s)?\\b`, 'g')   // also "tims" typed without the apostrophe
           let m: RegExpExecArray | null
           while ((m = re.exec(lower))) if (!best || m.index > best.at) best = { r, at: m.index }
         }

@@ -101,7 +101,7 @@ export function ScenarioPageView({ s, readNext }: { s: Scenario; readNext: Scena
                   <span className="uc-cardico" style={{ background: ic.bg, color: ic.fg }}>
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{ic.d}</svg>
                   </span>
-                  <h3>{c.title}</h3><p>{c.body}</p>
+                  <h3>{c.title}</h3><H as="p" html={c.body} />
                 </div>
               )
             })}

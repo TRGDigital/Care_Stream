@@ -130,6 +130,14 @@ export async function middleware(req: NextRequest) {
   // ── Auth-gated routes: card-up-front billing gate + training-only tier gate.
   if (matches(path, GATED) || matches(path, TRAINING_ONLY_BLOCKED) || matches(path, POLICIES_ONLY_BLOCKED_SCAN)) {
     const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET })
+    // Not signed in on this browser: send them to sign in and then straight back to where the email link pointed (the hub view),
+    // instead of losing the destination. Only the hub, so nothing else changes.
+    if (!token && (path === '/chat' || path.startsWith('/chat/'))) {
+      const url = req.nextUrl.clone()
+      url.pathname = '/login'
+      url.search = `?callbackUrl=${encodeURIComponent(path + req.nextUrl.search)}`
+      return NextResponse.redirect(url)
+    }
     // Card-up-front trial hard gate (existing behaviour, gated app routes only).
     if (token?.needsBilling && matches(path, GATED)) {
       const url = req.nextUrl.clone()

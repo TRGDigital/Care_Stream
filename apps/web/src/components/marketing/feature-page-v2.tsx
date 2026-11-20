@@ -99,6 +99,7 @@ const WIDE_SHOTS = new Set([
   ...THEME_IMAGES.map(i => i.src).filter(s => /^\/images\/features\/[^/]+\/5\.webp$/.test(s)),
   // Pages added after the theme was generated (not in the manifest) that ship their own fifth image.
   '/images/features/resident-profiles-this-is-me/5.webp',
+  '/images/features/family-photos-and-video-messages/5.webp',
 ])
 const SHARED_WIDE = '/images/_shared/1.webp'
 

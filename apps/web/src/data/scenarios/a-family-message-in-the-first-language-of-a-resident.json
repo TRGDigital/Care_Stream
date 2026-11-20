@@ -1,0 +1,483 @@
+{
+  "slug": "a-family-message-in-the-first-language-of-a-resident",
+  "order": 107,
+  "title": "Planning care for <em>bilingual dementia?</em> A family message in her own language is easy to collect and safe to play.",
+  "meta_title": "Bilingual Dementia: A Family Message in Her Language | CareStreamAI",
+  "meta_description": "Family record a short message in the resident's first language by private link. You approve it, staff play it. CareStream does not translate or subtitle video.",
+  "lede": "A resident who has spoken two languages all her life may find English tiring, and her family know the words and the voice that feel like home. Teams working with bilingual dementia often ask how a relative can send a message in that language. CareStream gives them a private link, holds the video for your approval, and lets staff play it without needing to understand a word. It sits alongside <a href=\"/training-platform\">your training and policy tools</a>.",
+  "panel": {
+    "title": "One grandson's message, step by step",
+    "pill": "Illustration",
+    "rows": [
+      {
+        "label": "Grandson invited by email",
+        "note": "Day 1",
+        "done": true
+      },
+      {
+        "label": "He records 40 seconds in Polish and adds a title",
+        "note": "Day 2",
+        "done": true
+      },
+      {
+        "label": "Manager previews, writes an English title, approves",
+        "note": "Not yet",
+        "done": false
+      },
+      {
+        "label": "A carer plays it on a tablet",
+        "note": "Not yet",
+        "done": false
+      }
+    ],
+    "meter": 50
+  },
+  "image_alt": "An older woman sits with a carer in a lounge, smiling and speaking warmly towards a small tablet, a framed photograph of a seaside town on the wall behind",
+  "card_title": "A resident's first language is not English. Can family send a message in it?",
+  "card_snippet": "Relatives record a short video message in the resident's first language by private link. You approve it, and staff play it without needing to understand the words.",
+  "primary_keyword": "bilingual dementia",
+  "secondary_keywords": [
+    "dementia communication tips",
+    "dementia confusion"
+  ],
+  "feature_links": [
+    {
+      "title": "Training built from your own policies",
+      "body": "Ad hoc training from your policies, face to face training organised, and wrong answers that become lessons.",
+      "action": "See the feature",
+      "href": "/training-platform"
+    },
+    {
+      "title": "Resident knowledge for your team",
+      "body": "Quick, short answers about the people staff care for, drawn from what you have recorded and approved.",
+      "action": "See resident knowledge",
+      "href": "/uses/resident-knowledge"
+    },
+    {
+      "title": "Dementia awareness training",
+      "body": "A course that helps staff understand the person behind the diagnosis.",
+      "action": "See the course",
+      "href": "/staff-training/dementia-awareness"
+    }
+  ],
+  "intro": {
+    "heading": "She came to England at nineteen. She still counts in Polish.",
+    "sub": "A scenario we see in many care settings.",
+    "paragraph": "Mrs Nowak came from Kraków as a young woman and worked in a Bolton mill. Her English is good, but in the evenings the team hear her speaking Polish to nobody in particular. Nobody on shift speaks it. Her grandson, Tomasz, lives in Leeds and says he could record a few minutes of her favourite sayings and a bread recipe. The manager, Rukhsana, likes the idea, and wants it checked, kept private, and findable by a carer who has never met her."
+  },
+  "trail": [
+    {
+      "when": "Admission",
+      "text": "The home records that Mrs Nowak speaks Polish and English.",
+      "kind": "ok"
+    },
+    {
+      "when": "Week two",
+      "text": "Her key worker learns three Polish greetings.",
+      "kind": "ok"
+    },
+    {
+      "when": "Week five",
+      "text": "Tomasz offers to record a message in Polish.",
+      "kind": "ok"
+    },
+    {
+      "when": "Same week",
+      "text": "There is no safe way to receive it. The offer fades.",
+      "kind": "gap"
+    },
+    {
+      "when": "Month three",
+      "text": "She speaks Polish more in the evenings. Staff cannot answer her.",
+      "kind": "gap"
+    },
+    {
+      "when": "Month four",
+      "text": "Tomasz sends a clip to a carer's phone. It has to be deleted.",
+      "kind": "gap"
+    },
+    {
+      "when": "Month five",
+      "text": "Nobody is sure what to play, or what it says.",
+      "kind": "gap"
+    },
+    {
+      "when": "Review day",
+      "text": "“How do you meet her communication needs?” You have three greetings.",
+      "kind": "end"
+    }
+  ],
+  "trail_close": "<b>The family could give her something in her own language.</b> The gap is between that and a safe way to use it. Here is how CareStream collects a message, lets you check it, and lets any carer find it.",
+  "why": {
+    "heading": "Language is part of who a person is",
+    "sub": "Staff do not need to understand every word to offer a familiar voice.",
+    "cards": [
+      {
+        "icon": "chat",
+        "title": "A familiar voice, in her own words",
+        "body": "Families of people with bilingual dementia often tell us that the first language feels like home. Staff may not share it, but a grandson speaking it gives a carer a name and a voice to sit beside. We make no claim about what it does for any person."
+      },
+      {
+        "icon": "tick",
+        "title": "Care should reflect the person",
+        "body": "Care must <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/9\">meet a person's needs and reflect their preferences</a>. Where someone cannot decide for themselves, the <a href=\"https://www.legislation.gov.uk/ukpga/2005/9/section/4\">Mental Capacity Act asks you to consider their past and present wishes and feelings</a>, and to consult people interested in their welfare where practicable and appropriate."
+      },
+      {
+        "icon": "alert",
+        "title": "You cannot check what you cannot understand",
+        "body": "A clip in another language can still show other people or say something the resident would not want played. A manager still has to approve it, so ask the family for a note on what it is about. <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/10\">Regulation 10</a> includes ensuring the privacy of the person."
+      }
+    ]
+  },
+  "how": {
+    "heading": "From a private link to a message any carer can play.",
+    "sub": "Video messages are part of the resident profiles feature, in the same system as your <a href=\"/training-platform\">policies and training</a>. They are on Professional and above. See <a href=\"/uses/resident-knowledge\">how staff use resident knowledge</a> too.",
+    "blocks": [
+      {
+        "heading": "The family record in whichever language they choose",
+        "bullets": [
+          "You invite the relative by name and email from the resident's record. They get a private link, with no account. The page they see is in English, but what they record is up to them",
+          "They tap Record a message, which opens the phone camera, or Choose a video. Each clip can be up to 60 seconds, with up to 5 on one link and up to 150MB per upload",
+          "They can add a short title of up to 60 characters and remove a clip before pressing Send. A line above the buttons asks them to share only what they are happy for the care team to play"
+        ],
+        "tags": [
+          {
+            "label": "Resident knowledge",
+            "href": "/uses/resident-knowledge"
+          },
+          {
+            "label": "How CareStream works",
+            "href": "/how-it-works"
+          }
+        ],
+        "mock": {
+          "type": "audit",
+          "audit": "Family page: A video message (example)",
+          "stats": [
+            [
+              "Videos shared",
+              "1 of 5"
+            ],
+            [
+              "Login needed",
+              "None"
+            ]
+          ],
+          "blocks": [
+            [
+              "What a relative sees (example)",
+              [
+                [
+                  "Record a message",
+                  ""
+                ],
+                [
+                  "Choose a video",
+                  ""
+                ],
+                [
+                  "Title (optional): Dzien dobry, Babcia",
+                  ""
+                ],
+                [
+                  "Ready, 0:40. Waiting for the manager once you press Send",
+                  "Remove"
+                ]
+              ]
+            ]
+          ],
+          "caption": "Example only. Names and figures are illustrative."
+        }
+      },
+      {
+        "heading": "You approve it, and write the title in English if you like",
+        "bullets": [
+          "The video waits on the Approvals tab. You can play it there, edit the title and add a note for staff, then choose Approve or Reject",
+          "If you do not speak the language, ask the family for a line on what the message says, or ask a colleague who does. The note field is a good place to put it",
+          "Rejecting removes the video from storage straight away. A video you add yourself is approved at once"
+        ],
+        "tags": [
+          {
+            "label": "CQC and compliance",
+            "href": "/cqc-compliance"
+          },
+          {
+            "label": "Multilingual staff hub",
+            "href": "/uses/multilingual-staff-hub"
+          }
+        ],
+        "mock": {
+          "type": "audit",
+          "audit": "Residents: Approvals tab (example)",
+          "stats": [
+            [
+              "Videos waiting",
+              "1"
+            ],
+            [
+              "Approved",
+              "0"
+            ]
+          ],
+          "blocks": [
+            [
+              "Video waiting for approval (example)",
+              [
+                [
+                  "Tomasz, grandson, 0:40",
+                  "Approve, Reject"
+                ],
+                [
+                  "Title for staff: Tomasz, in Polish, saying good morning",
+                  ""
+                ],
+                [
+                  "Note for staff: Polish. Greeting and a bread recipe",
+                  ""
+                ]
+              ]
+            ]
+          ],
+          "caption": "Example only. Nothing here has reached the care team."
+        }
+      },
+      {
+        "heading": "Staff find it by the title and note, then press play",
+        "bullets": [
+          "In the This is me chat a carer asks, for example, “do we have a message in Polish?”. The chat reads the approved title and note only, and the video appears under the answer with the resident's name and room number",
+          "A Messages from family button lists a person's approved videos, newest first. Playing opens just the video on a dimmed backdrop, which suits a tablet",
+          "Each play is logged with who and when. The assistant never watches or describes a video, so it does not know what is said"
+        ],
+        "tags": [
+          {
+            "label": "Resident knowledge",
+            "href": "/uses/resident-knowledge"
+          },
+          {
+            "label": "Care home policies guide",
+            "href": "/blog/care-home-policies-the-complete-guide"
+          }
+        ],
+        "mock": {
+          "type": "audit",
+          "audit": "Staff Hub: This is me chat (example)",
+          "stats": [
+            [
+              "Matches",
+              "1 video"
+            ],
+            [
+              "Plays",
+              "Logged"
+            ]
+          ],
+          "blocks": [
+            [
+              "Chat (example)",
+              [
+                [
+                  "Ask: do we have a message in Polish?",
+                  ""
+                ],
+                [
+                  "Tomasz, in Polish, saying good morning. Mrs Nowak, Room 9",
+                  "Play"
+                ]
+              ]
+            ]
+          ],
+          "caption": "Example only. Illustration, not a real resident."
+        }
+      },
+      {
+        "heading": "No translation or subtitles, and that is stated plainly",
+        "bullets": [
+          "CareStream does not translate or subtitle video messages. The clip plays as the family recorded it",
+          "Translation on paid plans covers training for staff, and is separate. See <a href=\"/languages\">the languages page</a>. It does not touch these videos",
+          "Videos are private, shown through short lived links to signed in staff only, and leave the hub at once when someone dies or moves on"
+        ],
+        "tags": [
+          {
+            "label": "Languages",
+            "href": "/languages"
+          },
+          {
+            "label": "Pricing and plans",
+            "href": "/pricing"
+          }
+        ],
+        "mock": {
+          "type": "audit",
+          "audit": "Residents: Video messages (example)",
+          "stats": [
+            [
+              "Translation of video",
+              "None"
+            ],
+            [
+              "Public address",
+              "None"
+            ]
+          ],
+          "blocks": [
+            [
+              "Video messages (example)",
+              [
+                [
+                  "Tomasz, in Polish, saying good morning",
+                  "Approved, Delete"
+                ],
+                [
+                  "Recently played: a carer played this title",
+                  "Time shown"
+                ]
+              ]
+            ]
+          ],
+          "caption": "Example only. Illustration, not a real resident."
+        }
+      }
+    ]
+  },
+  "talk": {
+    "heading": "The questions managers ask, and how CareStream answers them",
+    "sub": "Read this as a conversation. The questions are the ones we hear most.",
+    "items": [
+      {
+        "q": "A grandson wants to record a message in Polish. Can he?",
+        "a": "Yes. You invite him from the resident's record, and on his private link he records or chooses a short video in any language. The page itself is in English. Nothing reaches your team until you have watched it and approved it."
+      },
+      {
+        "q": "Staff do not speak the language. Does that matter?",
+        "a": "Not for playing it. A carer finds the video from its title and note and presses play. It helps to write both in English, and to say in the note what the message is about."
+      },
+      {
+        "q": "Does CareStream translate or subtitle the video?",
+        "a": "No. It plays exactly as recorded. Translation on the paid plans is for staff training, and does not apply to these videos."
+      },
+      {
+        "q": "How do I check a video I cannot understand?",
+        "a": "You watch it for who is in it and how it feels, and ask the family for a short note of what it says. A colleague who speaks the language can help. You are the approver, so only you can say yes or no."
+      },
+      {
+        "q": "Will it help with dementia confusion?",
+        "a": "We would not say that. CareStream does not treat or change anything. It gives staff a personal message to play, safely. How you use it with each person is for you and your team to judge."
+      },
+      {
+        "q": "Can the assistant tell what is said in it?",
+        "a": "No. It never watches or describes a video, and there is no speech to text. It only knows the title, the note and who sent it."
+      },
+      {
+        "q": "What happens if the resident moves on?",
+        "a": "Their videos leave the hub straight away, and any still waiting are deleted. Approved files stay in private storage for the retention period, like the written profile, then are deleted with it."
+      },
+      {
+        "q": "Which plan is it on, and can I try it?",
+        "a": "Resident profiles and videos are on Professional and above. There is a 14 day free trial. You can <a href=\"/register\">create an account</a> or <a href=\"/demo\">book a demo</a>, and the <a href=\"/pricing\">pricing page</a> has the plan details."
+      }
+    ]
+  },
+  "limits": {
+    "heading": "Honest limits: it plays a message, it does not understand one",
+    "cards": [
+      {
+        "title": "No translation, no subtitles",
+        "body": "CareStream does not translate, transcribe or subtitle a video. If staff want to know what it says, ask the family for a note, or a colleague who speaks the language."
+      },
+      {
+        "title": "Finding depends on the title",
+        "body": "The chat reads the title and note only. If you write them in English, English questions will find them. Videos shown in the hub are the newest ten per resident, and a vague title makes a clip harder to find."
+      },
+      {
+        "title": "It is a message, not a conversation",
+        "body": "The family record once and the team plays it back. CareStream does not do video calls, and the resident cannot record a reply. It makes no claim about how any person will respond."
+      }
+    ]
+  },
+  "read_next": [
+    "this-is-me-document",
+    "care-home-policies-the-complete-guide"
+  ],
+  "faqs": {
+    "heading": "Messages in a first language, answered",
+    "groups": [
+      {
+        "group": "About language and communication",
+        "items": [
+          {
+            "q": "What are some dementia communication tips for a resident whose first language is not English?",
+            "a": "Ask the family which words, phrases and names matter, and write them into the profile. Learn a few greetings, use a calm tone, and offer familiar things such as a recording. Read more in our <a href=\"/blog/this-is-me-document\">guide to the this is me document</a>."
+          },
+          {
+            "q": "How does a family message fit with bilingual dementia care?",
+            "a": "It is one personal item among many. Teams caring for someone with bilingual dementia often record the languages they use and when, then add a voice the person knows. We make no claim about outcomes."
+          },
+          {
+            "q": "Can staff understand a message in another language?",
+            "a": "They do not need to in order to play it. If you want them to know what it says, add a note in English when you approve it."
+          },
+          {
+            "q": "Does the system watch the video or describe it?",
+            "a": "No. It never watches or describes a video. It only knows the title, the note and who sent it."
+          }
+        ]
+      },
+      {
+        "group": "About approval, privacy and limits",
+        "items": [
+          {
+            "q": "How long can a family video be?",
+            "a": "Up to 60 seconds each, up to 5 on one link, and up to 150MB per upload. The family can add a title of up to 60 characters and remove a clip before pressing Send."
+          },
+          {
+            "q": "Does a manager have to approve every video?",
+            "a": "Yes. A family video stays hidden from staff until you approve it. You can edit the title and add a note first, or reject it. Videos you add yourself are approved at once."
+          },
+          {
+            "q": "Is the page the family sees in other languages?",
+            "a": "The family page is in English. The clip they record can be in any language. If a relative needs help with the page, you may want to help them over the phone."
+          },
+          {
+            "q": "What do the regulations say about involving family?",
+            "a": "Under <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/9\">regulation 9</a>, care must meet needs and reflect preferences, and relevant persons are involved in decisions. <a href=\"https://www.legislation.gov.uk/ukpga/2005/9/section/4\">Section 4 of the Mental Capacity Act 2005</a> asks you to consider a person's past and present wishes. Check your own policies on consent and recordings."
+          }
+        ]
+      }
+    ]
+  },
+  "guide": {
+    "heading": "How to use a first language message well",
+    "lede": "A few habits make the difference between a clip nobody can find and one that helps at the right moment. Ask for a short message, write a clear English title, and check before you approve.",
+    "sections": [
+      {
+        "h3": "Ask the family for a short, warm message",
+        "paragraphs": [
+          "Tell the relative that 30 or 40 seconds is plenty. A greeting, the person's name and one small story is enough. Ask them to put a title on it that says who it is from, and to tell you in a line what it says."
+        ]
+      },
+      {
+        "h3": "Before you approve a message",
+        "paragraphs": [
+          "Watch it as a new carer would, and as the resident might feel about it. Write the title and note in English so staff can find it. Reject anything that shows other people who might not want it shared. You can read what the law says about <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/10\">dignity and respect in regulation 10</a>."
+        ],
+        "checklist": [
+          "Is the speaker someone the resident would be glad to hear?",
+          "Does the title say who it is from and the language?",
+          "Does it show anyone else who might not want it shared?",
+          "Would a carer know when to play it?"
+        ]
+      },
+      {
+        "h3": "Record the language in the profile too",
+        "paragraphs": [
+          "A message does not replace knowing the person. Note which languages she uses, the greetings she likes, and when she speaks them. The <a href=\"/staff-training/dementia-awareness\">dementia awareness course</a> helps staff see why these details matter."
+        ]
+      }
+    ],
+    "note": "This page describes how the software works and is not legal advice. Check your own policies and local guidance for how you collect and share recordings of residents."
+  },
+  "fine": "14 day free trial · Set up in a day · UK data residency",
+  "eyebrow": "Scenario",
+  "status": "draft",
+  "image": "https://api.carestreamai.com/public/policy-shop/image/ef5359e9-668d-4201-aedd-5f2f6d47baec.webp"
+}

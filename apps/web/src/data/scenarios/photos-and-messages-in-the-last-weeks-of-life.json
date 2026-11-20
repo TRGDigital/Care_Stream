@@ -1,0 +1,484 @@
+{
+  "slug": "photos-and-messages-in-the-last-weeks-of-life",
+  "order": 109,
+  "title": "End of life care dementia: <em>family photos and a few words, always checked first.</em>",
+  "meta_title": "End of Life Care Dementia: Family Photos | CareStreamAI",
+  "meta_description": "In the last weeks of life, family can send photos and words by private link. You check each one, and staff use them only if wanted.",
+  "lede": "When someone is near the end of life, the people who love them often want to give something. For end of life care dementia teams, that gift needs gentle handling. CareStream gives family a private link for photos, a few words and short videos, and holds each one for your approval. Staff can use them only as the person and family wish. This sits alongside <a href=\"/training-platform\">the rest of your training and knowledge tools</a>.",
+  "panel": {
+    "title": "One family's photos, step by step",
+    "pill": "Illustration",
+    "rows": [
+      {
+        "label": "Family invited by the manager, in person first",
+        "note": "Monday",
+        "done": true
+      },
+      {
+        "label": "A daughter sends photos with captions and a few words",
+        "note": "Tuesday",
+        "done": true
+      },
+      {
+        "label": "Manager checks each one and speaks to the family",
+        "note": "Wednesday",
+        "done": true
+      },
+      {
+        "label": "Staff may use approved items, if the family want that",
+        "note": "Not yet",
+        "done": false
+      }
+    ],
+    "meter": 75
+  },
+  "image_alt": "A carer sits quietly in a softly lit sitting room beside an older woman in an armchair with a blanket over her knees, a framed family photograph on the side table",
+  "card_title": "Family want to send photos and words in the last weeks of life. Who checks them?",
+  "card_snippet": "Family send photos, a few words or a short video by private link. You check each one and the person's wishes first, and staff use them only if the person and family want that.",
+  "primary_keyword": "end of life care dementia",
+  "secondary_keywords": [
+    "dementia care plan",
+    "person centred care examples"
+  ],
+  "feature_links": [
+    {
+      "title": "Training built from your own policies",
+      "body": "Ad hoc training from your policies, face to face training organised, and wrong answers that become lessons.",
+      "action": "See the feature",
+      "href": "/training-platform"
+    },
+    {
+      "title": "Resident knowledge for your team",
+      "body": "Give staff quick, short answers about the people they care for, drawn from what you have recorded and approved.",
+      "action": "See resident knowledge",
+      "href": "/uses/resident-knowledge"
+    },
+    {
+      "title": "Dementia awareness training",
+      "body": "A course that helps staff understand the person behind the diagnosis.",
+      "action": "See the course",
+      "href": "/staff-training/dementia-awareness"
+    }
+  ],
+  "intro": {
+    "heading": "The family want to be there, even when they cannot be.",
+    "sub": "A scenario we see in many care settings.",
+    "paragraph": "Edna Marsh is in her last weeks. She has lived with dementia for years and now sleeps most of the day. Her daughter Margaret visits as often as she can, and her grandchildren live abroad. They have photographs of Edna's garden, her wedding, and the dog she adored, and they want to send some. Margaret asks whether the home has a way to share them, and whether a carer could show Edna at the bedside. Nobody wants this to be clumsy, or to put something in front of Edna she would not have wanted."
+  },
+  "trail": [
+    {
+      "when": "Week one",
+      "text": "The home and family agree an end of life plan together.",
+      "kind": "ok"
+    },
+    {
+      "when": "Week one",
+      "text": "The manager talks with Margaret about what Edna would want.",
+      "kind": "ok"
+    },
+    {
+      "when": "Week two",
+      "text": "The grandchildren ask to send photos and a few words.",
+      "kind": "ok"
+    },
+    {
+      "when": "Same day",
+      "text": "Photos arrive on a carer's phone, unchecked.",
+      "kind": "gap"
+    },
+    {
+      "when": "Week two",
+      "text": "Nobody knows if they include other people's faces.",
+      "kind": "gap"
+    },
+    {
+      "when": "Week three",
+      "text": "A night carer has not heard that any were sent.",
+      "kind": "gap"
+    },
+    {
+      "when": "Later",
+      "text": "The files are still on a personal phone.",
+      "kind": "gap"
+    },
+    {
+      "when": "Review day",
+      "text": "“How were her wishes and her family's honoured?” You cannot show.",
+      "kind": "end"
+    }
+  ],
+  "trail_close": "<b>Everyone meant well.</b> The gap was in the handling: where things arrive, who checks them, and what happens afterwards. Here is how CareStream collects photos and words, holds them for your approval, and removes them from the hub when the person has died.",
+  "why": {
+    "heading": "Small, personal things matter most at the end",
+    "sub": "Person centred care examples are often quiet ones.",
+    "cards": [
+      {
+        "icon": "chat",
+        "title": "Familiar faces, offered gently",
+        "body": "Person centred care examples at the end of life are often small: a photograph of a garden, a grandchild's few words. They are only ever offered if the person and family want them, and the home's own end of life plan leads. Nothing here is care advice."
+      },
+      {
+        "icon": "tick",
+        "title": "Wishes come first",
+        "body": "Care must <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/9\">meet needs and reflect preferences</a>. Where someone cannot decide, the <a href=\"https://www.legislation.gov.uk/ukpga/2005/9/section/4\">Mental Capacity Act asks you to consider their past and present wishes and feelings</a>, and to take into account the views of those interested in their welfare. The <a href=\"https://www.alzheimers.org.uk/get-support/help-dementia-care/end-life-care-dementia\">Alzheimer's Society explains</a> that advance care planning can help ensure the person's wishes are known and respected."
+      },
+      {
+        "icon": "alert",
+        "title": "Privacy matters more, not less",
+        "body": "A photo can show people who did not agree to be shared, or a moment the person would not have chosen. A manager should check each one first, and files should not live on a personal phone. <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/10\">Regulation 10</a> includes ensuring the privacy of the person."
+      }
+    ]
+  },
+  "how": {
+    "heading": "From a private link to a gentle, checked offering.",
+    "sub": "Photos, short videos and reminders are part of the resident profiles feature, in the same system as your <a href=\"/training-platform\">policies and training</a>. They are on Professional and above. See <a href=\"/uses/resident-knowledge\">how staff use resident knowledge</a> too.",
+    "blocks": [
+      {
+        "heading": "You decide whether to invite, and when",
+        "bullets": [
+          "Speak to the family first. If they would like to send something, invite them by name and email from the resident's record. They get a private link and do not create an account",
+          "Each link takes up to 5 photos, each up to 5MB, with an optional caption of up to 140 characters and a note on who is in the picture. A link can also take up to 5 videos of up to 60 seconds each",
+          "Family reminders are off by default. If you would rather ask in person at this time, simply leave them off"
+        ],
+        "tags": [
+          {
+            "label": "Resident knowledge",
+            "href": "/uses/resident-knowledge"
+          },
+          {
+            "label": "How CareStream works",
+            "href": "/how-it-works"
+          }
+        ],
+        "mock": {
+          "type": "audit",
+          "audit": "Family page: Photos and a few words (example)",
+          "stats": [
+            [
+              "Photos shared",
+              "3 of 5"
+            ],
+            [
+              "Login needed",
+              "None"
+            ]
+          ],
+          "blocks": [
+            [
+              "What a relative sees (example)",
+              [
+                [
+                  "Add a photo: JPEG, PNG or WebP",
+                  ""
+                ],
+                [
+                  "Caption (optional): Mum in the garden, summer 1998",
+                  ""
+                ],
+                [
+                  "Who is in this photo? (optional): Edna and her dog, Bess",
+                  ""
+                ],
+                [
+                  "Ready. Waiting for the manager once you press Send",
+                  "Remove"
+                ]
+              ]
+            ]
+          ],
+          "caption": "Example only. Names and wording are illustrative."
+        }
+      },
+      {
+        "heading": "You check every item, and the person's wishes",
+        "bullets": [
+          "Photos and videos wait on the Approvals tab. You can preview each one, edit its caption or title, add a note for staff, and approve or reject it. Rejecting deletes the file at once",
+          "Check who is in the picture, and whether the family want this shown at all. Talk to them if you are unsure. The decision is yours, not the software's",
+          "Nothing is seen by staff until approved. Pending items show as a number on the Approvals badge, so they are not forgotten"
+        ],
+        "tags": [
+          {
+            "label": "Book a demo",
+            "href": "/demo"
+          },
+          {
+            "label": "Pricing and plans",
+            "href": "/pricing"
+          }
+        ],
+        "mock": {
+          "type": "audit",
+          "audit": "Residents: Approvals tab (example)",
+          "stats": [
+            [
+              "Photos waiting",
+              "2"
+            ],
+            [
+              "Videos waiting",
+              "1"
+            ]
+          ],
+          "blocks": [
+            [
+              "Waiting for approval (example)",
+              [
+                [
+                  "Photo: Mum in the garden, summer 1998",
+                  "Approve, Reject"
+                ],
+                [
+                  "Photo: Edna and Bess on the beach",
+                  "Approve, Reject"
+                ],
+                [
+                  "Video: Hello from the grandchildren, 0:30",
+                  "Approve, Reject"
+                ],
+                [
+                  "Note for staff (optional): Only if Margaret is present",
+                  ""
+                ]
+              ]
+            ]
+          ],
+          "caption": "Example only. Nothing here has reached the care team."
+        }
+      },
+      {
+        "heading": "Staff can find them, but use them only as wished",
+        "bullets": [
+          "In the Staff Hub, a carer asking about Edna's photographs or messages is answered from the approved captions, titles and notes only. The assistant never looks inside a picture or watches a video",
+          "Photos appear as thumbnails under the answer, and videos appear with her name and room number. Tap to enlarge or play. Plays are logged, with who and when",
+          "Whether anything is shown at the bedside is a matter for Edna, her family and the home's end of life plan, not the app. Your note can say so plainly"
+        ],
+        "tags": [
+          {
+            "label": "Dementia awareness course",
+            "href": "/staff-training/dementia-awareness"
+          },
+          {
+            "label": "CQC and compliance",
+            "href": "/cqc-compliance"
+          }
+        ],
+        "mock": {
+          "type": "audit",
+          "audit": "Staff Hub: ask about a resident (example)",
+          "stats": [
+            [
+              "Source",
+              "Approved captions and notes only"
+            ]
+          ],
+          "blocks": [
+            [
+              "Example question and answer",
+              [
+                [
+                  "Staff asks: Do we have a photo of Edna's garden?",
+                  ""
+                ],
+                [
+                  "Answer: Yes, one captioned “Mum in the garden, summer 1998”",
+                  ""
+                ],
+                [
+                  "Under the answer: a thumbnail, tap to enlarge",
+                  ""
+                ],
+                [
+                  "Note for staff: Only if Margaret is present",
+                  ""
+                ]
+              ]
+            ]
+          ],
+          "caption": "Example only. Illustration, not a real resident."
+        }
+      },
+      {
+        "heading": "When she dies, the hub lets go at once",
+        "bullets": [
+          "A manager chooses Mark as died or moved on and picks Passed away, with the date. She disappears from the hub and the assistant straight away, and open family links are cancelled",
+          "Anything still waiting for approval is deleted, and family reminders stop at once",
+          "Approved files stay in private storage for the retention period, like the written profile, then are deleted with it."
+        ],
+        "tags": [
+          {
+            "label": "Resident knowledge",
+            "href": "/uses/resident-knowledge"
+          },
+          {
+            "label": "Care home policies guide",
+            "href": "/blog/care-home-policies-the-complete-guide"
+          }
+        ],
+        "mock": {
+          "type": "audit",
+          "audit": "Residents: Mark as died or moved on (example)",
+          "stats": [
+            [
+              "In the hub",
+              "Removed at once"
+            ],
+            [
+              "Waiting items",
+              "Deleted"
+            ]
+          ],
+          "blocks": [
+            [
+              "What happens when you confirm (example)",
+              [
+                [
+                  "Edna disappears from the hub and from the assistant",
+                  ""
+                ],
+                [
+                  "Any family links that are still open are cancelled",
+                  ""
+                ],
+                [
+                  "The profile moves to Archived and is kept privately",
+                  "Retention period"
+                ],
+                [
+                  "Admins with the archive permission are asked to action it",
+                  ""
+                ]
+              ]
+            ]
+          ],
+          "caption": "Example only. Wording summarised, not the exact screen."
+        }
+      }
+    ]
+  },
+  "talk": {
+    "heading": "The questions managers ask, and how CareStream answers them",
+    "sub": "Read this as a conversation. The questions are the ones we hear most.",
+    "items": [
+      {
+        "q": "Should I offer this to every family?",
+        "a": "That is your judgement, and the family's. Invitations only go out when you send them, and reminders are off unless you turn them on. Many managers will speak to the family first and invite only if they would like to give something."
+      },
+      {
+        "q": "Does the software tell staff what to do at the bedside?",
+        "a": "No. It makes no clinical suggestions and gives no care advice. Your end of life care plan, and the wishes of the person and family, lead. Approved items are simply there to be found if the team and family want them."
+      },
+      {
+        "q": "What if a photo shows someone who should not be in it?",
+        "a": "Reject it, or edit the caption and talk to the family. Every photo and video waits for you on the Approvals tab. Staff cannot see anything until you approve it, and rejected files are deleted at once."
+      },
+      {
+        "q": "Can the assistant describe a photo to a carer?",
+        "a": "No. It never looks inside a picture and says so if asked. It only reads the captions and notes that people wrote, matched by meaning, so a wedding photo captioned “married” is found when someone asks about a wedding."
+      },
+      {
+        "q": "What happens when the person dies?",
+        "a": "You mark them as passed away with the date. They disappear from the hub and the assistant straight away, open links are cancelled, waiting items are deleted and reminders stop. Approved files stay in private storage for the retention period, then are deleted."
+      },
+      {
+        "q": "Which plan is it on, and can I try it?",
+        "a": "Resident profiles, photos and videos are on Professional and above. There is a 14 day free trial, and the <a href=\"/pricing\">pricing page</a> shows what each plan includes. You can <a href=\"/register\">create an account</a> or <a href=\"/demo\">book a demo</a> to see it first."
+      }
+    ]
+  },
+  "limits": {
+    "heading": "Honest limits: a careful place to keep things, not care advice",
+    "cards": [
+      {
+        "title": "It gives no care advice",
+        "body": "CareStream does not suggest what to do in the last weeks of life, and it does not treat, prevent or improve any condition. Your end of life care plan, your clinicians and the wishes of the person and family decide everything."
+      },
+      {
+        "title": "It reads words, not pictures",
+        "body": "The assistant cannot look inside a photo or watch a video. It knows captions, titles, notes and who sent them, so a vague caption is hard to find. Videos show up to 10 newest per resident in the hub."
+      },
+      {
+        "title": "It is not automatic, and it lets go",
+        "body": "Nothing reaches staff until a manager approves it. Once a person is marked as passed away or moved on, the profile is archived, and an archived profile cannot take new photos or invitations. It is on Professional and above."
+      }
+    ]
+  },
+  "read_next": [
+    "this-is-me-document",
+    "end-of-life-care-training-what-should-care-staff-learn",
+    "palliative-care-vs-end-of-life-care"
+  ],
+  "faqs": {
+    "heading": "End of life, family photos and privacy, answered",
+    "groups": [
+      {
+        "group": "About end of life and family involvement",
+        "items": [
+          {
+            "q": "What does end of life care dementia involve for families?",
+            "a": "That depends on the person, their wishes and their care plan, and we cannot advise on it. What we can say is that families often want to be involved, and a private, checked route for a photo or a few words can be one way. Read our post on <a href=\"/blog/palliative-care-vs-end-of-life-care\">palliative and end of life care</a>."
+          },
+          {
+            "q": "Where does a dementia care plan fit in?",
+            "a": "Your dementia care plan, and any advance care plan, stay with the home's own records and lead. CareStream does not change them. The <a href=\"https://www.alzheimers.org.uk/get-support/help-dementia-care/end-life-care-dementia\">Alzheimer's Society notes</a> that professionals should weigh the person's wishes, including those in a care plan."
+          },
+          {
+            "q": "What are person centred care examples at the end of life?",
+            "a": "They are usually small: a familiar photograph, a favourite name used, the grandchild's voice, a quiet room. Each home decides what suits each person. This page only shows how a checked photo or message can reach staff."
+          }
+        ]
+      },
+      {
+        "group": "About approval, privacy and limits",
+        "items": [
+          {
+            "q": "Are photos private?",
+            "a": "Yes. Photos and videos are shown only to signed in staff of your service, through short lived links, never a public address, and only for living residents. Location details are removed when files are saved."
+          },
+          {
+            "q": "What happens to the files after the person dies?",
+            "a": "They leave the hub at once. Anything pending is deleted. Approved files stay in private storage for the retention period, like the written profile, then are deleted with it."
+          },
+          {
+            "q": "What do regulations and law say about wishes?",
+            "a": "Under <a href=\"https://www.legislation.gov.uk/ukpga/2005/9/section/4\">section 4 of the Mental Capacity Act 2005</a>, you consider the person's past and present wishes and feelings and, where practicable, the views of those interested in their welfare. <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/9\">Regulation 9</a> requires care to reflect preferences, and <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/10\">regulation 10</a> requires dignity and respect."
+          }
+        ]
+      }
+    ]
+  },
+  "guide": {
+    "heading": "How to handle family photos and words in the last weeks of life",
+    "lede": "There is no right way to do this, and the home's own plan leads. These are a few habits we think help: speak first, check carefully, and let go cleanly.",
+    "sections": [
+      {
+        "h3": "Speak first, then invite",
+        "paragraphs": [
+          "Before any link is sent, talk to the family, and to the person if they can take part. Ask whether they would like to give something, and whether they would want it used at the bedside at all. If the answer is not yet, leave it."
+        ]
+      },
+      {
+        "h3": "Before you approve anything",
+        "paragraphs": [
+          "Look at each item as a member of the family and as the person might feel about it. Edit captions so they are kind and clear, and add a note for staff that says how the family would like it used."
+        ],
+        "checklist": [
+          "Does the family want this one used, and how?",
+          "Does it show anyone who may not want to be seen?",
+          "Is the caption kind and clear to a carer who never met the family?",
+          "Does the note say whether it is only for when family are present?"
+        ]
+      },
+      {
+        "h3": "After she has died",
+        "paragraphs": [
+          "Mark the person as passed away, with the date, and let the family know in your own way what happens to the files. Check your retention policy, and <a href=\"/blog/this-is-me-document\">read how a this is me document is used</a> with your team. The <a href=\"/staff-training/dementia-awareness\">dementia awareness course</a> supports staff in seeing the person first."
+        ]
+      }
+    ],
+    "note": "This page describes how the software works. It is not clinical, legal or end of life care advice. Your home's end of life care plan, your clinicians and the wishes of the person and family come first."
+  },
+  "fine": "14 day free trial · Set up in a day · UK data residency",
+  "eyebrow": "Scenario",
+  "status": "draft",
+  "image": "https://api.carestreamai.com/public/policy-shop/image/17617754-0412-40d4-9a9d-dac679f706e2.webp"
+}

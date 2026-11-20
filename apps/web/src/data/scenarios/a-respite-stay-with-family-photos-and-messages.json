@@ -1,0 +1,488 @@
+{
+  "slug": "a-respite-stay-with-family-photos-and-messages",
+  "order": 110,
+  "title": "Respite care dementia: the family send photos and words first, so the stay begins with <em>something familiar.</em>",
+  "meta_title": "Respite Care Dementia: Family Photos First | CareStreamAI",
+  "meta_description": "Before a respite stay, family send photos and short messages by private link. You approve them, and staff can use them from day one.",
+  "lede": "A short stay can be unsettling for the person and for the family who love them. For respite care dementia teams, the first day is when you know least about the person. CareStream lets the family send photos with captions and a few words by private link before arrival, holds each one for your approval, and lets staff find them from the first day. See <a href=\"/training-platform\">the rest of your training and knowledge tools</a> too.",
+  "panel": {
+    "title": "One respite stay, step by step",
+    "pill": "Illustration",
+    "rows": [
+      {
+        "label": "Daughter invited, five days before arrival",
+        "note": "Day -5",
+        "done": true
+      },
+      {
+        "label": "She sends photos with captions and a few words",
+        "note": "Day -3",
+        "done": true
+      },
+      {
+        "label": "Manager approves what is suitable",
+        "note": "Day -1",
+        "done": true
+      },
+      {
+        "label": "Staff use them from the first day",
+        "note": "Day 1",
+        "done": false
+      }
+    ],
+    "meter": 75
+  },
+  "image_alt": "A short-stay resident and her husband sit with a carer at a table in a lounge looking through a small album of photographs, a suitcase by the door in the background",
+  "card_title": "A respite stay starts in days. How do you know who is coming?",
+  "card_snippet": "Family send photos with captions and a few words by private link before a short stay. You approve them first, and staff can find them from the first day.",
+  "primary_keyword": "respite care dementia",
+  "secondary_keywords": [
+    "dementia day care",
+    "dementia care plan"
+  ],
+  "feature_links": [
+    {
+      "title": "Training built from your own policies",
+      "body": "Ad hoc training from your policies, face to face training organised, and wrong answers that become lessons.",
+      "action": "See the feature",
+      "href": "/training-platform"
+    },
+    {
+      "title": "Resident knowledge for your team",
+      "body": "Give staff quick, short answers about the people they care for, drawn from what you have recorded and approved.",
+      "action": "See resident knowledge",
+      "href": "/uses/resident-knowledge"
+    },
+    {
+      "title": "Dementia awareness training",
+      "body": "A course that helps staff understand the person behind the diagnosis.",
+      "action": "See the course",
+      "href": "/staff-training/dementia-awareness"
+    }
+  ],
+  "intro": {
+    "heading": "Two weeks is short. The first day matters.",
+    "sub": "A scenario we see in many care settings.",
+    "paragraph": "Joan Hollis is coming for two weeks while her husband, Brian, has a hip operation. She has lived with dementia for some years, and they have never been apart for more than a night. Their daughter Claire has the photographs, the names of the grandchildren and a few stories her mother loves to hear. The home has a pre-admission form and a phone call booked. Joan will arrive on Monday morning, with a suitcase, and staff she has never met."
+  },
+  "trail": [
+    {
+      "when": "Two weeks before",
+      "text": "The home books the stay and takes a pre-admission call.",
+      "kind": "ok"
+    },
+    {
+      "when": "One week before",
+      "text": "The key worker reads the assessment and the care needs.",
+      "kind": "ok"
+    },
+    {
+      "when": "Five days before",
+      "text": "Claire offers photographs and some words about her mother.",
+      "kind": "ok"
+    },
+    {
+      "when": "Same day",
+      "text": "They go to the office email, where nobody checks it.",
+      "kind": "gap"
+    },
+    {
+      "when": "Arrival day",
+      "text": "Joan asks for Brian, and staff do not know his name.",
+      "kind": "gap"
+    },
+    {
+      "when": "Day two",
+      "text": "A carer prints a photo from a phone and puts it up.",
+      "kind": "gap"
+    },
+    {
+      "when": "End of stay",
+      "text": "Nobody is sure where the photos went afterwards.",
+      "kind": "gap"
+    },
+    {
+      "when": "Inspection day",
+      "text": "“How did you get to know her in a short stay?” You cannot show.",
+      "kind": "end"
+    }
+  ],
+  "trail_close": "<b>The family had what staff needed.</b> The gap was a safe way to send it in time. Here is how CareStream collects it before arrival, holds it for your approval, and lets it go when the stay ends.",
+  "why": {
+    "heading": "A short stay leaves little time to learn a person",
+    "sub": "Photos and a few words give staff a head start.",
+    "cards": [
+      {
+        "icon": "chat",
+        "title": "Names and faces from the first hour",
+        "body": "A captioned photograph tells a carer who Brian is and what Joan calls her granddaughter. Many families offer to help with respite care dementia stays, but have nowhere safe to send things. We make no claim about how someone will settle."
+      },
+      {
+        "icon": "tick",
+        "title": "Care should reflect the person",
+        "body": "Care must <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/9\">meet needs and reflect preferences</a>. Where someone cannot decide for themselves, the <a href=\"https://www.legislation.gov.uk/ukpga/2005/9/section/4\">Mental Capacity Act asks you to consider their past and present wishes and feelings</a> and to take into account, where practicable, the views of people interested in their welfare. Family input before arrival is one way to hear them."
+      },
+      {
+        "icon": "alert",
+        "title": "Short stays still need a careful gate",
+        "body": "A family photo might show other people, or something Joan would not want shown. A manager should check each one, and the files should not live on a personal phone. <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/10\">Regulation 10</a> includes ensuring the privacy of the person."
+      }
+    ]
+  },
+  "how": {
+    "heading": "From a private link to a stay that begins with something familiar.",
+    "sub": "Photos, videos and reminders are part of the resident profiles feature, in the same system as your <a href=\"/training-platform\">policies and training</a>. They are on Professional and above. See <a href=\"/uses/resident-knowledge\">how staff use resident knowledge</a> too.",
+    "blocks": [
+      {
+        "heading": "Set up the profile and invite before she arrives",
+        "bullets": [
+          "Create the resident's record, then invite Claire by name and email. She gets a private link and does not create an account",
+          "Each link takes up to 5 photos, each up to 5MB, in JPEG, PNG or WebP, and up to 5 videos of up to 60 seconds each. Photos can carry a caption of up to 140 characters and a note on who is in the picture",
+          "Each photo is checked, scanned for viruses and saved again without location data. After she presses Send, the link is spent, so send another if she has more"
+        ],
+        "tags": [
+          {
+            "label": "Resident knowledge",
+            "href": "/uses/resident-knowledge"
+          },
+          {
+            "label": "How CareStream works",
+            "href": "/how-it-works"
+          }
+        ],
+        "mock": {
+          "type": "audit",
+          "audit": "Family page: Photos for a short stay (example)",
+          "stats": [
+            [
+              "Photos shared",
+              "4 of 5"
+            ],
+            [
+              "Login needed",
+              "None"
+            ]
+          ],
+          "blocks": [
+            [
+              "What Claire sees (example)",
+              [
+                [
+                  "Add a photo: JPEG, PNG or WebP",
+                  ""
+                ],
+                [
+                  "Caption (optional): Mum and Dad, Whitby, 1974",
+                  ""
+                ],
+                [
+                  "Who is in this photo? (optional): Joan, Brian and their dog",
+                  ""
+                ],
+                [
+                  "Ready. Waiting for the manager once you press Send",
+                  "Remove"
+                ]
+              ]
+            ]
+          ],
+          "caption": "Example only. Names and wording are illustrative."
+        }
+      },
+      {
+        "heading": "You approve before the first day",
+        "bullets": [
+          "Photos and videos wait on the Approvals tab. You can preview each, edit the caption or title, add a note for staff, and approve or reject. Rejecting deletes the file at once",
+          "You can also add photos and videos yourself from the resident's record, and they are approved at once",
+          "Nothing is seen by staff until approved. A number on the Approvals badge shows what is waiting"
+        ],
+        "tags": [
+          {
+            "label": "Book a demo",
+            "href": "/demo"
+          },
+          {
+            "label": "Pricing and plans",
+            "href": "/pricing"
+          }
+        ],
+        "mock": {
+          "type": "audit",
+          "audit": "Residents: Approvals tab (example)",
+          "stats": [
+            [
+              "Photos waiting",
+              "4"
+            ],
+            [
+              "Approved",
+              "0"
+            ]
+          ],
+          "blocks": [
+            [
+              "Photos waiting for approval (example)",
+              [
+                [
+                  "Mum and Dad, Whitby, 1974",
+                  "Approve, Reject"
+                ],
+                [
+                  "Joan with her granddaughter, Ellie",
+                  "Approve, Reject"
+                ],
+                [
+                  "Note for staff (optional): Brian is her husband, in hospital this week",
+                  ""
+                ]
+              ]
+            ]
+          ],
+          "caption": "Example only. Nothing here has reached the care team."
+        }
+      },
+      {
+        "heading": "Staff use them from day one",
+        "bullets": [
+          "In the Staff Hub, a carer opens the This is me topic and asks, for example, whether there is a photo of Joan's husband. The answer comes from approved captions and notes",
+          "Photos appear as thumbnails under the answer. Videos appear with her name and room number. The assistant never looks inside a picture or watches a video",
+          "Your own pre-admission form and dementia care plan stay where they are. The hub holds only what you approved from the family"
+        ],
+        "tags": [
+          {
+            "label": "Dementia awareness course",
+            "href": "/staff-training/dementia-awareness"
+          },
+          {
+            "label": "CQC and compliance",
+            "href": "/cqc-compliance"
+          }
+        ],
+        "mock": {
+          "type": "audit",
+          "audit": "Staff Hub: ask about a resident (example)",
+          "stats": [
+            [
+              "Source",
+              "Approved captions and notes only"
+            ]
+          ],
+          "blocks": [
+            [
+              "Example question and answer",
+              [
+                [
+                  "Staff asks: Do we have a photo of Joan's husband?",
+                  ""
+                ],
+                [
+                  "Answer: Yes, one captioned “Mum and Dad, Whitby, 1974”",
+                  ""
+                ],
+                [
+                  "Under the answer: a thumbnail, tap to enlarge",
+                  ""
+                ]
+              ]
+            ]
+          ],
+          "caption": "Example only. Illustration, not a real resident."
+        }
+      },
+      {
+        "heading": "When the stay ends, the hub lets go",
+        "bullets": [
+          "A manager chooses Mark as died or moved on, picks Moved on and enters the date. She disappears from the hub and the assistant at once, and open family links are cancelled",
+          "Photos still waiting are deleted, and family reminders stop",
+          "Approved files stay in private storage for the retention period, like the written profile, then are deleted with it"
+        ],
+        "tags": [
+          {
+            "label": "Resident knowledge",
+            "href": "/uses/resident-knowledge"
+          },
+          {
+            "label": "Care home policies guide",
+            "href": "/blog/care-home-policies-the-complete-guide"
+          }
+        ],
+        "mock": {
+          "type": "audit",
+          "audit": "Residents: Mark as died or moved on (example)",
+          "stats": [
+            [
+              "In the hub",
+              "Removed at once"
+            ],
+            [
+              "Waiting items",
+              "Deleted"
+            ]
+          ],
+          "blocks": [
+            [
+              "What happens when you confirm (example)",
+              [
+                [
+                  "Joan disappears from the hub and from the assistant",
+                  ""
+                ],
+                [
+                  "Any family links that are still open are cancelled",
+                  ""
+                ],
+                [
+                  "The profile moves to Archived and is kept privately",
+                  "Retention period"
+                ]
+              ]
+            ]
+          ],
+          "caption": "Example only. Wording summarised, not the exact screen."
+        }
+      }
+    ]
+  },
+  "talk": {
+    "heading": "The questions managers ask, and how CareStream answers them",
+    "sub": "Read this as a conversation. The questions are the ones we hear most.",
+    "items": [
+      {
+        "q": "Can family send photos before a respite stay starts?",
+        "a": "Yes, once the resident's record exists. You invite the relative by name and email, and they use a private link with no login. Everything waits for your approval, so you can check it all before the first day."
+      },
+      {
+        "q": "How much staff time does this take?",
+        "a": "The invite is quick to send, and approving takes as long as it takes you to look at each photo and video. Staff then ask the hub about the person in plain words and get answers from approved captions and notes."
+      },
+      {
+        "q": "Does it replace our pre-admission assessment or dementia care plan?",
+        "a": "No. Your pre-admission form and your dementia care plan stay in your own records and lead. CareStream does not edit them or link to them. The hub only holds family photos, videos and notes you have approved."
+      },
+      {
+        "q": "What if the family forgets?",
+        "a": "You can turn on a gentle email reminder to a family contact, weekly, fortnightly or monthly, on a weekday you choose. It is off by default, every email has a stop link, and it stops after three reminders with no reply, with a manager told."
+      },
+      {
+        "q": "Can the assistant describe what is in a photo?",
+        "a": "No. It never looks inside a picture. It reads only captions and notes, matched by meaning. If nothing is captioned that way it shows that person's photos and says none is captioned that way."
+      },
+      {
+        "q": "What happens when the stay ends?",
+        "a": "You mark the stay as moved on, with the date. Photos leave the hub at once, waiting ones are deleted, and open links are cancelled. Approved files stay in private storage for the retention period, then are deleted."
+      },
+      {
+        "q": "Can she come back for another stay?",
+        "a": "An archived profile cannot be edited or sent new invitations, so for a repeat stay you would create a new resident record and invite the family again."
+      },
+      {
+        "q": "Which plan is it on, and can I try it?",
+        "a": "Resident profiles, photos and videos are on Professional and above. There is a 14 day free trial, and the <a href=\"/pricing\">pricing page</a> shows what each plan includes. You can <a href=\"/register\">create an account</a> or <a href=\"/demo\">book a demo</a> to see it first."
+      }
+    ]
+  },
+  "limits": {
+    "heading": "Honest limits: a head start, not a substitute for knowing her",
+    "cards": [
+      {
+        "title": "It does not assess or plan care",
+        "body": "CareStream does not decide what a person needs, does not write or change a dementia care plan, and does not treat, prevent or improve any condition. Your pre-admission assessment and your team's judgement lead."
+      },
+      {
+        "title": "It reads words, not pictures",
+        "body": "The assistant cannot look inside a photo or watch a video. Staff find things through captions, titles and notes, so a vague caption is hard to find. The hub shows up to 10 newest videos per resident."
+      },
+      {
+        "title": "Stays end, and so does the profile",
+        "body": "Marking a stay as moved on archives the profile, and an archived profile cannot take new photos or invitations. Nothing is automatic: a manager must approve each item. It is on Professional and above."
+      }
+    ]
+  },
+  "read_next": [
+    "this-is-me-document",
+    "care-home-policies-the-complete-guide",
+    "dementia-care-training-in-the-uk"
+  ],
+  "faqs": {
+    "heading": "Respite stays and family photos, answered",
+    "groups": [
+      {
+        "group": "About respite stays",
+        "items": [
+          {
+            "q": "What should we ask the family before respite care dementia stays?",
+            "a": "Ask about names, routines, favourite things and what usually helps, and invite photos with captions. Your own pre-admission assessment and care plan still lead. Read our <a href=\"/blog/this-is-me-document\">guide to the this is me document</a>."
+          },
+          {
+            "q": "How does respite compare with dementia day care?",
+            "a": "Dementia day care is a daytime service, and a respite stay is a short stay in the home. Either way, staff meet someone with little time to learn about them. Both are covered by the same resident profile route, so check the <a href=\"/pricing\">pricing page</a> for what each plan includes."
+          },
+          {
+            "q": "Can a dementia care plan include family photos?",
+            "a": "A plan is yours to write and hold in your own records. CareStream does not link to or edit it. Photos in the hub sit beside it, so staff can look up a name or a face quickly."
+          },
+          {
+            "q": "Can the assistant tell me what is in a photo?",
+            "a": "No. It only reads the captions and notes that people wrote. It never looks inside a picture."
+          }
+        ]
+      },
+      {
+        "group": "About approval, privacy and limits",
+        "items": [
+          {
+            "q": "Does a manager have to approve every photo?",
+            "a": "Yes. A family photo stays hidden from staff until you approve it. You can edit the caption first, or reject it. Photos you add yourself are approved at once."
+          },
+          {
+            "q": "Are photos private?",
+            "a": "Yes. They are shown only to signed in staff of your service through short lived links, never a public address, and only for current residents. Location details are removed."
+          },
+          {
+            "q": "What happens to files when a short stay ends?",
+            "a": "They leave the hub at once. Anything pending is deleted. Approved files stay in private storage for the retention period, like the written profile, then are deleted with it."
+          },
+          {
+            "q": "What do regulations say about involving family?",
+            "a": "Under <a href=\"https://www.legislation.gov.uk/ukpga/2005/9/section/4\">section 4 of the Mental Capacity Act 2005</a>, where practicable and appropriate, you take into account the views of anyone interested in the person's welfare. <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/9\">Regulation 9</a> requires care to reflect people's preferences. Check your own policies."
+          }
+        ]
+      }
+    ]
+  },
+  "guide": {
+    "heading": "How to prepare for a respite stay with family photos and messages",
+    "lede": "A short stay gives you days, not months. A little preparation before arrival makes the first day calmer for everyone.",
+    "sections": [
+      {
+        "h3": "Ask early, ask simply",
+        "paragraphs": [
+          "As soon as the stay is booked, tell the family what you would find useful: a handful of photographs with names and a line about each, and a few words about routines. Five clear photos are worth more than fifty."
+        ]
+      },
+      {
+        "h3": "Before you approve",
+        "paragraphs": [
+          "Look at each photo as a new carer would. Edit captions so they say who is in the picture, and add a note for staff where it helps, such as that a husband is in hospital this week. Reject anything that shows others who may not want to be seen."
+        ],
+        "checklist": [
+          "Does each caption say who is in the photo?",
+          "Does any photo show other people who may not want to be shown?",
+          "Is there a note on anything staff should handle gently?",
+          "Has the family been told what happens to the files after the stay?"
+        ]
+      },
+      {
+        "h3": "Close the stay properly",
+        "paragraphs": [
+          "On the day she leaves, mark the stay as moved on and tell the family what happens to the files. Check your retention policy. The <a href=\"/staff-training/dementia-awareness\">dementia awareness course</a> helps staff meet a new person well."
+        ]
+      }
+    ],
+    "note": "This page describes how the software works. It is not legal or clinical advice. Your pre-admission assessment, care plan and own policies lead."
+  },
+  "fine": "14 day free trial · Set up in a day · UK data residency",
+  "eyebrow": "Scenario",
+  "status": "draft",
+  "image": "https://api.carestreamai.com/public/policy-shop/image/6649fcec-166e-46dc-822a-2a8af998690a.webp"
+}

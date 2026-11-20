@@ -1,0 +1,458 @@
+{
+  "slug": "video-messages-between-visits",
+  "status": "draft",
+  "order": 112,
+  "title": "Between visits, <strong>care home visiting</strong> can continue <em>with a short message from home.</em>",
+  "meta_title": "Care Home Visiting: Video Messages Between Visits | CareStreamAI",
+  "meta_description": "Families who visit weekly can send a short video between visits. A manager approves it and staff play it, while the visit stays the heart.",
+  "eyebrow": "Scenario",
+  "lede": "Care home visiting matters most when families can come in person, and some weeks they cannot. CareStream lets relatives send a short video message through a private link, a manager checks it, and staff can play it on a Wednesday afternoon. It sits alongside <a href=\"/training-platform\">your policies, training and knowledge tools</a>.",
+  "fine": "14 day free trial · Set up in a day · UK data residency",
+  "panel": {
+    "title": "One mid-week message",
+    "pill": "Illustration",
+    "rows": [
+      {
+        "label": "Callum receives a gentle email on Wednesday",
+        "note": "A fresh private link",
+        "done": true
+      },
+      {
+        "label": "He records 40 seconds on his phone",
+        "note": "Between meetings",
+        "done": true
+      },
+      {
+        "label": "The manager previews it and approves it",
+        "note": "Before staff see it",
+        "done": true
+      },
+      {
+        "label": "A carer plays it with his mother on Thursday",
+        "note": "The Sunday visit stays as it is",
+        "done": false
+      }
+    ],
+    "meter": 50
+  },
+  "image": "https://api.carestreamai.com/public/policy-shop/image/613f6f0c-e522-41a6-9445-3e46e43e648e.webp",
+  "image_alt": "A son and his mother sit together on a garden bench in a care home garden, the son holding a printed photograph, while a carer waves from a doorway behind them.",
+  "card_title": "Visits are weekly. Can the family still say hello between them?",
+  "card_snippet": "A son who visits every Sunday sends a short video mid-week. The manager checks it, a carer plays it, and the visit remains the heart of the week.",
+  "primary_keyword": "care home visiting",
+  "secondary_keywords": [
+    "care home activities",
+    "family involvement in care"
+  ],
+  "feature_links": [
+    {
+      "title": "Training built from your own policies",
+      "body": "Ad hoc training from your policies, face to face training organised, and wrong answers that become lessons.",
+      "action": "See the feature",
+      "href": "/training-platform"
+    },
+    {
+      "title": "Resident knowledge for your team",
+      "body": "Give staff quick, short answers about the people they care for, drawn from what you have recorded and approved.",
+      "action": "See resident knowledge",
+      "href": "/uses/resident-knowledge"
+    },
+    {
+      "title": "Dementia awareness training",
+      "body": "A course that helps staff understand the person behind the diagnosis.",
+      "action": "See the course",
+      "href": "/staff-training/dementia-awareness"
+    }
+  ],
+  "intro": {
+    "heading": "Sunday is the best day. Wednesday is the long one.",
+    "sub": "A scenario we see in many care settings.",
+    "paragraph": "Hannah manages a care home where Mrs Lowry's son, Callum, visits every Sunday without fail. They sit in the garden and look at old photographs. By Wednesday, Mrs Lowry is asking when he is coming. Callum works long hours and cannot get in during the week, and he would gladly say hello for a minute if there were an easy, safe way to do it. Hannah does not want him sending clips to a carer's own phone. She wants the visit to stay the heart of the week, with something small in between."
+  },
+  "trail": [
+    {
+      "when": "Every Sunday",
+      "text": "Callum visits. The garden, the photographs, the tea.",
+      "kind": "ok"
+    },
+    {
+      "when": "Sunday evening",
+      "text": "Mrs Lowry is bright. Staff see the difference.",
+      "kind": "ok"
+    },
+    {
+      "when": "Monday",
+      "text": "Callum asks Hannah if he can send something midweek.",
+      "kind": "ok"
+    },
+    {
+      "when": "Tuesday",
+      "text": "Nobody is sure what is allowed. The idea waits.",
+      "kind": "gap"
+    },
+    {
+      "when": "Wednesday",
+      "text": "Mrs Lowry asks the afternoon carer when Callum is coming.",
+      "kind": "gap"
+    },
+    {
+      "when": "That afternoon",
+      "text": "The carer cannot say whether Callum has sent anything.",
+      "kind": "gap"
+    },
+    {
+      "when": "Weeks later",
+      "text": "Callum asks if the family has done enough. Nobody can say.",
+      "kind": "gap"
+    },
+    {
+      "when": "Inspection day",
+      "text": "“How do families stay involved between visits?” “They visit.”",
+      "kind": "end"
+    }
+  ],
+  "trail_close": "<b>The visit stays the heart of it.</b> This page is about the days in between, and how a manager can offer something small and safe. It also states plainly what the software does not do.",
+  "why": {
+    "heading": "Why the days between visits matter",
+    "sub": "Regular visits are precious, and the gaps are real.",
+    "cards": [
+      {
+        "icon": "chat",
+        "title": "Families want to stay close",
+        "body": "A weekly visit is a promise. For many relatives, a minute of their own voice in the middle of the week would be a welcome extra, not a replacement. Good <b>care home visiting</b> is about how often someone is seen, and also about how they are held in mind."
+      },
+      {
+        "icon": "tick",
+        "title": "It sits within the rules on involvement and dignity",
+        "body": "<a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/9\">Regulation 9</a> refers to involving relevant people in decisions about care. <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/10\">Regulation 10</a> asks providers to support a person's autonomy, independence and involvement in the community, and to ensure their privacy."
+      },
+      {
+        "icon": "alert",
+        "title": "Informal routes leave gaps",
+        "body": "A clip sent to a carer's own phone is unchecked, unrecorded and gone when she leaves. A manager needs a way to say yes that is safe for the person and fair to the family."
+      }
+    ]
+  },
+  "how": {
+    "heading": "From a son's phone to a carer's hand, in four steps.",
+    "sub": "Video messages are part of the resident profiles feature, on Professional and above. See <a href=\"/uses/resident-knowledge\">how staff use resident knowledge</a> and the <a href=\"/blog/this-is-me-document\">this is me guide</a>.",
+    "blocks": [
+      {
+        "heading": "A gentle reminder brings a fresh private link",
+        "bullets": [
+          "On the Family tab, a manager can ask a contact by email to add something new: weekly, fortnightly or monthly, on a weekday they choose. The default is off",
+          "Each reminder carries a fresh private link that lasts 14 days, and each email has a Stop these reminders link. After three reminders with no reply, they stop and a manager is told",
+          "The email asks for a few words, a photo or a short video message, so the family chooses what suits"
+        ],
+        "tags": [
+          {
+            "label": "Resident knowledge",
+            "href": "/uses/resident-knowledge"
+          },
+          {
+            "label": "How CareStream works",
+            "href": "/how-it-works"
+          }
+        ],
+        "mock": {
+          "type": "audit",
+          "audit": "Residents: Family tab, reminders (example)",
+          "stats": [
+            [
+              "Cadence",
+              "Weekly"
+            ],
+            [
+              "Day",
+              "Wednesday"
+            ]
+          ],
+          "blocks": [
+            [
+              "Callum, son (example)",
+              [
+                [
+                  "Reminder by email, weekly on Wednesday",
+                  "Next reminder due"
+                ],
+                [
+                  "Stop these reminders link in every email",
+                  "Always present"
+                ]
+              ]
+            ]
+          ],
+          "caption": "Example only. Names and settings are illustrative."
+        }
+      },
+      {
+        "heading": "Callum records a short message on his phone",
+        "bullets": [
+          "He opens the link on his phone, with no login. He taps Record a message to open the camera, or Choose a video if he has one ready",
+          "A video can run up to 60 seconds. The upload shows progress and can resume after a lost signal. He can add a short title and remove a clip before pressing Send",
+          "A line above the buttons asks him to share only a message he is happy for the care team to play, and tells him a manager checks every video before staff see it. After Send the link is spent"
+        ],
+        "tags": [
+          {
+            "label": "Dementia awareness course",
+            "href": "/staff-training/dementia-awareness"
+          },
+          {
+            "label": "CQC and compliance",
+            "href": "/cqc-compliance"
+          }
+        ],
+        "mock": {
+          "type": "audit",
+          "audit": "The family link on a phone (example)",
+          "stats": [
+            [
+              "Length",
+              "40 seconds"
+            ],
+            [
+              "Title",
+              "Hello from Callum"
+            ]
+          ],
+          "blocks": [
+            [
+              "What he sees (example)",
+              [
+                [
+                  "Record a message",
+                  "Opens the phone camera"
+                ],
+                [
+                  "Choose a video",
+                  "From the phone"
+                ]
+              ]
+            ]
+          ],
+          "caption": "Example only. The wording of the buttons is real, the content is invented."
+        }
+      },
+      {
+        "heading": "Hannah previews it and decides",
+        "bullets": [
+          "The video waits on the resident's Approvals tab, and a count shows how many are waiting. Staff see nothing until it is approved",
+          "She can preview it, edit the title and add a note for staff. Then she chooses Approve or Reject. Rejecting removes the file straight away",
+          "Approved videos also appear on the From family tab under the person who sent them. CareStream does not message Callum about the decision, so a quick word from Hannah is a kind thing to add"
+        ],
+        "tags": [
+          {
+            "label": "Pricing and plans",
+            "href": "/pricing"
+          },
+          {
+            "label": "Staff training",
+            "href": "/staff-training"
+          }
+        ],
+        "mock": {
+          "type": "audit",
+          "audit": "Residents: Approvals tab (example)",
+          "stats": [
+            [
+              "Videos waiting",
+              "1"
+            ],
+            [
+              "Photos waiting",
+              "0"
+            ]
+          ],
+          "blocks": [
+            [
+              "Videos waiting for approval (example)",
+              [
+                [
+                  "Callum, son. Title: Hello from Callum, 40 seconds",
+                  "Preview, Approve, Reject"
+                ]
+              ]
+            ]
+          ],
+          "caption": "Example only. Illustration, not a real resident."
+        }
+      },
+      {
+        "heading": "A carer plays it, and the play is logged",
+        "bullets": [
+          "In the Staff Hub, a carer picks the This is me topic and asks whether there is a video from Callum. The video appears under the answer with Mrs Lowry's name and room number, and a play button",
+          "A Messages from family button lists a person's approved videos, newest first. Playing opens just the video on a dimmed backdrop",
+          "Each play is logged, with who and when, and managers see recent plays on the resident's record. That tells you it was played, not how it felt"
+        ],
+        "tags": [
+          {
+            "label": "Resident knowledge",
+            "href": "/uses/resident-knowledge"
+          },
+          {
+            "label": "Book a demo",
+            "href": "/demo"
+          }
+        ],
+        "mock": {
+          "type": "audit",
+          "audit": "Residents: Recently played (example)",
+          "stats": [
+            [
+              "Videos approved",
+              "1"
+            ],
+            [
+              "Plays this week",
+              "2"
+            ]
+          ],
+          "blocks": [
+            [
+              "Recently played (example)",
+              [
+                [
+                  "A carer played Hello from Callum",
+                  "Thursday 2.30pm"
+                ],
+                [
+                  "A carer played Hello from Callum",
+                  "Saturday 4.15pm"
+                ]
+              ]
+            ]
+          ],
+          "caption": "Example only. Names, titles and times are illustrative."
+        }
+      }
+    ]
+  },
+  "talk": {
+    "heading": "The questions managers ask, and how CareStream answers them",
+    "sub": "Read this as a conversation. The questions are the ones we hear most.",
+    "items": [
+      {
+        "q": "Does a video message replace a visit?",
+        "a": "No, and it should not. A visit is a person in the room, and the visit stays the heart of the week. A short message fills in the days between, and it only goes ahead if the family wants to send one."
+      },
+      {
+        "q": "How long can a video be, and what do families need?",
+        "a": "Up to 60 seconds each, with up to five videos per link. They need only their phone and the private link. There is no login and no app, and the clip is converted so it plays on any phone, tablet or computer."
+      },
+      {
+        "q": "Who sees it before staff do?",
+        "a": "Only you and other managers with access to the resident's record. Every video waits on the Approvals tab, and staff see it only once you approve it. If you reject it, the file is removed at once."
+      },
+      {
+        "q": "Does the chat watch the video?",
+        "a": "No. It finds a video by its title and any note, and it never watches or describes it. It only knows the title and who sent it."
+      },
+      {
+        "q": "Can we see who played a video?",
+        "a": "Yes. Each play is logged with who and when, and managers see recent plays on the resident's record. It shows a play, not a reaction."
+      },
+      {
+        "q": "How often will families be asked?",
+        "a": "Only as often as you choose. Reminders are off by default. You can set weekly, fortnightly or monthly, pause them, and every email carries a link to stop them. After three reminders with no reply they stop and a manager is told."
+      },
+      {
+        "q": "What happens if the person moves on or passes away?",
+        "a": "Reminders stop at once and videos leave the hub. Pending ones are deleted. Approved files stay in private storage for the retention period, like the written profile, then are deleted with it."
+      },
+      {
+        "q": "Which plan is it on, and can I try it?",
+        "a": "Resident profiles, photos and video messages are on Professional and above, with a 14 day free trial. See the <a href=\"/pricing\">pricing page</a>. You can <a href=\"/register\">create an account</a> or <a href=\"/demo\">book a demo</a> to see it first."
+      }
+    ]
+  },
+  "limits": {
+    "heading": "Honest limits: a message is not a visit, and approval is yours",
+    "cards": [
+      {
+        "title": "A message is not a visit",
+        "body": "Families send messages and staff play them. It is a small extra between visits, and the visit stays the heart of the week. It is only offered where the family wants to take part, and no one should feel they have to."
+      },
+      {
+        "title": "Approval is not consent",
+        "body": "Your approval controls what staff see. It does not record that the resident, or anyone else in the video, agreed to it. Capture that in the way your own policies require, and keep your own notes."
+      },
+      {
+        "title": "It does not judge the effect",
+        "body": "CareStream logs plays. It does not record how anyone felt, and it does not claim the messages treat or improve anything. Your team's observations and the person's own wishes tell you that."
+      }
+    ]
+  },
+  "read_next": [
+    "this-is-me-document",
+    "dementia-care-training-in-the-uk",
+    "care-home-policies-the-complete-guide"
+  ],
+  "faqs": {
+    "heading": "Video messages between visits, answered",
+    "groups": [
+      {
+        "group": "For families and managers",
+        "items": [
+          {
+            "q": "How can we encourage family involvement in care between visits?",
+            "a": "Invite relatives and friends from the resident's Family tab and offer a gentle reminder by email, with a stop link in each one. A few words, a photo or a short video are all welcome. Our <a href=\"/blog/this-is-me-document\">guide to the this is me document</a> has more."
+          },
+          {
+            "q": "Which care home activities could a video message fit into?",
+            "a": "A quiet afternoon, a tea round, a moment in the garden, or the hour before supper. A video is a small addition, not a replacement for your activities coordinator or the programme you run. Many homes play it one to one."
+          },
+          {
+            "q": "Does the family need an account?",
+            "a": "No. They open a private link on their phone, with no login. The link is used up when they press Send, so a reminder brings a new one."
+          },
+          {
+            "q": "Do we have to use video messages?",
+            "a": "No. They are optional for each person. You can choose not to invite anyone to send one."
+          }
+        ]
+      },
+      {
+        "group": "Privacy and the rules",
+        "items": [
+          {
+            "q": "Are the videos private?",
+            "a": "Yes. They are shown through short lived links to signed in staff, never a public address. Location and device details are removed, and only people currently living in the home appear."
+          },
+          {
+            "q": "What do the regulations say?",
+            "a": "<a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/10\">Regulation 10</a> says people must be treated with dignity and respect, including ensuring privacy and supporting autonomy, independence and involvement in the community. Check what it means for your service with your own policies."
+          },
+          {
+            "q": "Can I delete something I approved?",
+            "a": "Yes. You can delete an approved video from the resident's record at any time. It is removed from the hub and from storage."
+          }
+        ]
+      }
+    ]
+  },
+  "guide": {
+    "heading": "How to offer a message between visits, kindly and simply",
+    "lede": "The aim is a small, regular thing a busy relative can manage. A short routine keeps it kind for them and manageable for you.",
+    "sections": [
+      {
+        "h3": "Agree it with the family first",
+        "paragraphs": [
+          "Talk to the family before you invite them, and tell them it is a small extra and the visit comes first. Say what makes a good message: short, warm, in their own voice, with no one else in the picture. A few lines in your invitation save a lot of editing later."
+        ],
+        "checklist": [
+          "Does the family want to do this, and have they said so?",
+          "Have we agreed with the person, or on their behalf, that it is welcome?",
+          "Do staff know when and where they might play it?",
+          "Have we told the family what happens if we cannot approve a message?"
+        ]
+      },
+      {
+        "h3": "Decide who plays it and when",
+        "paragraphs": [
+          "Pick a quiet time in the week, such as a mid-afternoon sit. Tell carers where to find it. Use it as one small thing among your other care home activities, and watch how the person responds, in your own notes."
+        ]
+      }
+    ],
+    "note": "This page describes how the software works and is not legal advice. Check your own policies and local guidance for how you handle consent and family messages."
+  }
+}

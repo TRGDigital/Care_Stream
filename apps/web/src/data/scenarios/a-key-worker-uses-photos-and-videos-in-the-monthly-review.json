@@ -1,0 +1,484 @@
+{
+  "slug": "a-key-worker-uses-photos-and-videos-in-the-monthly-review",
+  "status": "draft",
+  "order": 114,
+  "title": "Every <em>key worker care home</em> review asks what works. A key worker can show what the family sent, and what staff played.",
+  "meta_title": "Key Worker Care Home Review: Family Photos | CareStreamAI",
+  "meta_description": "Before the monthly review, a key worker checks what family sent and what staff played, then asks the manager to approve more or set a reminder.",
+  "eyebrow": "Scenario",
+  "lede": "In a key worker care home model, the monthly review is where small knowledge about a person becomes better care. CareStream gives the key worker a place to see what family shared and what staff have played, alongside <a href=\"/training-platform\">your policies and training</a>. The manager still decides what staff see.",
+  "fine": "14 day free trial · Set up in a day · UK data residency",
+  "panel": {
+    "title": "Priya's week before the review",
+    "pill": "Illustration",
+    "rows": [
+      {
+        "label": "She opens the From family tab",
+        "note": "Tuesday",
+        "done": true
+      },
+      {
+        "label": "She checks Recently played",
+        "note": "Who played what, and when",
+        "done": true
+      },
+      {
+        "label": "She notes what settles Mrs Okafor in her care plan",
+        "note": "Her own record",
+        "done": true
+      },
+      {
+        "label": "She asks the manager to approve more, or set a reminder",
+        "note": "Wednesday",
+        "done": false
+      }
+    ],
+    "meter": 50
+  },
+  "image": "https://api.carestreamai.com/public/policy-shop/image/ecf7b498-52c5-4fac-8912-96a2bde06dd9.webp",
+  "image_alt": "A key worker and a resident sit at a table in a quiet corner of the lounge going through a few printed photographs and a notebook together.",
+  "card_title": "A key worker prepares the monthly review with what family sent and staff played",
+  "card_snippet": "Before the review, a key worker looks at what each relative has shared and which videos staff played, then asks the manager for more items or a gentle reminder.",
+  "primary_keyword": "key worker care home",
+  "secondary_keywords": [
+    "person centred care examples",
+    "dementia care plan"
+  ],
+  "feature_links": [
+    {
+      "title": "Training built from your own policies",
+      "body": "Ad hoc training from your policies, face to face training organised, and wrong answers that become lessons.",
+      "action": "See the feature",
+      "href": "/training-platform"
+    },
+    {
+      "title": "Resident knowledge for your team",
+      "body": "Quick, short answers about the people staff care for, drawn from what you have recorded and approved.",
+      "action": "See resident knowledge",
+      "href": "/uses/resident-knowledge"
+    },
+    {
+      "title": "Dementia awareness training",
+      "body": "A course that helps staff understand the person behind the diagnosis.",
+      "action": "See the course",
+      "href": "/staff-training/dementia-awareness"
+    }
+  ],
+  "intro": {
+    "heading": "The review is on Friday. What does Priya actually have?",
+    "sub": "A scenario we see in many care settings.",
+    "paragraph": "Priya is the key worker for Mrs Okafor, who has dementia and lives on the first floor. Every month she sits down with the manager to review how things are going. Over the last six weeks, Mrs Okafor's daughter has sent a few photos and a short video of the church choir. Priya knows staff have been using some of it, but she could not say which items, how often, or who else has seen it. She wants to bring something specific to the review, not a general feeling."
+  },
+  "trail": [
+    {
+      "when": "Six weeks ago",
+      "text": "Mrs Okafor's daughter agrees to share photos and a video.",
+      "kind": "ok"
+    },
+    {
+      "when": "Five weeks ago",
+      "text": "The manager approves the first items.",
+      "kind": "ok"
+    },
+    {
+      "when": "Last month",
+      "text": "A carer plays the choir video one afternoon. It goes well.",
+      "kind": "ok"
+    },
+    {
+      "when": "Two weeks ago",
+      "text": "Staff mention it at handover, but nobody writes it down.",
+      "kind": "gap"
+    },
+    {
+      "when": "Last week",
+      "text": "Another carer is unsure which items have been approved.",
+      "kind": "gap"
+    },
+    {
+      "when": "Review week",
+      "text": "Priya cannot say what has been played, or by whom.",
+      "kind": "gap"
+    },
+    {
+      "when": "Review day",
+      "text": "The daughter asks whether anything has been used. Nobody knows.",
+      "kind": "gap"
+    },
+    {
+      "when": "Inspection day",
+      "text": "“How does the key worker use what the family tells you?” A general answer.",
+      "kind": "end"
+    }
+  ],
+  "trail_close": "<b>The family did their part, and the review still ran on memory.</b> Here is how a key worker can use the tools in CareStream before the review, with the limits stated plainly.",
+  "why": {
+    "heading": "Why the key worker role needs something to look at",
+    "sub": "A review is only as good as what you bring to it.",
+    "cards": [
+      {
+        "icon": "chat",
+        "title": "Families know what works",
+        "body": "A daughter's story, a choir recording or a photo of a garden gives a key worker real material. Good person centred care examples are usually small and specific, and they come from people who know the person best."
+      },
+      {
+        "icon": "tick",
+        "title": "It supports the plan",
+        "body": "Under <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/9\">regulation 9</a>, care must meet people's needs and reflect their preferences. For someone who cannot easily say, <a href=\"https://www.legislation.gov.uk/ukpga/2005/9/section/4\">section 4 of the Mental Capacity Act 2005</a> asks decision makers to consider their past and present wishes and feelings. What families share is one way to know them."
+      },
+      {
+        "icon": "alert",
+        "title": "A log is not a result",
+        "body": "Seeing who played a video is useful, but it is a record of plays. It does not tell you how the person felt. The key worker's own observation, written in the home's usual way, still carries the weight."
+      }
+    ]
+  },
+  "how": {
+    "heading": "From what the family sent to a better review.",
+    "sub": "Photos and video messages are part of resident profiles, in the same system as your <a href=\"/training-platform\">policies and training</a>. They are on Professional and above. See <a href=\"/uses/resident-knowledge\">how staff use resident knowledge</a> too.",
+    "blocks": [
+      {
+        "heading": "The key worker opens the From family tab",
+        "bullets": [
+          "The From family tab lists each relative or friend as a drawer. Open one to see the photos, videos and written answers they shared, as the manager approved them",
+          "Each item sits under the name of the person who gave it, with the date it was approved",
+          "Photos and videos from the home's own upload are on the Profile tab, not here"
+        ],
+        "tags": [
+          {
+            "label": "Resident knowledge",
+            "href": "/uses/resident-knowledge"
+          },
+          {
+            "label": "How CareStream works",
+            "href": "/how-it-works"
+          }
+        ],
+        "mock": {
+          "type": "audit",
+          "audit": "Residents: From family tab (example)",
+          "stats": [
+            [
+              "Photos approved",
+              "3"
+            ],
+            [
+              "Videos approved",
+              "1"
+            ]
+          ],
+          "blocks": [
+            [
+              "Grace, daughter (example)",
+              [
+                [
+                  "Choir at St Mary's, 2019",
+                  "Photo, approved"
+                ],
+                [
+                  "Mum in the garden at Lagos Road",
+                  "Photo, approved"
+                ],
+                [
+                  "Choir singing Amazing Grace, 50 seconds",
+                  "Video, approved"
+                ]
+              ]
+            ]
+          ],
+          "caption": "Example only. Names and titles are illustrative."
+        }
+      },
+      {
+        "heading": "She checks Recently played",
+        "bullets": [
+          "On the resident's Profile tab, Recently played lists who played a video message and when, with the title",
+          "It shows how often a clip is being used, and by whom. It does not show how the person responded",
+          "Priya can compare it with her own notes from the shifts she has worked"
+        ],
+        "tags": [
+          {
+            "label": "Dementia awareness course",
+            "href": "/staff-training/dementia-awareness"
+          },
+          {
+            "label": "CQC and compliance",
+            "href": "/cqc-compliance"
+          }
+        ],
+        "mock": {
+          "type": "audit",
+          "audit": "Residents: Profile tab (example)",
+          "stats": [
+            [
+              "Plays this month",
+              "4"
+            ],
+            [
+              "Approved videos",
+              "1"
+            ]
+          ],
+          "blocks": [
+            [
+              "Recently played (example)",
+              [
+                [
+                  "A carer played \"Choir singing Amazing Grace\"",
+                  "Wednesday 3.30pm"
+                ],
+                [
+                  "A carer played \"Choir singing Amazing Grace\"",
+                  "Friday 4.15pm"
+                ],
+                [
+                  "A carer played \"Choir singing Amazing Grace\"",
+                  "Last Tuesday 2.50pm"
+                ]
+              ]
+            ]
+          ],
+          "caption": "Example only. Illustration, not a real resident."
+        }
+      },
+      {
+        "heading": "She writes it into the plan, in your own system",
+        "bullets": [
+          "CareStream does not write to your care records. Priya notes what seems to settle Mrs Okafor in the dementia care plan, in the system or paper record your home already uses",
+          "She uses the review to ask what else would help: another photo of a place, a story about the choir, a clip from a grandchild",
+          "She can ask staff to give good titles and captions so the chat finds things quickly"
+        ],
+        "tags": [
+          {
+            "label": "Staff training",
+            "href": "/staff-training"
+          },
+          {
+            "label": "Mental Capacity Act course",
+            "href": "/staff-training/mental-capacity-act-and-dols"
+          }
+        ],
+        "mock": {
+          "type": "audit",
+          "audit": "A review note, in your own record (example)",
+          "stats": [
+            [
+              "Review",
+              "Monthly"
+            ],
+            [
+              "Where written",
+              "Your own care record"
+            ]
+          ],
+          "blocks": [
+            [
+              "What the key worker might write (example)",
+              [
+                [
+                  "Choir video played three times this month, usually mid afternoon",
+                  "Observation"
+                ],
+                [
+                  "Staff report she hums along and talks about church",
+                  "Observation"
+                ],
+                [
+                  "Ask Grace for photos of the church hall",
+                  "Action"
+                ]
+              ]
+            ]
+          ],
+          "caption": "Example only. This is a note your own team might write, not a CareStream screen."
+        }
+      },
+      {
+        "heading": "She asks the manager for more, or a reminder",
+        "bullets": [
+          "The manager can approve new items on the Approvals tab, with a preview, an editable title or caption and a note for staff",
+          "On the Family tab a manager or admin can set a gentle email reminder for a contact, weekly, fortnightly or monthly, on a preferred day, with a pause until date. It is off by default",
+          "After three reminders with no reply they stop, and a manager is told"
+        ],
+        "tags": [
+          {
+            "label": "Pricing and plans",
+            "href": "/pricing"
+          },
+          {
+            "label": "Book a demo",
+            "href": "/demo"
+          }
+        ],
+        "mock": {
+          "type": "audit",
+          "audit": "Residents: Family tab, reminders (example)",
+          "stats": [
+            [
+              "Contacts",
+              "2"
+            ],
+            [
+              "Reminders on",
+              "1"
+            ]
+          ],
+          "blocks": [
+            [
+              "Gentle reminders (example)",
+              [
+                [
+                  "Grace, daughter. Monthly, Sundays",
+                  "Next reminder shown"
+                ],
+                [
+                  "Tunde, grandson. Off",
+                  "Reminders off"
+                ]
+              ]
+            ]
+          ],
+          "caption": "Example only. Names and settings are illustrative."
+        }
+      }
+    ]
+  },
+  "talk": {
+    "heading": "The questions managers ask, and how CareStream answers them",
+    "sub": "Read this as a conversation. The questions are the ones we hear most.",
+    "items": [
+      {
+        "q": "What can a key worker actually see?",
+        "a": "The From family tab shows what each relative or friend has shared, once a manager has approved it. The Profile tab shows Recently played, which lists who played a video message and when. The key worker still writes the review notes."
+      },
+      {
+        "q": "Does CareStream update the dementia care plan?",
+        "a": "No. It does not write to your care records. The key worker or manager records what they have learned in the dementia care plan in your own system. CareStream gives them something to bring to the review."
+      },
+      {
+        "q": "Can the log tell us whether a video helped?",
+        "a": "No. It shows who played it and when. It does not record how the person responded, and we do not claim any effect on a condition. What staff observed is for your own notes."
+      },
+      {
+        "q": "Can a key worker approve things themselves?",
+        "a": "Approval sits with a manager or admin on the resident's Approvals tab. A key worker can ask for more items to be approved, or for a reminder to be set."
+      },
+      {
+        "q": "How do reminders work?",
+        "a": "A manager or admin can ask a family contact, by email, to add something new: weekly, fortnightly or monthly. Each email carries a fresh private link and a Stop these reminders link. The default is off."
+      },
+      {
+        "q": "Does the chat look at what is in the photos?",
+        "a": "No. Staff find items by the titles, captions and notes people wrote. It never describes a picture or a video, so good titles matter."
+      },
+      {
+        "q": "What if the person moves on or passes away?",
+        "a": "Photos and videos leave the hub at once, pending ones are deleted, and reminders stop. Approved files stay in private storage for the retention period, like the written profile, then are deleted with it."
+      },
+      {
+        "q": "Which plan is it on, and can I try it?",
+        "a": "Resident profiles, photos and videos are on Professional and above, with a 14 day free trial. See the <a href=\"/pricing\">pricing page</a>. You can <a href=\"/register\">create a free account</a> or <a href=\"/demo\">book a demo</a>."
+      }
+    ]
+  },
+  "limits": {
+    "heading": "Honest limits: it shows what was shared and played, nothing more",
+    "cards": [
+      {
+        "title": "It records plays, not reactions",
+        "body": "You can see who played a video and when. You cannot see how the person felt, and nothing here shows that it helped. That judgement belongs to the key worker and the team."
+      },
+      {
+        "title": "It is not your care record",
+        "body": "CareStream does not hold the care plan and does not write to it. What the key worker learns goes into the record your home already uses, and the review stays your process."
+      },
+      {
+        "title": "It cannot see the photos",
+        "body": "The chat finds items from titles, captions and notes. It does not look inside a picture or a video. The manager's check on the Approvals tab is the safeguard, and relatives cannot see the profile."
+      }
+    ]
+  },
+  "read_next": [
+    "this-is-me-document",
+    "dementia-care-training-in-the-uk",
+    "care-home-policies-the-complete-guide"
+  ],
+  "faqs": {
+    "heading": "The key worker and the review, answered",
+    "groups": [
+      {
+        "group": "The key worker role",
+        "items": [
+          {
+            "q": "What does a key worker do in a care home?",
+            "a": "Practice varies, and your own policy sets it out. Typically a key worker gets to know one person well, keeps in touch with their family and brings what they learn to reviews. Our <a href=\"/blog/this-is-me-document\">guide to the this is me document</a> shows what to record."
+          },
+          {
+            "q": "What are good person centred care examples for a review?",
+            "a": "Noting that a choir video is played mid afternoon, asking a daughter for a photo of a place that matters, or adding a favourite song to the plan. Each one is small, specific and tied to the person."
+          },
+          {
+            "q": "How should a dementia care plan use what the family shares?",
+            "a": "Record what staff notice and what you plan to do, in your own system. The family's items are a source, and the key worker's observations are the evidence. Review the plan with the person and their family where you can."
+          },
+          {
+            "q": "Is the key worker role the same in every care setting?",
+            "a": "No. Some services use different names. The tools on this page work for anyone you ask to review what a family has shared."
+          }
+        ]
+      },
+      {
+        "group": "Privacy and records",
+        "items": [
+          {
+            "q": "Are the files private?",
+            "a": "Yes. Signed in staff see them through short lived links, and there is no public address. Photos are checked, scanned and saved again without location data, and videos have location and device details removed."
+          },
+          {
+            "q": "Can relatives see the profile?",
+            "a": "No. They use a private link to add items. They cannot see the profile, and the link is used up when they press Send."
+          },
+          {
+            "q": "What does the regulation say about preferences?",
+            "a": "<a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/9\">Regulation 9</a> says care and treatment must be appropriate, meet people's needs and reflect their preferences. Check what this means for your service with your own policies."
+          },
+          {
+            "q": "Can I delete an item I approved earlier?",
+            "a": "Yes. You can delete an approved photo or video from the resident's record at any time."
+          }
+        ]
+      }
+    ]
+  },
+  "guide": {
+    "heading": "How to prepare a monthly review with what the family shared",
+    "lede": "A short routine before the review turns scattered comments into something you can act on.",
+    "sections": [
+      {
+        "h3": "Ten minutes before the review",
+        "paragraphs": [
+          "Open the From family tab and look at what is new. Then look at Recently played. Put them next to your own notes from the month. The question is simple: what did we try, and what did we see?"
+        ],
+        "checklist": [
+          "What has the family shared since the last review?",
+          "Which items have staff played, and roughly how often?",
+          "What did staff observe, in their own words?",
+          "What should the manager approve or ask for next?"
+        ]
+      },
+      {
+        "h3": "Write only what you saw",
+        "paragraphs": [
+          "Keep observations plain and factual. Write what the person did or said, not what you hope it means. The <a href=\"/staff-training/mental-capacity-act-and-dols\">Mental Capacity Act course</a> helps staff think about wishes and feelings, and the <a href=\"/staff-training/dementia-awareness\">dementia awareness course</a> helps them understand the person behind the diagnosis."
+        ]
+      },
+      {
+        "h3": "Close the loop with the family",
+        "paragraphs": [
+          "Tell the family what has been used and thank them. If you would like more, ask for something specific, such as a photo of a place or a short clip with a name in the title. A gentle reminder can help, and the family can stop it with one click."
+        ]
+      }
+    ],
+    "note": "This page describes how the software works and is not legal or clinical advice. Check your own policies and local guidance on key worker duties, reviews and care planning."
+  }
+}

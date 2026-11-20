@@ -1,0 +1,490 @@
+{
+  "slug": "a-video-of-the-dog-a-resident-misses",
+  "status": "draft",
+  "order": 113,
+  "title": "A video of the dog a resident misses, and a plain look at <em>dementia pets</em> in a care home.",
+  "meta_title": "Dementia Pets: A Video of the Dog He Misses | CareStreamAI",
+  "meta_description": "A resident misses his dog. Family send a short clip and captioned photos, a manager approves them and staff play them. What it does and does not do.",
+  "eyebrow": "Scenario",
+  "lede": "Many people moving into care leave a much loved dog behind, and the question of dementia pets comes up at the first review. CareStream lets family send a short clip and captioned photos by a private link, and a manager decides what staff see. It sits alongside <a href=\"/training-platform\">the rest of your training and knowledge tools</a>.",
+  "fine": "14 day free trial · Set up in a day · UK data residency",
+  "panel": {
+    "title": "One week after Mr Bell moves in",
+    "pill": "Illustration",
+    "rows": [
+      {
+        "label": "His daughter-in-law sends a clip of Biscuit",
+        "note": "Sunday",
+        "done": true
+      },
+      {
+        "label": "The manager previews it and approves it",
+        "note": "Monday",
+        "done": true
+      },
+      {
+        "label": "A carer finds it in the Staff Hub chat",
+        "note": "Tuesday afternoon",
+        "done": true
+      },
+      {
+        "label": "The play is logged for the manager to see",
+        "note": "Who and when",
+        "done": false
+      }
+    ],
+    "meter": 50
+  },
+  "image": "https://api.carestreamai.com/public/policy-shop/image/512e8852-48fc-4b5c-82ca-76388a8e6f94.webp",
+  "image_alt": "An older man in a lounge laughs as a carer holds a small tablet towards him, a small framed photo of a dog on the side table.",
+  "card_title": "He misses his dog. Family send a clip, you approve it, staff can play it.",
+  "card_snippet": "A resident asks for the spaniel he left at his son's house. A short family video and captioned photos wait for a manager's approval, then staff can find and play them.",
+  "primary_keyword": "dementia pets",
+  "secondary_keywords": [
+    "dementia memory",
+    "reminiscence photos"
+  ],
+  "feature_links": [
+    {
+      "title": "Training built from your own policies",
+      "body": "Ad hoc training from your policies, face to face training organised, and wrong answers that become lessons.",
+      "action": "See the feature",
+      "href": "/training-platform"
+    },
+    {
+      "title": "Resident knowledge for your team",
+      "body": "Quick, short answers about the people staff care for, drawn from what you have recorded and approved.",
+      "action": "See resident knowledge",
+      "href": "/uses/resident-knowledge"
+    },
+    {
+      "title": "Dementia awareness training",
+      "body": "A course that helps staff understand the person behind the diagnosis.",
+      "action": "See the course",
+      "href": "/staff-training/dementia-awareness"
+    }
+  ],
+  "intro": {
+    "heading": "He keeps asking where the dog is.",
+    "sub": "A scenario we see in many care settings.",
+    "paragraph": "Mr Bell moved into a care home ten days ago. His spaniel, Biscuit, went to live with his son, because nobody could look after a dog on the unit. Each afternoon Mr Bell asks where the dog is. The staff are kind, but they only know his name for the dog because someone wrote it on a form. His son's wife has a lovely clip of Biscuit in the garden and a few old photos. She would happily send them. The home has no tidy way to take them, and a carer's own phone is not an answer."
+  },
+  "trail": [
+    {
+      "when": "Day one",
+      "text": "Mr Bell moves in. His son brings his slippers and a photo.",
+      "kind": "ok"
+    },
+    {
+      "when": "Day two",
+      "text": "His key worker writes down that he has a spaniel called Biscuit.",
+      "kind": "ok"
+    },
+    {
+      "when": "Day four",
+      "text": "He asks about the dog. A carer chats kindly about dogs.",
+      "kind": "ok"
+    },
+    {
+      "when": "Day six",
+      "text": "His daughter-in-law offers a video. Nobody knows where to send it.",
+      "kind": "gap"
+    },
+    {
+      "when": "Day eight",
+      "text": "A carer offers her own phone. The manager says no.",
+      "kind": "gap"
+    },
+    {
+      "when": "Day ten",
+      "text": "He asks again. Staff have no picture of Biscuit to hand.",
+      "kind": "gap"
+    },
+    {
+      "when": "Month end",
+      "text": "The family ask if anything they sent was used. Nobody can say.",
+      "kind": "gap"
+    },
+    {
+      "when": "Inspection day",
+      "text": "“How do you reflect what matters to him?” The answer is memory.",
+      "kind": "end"
+    }
+  ],
+  "trail_close": "<b>Everyone wanted to help, and nothing was in place.</b> Here is how it can look in CareStream, with the limits stated plainly, including what it cannot tell you about dementia memory.",
+  "why": {
+    "heading": "Why a clip of a dog matters to staff",
+    "sub": "Small things from home give staff something real to talk about.",
+    "cards": [
+      {
+        "icon": "chat",
+        "title": "It gives staff a way in",
+        "body": "A carer who can say \"is this Biscuit?\" has a better conversation than one who only knows there is a dog. Reminiscence photos and short clips from home give staff names, places and stories to start from. We make no claim about what that does for the person."
+      },
+      {
+        "icon": "tick",
+        "title": "It reflects what he likes",
+        "body": "Under <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/9\">regulation 9</a>, care must meet people's needs and reflect their preferences. Knowing who and what matters to someone is part of that. For someone who cannot easily say, <a href=\"https://www.legislation.gov.uk/ukpga/2005/9/section/4\">section 4 of the Mental Capacity Act 2005</a> asks decision makers to consider their past and present wishes and feelings."
+      },
+      {
+        "icon": "alert",
+        "title": "A clip needs a gatekeeper",
+        "body": "A video is personal. It might show someone else's face, or a caption a relative did not expect to be seen. Somebody has to look at it before staff do, and the home's own policy on pets and visiting animals is a separate matter."
+      }
+    ]
+  },
+  "how": {
+    "heading": "From a clip of the dog to something staff can find and play.",
+    "sub": "Photos and video messages are part of resident profiles, in the same system as your <a href=\"/training-platform\">policies and training</a>. They are on Professional and above. See <a href=\"/uses/resident-knowledge\">how staff use resident knowledge</a> too.",
+    "blocks": [
+      {
+        "heading": "Family send a clip and captioned photos by a private link",
+        "bullets": [
+          "You invite his daughter-in-law from the resident's Family tab. She opens a private link with no login and taps Record a message or Choose a video",
+          "A clip can be up to 60 seconds, with a short title. Photos can carry a caption and a note saying who is in them. She can add several, and remove one before she presses Send",
+          "A line above the buttons asks her to share only what she is happy for the care team to play. The link is used up once she presses Send"
+        ],
+        "tags": [
+          {
+            "label": "Resident knowledge",
+            "href": "/uses/resident-knowledge"
+          },
+          {
+            "label": "How CareStream works",
+            "href": "/how-it-works"
+          }
+        ],
+        "mock": {
+          "type": "audit",
+          "audit": "What the family might send (example)",
+          "stats": [
+            [
+              "Video",
+              "1"
+            ],
+            [
+              "Photos",
+              "3"
+            ]
+          ],
+          "blocks": [
+            [
+              "Sent through the private link (example)",
+              [
+                [
+                  "Title: Biscuit in the garden",
+                  "Video, 40 seconds"
+                ],
+                [
+                  "Caption: Biscuit on the lawn, summer 2023",
+                  "Photo"
+                ],
+                [
+                  "Caption: Dad and Biscuit at the allotment",
+                  "Photo"
+                ],
+                [
+                  "Caption: Biscuit with the grandchildren",
+                  "Photo"
+                ]
+              ]
+            ]
+          ],
+          "caption": "Example only. Names, titles and captions are illustrative."
+        }
+      },
+      {
+        "heading": "The manager previews it and decides",
+        "bullets": [
+          "Everything waits on the resident's Approvals tab. Staff see nothing until you approve, and a count shows how many items are waiting",
+          "For a video you can preview it, edit the title and add a note for staff. For a photo you can edit the caption",
+          "Approve or Reject. Rejecting deletes the file at once. You can also add a video or photo yourself, and it is approved straight away"
+        ],
+        "tags": [
+          {
+            "label": "Dementia awareness course",
+            "href": "/staff-training/dementia-awareness"
+          },
+          {
+            "label": "CQC and compliance",
+            "href": "/cqc-compliance"
+          }
+        ],
+        "mock": {
+          "type": "audit",
+          "audit": "Residents: Approvals tab (example)",
+          "stats": [
+            [
+              "Videos waiting",
+              "1"
+            ],
+            [
+              "Photos waiting",
+              "3"
+            ]
+          ],
+          "blocks": [
+            [
+              "Videos waiting for approval (example)",
+              [
+                [
+                  "Title: Biscuit in the garden",
+                  "Preview, Approve, Reject"
+                ]
+              ]
+            ],
+            [
+              "Photos waiting for approval (example)",
+              [
+                [
+                  "Biscuit on the lawn, summer 2023",
+                  "Approve, Reject"
+                ],
+                [
+                  "Dad and Biscuit at the allotment",
+                  "Approve, Reject"
+                ]
+              ]
+            ]
+          ],
+          "caption": "Example only. This is an illustration of the kind of screen, not a real resident."
+        }
+      },
+      {
+        "heading": "A carer asks the chat and finds it",
+        "bullets": [
+          "In the Staff Hub, the This is me chat answers questions about a person. Ask \"do we have a video of Biscuit?\" and approved videos appear under the answer, with the resident's name and room number",
+          "Photos are found the same way. A question about a photo is matched to approved captions and notes by meaning, and thumbnails appear under the answer",
+          "The Messages from family button lists a person's approved videos, newest first. Playing a clip opens just the video, and each play is logged"
+        ],
+        "tags": [
+          {
+            "label": "Staff training",
+            "href": "/staff-training"
+          },
+          {
+            "label": "Mental Capacity Act course",
+            "href": "/staff-training/mental-capacity-act-and-dols"
+          }
+        ],
+        "mock": {
+          "type": "audit",
+          "audit": "Staff Hub: This is me chat (example)",
+          "stats": [
+            [
+              "Question",
+              "1"
+            ],
+            [
+              "Videos shown",
+              "1"
+            ]
+          ],
+          "blocks": [
+            [
+              "A carer asks (example)",
+              [
+                [
+                  "Do we have a video of Biscuit?",
+                  "Asked in the chat"
+                ]
+              ]
+            ],
+            [
+              "Shown under the answer (example)",
+              [
+                [
+                  "Biscuit in the garden. Mr Bell, Room 12",
+                  "Poster and play button"
+                ],
+                [
+                  "Biscuit on the lawn, summer 2023",
+                  "Photo thumbnail"
+                ]
+              ]
+            ]
+          ],
+          "caption": "Example only. Wording and layout are illustrative."
+        }
+      },
+      {
+        "heading": "The manager can see who played it, and when",
+        "bullets": [
+          "On the resident's Profile tab, Recently played lists who played a video message and when. The From family tab shows what each relative sent",
+          "That is a record of plays. It does not record how he reacted, and CareStream does not say whether anything helped",
+          "You can set a gentle email reminder on the Family tab, weekly, fortnightly or monthly, so the family are asked for something new now and then"
+        ],
+        "tags": [
+          {
+            "label": "Pricing and plans",
+            "href": "/pricing"
+          },
+          {
+            "label": "Book a demo",
+            "href": "/demo"
+          }
+        ],
+        "mock": {
+          "type": "audit",
+          "audit": "Residents: Profile tab (example)",
+          "stats": [
+            [
+              "Plays this week",
+              "2"
+            ],
+            [
+              "Approved videos",
+              "1"
+            ]
+          ],
+          "blocks": [
+            [
+              "Recently played (example)",
+              [
+                [
+                  "A carer played \"Biscuit in the garden\"",
+                  "Tuesday 3.40pm"
+                ],
+                [
+                  "A carer played \"Biscuit in the garden\"",
+                  "Thursday 4.05pm"
+                ]
+              ]
+            ]
+          ],
+          "caption": "Example only. Illustration, not a real resident."
+        }
+      }
+    ]
+  },
+  "talk": {
+    "heading": "The questions managers ask, and how CareStream answers them",
+    "sub": "Read this as a conversation. The questions are the ones we hear most.",
+    "items": [
+      {
+        "q": "Can family really send a video of a pet?",
+        "a": "Yes. A relative or friend opens a private link, records a clip or chooses one, and can add a short title. Clips can be up to 60 seconds. They do not need an account, and the link is used up once they press Send."
+      },
+      {
+        "q": "Who sees it before staff do?",
+        "a": "Only managers with access to the resident's record. A family video or photo waits on the Approvals tab. You preview it, edit the title or caption and approve it, or reject it. Staff see approved items for current residents and nothing else."
+      },
+      {
+        "q": "How does a carer find it in the moment?",
+        "a": "They ask the This is me chat in the Staff Hub, for example whether there is a video of the dog. Approved videos appear under the answer with the resident's name and room number, and a play button. The Messages from family button lists a person's videos too."
+      },
+      {
+        "q": "Does the chat watch the video or look in the photos?",
+        "a": "No. It finds items from the titles, captions and notes people wrote, so a good title such as Biscuit in the garden matters. It never describes a picture or a video, and photos and videos are not used for any of its other answers."
+      },
+      {
+        "q": "Will it help his memory or settle him?",
+        "a": "We do not claim that. CareStream does not treat, prevent or improve any condition. It gives staff a quick, approved way to find something his family chose to share. What it means for him is for your team to judge."
+      },
+      {
+        "q": "What about our policy on pets and visiting animals?",
+        "a": "That is your own policy and it is separate. A video of a dog is not the same as a dog on the unit. Keep your pets and visiting animals policy in your <a href=\"/training-platform\">policy library</a> and follow it."
+      },
+      {
+        "q": "What happens if he moves on or passes away?",
+        "a": "Photos and videos leave the hub at once and pending ones are deleted. Approved files stay in private storage for the retention period, like the written profile, then are deleted with it."
+      },
+      {
+        "q": "Which plan is it on, and can I try it?",
+        "a": "Resident profiles, photos and videos are on Professional and above, with a 14 day free trial. See the <a href=\"/pricing\">pricing page</a>. You can <a href=\"/register\">create a free account</a> or <a href=\"/demo\">book a demo</a> to see it first."
+      }
+    ]
+  },
+  "limits": {
+    "heading": "Honest limits: it finds and plays, and it does not judge",
+    "cards": [
+      {
+        "title": "It cannot see the dog, or the garden",
+        "body": "CareStream does not look inside photos or videos. It cannot tell if another resident appears or if a clip is suitable. Your check on the Approvals tab is the safeguard, and it is yours."
+      },
+      {
+        "title": "Plays are logged, reactions are not",
+        "body": "You can see who played a clip and when. You cannot see how he responded, and nothing records whether it helped. If staff notice something, they write it down the way your home already does."
+      },
+      {
+        "title": "It is not a pet policy",
+        "body": "A clip is not a visit. Whether a dog can come into your home, and under what conditions, is for your own policy. CareStream does not decide it, and the family cannot see the profile or message the team through it."
+      }
+    ]
+  },
+  "read_next": [
+    "this-is-me-document",
+    "dementia-care-training-in-the-uk",
+    "care-home-policies-the-complete-guide"
+  ],
+  "faqs": {
+    "heading": "A video of a pet, answered",
+    "groups": [
+      {
+        "group": "Pets, memory and family",
+        "items": [
+          {
+            "q": "Do dementia pets belong in a care home?",
+            "a": "That is a decision for your service and your own policy. Some homes allow visiting animals and some do not. A family clip is a different question, because the dog stays where it lives. Our <a href=\"/blog/this-is-me-document\">guide to the this is me document</a> covers what to record about a person."
+          },
+          {
+            "q": "Does a photo or a video help dementia memory?",
+            "a": "We cannot say. Staff often find that familiar pictures give them something to talk about. CareStream does not claim to treat, prevent or improve any condition. It helps you find and play what the family chose to share."
+          },
+          {
+            "q": "What makes good reminiscence photos?",
+            "a": "A clear picture, a short caption with names and a place or year, and a note saying who is in it. Staff and the chat find a photo by those words. Try, for example, \"Dad and Biscuit at the allotment\"."
+          },
+          {
+            "q": "Do we have to use photos and videos?",
+            "a": "No. They are optional for each person. See <a href=\"/uses/resident-knowledge\">resident knowledge</a> for how staff use what you approve."
+          }
+        ]
+      },
+      {
+        "group": "Privacy and records",
+        "items": [
+          {
+            "q": "Are the files private?",
+            "a": "Yes. Signed in staff see them through short lived links, and there is no public address. Each photo is checked, scanned and saved again without location data, and videos have location and device details removed."
+          },
+          {
+            "q": "What does the regulation say?",
+            "a": "<a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/9\">Regulation 9</a> says care must be appropriate, meet people's needs and reflect their preferences. Check what that means for your service with your own policies."
+          }
+        ]
+      }
+    ]
+  },
+  "guide": {
+    "heading": "How to use a family clip well, without overpromising",
+    "lede": "A short routine keeps this kind of sharing kind and consistent. A few minutes when something arrives is usually enough.",
+    "sections": [
+      {
+        "h3": "Before you approve it",
+        "paragraphs": [
+          "Watch the whole clip. Give it a plain title with the name staff will use, such as Biscuit in the garden, and add a note for staff on who it is from. Staff and the chat find it by those words. If you are unsure about a clip, speak to the relative first."
+        ],
+        "checklist": [
+          "Does it show anyone other than the resident's family or pet?",
+          "Is the title the name staff would actually say?",
+          "Would he be comfortable that staff saw it?",
+          "If I reject it, have I got a kind way to explain?"
+        ]
+      },
+      {
+        "h3": "When a carer plays it",
+        "paragraphs": [
+          "Offer it, and do not insist. Sit beside him and let him lead. If he does not want to watch, stop. Make a short note of what you saw in the way your home already records daily notes."
+        ]
+      },
+      {
+        "h3": "Bring it back to the review",
+        "paragraphs": [
+          "Where a clip or photo does seem to spark a good conversation, the key worker can mention it in the review and the care plan. The <a href=\"/staff-training/mental-capacity-act-and-dols\">Mental Capacity Act course</a> and the <a href=\"/staff-training/dementia-awareness\">dementia awareness course</a> help staff think about wishes and feelings."
+        ]
+      }
+    ],
+    "note": "This page describes how the software works and is not legal or clinical advice. Check your own policies, including those on pets and visiting animals, and local guidance."
+  }
+}

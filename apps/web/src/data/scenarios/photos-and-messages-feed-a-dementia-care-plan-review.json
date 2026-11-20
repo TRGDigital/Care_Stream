@@ -1,0 +1,467 @@
+{
+  "slug": "photos-and-messages-feed-a-dementia-care-plan-review",
+  "status": "draft",
+  "order": 111,
+  "title": "Before you update a <strong>dementia care plan</strong>, <em>look at what the family has already shown you.</em>",
+  "meta_title": "Dementia Care Plan Review: Use Family Photos | CareStreamAI",
+  "meta_description": "Before a dementia care plan review, see which family photos and messages staff actually use, then note what settles the person in your own care plan.",
+  "eyebrow": "Scenario",
+  "lede": "A dementia care plan review is only as good as what the team knows about the person today. CareStream gives staff approved family photos and video messages, and shows which ones get used, so the review starts from real evidence. Everything sits alongside <a href=\"/training-platform\">your policies, training and knowledge tools</a>.",
+  "fine": "14 day free trial · Set up in a day · UK data residency",
+  "panel": {
+    "title": "A review week for Mrs Bell",
+    "pill": "Illustration",
+    "rows": [
+      {
+        "label": "Family photos and a video are approved",
+        "note": "Captions say what each one is",
+        "done": true
+      },
+      {
+        "label": "Staff use them through the This is me chat",
+        "note": "Plays are logged",
+        "done": true
+      },
+      {
+        "label": "Senior carer opens the record before the review",
+        "note": "Captions, notes and plays",
+        "done": true
+      },
+      {
+        "label": "The team writes what it learns in its own care plan",
+        "note": "Done by people, not the software",
+        "done": false
+      }
+    ],
+    "meter": 50
+  },
+  "image": "https://api.carestreamai.com/public/policy-shop/image/dd492a1a-859f-4b26-8b6b-41a1e17975a4.webp",
+  "image_alt": "A senior carer and a relative sit at a table going through a folder together, with a few printed photographs laid beside it in calm daylight.",
+  "card_title": "Reviewing a dementia care plan? Start with what the family has shown you",
+  "card_snippet": "A senior carer prepares a review using the photos and video messages the family shared, the captions staff can find and a log of what was played, then records what she learns in the home's own care plan.",
+  "primary_keyword": "dementia care plan",
+  "secondary_keywords": [
+    "person centred care examples",
+    "life story work dementia"
+  ],
+  "feature_links": [
+    {
+      "title": "Training built from your own policies",
+      "body": "Ad hoc training from your policies, face to face training organised, and wrong answers that become lessons.",
+      "action": "See the feature",
+      "href": "/training-platform"
+    },
+    {
+      "title": "Resident knowledge for your team",
+      "body": "Give staff quick, short answers about the people they care for, drawn from what you have recorded and approved.",
+      "action": "See resident knowledge",
+      "href": "/uses/resident-knowledge"
+    },
+    {
+      "title": "Dementia awareness training",
+      "body": "A course that helps staff understand the person behind the diagnosis.",
+      "action": "See the course",
+      "href": "/staff-training/dementia-awareness"
+    }
+  ],
+  "intro": {
+    "heading": "The review is on Thursday. The folder is thin.",
+    "sub": "A scenario we see in many care settings.",
+    "paragraph": "Priya is a senior carer on a dementia unit. Mrs Bell's care plan review is on Thursday, and her daughter Ruth will join it. The plan says Mrs Bell \"enjoys music\" and \"likes company\". Priya knows there is more to it. Ruth has sent three photographs and a short video over the last two months, and carers talk about which ones help in the afternoon. None of that is written down in a form Priya can bring to the table. She has an hour to prepare, a handwritten page and a feeling that the plan is out of date."
+  },
+  "trail": [
+    {
+      "when": "On admission",
+      "text": "Ruth fills in a life story page. It is good.",
+      "kind": "ok"
+    },
+    {
+      "when": "Month one",
+      "text": "Ruth sends photographs. Staff enjoy them.",
+      "kind": "ok"
+    },
+    {
+      "when": "Month two",
+      "text": "A video message arrives and the manager checks it first.",
+      "kind": "ok"
+    },
+    {
+      "when": "Most weeks",
+      "text": "Carers pick up what helps. It lives in their heads.",
+      "kind": "gap"
+    },
+    {
+      "when": "Change of shift",
+      "text": "The afternoon carer does not know what the morning carer found.",
+      "kind": "gap"
+    },
+    {
+      "when": "Week of the review",
+      "text": "Priya cannot say which photo or message is actually used.",
+      "kind": "gap"
+    },
+    {
+      "when": "In the meeting",
+      "text": "Ruth asks what has changed since she wrote the first page.",
+      "kind": "gap"
+    },
+    {
+      "when": "Inspection day",
+      "text": "“How does the plan reflect what matters to her?” The plan says music.",
+      "kind": "end"
+    }
+  ],
+  "trail_close": "<b>The knowledge exists, and nobody has gathered it.</b> Here is how a senior carer can gather it using CareStream, and where the software stops and the team's own care plan begins.",
+  "why": {
+    "heading": "Why a review needs more than the original form",
+    "sub": "People change, and so does what comforts them.",
+    "cards": [
+      {
+        "icon": "chat",
+        "title": "A first page goes stale",
+        "body": "What a relative wrote on admission is a starting point. Months later, the song, the photograph or the story that settles someone may be different. Life story work dementia families begin on day one needs revisiting, or the plan is easy to write and hard to defend."
+      },
+      {
+        "icon": "tick",
+        "title": "The rules ask for preferences and involvement",
+        "body": "Under <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/9\">regulation 9</a>, care must reflect the person's preferences, and relevant people are to be involved in decisions about care. <a href=\"https://www.legislation.gov.uk/ukpga/2005/9/section/4\">Section 4 of the Mental Capacity Act</a> asks decision makers to consider a person's past and present wishes and feelings, and to consult people who care for them, where practicable."
+      },
+      {
+        "icon": "alert",
+        "title": "Knowledge in heads leaves with the shift",
+        "body": "Good person centred care examples are often small: a name used, a photograph passed over, a story asked for. If only one carer knows, the next shift starts again."
+      }
+    ]
+  },
+  "how": {
+    "heading": "From what the family shared to what the team writes down.",
+    "sub": "Photos and video messages are part of the resident profiles feature, on Professional and above. CareStream helps staff find and use them. It does not write your care plan. See <a href=\"/uses/resident-knowledge\">how staff use resident knowledge</a>.",
+    "blocks": [
+      {
+        "heading": "The family shares, and a manager approves first",
+        "bullets": [
+          "Ruth opens a private link from the resident's Family tab, with no login. She can add up to 5 photos and up to 5 short video messages, with a caption or title and a note on who is in the photo",
+          "A manager previews each item on the Approvals tab and can edit the caption or title. Staff see nothing until it is approved",
+          "Plain, specific captions matter, because staff and the This is me chat find items by those words"
+        ],
+        "tags": [
+          {
+            "label": "Resident knowledge",
+            "href": "/uses/resident-knowledge"
+          },
+          {
+            "label": "The this is me guide",
+            "href": "/blog/this-is-me-document"
+          }
+        ],
+        "mock": {
+          "type": "audit",
+          "audit": "Residents: Approvals tab (example)",
+          "stats": [
+            [
+              "Photos approved",
+              "3"
+            ],
+            [
+              "Videos approved",
+              "1"
+            ]
+          ],
+          "blocks": [
+            [
+              "Captions staff can find (example)",
+              [
+                [
+                  "Mum and Dad dancing at Blackpool, 1962",
+                  "Approved by the manager"
+                ],
+                [
+                  "Ruth, aged 7, on the beach at Filey",
+                  "Approved by the manager"
+                ],
+                [
+                  "Good afternoon Mum, singing the old tune, 35 seconds",
+                  "Approved by the manager"
+                ]
+              ]
+            ]
+          ],
+          "caption": "Example only. Names and captions are illustrative."
+        }
+      },
+      {
+        "heading": "Staff ask the chat, and photos and videos appear under the answer",
+        "bullets": [
+          "In the Staff Hub, a carer picks the This is me topic and asks a question such as whether there is a photo of Mrs Bell dancing. The answer is found from the approved captions and notes, matched by meaning",
+          "Photos appear as thumbnails under the answer, and videos appear with the resident's name and room number and a play button. A Messages from family button lists a person's approved videos, newest first",
+          "The chat never looks inside a picture or watches a video. It only reads the words people wrote, so a poor caption means a poor result"
+        ],
+        "tags": [
+          {
+            "label": "Dementia awareness course",
+            "href": "/staff-training/dementia-awareness"
+          },
+          {
+            "label": "How CareStream works",
+            "href": "/how-it-works"
+          }
+        ],
+        "mock": {
+          "type": "audit",
+          "audit": "Staff Hub: This is me chat (example)",
+          "stats": [
+            [
+              "Question",
+              "A photo of dancing?"
+            ],
+            [
+              "Found by",
+              "Caption words"
+            ]
+          ],
+          "blocks": [
+            [
+              "Under the answer (example)",
+              [
+                [
+                  "Mum and Dad dancing at Blackpool, 1962",
+                  "Photo, tap to enlarge"
+                ],
+                [
+                  "Mrs Bell, Room 14. Good afternoon Mum",
+                  "Video, play button"
+                ]
+              ]
+            ]
+          ],
+          "caption": "Example only. This shows how results appear, with invented names."
+        }
+      },
+      {
+        "heading": "Before the review, the senior carer opens the record",
+        "bullets": [
+          "On the resident's record, From family lists each relative's approved photos and videos, with the captions staff can find them by",
+          "Recently played shows who played a video and when. It records that a video was played. It does not record how the person felt",
+          "Put that beside your own observation notes. A video played most afternoons at four tells you something. What it means is a conversation for the review"
+        ],
+        "tags": [
+          {
+            "label": "Resident knowledge",
+            "href": "/uses/resident-knowledge"
+          },
+          {
+            "label": "CQC and compliance",
+            "href": "/cqc-compliance"
+          }
+        ],
+        "mock": {
+          "type": "audit",
+          "audit": "Residents: preparing the review (example)",
+          "stats": [
+            [
+              "Approved items",
+              "4"
+            ],
+            [
+              "Plays this month",
+              "11"
+            ]
+          ],
+          "blocks": [
+            [
+              "Recently played (example)",
+              [
+                [
+                  "A carer played Good afternoon Mum",
+                  "Tuesday 3.55pm"
+                ],
+                [
+                  "A carer played Good afternoon Mum",
+                  "Thursday 4.05pm"
+                ]
+              ]
+            ],
+            [
+              "Notes from the team, not from CareStream (example)",
+              [
+                [
+                  "Calmer when the singing video is played, say two carers",
+                  "For discussion"
+                ]
+              ]
+            ]
+          ],
+          "caption": "Example only. The log shows plays. Observations come from your own team."
+        }
+      },
+      {
+        "heading": "The team records what it learns in its own care plan",
+        "bullets": [
+          "At the review, Priya and Ruth go through the photographs and the plays. They agree what seems to help, and what Ruth would like staff to know that the first page left out",
+          "The team notes it in their own care plan, in the way your policy requires. CareStream does not write the care plan, edit it or keep a copy of it",
+          "Ruth can be invited again from the Family tab, and a gentle email reminder can ask for something new, weekly, fortnightly or monthly"
+        ],
+        "tags": [
+          {
+            "label": "Pricing and plans",
+            "href": "/pricing"
+          },
+          {
+            "label": "Book a demo",
+            "href": "/demo"
+          }
+        ],
+        "mock": {
+          "type": "audit",
+          "audit": "A line the team might add to its own care plan (example)",
+          "stats": [
+            [
+              "Where it lives",
+              "Your own care plan"
+            ],
+            [
+              "Who wrote it",
+              "The team, with Ruth"
+            ]
+          ],
+          "blocks": [
+            [
+              "Wording your team might use (example)",
+              [
+                [
+                  "Late afternoon is harder. Familiar singing and the Blackpool photograph have been used by staff",
+                  ""
+                ],
+                [
+                  "Ruth would like staff to ask about the dance hall, not about her father's illness",
+                  ""
+                ]
+              ]
+            ]
+          ],
+          "caption": "Example only. This is wording your own team might write, not a CareStream screen."
+        }
+      }
+    ]
+  },
+  "talk": {
+    "heading": "The questions managers ask, and how CareStream answers them",
+    "sub": "Read this as a conversation. The questions are the ones we hear most.",
+    "items": [
+      {
+        "q": "Does CareStream write or update our care plan?",
+        "a": "No. You keep your own care plan, and your team writes into it. CareStream helps staff find and use what the family has shared, and shows you what has been played. What you conclude, and how you record it, stays with you."
+      },
+      {
+        "q": "What can a senior carer actually see before a review?",
+        "a": "The approved photos and videos with their captions and titles, who sent each one, and a Recently played list showing who played a video and when. A short list of facts, not a verdict."
+      },
+      {
+        "q": "Can the chat tell me what is in a photograph?",
+        "a": "No. It never looks inside a picture or watches a video. It finds items from the captions, titles and notes that people wrote, matching meaning, so a search for wedding can find a caption that says married."
+      },
+      {
+        "q": "Does a log of plays prove a video helped?",
+        "a": "No. It shows a video was played, by whom and when. It cannot show how the person responded, and we do not claim it treats or improves anything. Your team's observations carry that part."
+      },
+      {
+        "q": "Who decides what staff are allowed to see?",
+        "a": "A manager. Every photo and video waits on the Approvals tab, and staff see it only once approved. Photos and videos are private, shown through short lived links to signed in staff, and only for people currently living in the home."
+      },
+      {
+        "q": "What if the person moves on or passes away?",
+        "a": "Photos and videos leave the hub at once, and anything pending is deleted. Approved files stay in private storage for the retention period, like the written profile, then are deleted with it."
+      },
+      {
+        "q": "Which plan is it on, and can I try it?",
+        "a": "Resident profiles, photos and video messages are on Professional and above, with a 14 day free trial. See the <a href=\"/pricing\">pricing page</a>. You can <a href=\"/register\">create an account</a> or <a href=\"/demo\">book a demo</a> to see it first."
+      }
+    ]
+  },
+  "limits": {
+    "heading": "Honest limits: the software helps you gather, and your team decides",
+    "cards": [
+      {
+        "title": "It does not touch the care plan",
+        "body": "CareStream does not write, edit, store or send anything into your care plan. The team records what it has learned, in your usual way, and reviews it with the person and family as your policy requires."
+      },
+      {
+        "title": "Captions are only as good as the words",
+        "body": "The chat reads captions, titles and notes. It cannot see a picture or watch a video. A photo captioned \"Mum\" will be found for questions about Mum and little else, so ask your manager to edit captions before approving."
+      },
+      {
+        "title": "Plays are logged, outcomes are not",
+        "body": "You can see who played a video and when. CareStream does not record how the person responded, and nothing here shows that anyone is better or worse. Use your own observations, and the person's own wishes, for that."
+      }
+    ]
+  },
+  "read_next": [
+    "this-is-me-document",
+    "dementia-care-training-in-the-uk",
+    "care-home-policies-the-complete-guide"
+  ],
+  "faqs": {
+    "heading": "Dementia care plan reviews, answered",
+    "groups": [
+      {
+        "group": "Reviewing the plan",
+        "items": [
+          {
+            "q": "What should a dementia care plan review include?",
+            "a": "Your own policy decides the format. It usually covers what has changed for the person, what helps and what does not, and what the person and their family would like. Photographs and messages from the family can show what matters to them in the family's own words. See our <a href=\"/blog/this-is-me-document\">guide to the this is me document</a>."
+          },
+          {
+            "q": "What are some person centred care examples for someone with dementia?",
+            "a": "Using the name they like, playing the song that belonged to a particular decade, asking about a job they were proud of, or having a familiar photograph on hand in the afternoon. Each one starts with something a relative or the person told you. Our <a href=\"/staff-training/dementia-awareness\">dementia awareness course</a> covers the thinking behind it."
+          },
+          {
+            "q": "How is life story work different from this?",
+            "a": "Life story work is the wider practice of recording a person's history and preferences, and the book or page is yours to keep. CareStream adds a way for staff to find and use approved photos and messages from it. It does not replace the book."
+          },
+          {
+            "q": "Can relatives take part in the review?",
+            "a": "Yes, and the rules support it. Regulation 9 refers to involving relevant people in decisions. Relatives can also share more beforehand through a private link."
+          }
+        ]
+      },
+      {
+        "group": "Using CareStream for it",
+        "items": [
+          {
+            "q": "Can I see who has played a video?",
+            "a": "Yes. Recently played on the resident's record lists who played it and when. Each play is logged."
+          },
+          {
+            "q": "What does the Mental Capacity Act say about wishes and feelings?",
+            "a": "<a href=\"https://www.legislation.gov.uk/ukpga/2005/9/section/4\">Section 4(6)</a> asks the decision maker to consider the person's past and present wishes and feelings, and the beliefs and values likely to influence their decision. Check what it means for your service with your own policies and the <a href=\"/staff-training/mental-capacity-act-and-dols\">Mental Capacity Act course</a>."
+          }
+        ]
+      }
+    ]
+  },
+  "guide": {
+    "heading": "How to prepare for a care plan review using what the family shared",
+    "lede": "A good review feels like a conversation, not a form. A little preparation turns scattered small things into something you can talk through together.",
+    "sections": [
+      {
+        "h3": "Gather three kinds of evidence before the meeting",
+        "paragraphs": [
+          "Pull together what the family has shared, what staff have seen and what the person has said or shown. Keep them separate, because they answer different questions. The person's own voice comes first."
+        ],
+        "checklist": [
+          "Which photos and messages are approved, and are the captions clear and kind?",
+          "Which have staff actually used in the last month, according to the plays log?",
+          "What have carers on different shifts noticed in their own notes?",
+          "What would the person, or the family on their behalf, like to change?"
+        ]
+      },
+      {
+        "h3": "Write down what you learn in your own care plan",
+        "paragraphs": [
+          "Keep the entry short and factual: what was tried, what seemed to help, and who agreed it. The <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/9\">person-centred care regulation</a> asks for care that reflects preferences, so say whose preference it is. If the person lacks capacity for a decision, follow your Mental Capacity Act process and record who was consulted."
+        ]
+      }
+    ],
+    "note": "This page describes how the software works and is not legal or clinical advice. Check your own policies, your care planning process and local guidance for how you review care plans and share family photos and videos."
+  }
+}

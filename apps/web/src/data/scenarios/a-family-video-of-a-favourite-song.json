@@ -1,0 +1,472 @@
+{
+  "slug": "a-family-video-of-a-favourite-song",
+  "order": 108,
+  "title": "Dementia and music: a daughter sings her father's favourite song, and <em>you check it before staff play it.</em>",
+  "meta_title": "Dementia and Music: A Family Video Song | CareStreamAI",
+  "meta_description": "A daughter sings her father's favourite song by private link. You approve it first, then staff can play it in a quiet moment.",
+  "lede": "Ruth cannot visit her father every week, but she can sing him the song he sang to her. You think about dementia and music a good deal, and you would like her voice in the home without a clip on someone's personal phone. CareStream gives her a private link, holds her video for your approval, and lets staff find it once approved. It sits alongside <a href=\"/training-platform\">the rest of your training and knowledge tools</a>.",
+  "panel": {
+    "title": "One daughter's song, step by step",
+    "pill": "Illustration",
+    "rows": [
+      {
+        "label": "Ruth invited by email",
+        "note": "Monday",
+        "done": true
+      },
+      {
+        "label": "She records herself singing and adds a title",
+        "note": "Tuesday",
+        "done": true
+      },
+      {
+        "label": "Manager watches it, then approves",
+        "note": "Not yet",
+        "done": false
+      },
+      {
+        "label": "Staff can play it at a quiet moment",
+        "note": "Not yet",
+        "done": false
+      }
+    ],
+    "meter": 50
+  },
+  "image_alt": "A carer and an older man sit in a lounge, the man tapping his hand to a rhythm and smiling at a small tablet the carer holds, a guitar leaning against a shelf behind them",
+  "card_title": "A daughter wants to sing her father a favourite song. Who checks it first?",
+  "card_snippet": "Family record a short song or hum by private link. You watch it, title it and approve it before any carer can play it, and nothing reaches staff until you do.",
+  "primary_keyword": "dementia and music",
+  "secondary_keywords": [
+    "care home activities",
+    "dementia memory"
+  ],
+  "feature_links": [
+    {
+      "title": "Training built from your own policies",
+      "body": "Ad hoc training from your policies, face to face training organised, and wrong answers that become lessons.",
+      "action": "See the feature",
+      "href": "/training-platform"
+    },
+    {
+      "title": "Resident knowledge for your team",
+      "body": "Give staff quick, short answers about the people they care for, drawn from what you have recorded and approved.",
+      "action": "See resident knowledge",
+      "href": "/uses/resident-knowledge"
+    },
+    {
+      "title": "Dementia awareness training",
+      "body": "A course that helps staff understand the person behind the diagnosis.",
+      "action": "See the course",
+      "href": "/staff-training/dementia-awareness"
+    }
+  ],
+  "intro": {
+    "heading": "He sang in a choir for forty years. Now he rarely says much.",
+    "sub": "A scenario we see in many care settings.",
+    "paragraph": "Walter Pearce sang bass in a male voice choir for most of his adult life. Since moving in he says little at mealtimes, though staff have seen his fingers tap along when the radio is on. His daughter Ruth lives in Aberdeen. She says her dad always sang Moon River to her mum, and she could hum it for him. She offers to send a recording to the activities coordinator's phone. The manager is not sure where it would be kept, or who else it might show."
+  },
+  "trail": [
+    {
+      "when": "Week one",
+      "text": "Walter moves in. Staff note that he used to sing in a choir.",
+      "kind": "ok"
+    },
+    {
+      "when": "Week three",
+      "text": "Staff notice him tapping along to the radio in the lounge.",
+      "kind": "ok"
+    },
+    {
+      "when": "Week five",
+      "text": "Ruth asks, “Could I sing him his favourite song?”",
+      "kind": "ok"
+    },
+    {
+      "when": "Same day",
+      "text": "There is no safe place to send a recording.",
+      "kind": "gap"
+    },
+    {
+      "when": "Week six",
+      "text": "She sends it to a carer's phone. It is not on the home's system.",
+      "kind": "gap"
+    },
+    {
+      "when": "Week eight",
+      "text": "The carer leaves. The clip leaves with her.",
+      "kind": "gap"
+    },
+    {
+      "when": "Month three",
+      "text": "The activities coordinator has never heard of it.",
+      "kind": "gap"
+    },
+    {
+      "when": "Inspection day",
+      "text": "“How do you use his family's input in his day?” Nobody knows.",
+      "kind": "end"
+    }
+  ],
+  "trail_close": "<b>The family had something real to give.</b> The gap is between that kindness and a place where it can be checked, kept and found. Here is how CareStream collects the song, holds it for your approval, and puts only approved clips in front of staff.",
+  "why": {
+    "heading": "A song from someone he knows is worth keeping safe",
+    "sub": "Voices carry what a profile can only describe.",
+    "cards": [
+      {
+        "icon": "chat",
+        "title": "A familiar voice gives staff a way in",
+        "body": "Many teams talk about dementia and music because a known tune can start a conversation. A song sung by his own daughter gives a carer something to say and him something to answer. We make no claim about what it does for anyone's health."
+      },
+      {
+        "icon": "tick",
+        "title": "Care should reflect the person",
+        "body": "Care must <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/9\">meet needs and reflect preferences</a>. Where someone cannot decide for themselves, the <a href=\"https://www.legislation.gov.uk/ukpga/2005/9/section/4\">Mental Capacity Act asks you to consider their past and present wishes and feelings</a> and, where practicable, to take into account the views of people interested in their welfare. A favourite song is one small, concrete way to do that."
+      },
+      {
+        "icon": "alert",
+        "title": "Home recordings need a careful gate",
+        "body": "A clip can show people who did not agree to be filmed, or play something the person would not want. A manager should watch each one first, and the file should not sit on a personal phone. <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/10\">Regulation 10</a> includes ensuring the privacy of the person."
+      }
+    ]
+  },
+  "how": {
+    "heading": "From a private link to a song the team can play.",
+    "sub": "Video messages are part of the resident profiles feature, in the same system as your <a href=\"/training-platform\">policies and training</a>. They are on Professional and above. See <a href=\"/uses/resident-knowledge\">how staff use resident knowledge</a> too.",
+    "blocks": [
+      {
+        "heading": "Ruth sings through the same private link",
+        "bullets": [
+          "You invite her by name and email from Walter's record. She gets a private link and does not create an account",
+          "She taps Record a message, which opens her phone camera, or Choose a video. A clip can run up to 60 seconds, so a verse and a chorus is plenty",
+          "She can add a short title of up to 60 characters, such as the name of the song, and remove a clip before pressing Send"
+        ],
+        "tags": [
+          {
+            "label": "Resident knowledge",
+            "href": "/uses/resident-knowledge"
+          },
+          {
+            "label": "How CareStream works",
+            "href": "/how-it-works"
+          }
+        ],
+        "mock": {
+          "type": "audit",
+          "audit": "Family page: A video message (example)",
+          "stats": [
+            [
+              "Videos shared",
+              "1 of 5"
+            ],
+            [
+              "Login needed",
+              "None"
+            ]
+          ],
+          "blocks": [
+            [
+              "What Ruth sees (example)",
+              [
+                [
+                  "Record a message",
+                  ""
+                ],
+                [
+                  "Choose a video",
+                  ""
+                ],
+                [
+                  "Title (optional): Ruth singing Moon River",
+                  ""
+                ],
+                [
+                  "Ready, 0:48. Waiting for the manager once you press Send",
+                  "Remove"
+                ]
+              ]
+            ]
+          ],
+          "caption": "Example only. Names and figures are illustrative."
+        }
+      },
+      {
+        "heading": "You watch it, name it, then approve or reject",
+        "bullets": [
+          "The clip waits on the Approvals tab under Videos waiting for approval. You can play it there before anyone else can",
+          "You can edit the title and add a note for staff, such as that Walter used to sing this one to his wife. Then you choose Approve or Reject. Rejecting removes the file straight away",
+          "You can also add a video yourself from the resident's record, and it is approved at once because you are the approver"
+        ],
+        "tags": [
+          {
+            "label": "Book a demo",
+            "href": "/demo"
+          },
+          {
+            "label": "Pricing and plans",
+            "href": "/pricing"
+          }
+        ],
+        "mock": {
+          "type": "audit",
+          "audit": "Residents: Approvals tab (example)",
+          "stats": [
+            [
+              "Videos waiting",
+              "1"
+            ],
+            [
+              "Approved",
+              "0"
+            ]
+          ],
+          "blocks": [
+            [
+              "Videos waiting for approval (example)",
+              [
+                [
+                  "Ruth, daughter, 0:48. Title: Ruth singing Moon River",
+                  "Approve, Reject"
+                ],
+                [
+                  "Note for staff (optional): Walter sang this to his wife",
+                  ""
+                ],
+                [
+                  "Nothing here has reached the care team",
+                  ""
+                ]
+              ]
+            ]
+          ],
+          "caption": "Example only. Illustration, not a real resident."
+        }
+      },
+      {
+        "heading": "Staff find it by asking, and play it in a quiet moment",
+        "bullets": [
+          "In the Staff Hub, a carer opens the This is me topic and asks, for example, whether there is a video of Walter's daughter. The answer comes from approved titles and notes only",
+          "The video appears under the answer with Walter's name and room number, a poster and a play button. There is also a Messages from family button that lists his approved videos, newest first",
+          "Playing opens just the video on a dimmed backdrop. Each play is logged, with who and when, and managers can see recent plays on the resident record"
+        ],
+        "tags": [
+          {
+            "label": "Dementia awareness course",
+            "href": "/staff-training/dementia-awareness"
+          },
+          {
+            "label": "CQC and compliance",
+            "href": "/cqc-compliance"
+          }
+        ],
+        "mock": {
+          "type": "audit",
+          "audit": "Staff Hub: ask about a resident (example)",
+          "stats": [
+            [
+              "Source",
+              "Approved titles and notes only"
+            ]
+          ],
+          "blocks": [
+            [
+              "Example question and answer",
+              [
+                [
+                  "Staff asks: Is there a video from Walter's daughter?",
+                  ""
+                ],
+                [
+                  "Answer: Yes, one titled “Ruth singing Moon River”, sent by Ruth, his daughter",
+                  ""
+                ],
+                [
+                  "Under the answer: Walter, Room 9, with a play button",
+                  ""
+                ]
+              ]
+            ]
+          ],
+          "caption": "Example only. Illustration, not a real resident."
+        }
+      },
+      {
+        "heading": "Private, and gone when the person moves on",
+        "bullets": [
+          "Videos are private. Signed in staff of your service reach them through short lived links, only for current residents, and never through a public address",
+          "When someone dies or moves on, their videos leave the hub at once and any video still waiting is deleted",
+          "Approved files stay in private storage for the retention period, like the written profile, then are deleted with it"
+        ],
+        "tags": [
+          {
+            "label": "Resident knowledge",
+            "href": "/uses/resident-knowledge"
+          },
+          {
+            "label": "Care home policies guide",
+            "href": "/blog/care-home-policies-the-complete-guide"
+          }
+        ],
+        "mock": {
+          "type": "audit",
+          "audit": "Residents: Video messages (example)",
+          "stats": [
+            [
+              "Public address",
+              "None"
+            ],
+            [
+              "Plays",
+              "Logged"
+            ]
+          ],
+          "blocks": [
+            [
+              "Video messages (example)",
+              [
+                [
+                  "Ruth singing Moon River",
+                  "Approved, Delete"
+                ],
+                [
+                  "Recently played: a carer played “Ruth singing Moon River”",
+                  "Time shown"
+                ],
+                [
+                  "Add a video: up to 60 seconds, approved at once",
+                  ""
+                ]
+              ]
+            ]
+          ],
+          "caption": "Example only. Illustration, not a real resident."
+        }
+      }
+    ]
+  },
+  "talk": {
+    "heading": "The questions managers ask, and how CareStream answers them",
+    "sub": "Read this as a conversation. The questions are the ones we hear most.",
+    "items": [
+      {
+        "q": "A daughter wants to sing her father a favourite song. What do I do?",
+        "a": "You invite her from the resident's record with her name and email, and CareStream emails a private link. She records or chooses a short video and adds a title. Nothing reaches your team until you have watched it and approved it."
+      },
+      {
+        "q": "Is this music therapy?",
+        "a": "No. It is a way for a family member's voice to reach the person through the people caring for them. CareStream does not offer music therapy, does not claim that a song treats, prevents or improves anything, and does not tell staff when to play a clip."
+      },
+      {
+        "q": "Can staff play it as part of our planned activities?",
+        "a": "Yes, if you decide so. Approved videos are found in the Staff Hub and play on a phone or tablet. A coordinator can look one up by asking about the person, then play it in a quiet moment or as one part of a session. Judgement stays with your team."
+      },
+      {
+        "q": "What stops an unsuitable clip reaching staff?",
+        "a": "You do. Each family video waits on the Approvals tab. You preview it, edit the title, add a note for staff, and approve or reject it. Rejecting deletes the file at once."
+      },
+      {
+        "q": "What happens if he passes away or moves on?",
+        "a": "His videos leave the hub straight away, any still waiting are deleted, and open family links are cancelled. Approved files stay in private storage for the retention period, then are deleted with the profile."
+      },
+      {
+        "q": "Which plan is it on, and can I try it?",
+        "a": "Resident profiles, photos and videos are on Professional and above. There is a 14 day free trial, and the <a href=\"/pricing\">pricing page</a> shows what each plan includes. You can <a href=\"/register\">create an account</a> or <a href=\"/demo\">book a demo</a> to see it first."
+      }
+    ]
+  },
+  "limits": {
+    "heading": "Honest limits: a way to find and play, not a therapy",
+    "cards": [
+      {
+        "title": "It does not treat or prevent anything",
+        "body": "CareStream does not diagnose, treat or promise a response. It does not choose songs, schedule plays or judge whether a clip suits the moment. Some days a song will be welcome and some days it will not, and your care plan stays where it is."
+      },
+      {
+        "title": "It reads titles, not clips",
+        "body": "The assistant cannot listen to a video or describe what is in it. A clip is found from its title and note, so a vague title is hard to find. The hub shows up to 10 newest videos per resident, and the family cannot see the profile or message you through the link."
+      },
+      {
+        "title": "Nothing is automatic",
+        "body": "A video does not reach staff by itself. A manager has to preview and approve each one, so someone needs to check the Approvals tab. Plays are logged, not alerted, and the residents cannot record a reply. It is on Professional and above."
+      }
+    ]
+  },
+  "read_next": [
+    "this-is-me-document",
+    "care-home-policies-the-complete-guide",
+    "dementia-care-training-in-the-uk"
+  ],
+  "faqs": {
+    "heading": "Family video and music, answered",
+    "groups": [
+      {
+        "group": "About music and family video",
+        "items": [
+          {
+            "q": "How can dementia and music work together in a care home?",
+            "a": "Many homes include familiar songs in daily life, as a quiet moment with one person or as part of a group. A recording by a relative adds a voice the person knows. How it is used is for your team and the person's care plan, and we make no health claims."
+          },
+          {
+            "q": "What care home activities can a family video support?",
+            "a": "A short clip can be one part of a singing session, a one to one chat or a quiet afternoon. It does not replace a planned activity. It gives your activities coordinator something personal to build around, once you have approved it."
+          },
+          {
+            "q": "Can a song say anything about dementia memory?",
+            "a": "We do not claim that. Families often tell us a song brings back a name, a place or a feeling, and staff can note what they see. CareStream does not measure or treat dementia memory. It only helps you find the approved clip."
+          }
+        ]
+      },
+      {
+        "group": "About approval, privacy and limits",
+        "items": [
+          {
+            "q": "Does a manager have to approve every video?",
+            "a": "Yes. A family video stays hidden from staff until you approve it. You can edit the title first, or reject it. Videos you add yourself are approved at once."
+          },
+          {
+            "q": "Who else might appear in a home recording?",
+            "a": "The family page asks senders to share only a message they are happy for the care team to play, and a manager checks every video. Still, watch for others on screen. <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/10\">Regulation 10</a> includes ensuring the privacy of the person."
+          },
+          {
+            "q": "What does the law say about involving family?",
+            "a": "Under <a href=\"https://www.legislation.gov.uk/ukpga/2005/9/section/4\">section 4 of the Mental Capacity Act 2005</a>, where it is practicable and appropriate, you take into account the views of anyone interested in the person's welfare. <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/9\">Regulation 9</a> requires care to reflect people's preferences. Check your own policies on consent and recording."
+          }
+        ]
+      }
+    ]
+  },
+  "guide": {
+    "heading": "How to bring a favourite song into care home activities",
+    "lede": "A recording only helps if it is easy to find and kind to use. Ask early, ask for a clear title, and check before you approve.",
+    "sections": [
+      {
+        "h3": "Ask for something short and unpolished",
+        "paragraphs": [
+          "Tell the relative that a verse, a hum or a few lines is plenty, and that it does not need to be in tune. Ask for the name of the song in the title, because staff find a clip by its title."
+        ]
+      },
+      {
+        "h3": "Before you approve a video",
+        "paragraphs": [
+          "Watch it as a new carer would, and then as the resident might feel about it. Edit the title so it is clear and kind. Reject anything that shows other people who may not want to be seen, or anything the person would find upsetting."
+        ],
+        "checklist": [
+          "Is the singer someone the resident would be glad to hear?",
+          "Does the title name the song and who sings it?",
+          "Does the clip show anyone else who might not want it shared?",
+          "Would a new carer know when it might be welcome?"
+        ]
+      },
+      {
+        "h3": "Tell the team and note what you see",
+        "paragraphs": [
+          "Tell the key worker and the activities coordinator when a clip is approved, and show them where to find it. The <a href=\"/staff-training/dementia-awareness\">dementia awareness course</a> helps new staff see why such details matter."
+        ]
+      }
+    ],
+    "note": "This page describes how the software works. It is not legal or clinical advice, and it does not claim that music treats or improves any condition. Check your own policies on collecting and sharing recordings of residents."
+  },
+  "fine": "14 day free trial · Set up in a day · UK data residency",
+  "eyebrow": "Scenario",
+  "status": "draft",
+  "image": "https://api.carestreamai.com/public/policy-shop/image/ccdc3504-c252-48c0-bec2-6ce7cf771443.webp"
+}

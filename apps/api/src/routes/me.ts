@@ -31,6 +31,7 @@ import { sendTrainingCompletionEmail } from '../services/email/outbound'
 import { generateAuditRecommendations } from './audits'
 import { prisma } from '../db/client'
 import { staffPhotoUrl, setStaffPhoto, removeStaffPhoto } from '../lib/staff-photos'
+import { listNotices, markNoticeSeen, markAllNoticesSeen } from '../services/staff-notices'
 import { residentPhotoUploadMiddleware } from '../middleware/upload'
 import { SECTIONS_WITH_ALL_QUESTIONS, shapeRunTemplate, visibleQuestions, answerText, outcomeFor } from '../lib/audit-questions'
 import { completeMyAction, requestExtension, storeSignature } from '../services/audits/action-closeout'
@@ -105,6 +106,21 @@ meRouter.get('/profile', async (req: Request, res: Response) => {
     // Whether this staff member may suggest better translations from the hub.
     can_suggest_translations:    !!user?.can_suggest_translations,
   })
+})
+
+// ─── Hub overlay notices (what an admin just allocated to me) ─────────────────
+// Only ever my own, in my own tenant. A missing table answers an empty list.
+meRouter.get('/notices', async (req: Request, res: Response) => {
+  const userId = (req as any).user.sub, tenantId = (req as any).user.tenant_id
+  ok(res, { notices: await listNotices(tenantId, userId) })
+})
+meRouter.post('/notices/seen-all', async (req: Request, res: Response) => {
+  const userId = (req as any).user.sub, tenantId = (req as any).user.tenant_id
+  ok(res, { marked: await markAllNoticesSeen(tenantId, userId) })
+})
+meRouter.post('/notices/:id/seen', async (req: Request, res: Response) => {
+  const userId = (req as any).user.sub, tenantId = (req as any).user.tenant_id
+  ok(res, { seen: await markNoticeSeen(tenantId, userId, String(req.params.id)) })
 })
 
 // ─── POST /me/photo, DELETE /me/photo ─────────────────────────────────────────

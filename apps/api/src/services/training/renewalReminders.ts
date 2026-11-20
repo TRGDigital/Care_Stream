@@ -11,6 +11,7 @@ import twilio from 'twilio'
 import sgMail from '@sendgrid/mail'
 import '../../lib/email-guard'   // never email reserved fictional domains (example.com and similar)
 import { prisma } from '../../db/client'
+import { siteUrl } from '../../lib/urls'
 import { sendPushToUsers } from '../../lib/push'
 import { splitIntoChunks } from '../../utils/htmlToWhatsApp'
 
@@ -60,6 +61,7 @@ function staffReminderEmail(firstName: string, moduleName: string, days: number)
       You will be sent your renewal assessment questions soon. In the meantime, if you have any questions about your training content, you can reply to this email or send a WhatsApp message and CareStreamAI will answer immediately.
     </p>
   </div>
+  <div style="text-align:center;margin:0 0 24px"><a href="${siteUrl()}/chat?view=annual" style="display:inline-block;padding:14px 32px;background:#9B52B5;color:#ffffff;font-size:15px;font-weight:600;border-radius:8px;text-decoration:none">Open my training</a></div>
   <p style="color:#aaa;font-size:12px;margin-top:32px">CareStreamAI Training — sent on behalf of your organisation.</p>
 </div>`.trim()
 }

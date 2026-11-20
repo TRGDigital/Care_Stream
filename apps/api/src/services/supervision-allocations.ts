@@ -11,6 +11,8 @@ import { prisma } from '../db/client'
 import { notifyStaffAllocation, notifyUsers } from '../lib/notify'
 import { sendProactiveTrainingQuestions } from './training/proactive'
 import { sendOnboardingUpdateEmail, sendCqcPrepEmail } from './email/outbound'
+import { onboardingContent, cqcPrepContent } from './email/person-content'
+import { recordNotices } from './staff-notices'
 import { sendPushToUsers } from '../lib/push'
 import { callClaude } from './ai/claude'
 import { checkAnnualLicenseLimit, PlanLimitError } from '../lib/plan-limits'
@@ -65,17 +67,19 @@ async function allocateInduction(tenantId: string, userId: string, flowId: strin
   })
   const tenant = await (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { name: true } }).catch(() => null)
   const portalUrl = siteUrl()
-  notifyUsers(tenantId, 'onboarding_updates', [userId], (email, name) =>
-    sendOnboardingUpdateEmail({
-      to: email, name, orgName: tenant?.name ?? '',
-      subject: `You have been enrolled on an onboarding flow — ${tenant?.name ?? 'CareStreamAI'}`,
-      bodyHtml: `
+  const enrolBodyHtml = `
         <p style="color:#374151;font-size:15px;line-height:1.6;margin:0 0 16px">
           You have been enrolled on the <strong>${flow.name}</strong> induction flow following your supervision.
         </p>
         <p style="color:#374151;font-size:15px;line-height:1.6;margin:0 0 24px">
           Log in to the portal to get started and complete your induction steps.
-        </p>`,
+        </p>`
+  await recordNotices({ tenantId, userIds: [userId], actorUserId, kind: 'onboarding', build: name => onboardingContent(name, enrolBodyHtml) })
+  notifyUsers(tenantId, 'onboarding_updates', [userId], (email, name) =>
+    sendOnboardingUpdateEmail({
+      to: email, name, orgName: tenant?.name ?? '',
+      subject: `You have been enrolled on an onboarding flow — ${tenant?.name ?? 'CareStreamAI'}`,
+      bodyHtml: enrolBodyHtml,
       portalUrl, actorUserId,
     })
   ).catch(e => console.error('[sup-alloc] induction email:', e))
@@ -103,6 +107,7 @@ Original: ${q.question}`,
     data: { tenant_id: tenantId, question_id: q.id, user_id: userId, rephrased_q: rephrased, channel: 'portal' },
   })
   const tenant = await (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { name: true } }).catch(() => null)
+  await recordNotices({ tenantId, userIds: [userId], actorUserId, kind: 'cqc_prep', build: name => cqcPrepContent(name, 1) })
   notifyUsers(tenantId, 'cqc_staff_prep', [userId], (email, name) =>
     sendCqcPrepEmail({ to: email, name, orgName: tenant?.name ?? '', questionCount: 1, portalUrl: siteUrl(), actorUserId })
   ).catch(e => console.error('[sup-alloc] cqc email:', e))

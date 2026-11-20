@@ -122,7 +122,7 @@ export async function runCredentialExpiryForTenant(tenantId: string, opts?: { fo
     const bodyHtml = f.when === 'expired'
       ? `<p style="font-size:15px;margin:0 0 8px">Your passport <strong style="color:#dc2626">has expired</strong> (expiry ${dateStr}). Please renew it as soon as possible and let your manager know once it is done.</p>`
       : `<p style="font-size:15px;margin:0 0 8px">Your passport is due to expire on <strong>${dateStr}</strong>. Please arrange to renew it in good time and let your manager know once it is done.</p>`
-    await sendTrainingUpdateEmail({ to: u.email, name: u.name, orgName: tenant.name, subject: f.when === 'expired' ? 'Your passport has expired' : 'Your passport is expiring soon', bodyHtml }).catch(() => {})
+    await sendTrainingUpdateEmail({ to: u.email, name: u.name, orgName: tenant.name, subject: f.when === 'expired' ? 'Your passport has expired' : 'Your passport is expiring soon', bodyHtml, buttonLabel: 'Open my hub', buttonPath: '/chat' }).catch(() => {})
     passportStaff++
   }
 

@@ -1295,6 +1295,16 @@ const GUIDE_SECTIONS: GuideSection[] = [
             </p>
           </div>
         </SectionBlock>
+        <SectionBlock title="What staff see when you allocate something to them">
+          <div className="space-y-3">
+            <p className="text-sm text-neutral-mid">
+              When you allocate training, an induction, CQC prep questions, an audit, a supervision or audit actions to a staff member, they get an email from you, and the next time they open the hub (or within about a minute if it is already open) a <strong>pop-up</strong> appears over the hub. It shows <strong>your photo</strong> (or your initials), <strong>your name and role</strong>, what was allocated, the due date and any details, and one button that takes them straight to the right place in the hub. It uses the same words as the email.
+            </p>
+            <p className="text-sm text-neutral-mid">
+              If several things are waiting, the newest shows first with <strong>1 of 3</strong> and a <strong>Next</strong> button. Once the person taps the button or <strong>Dismiss</strong> it is marked as seen and does not show again. Add your own photo from <strong>Your picture</strong> in the hub menu so staff recognise who sent it.
+            </p>
+          </div>
+        </SectionBlock>
         <Tip>The Chat Hub works best on mobile. The quickest setup for staff: open the portal URL once on their phone, install it to the home screen, and allow notifications.</Tip>
       </div>
     ),

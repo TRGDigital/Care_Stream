@@ -13,6 +13,7 @@ import { AuditsView } from '@/components/hub/audits-view'
 import { AnnualTrainingView, TakeModule, CertView } from '@/components/hub/annual-training-view'
 import { ProgrammesView } from '@/components/hub/programmes-view'
 import { CqcView } from '@/components/hub/cqc-view'
+import { AllocationOverlay } from '@/components/hub/allocation-overlay'
 import { PoliciesView } from '@/components/hub/policies-view'
 import { AuditApprovalsView } from '@/components/hub/audit-approvals-view'
 import { MyIncentivesView, incentivesMineKey } from '@/components/hub/my-incentives-view'
@@ -468,7 +469,7 @@ function ChatPageInner() {
   const searchParams = useSearchParams()
   useEffect(() => {
     const v = searchParams.get('view')
-    if (v === 'induction' || v === 'training' || v === 'annual' || v === 'diplomas' || v === 'followup' || v === 'audits' || v === 'cqc' || v === 'progress' || v === 'policies' || v === 'audit-approvals' || v === 'actions' || v === 'my-incentives' || v === 'incentive-approvals') {
+    if (v === 'supervisions' || v === 'f2f' || v === 'induction' || v === 'training' || v === 'annual' || v === 'diplomas' || v === 'followup' || v === 'audits' || v === 'cqc' || v === 'progress' || v === 'policies' || v === 'audit-approvals' || v === 'actions' || v === 'my-incentives' || v === 'incentive-approvals') {
       if (!hubLocked(v)) setView(v)
     }
   }, [searchParams]) // eslint-disable-line react-hooks/exhaustive-deps
@@ -1322,6 +1323,13 @@ function ChatPageInner() {
           </div>
         </div>
       )}
+
+      {/* What an admin has just allocated to me: same words as the email. Not for CPD reviewers, locked-down hubs or an admin viewing as someone. */}
+      <AllocationOverlay
+        token={session?.accessToken}
+        enabled={!isReviewer && !trainingOnly && !freeTier && !(session?.user as any)?.impersonation}
+        onGo={(v) => { if (v && !hubLocked(v)) setView(v as typeof view); else if (!v && !hubLocked('chat')) setView('chat') }}
+      />
 
       {/* ── Right panel ────────────────────────────────────────────────────── */}
       <div className="flex flex-1 flex-col overflow-hidden">

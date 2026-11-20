@@ -15,6 +15,8 @@ import { ok, err } from '../lib/response'
 import { requireAdmin } from '../middleware/auth'
 import { notifyStaffAllocation, getUsers } from '../lib/notify'
 import { sendFaceToFaceReminderEmail } from '../services/email/outbound'
+import { faceToFaceReminderContent } from '../services/email/person-content'
+import { recordNotices } from '../services/staff-notices'
 import { checkFeature, PlanLimitError } from '../lib/plan-limits'
 import { evidenceUploadMiddleware } from '../middleware/upload'
 import { uploadEvidenceFile, uploadCertificateFile, downloadFile, deleteFile } from '../services/storage/s3'
@@ -441,6 +443,7 @@ faceToFaceRouter.post('/sessions/:id/remind', requireAdmin, async (req: Request,
       trainerLabel = t?.name ?? trainerLabel
     }
 
+    await recordNotices({ tenantId, userIds: (users as any[]).map(u => u.id), actorUserId: uid(req), kind: 'face_to_face_reminder', build: name => faceToFaceReminderContent(name, { title: session.title, dateLabel, trainerLabel }) })
     await Promise.allSettled((users as any[]).map(u =>
       sendFaceToFaceReminderEmail({ to: u.email, name: u.name, orgName: tenant?.name ?? '', title: session.title, dateLabel, trainerLabel, actorUserId: uid(req) })
         .catch(e => console.error('[face-to-face/remind] email error:', e))

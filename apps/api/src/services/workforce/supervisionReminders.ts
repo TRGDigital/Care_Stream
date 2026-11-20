@@ -44,7 +44,7 @@ export async function runSupervisionReminders(): Promise<{ sessions: number; sta
     if (user?.email) {
       const by = r.conducted_by ? ` with ${escapeHtml(r.conducted_by)}` : ''
       const bodyHtml = `<p style="font-size:15px;margin:0 0 8px">This is a reminder that your ${label} is tomorrow, <strong>${dateStr}</strong>${by}.</p>`
-      try { await sendTrainingUpdateEmail({ to: user.email, name: user.name, orgName: tenant.name, subject: `Reminder: your ${label} is tomorrow`, bodyHtml }); staffEmailed++ } catch { /* ignore */ }
+      try { await sendTrainingUpdateEmail({ to: user.email, name: user.name, orgName: tenant.name, subject: `Reminder: your ${label} is tomorrow`, bodyHtml, buttonLabel: 'View my supervisions', buttonPath: '/chat?view=supervisions' }); staffEmailed++ } catch { /* ignore */ }
     }
 
     if (!adminBuckets.has(r.tenant_id)) adminBuckets.set(r.tenant_id, [])

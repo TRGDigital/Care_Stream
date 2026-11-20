@@ -8,6 +8,7 @@
 // they are never injected into policy or CQC conversations.
 
 import { prisma } from '../../db/client'
+import { siteUrl } from '../../lib/urls'
 import { translateTrainingQuestion } from '../../lib/translate'
 import { languageNameForCode } from '../../data/languages'
 
@@ -56,6 +57,7 @@ export function fmtQuestionEmail(q: any, index: number, total: number, moduleNam
     `</ul>`,
     `<p style="margin:0;font-size:12px;color:#6b7280;font-style:italic">Reply to this email with just a single letter: A, B, C, or D.</p>`,
     `</div>`,
+    `<div style="text-align:center;margin:0 0 24px"><a href="${siteUrl()}/chat?view=annual" style="display:inline-block;padding:14px 32px;background:#9B52B5;color:#ffffff;font-size:15px;font-weight:600;border-radius:8px;text-decoration:none">Open my training</a></div>`,
   ].join('\n')
 }
 

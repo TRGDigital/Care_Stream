@@ -4,6 +4,8 @@ import { prisma } from '../db/client'
 import { getTenantId } from '../db/tenant-context'
 import { notifyUsers, notifyFollowUp } from '../lib/notify'
 import { sendOnboardingUpdateEmail } from '../services/email/outbound'
+import { onboardingContent } from '../services/email/person-content'
+import { recordNotices } from '../services/staff-notices'
 import { callClaude } from '../services/ai/claude'
 import { downloadExtractedText } from '../services/storage/s3'
 import { illustrationUrl } from '../services/training/moduleImage'
@@ -332,19 +334,21 @@ onboardingRouter.post('/flows/:id/enroll', requireAdmin, async (req, res) => {
 
     const portalUrl = siteUrl()
     const tenant = await prisma.tenant.findUnique({ where: { id: tenantId }, select: { name: true } })
+    const enrolBodyHtml = `
+          <p style="color:#374151;font-size:15px;line-height:1.6;margin:0 0 16px">
+            You have been enrolled on the <strong>${flow.name}</strong> induction flow${due_date ? ` with a due date of <strong>${new Date(due_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</strong>` : ''}.
+          </p>
+          <p style="color:#374151;font-size:15px;line-height:1.6;margin:0 0 24px">
+            Log in to the portal to get started and complete your induction steps.
+          </p>`
+    await recordNotices({ tenantId, userIds: user_ids as string[], actorUserId: (req as any).user?.sub, kind: 'onboarding', build: name => onboardingContent(name, enrolBodyHtml) })
     notifyUsers(tenantId, 'onboarding_updates', user_ids as string[], (email, name) =>
       sendOnboardingUpdateEmail({
         to:       email,
         name,
         orgName:  tenant?.name ?? '',
         subject:  `You have been enrolled on an onboarding flow — ${tenant?.name ?? 'CareStreamAI'}`,
-        bodyHtml: `
-          <p style="color:#374151;font-size:15px;line-height:1.6;margin:0 0 16px">
-            You have been enrolled on the <strong>${flow.name}</strong> induction flow${due_date ? ` with a due date of <strong>${new Date(due_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</strong>` : ''}.
-          </p>
-          <p style="color:#374151;font-size:15px;line-height:1.6;margin:0 0 24px">
-            Log in to the portal to get started and complete your induction steps.
-          </p>`,
+        bodyHtml: enrolBodyHtml,
         portalUrl,
         actorUserId: (req as any).user?.sub,
       })

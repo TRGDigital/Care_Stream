@@ -1295,6 +1295,8 @@ export function createApiClient(token: string) {
     },
 
     me: {
+      notices: () => apiFetch<{ notices: Array<{ id: string; kind: string; headline: string; intro: string | null; details: Array<{ label: string; value: string }>; button_label: string | null; href: string | null; created_at: string; actor: { name: string; job_role: string; home_name: string | null; photo_url: string | null } | null }> }>('/me/notices', token),
+      markNoticeSeen: (id: string) => apiFetch<{ seen: boolean }>(`/me/notices/${encodeURIComponent(id)}/seen`, token, { method: 'POST' }),
       endViewAs: () => apiFetch<{ ended: boolean }>('/me/view-as/end', token, { method: 'POST' }),
       moduleReviews: () => apiFetch<{ reviews: Array<{ module_id: string; notes: string | null; status: string }> }>('/me/module-reviews', token),
       saveModuleReview: (module_id: string, data: { notes?: string; status?: string }) =>

@@ -17,6 +17,8 @@ import { freeEvent } from '../lib/free-events'
 import { trackAiAction, checkFeature, PlanLimitError, checkAiCreditLimit, logAiCredit, hasAuditRecommendations } from '../lib/plan-limits'
 import { notifyAdmin } from '../lib/notify'
 import { sendAuditUpdateEmail } from '../services/email/outbound'
+import { updateContent } from '../services/email/person-content'
+import { recordNotices } from '../services/staff-notices'
 import { getAuditsDue } from '../services/audits/due'
 import { auditApprovalRequired, submitAuditForApproval } from '../services/audits/approval'
 import { scoreAuditDomains } from '../services/analytics/readiness'
@@ -1996,10 +1998,14 @@ auditsRouter.post('/assignments', requireAdmin, async (req: Request, res: Respon
   const { notifyUsers } = await import('../lib/notify')
   const dueText = startOfDayUTC(due).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'Europe/London' })
   const repeatText = repeat === 'none' ? '' : ` It repeats ${repeat === 'daily' ? 'every day' : repeat === 'weekly' ? 'every week' : repeat === 'monthly' ? 'every month' : 'every quarter'}.`
+  const assignedBodyHtml = `<p style="color:#374151;font-size:15px;line-height:1.6;margin:0 0 16px"><strong>${template.name}</strong>${subject ? ` (${subject})` : ''} has been assigned to you, due on <strong>${dueText}</strong>.${repeatText}</p><p style="color:#374151;font-size:15px;line-height:1.6;margin:0">You can start it from Audits in the hub.</p>`
+  const assignedAction = `has assigned you an audit: ${template.name}`
+  await recordNotices({ tenantId, userIds: [user.id], actorUserId: req.user!.sub, kind: 'audit_assigned', build: name => updateContent(name, { personAction: assignedAction, bodyHtml: assignedBodyHtml, buttonLabel: 'Open my audits', path: '/chat?view=audits' }) })
   notifyUsers(tenantId, 'audit_updates', [user.id], (email, name) => sendAuditUpdateEmail({
     to: email, name, orgName: tenant?.name ?? '', subject: `Audit assigned to you: ${template.name}`,
-    actorUserId: req.user!.sub, personAction: `has assigned you an audit: ${template.name}`,
-    bodyHtml: `<p style="color:#374151;font-size:15px;line-height:1.6;margin:0 0 16px"><strong>${template.name}</strong>${subject ? ` (${subject})` : ''} has been assigned to you, due on <strong>${dueText}</strong>.${repeatText}</p><p style="color:#374151;font-size:15px;line-height:1.6;margin:0">You can start it from Audits in the hub.</p>`,
+    actorUserId: req.user!.sub, personAction: assignedAction,
+    buttonLabel: 'Open my audits', buttonPath: '/chat?view=audits',
+    bodyHtml: assignedBodyHtml,
   })).catch(e => console.error('[audits/assignments] notify:', e))
 })
 

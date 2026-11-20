@@ -8,6 +8,8 @@ import { requireAdmin } from '../middleware/auth'
 import { notifyUsers } from '../lib/notify'
 import { sendPushToUsers } from '../lib/push'
 import { sendCqcPrepEmail } from '../services/email/outbound'
+import { cqcPrepContent } from '../services/email/person-content'
+import { recordNotices } from '../services/staff-notices'
 import { translateText, translateTextsBatch, withTranslationBudget, hubContentLang } from '../lib/translate'
 import { languageNameForCode } from '../data/languages'
 
@@ -529,6 +531,7 @@ cqcQuestionsRouter.post('/generate-for-staff', requireAdmin, async (req: Request
         byCount.get(c)!.push(uid)
       }
       for (const [count, ids] of byCount) {
+        recordNotices({ tenantId, userIds: ids, actorUserId: (req as any).user?.sub, kind: 'cqc_prep', build: name => cqcPrepContent(name, count) }).catch(() => {})
         notifyUsers(tenantId, 'cqc_staff_prep', ids, (email, name) =>
           sendCqcPrepEmail({ to: email, name, orgName: tenant?.name ?? '', questionCount: count, portalUrl, actorUserId: (req as any).user?.sub })
         ).catch(e => console.error('[cqc/generate-for-staff] Notify error:', e))
@@ -686,6 +689,7 @@ Original: ${q.question}`,
     if (deliveries.count > 0) {
       const tenant = await (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { name: true } })
       const portalUrl = siteUrl()
+      recordNotices({ tenantId, userIds: newUserIds, actorUserId: (req as any).user?.sub, kind: 'cqc_prep', build: name => cqcPrepContent(name, 1) }).catch(() => {})
       notifyUsers(tenantId, 'cqc_staff_prep', newUserIds, (email, name) =>
         sendCqcPrepEmail({ to: email, name, orgName: tenant?.name ?? '', questionCount: 1, portalUrl, actorUserId: (req as any).user?.sub })
       ).catch(e => console.error('[cqc/deliver] Notify error:', e))

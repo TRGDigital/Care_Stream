@@ -4,6 +4,8 @@
 import { prisma } from '../db/client'
 import { siteUrl } from './urls'
 import { sendStaffAllocationEmail, type AllocationKind } from '../services/email/outbound'
+import { allocationContent } from '../services/email/person-content'
+import { recordNotices } from '../services/staff-notices'
 
 export async function isEmailEnabled(tenantId: string, prefKey: string): Promise<boolean> {
   const tenant = await (prisma as any).tenant.findUnique({
@@ -78,6 +80,8 @@ export async function notifyStaffAllocation(tenantId: string, userIds: string[],
   if (!userIds.length) return
   const tenant = await (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { name: true } }).catch(() => null)
   const portalUrl = siteUrl()
+  // The hub overlay, from the same words as the email. Needs an acting person; never blocks the email.
+  await recordNotices({ tenantId, userIds, actorUserId, kind: `allocation_${kind}`, build: name => allocationContent(name, kind) })
   await notifyUsers(tenantId, ALLOC_PREF[kind], userIds, (email, name) =>
     sendStaffAllocationEmail({ to: email, name, orgName: tenant?.name ?? '', kind, portalUrl, actorUserId })
   )

@@ -9,6 +9,8 @@ import { sendProactiveTrainingQuestions } from '../services/training/proactive'
 import { callClaude } from '../services/ai/claude'
 import { notifyAdmin, notifyStaffAllocation, notifyFollowUp } from '../lib/notify'
 import { sendTrainingUpdateEmail, sendTrainingReminderEmail } from '../services/email/outbound'
+import { trainingReminderContent } from '../services/email/person-content'
+import { recordNotices } from '../services/staff-notices'
 import { getTrainingReceiptUrl, createTrainingBasketCheckoutSession } from '../services/billing/stripe'
 import { requireAdmin } from '../middleware/auth'
 import { blogImagePublicUrl, siteUrl } from '../lib/urls'
@@ -617,6 +619,10 @@ trainingRouter.post('/enrollments/:id/remind', requireAdmin, async (req: Request
     // Two channels: an email, and a hub notification (a push to the devices where they have the hub app and have allowed notifications).
     // Either can be missing (no email on file, or no app installed), so the reply says what actually went where.
     let emailed = false
+    {
+      const reminderKind = enr.module.source === 'ai_generated' ? 'annual_training' : 'training'
+      await recordNotices({ tenantId, userIds: [enr.user_id as string], actorUserId: (req as any).user.sub, kind: 'training_reminder', build: name => trainingReminderContent(name, { courseName: enr.module.name, dueDate: enr.due_date ? new Date(enr.due_date) : null, kind: reminderKind }) })
+    }
     if (enr.user.email) {
       await sendTrainingReminderEmail({
         to: enr.user.email, name: enr.user.name, orgName: tenant?.name ?? '',

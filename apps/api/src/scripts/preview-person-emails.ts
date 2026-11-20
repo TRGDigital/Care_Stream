@@ -8,9 +8,12 @@
 //     npx tsx --env-file=.env src/scripts/preview-person-emails.ts --send allocation-training --to someone@example.org [--with-photo <public image url>]
 //   Names: allocation-training, allocation-annual, allocation-induction, allocation-cqc, training-reminder, face-to-face-reminder,
 //          cqc-prep, onboarding-update, audit-assigned, supervision-booked, action-plan
+//   Other staff emails (each ends with a hub button): staff-login-link, password-reset, password-setup, staff-welcome, follow-up, incentive,
+//          supervision-reminder, credential-expiry, audit-reminder, and the no-sender layouts allocation-training-branded, face-to-face-reminder-branded,
+//          cqc-prep-branded, onboarding-update-branded, action-plan-branded, training-reminder-branded
 //   The test subject is prefixed "[Preview]" and the recipient is replaced by --to. Without --with-photo the sender shows initials.
 
-import { personEmailCases } from '../services/email/person-email-samples'
+import { personEmailCases, otherStaffEmailCases } from '../services/email/person-email-samples'
 import fs from 'fs'
 import path from 'path'
 process.env.SENDGRID_API_KEY = process.env.SENDGRID_API_KEY || 'preview-not-a-real-key'
@@ -37,7 +40,10 @@ async function main() {
 
   const portalUrl = 'https://carestreamai.com'
   const base = { to: 'staff@example.org', name: 'Amira Khan', orgName: 'Ferndale Nursing Home', actorUserId: 'preview-admin' }
-  const cases = personEmailCases(out, base, portalUrl)
+  const cases = {
+    ...personEmailCases(out, base, portalUrl),
+    ...otherStaffEmailCases(out, { to: base.to, name: base.name, orgName: base.orgName }, portalUrl),
+  }
 
   if (sendName !== undefined) {
     const fn = cases[sendName]

@@ -7,6 +7,8 @@ import { syncLinkedActions } from '../../lib/supervision-training'
 import { prisma } from '../../db/client'
 import { callClaude } from '../ai/claude'
 import { sendActionPlanStaffEmail, sendActionPlanExternalEmail } from '../email/outbound'
+import { actionPlanContent } from '../email/person-content'
+import { recordNotices } from '../staff-notices'
 
 const PRIORITY_RANK: Record<string, number> = { immediate: 0, priority: 1, monitor: 2 }
 const normPriority = (p: any): string => (p === 'immediate' || p === 'monitor' ? p : 'priority')
@@ -163,6 +165,7 @@ export async function notifyActionPlanAssignees(tenantId: string, runId: string,
         g.actions.push(a); byPerson.set(matches[0].id, g)
       }
       for (const { user: u, actions } of byPerson.values()) {
+        await recordNotices({ tenantId, userIds: [u.id], actorUserId, kind: 'action_plan', build: name => actionPlanContent(name, actions.map(emailLine)) })
         if (u?.email) await sendActionPlanStaffEmail({ to: u.email, staffName: u.name, orgName, actions: actions.map(emailLine), actorUserId }).catch(() => {})
       }
     }

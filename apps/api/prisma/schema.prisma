@@ -3371,6 +3371,25 @@ model StaffPhoto {
   @@map("staff_photos")
 }
 
+model StaffNotice {
+  id            String    @id @default(uuid())
+  tenant_id     String
+  user_id       String
+  actor_user_id String?
+  kind          String
+  headline      String
+  intro         String?
+  details       Json      @default("[]")
+  button_label  String?
+  href          String?
+  created_at    DateTime  @default(now())
+  seen_at       DateTime?
+
+  @@index([user_id, seen_at])
+  @@index([tenant_id])
+  @@map("staff_notices")
+}
+
 model ResidentPhoto {
   id               String    @id @default(uuid())
   tenant_id        String

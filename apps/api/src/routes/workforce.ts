@@ -21,6 +21,8 @@ import { scanBuffer, scannerConfigured } from '../services/security/malware-scan
 import { detectEvidenceType, SAFE_EVIDENCE_TYPES } from '../lib/evidence-file'
 import { notifyUsers } from '../lib/notify'
 import { sendTrainingUpdateEmail } from '../services/email/outbound'
+import { updateContent } from '../services/email/person-content'
+import { recordNotices } from '../services/staff-notices'
 // Loaded when needed: lib/supervision-training reaches training-matrix, which imports this file, so a top level import would be a cycle.
 const stl = () => import('../lib/supervision-training')
 
@@ -345,8 +347,10 @@ workforceRouter.post('/staff/:userId/supervisions', async (req: Request, res: Re
     const bodyHtml =
       `<p style="font-size:15px;margin:0 0 12px">Your ${label} has been booked for <strong>${fmtLong(held)}</strong>${conductorName ? ` with ${escapeHtml(conductorName)}` : ''}.</p>` +
       `<p style="font-size:14px;color:#666;margin:0">You'll get a reminder the day before. You can see it any time in your CareStream hub under <strong>Supervisions</strong>.</p>`
+    const bookedAction = `has booked your ${label} for ${fmtLong(held)}`
+    await recordNotices({ tenantId, userIds: [userId], actorUserId: conductorId, kind: 'supervision_booked', build: n => updateContent(n, { personAction: bookedAction, bodyHtml, buttonLabel: 'View my supervisions', path: '/chat?view=supervisions' }) })
     notifyUsers(tenantId, 'supervision_updates', [userId], (email, name) =>
-      sendTrainingUpdateEmail({ to: email, name, orgName: tenant?.name ?? 'Your service', subject: `Your ${label} is booked for ${fmtLong(held)}`, bodyHtml, actorUserId: conductorId, personAction: `has booked your ${label} for ${fmtLong(held)}` }),
+      sendTrainingUpdateEmail({ to: email, name, orgName: tenant?.name ?? 'Your service', subject: `Your ${label} is booked for ${fmtLong(held)}`, bodyHtml, actorUserId: conductorId, personAction: bookedAction, buttonLabel: 'View my supervisions', buttonPath: '/chat?view=supervisions' }),
     ).catch(() => {})
   }
 

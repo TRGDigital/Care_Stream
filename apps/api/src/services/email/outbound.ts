@@ -8,6 +8,10 @@ import { signFeedbackToken } from '../../lib/feedback-token'
 import { siteUrl } from '../../lib/urls'
 import { reminderCopy } from '../../lib/family-reminders-copy'
 import { personLedEmail, personFrom, type PersonAdmin } from './person-email'
+import {
+  ALLOC_COPY, allocationContent, trainingReminderContent, faceToFaceReminderContent, cqcPrepContent, onboardingContent,
+  updateContent, actionPlanContent, type AllocationKind,
+} from './person-content'
 import { resolveActor } from './email-avatar'
 
 const INBOUND_DOMAIN = process.env.INBOUND_EMAIL_DOMAIN ?? 'carestreamai.co.uk'
@@ -25,8 +29,13 @@ const NEUTRAL_MID  = '#5E4D70'
 // With no acting person, each function keeps its existing branded look.
 const personFooterNote = (admin: PersonAdmin, did: string) =>
   `You received this because ${admin.name}${admin.homeName ? ` at ${admin.homeName}` : ''} ${did} in CareStream. If you were not expecting it, please speak to your manager.`
+// The one primary button every staff-facing email ends with: it takes them to the right place in the hub.
+const hubButton = (href: string, label: string) => `
+    <div style="text-align:center;margin:0 0 28px">
+      <a href="${href}" style="display:inline-block;padding:14px 32px;background:${PURPLE};color:#ffffff;font-size:15px;font-weight:600;border-radius:8px;text-decoration:none">${label}</a>
+    </div>`
+const hubLink = (path: string) => `${WEB_URL}${path}`
 const personSender = (admin: PersonAdmin, email: string) => ({ email, name: personFrom(admin) })
-const fmtDue = (d: Date | string | null | undefined) => d ? new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) : null
 
 // Lazy initialisation — API key may not be set in test environments.
 let initialised = false
@@ -711,26 +720,30 @@ export interface SendTrainingUpdateOptions {
   actorUserId?:  string | null
   /** What they did, after their name, for example "has booked your supervision". Used for the headline and subject. */
   personAction?: string
+  /** The button at the end of the email and its hub path, for example "View my supervisions" and "/chat?view=supervisions". Defaults to the hub home. */
+  buttonLabel?: string
+  buttonPath?:  string
 }
 
 // Shared by the two free-form update emails (training, audit): person-led when there is an acting admin.
-async function sendUpdateEmail(opts: SendTrainingUpdateOptions & { buttonLabel?: string; buttonHref?: string }): Promise<void> {
+async function sendUpdateEmail(opts: SendTrainingUpdateOptions): Promise<void> {
   const from      = process.env.SENDGRID_FROM_ADDRESS ?? `noreply@${INBOUND_DOMAIN}`
   const firstName = opts.name.split(' ')[0] ?? opts.name
   const admin = await resolveActor(opts.actorUserId)
   if (admin) {
-    const action = opts.personAction || 'has sent you an update'
+    const c = updateContent(admin.name, { personAction: opts.personAction, bodyHtml: opts.bodyHtml, buttonLabel: opts.buttonLabel, path: opts.buttonPath })
     const html = personLedEmail({
-      admin, headline: `${admin.name} ${action}`, bodyHtml: opts.bodyHtml,
-      button: opts.buttonHref ? { label: opts.buttonLabel || 'Open in your hub', href: opts.buttonHref } : null,
-      footerNote: personFooterNote(admin, 'sent you this'), logoUrl: LOGO_URL,
+      admin, headline: c.headline, bodyHtml: c.bodyHtml,
+      button: { label: c.buttonLabel!, href: hubLink(c.path!) },
+      footerNote: personFooterNote(admin, c.footerDid), logoUrl: LOGO_URL,
     })
-    await sgMail.send({ to: opts.to, from: personSender(admin, from), subject: `${admin.name} ${action}`, html })
+    await sgMail.send({ to: opts.to, from: personSender(admin, from), subject: c.headline, html })
     return
   }
   const html = emailWrapper(`
     <p style="color:${NEUTRAL_DARK};font-size:15px;margin:0 0 16px">Hi ${firstName},</p>
     ${opts.bodyHtml}
+    ${/<a\s/i.test(opts.bodyHtml) && !opts.buttonPath ? '' : hubButton(hubLink(opts.buttonPath ?? '/chat'), opts.buttonLabel ?? 'Open my hub')}
     ${emailFooter(opts.orgName)}
   `)
   await sgMail.send({ to: opts.to, from, subject: opts.subject, html })
@@ -747,6 +760,7 @@ export async function sendTrainingUpdateEmail(opts: SendTrainingUpdateOptions): 
   const html = emailWrapper(`
     <p style="color:${NEUTRAL_DARK};font-size:15px;margin:0 0 16px">Hi ${firstName},</p>
     ${opts.bodyHtml}
+    ${/<a\s/i.test(opts.bodyHtml) && !opts.buttonPath ? '' : hubButton(hubLink(opts.buttonPath ?? '/chat'), opts.buttonLabel ?? 'Open my hub')}
     ${emailFooter(opts.orgName)}
   `)
 
@@ -763,6 +777,8 @@ export interface SendAuditUpdateOptions {
   bodyHtml: string
   actorUserId?:  string | null
   personAction?: string
+  buttonLabel?: string
+  buttonPath?:  string
 }
 
 // The audit PDF report, emailed to admins when an audit is completed or signed off.
@@ -801,6 +817,7 @@ export async function sendAuditUpdateEmail(opts: SendAuditUpdateOptions): Promis
   const html = emailWrapper(`
     <p style="color:${NEUTRAL_DARK};font-size:15px;margin:0 0 16px">Hi ${firstName},</p>
     ${opts.bodyHtml}
+    ${/<a\s/i.test(opts.bodyHtml) && !opts.buttonPath ? '' : hubButton(hubLink(opts.buttonPath ?? '/chat'), opts.buttonLabel ?? 'Open my hub')}
     ${emailFooter(opts.orgName)}
   `)
 
@@ -827,16 +844,13 @@ export async function sendCqcPrepEmail(opts: SendCqcPrepOptions): Promise<void> 
 
   const admin = await resolveActor(opts.actorUserId)
   if (admin) {
-    const n = opts.questionCount
-    const thing = `${n} CQC prep ${n === 1 ? 'question' : 'questions'}`
+    const c = cqcPrepContent(admin.name, opts.questionCount)
     const html = personLedEmail({
-      admin, headline: `${admin.name} has allocated you ${thing}`,
-      intro: 'Take a few minutes to review and prepare your answers before the next inspection.',
-      details: [{ label: 'Allocated', value: thing }, { label: 'Where', value: 'Your CareStream hub, on your phone or computer' }],
-      button: { label: 'View my CQC questions', href: `${opts.portalUrl}/cqc` },
-      footerNote: personFooterNote(admin, 'allocated you CQC prep questions'), logoUrl: LOGO_URL,
+      admin, headline: c.headline, intro: c.intro, details: c.details,
+      button: { label: c.buttonLabel!, href: `${opts.portalUrl}${c.path}` },
+      footerNote: personFooterNote(admin, c.footerDid), logoUrl: LOGO_URL,
     })
-    await sgMail.send({ to: opts.to, from: personSender(admin, from), subject: `${admin.name} has allocated you ${thing}`, html })
+    await sgMail.send({ to: opts.to, from: personSender(admin, from), subject: c.headline, html })
     return
   }
 
@@ -884,12 +898,13 @@ export async function sendOnboardingUpdateEmail(opts: SendOnboardingUpdateOption
 
   const admin = await resolveActor(opts.actorUserId)
   if (admin) {
+    const c = onboardingContent(admin.name, opts.bodyHtml)
     const html = personLedEmail({
-      admin, headline: `${admin.name} has enrolled you on an induction`, bodyHtml: opts.bodyHtml,
-      button: { label: 'Start my induction', href: `${opts.portalUrl}/chat?view=induction` },
-      footerNote: personFooterNote(admin, 'enrolled you on an induction'), logoUrl: LOGO_URL,
+      admin, headline: c.headline, bodyHtml: c.bodyHtml,
+      button: { label: c.buttonLabel!, href: `${opts.portalUrl}${c.path}` },
+      footerNote: personFooterNote(admin, c.footerDid), logoUrl: LOGO_URL,
     })
-    await sgMail.send({ to: opts.to, from: personSender(admin, from), subject: `${admin.name} has enrolled you on an induction`, html })
+    await sgMail.send({ to: opts.to, from: personSender(admin, from), subject: c.headline, html })
     return
   }
 
@@ -912,19 +927,7 @@ export async function sendOnboardingUpdateEmail(opts: SendOnboardingUpdateOption
 // Sent to a staff member when an admin assigns them work, with a deep link to the
 // relevant section of the staff hub.
 
-export type AllocationKind = 'induction' | 'training' | 'annual_training' | 'cqc_prep' | 'follow_up'
-
-const ALLOC_COPY: Record<AllocationKind, { noun: string; path: string; cta: string }> = {
-  induction:       { noun: 'induction',       path: '/chat?view=induction', cta: 'Start my induction' },
-  training:        { noun: 'training',         path: '/chat?view=training',  cta: 'Go to my training' },
-  annual_training: { noun: 'annual training',  path: '/chat?view=annual',    cta: 'Start annual training' },
-  follow_up:       { noun: 'follow-up',        path: '/chat?view=followup',  cta: 'Complete my follow-up' },
-  cqc_prep:        { noun: 'CQC prep',          path: '/cqc',                 cta: 'View my CQC questions' },
-}
-
-const ALLOC_THING: Record<AllocationKind, string> = {
-  induction: 'an induction', training: 'training', annual_training: 'annual training', follow_up: 'a follow-up', cqc_prep: 'CQC prep questions',
-}
+export type { AllocationKind }
 
 export async function sendStaffAllocationEmail(opts: { to: string; name: string; orgName: string; kind: AllocationKind; portalUrl: string; actorUserId?: string | null }): Promise<void> {
   ensureInitialised()
@@ -936,15 +939,13 @@ export async function sendStaffAllocationEmail(opts: { to: string; name: string;
 
   const admin = await resolveActor(opts.actorUserId)
   if (admin) {
-    const thing = ALLOC_THING[opts.kind]
+    const pc = allocationContent(admin.name, opts.kind)
     const html = personLedEmail({
-      admin, headline: `${admin.name} has allocated you ${thing}`,
-      intro: 'Open the hub to get started. You can do it on your phone or computer.',
-      details: [{ label: 'Allocated', value: `New ${c.noun}` }, { label: 'Where', value: 'Your CareStream hub' }],
-      button: { label: c.cta, href: link },
-      footerNote: personFooterNote(admin, `allocated you ${thing}`), logoUrl: LOGO_URL,
+      admin, headline: pc.headline, intro: pc.intro, details: pc.details,
+      button: { label: pc.buttonLabel!, href: link },
+      footerNote: personFooterNote(admin, pc.footerDid), logoUrl: LOGO_URL,
     })
-    await sgMail.send({ to: opts.to, from: personSender(admin, from), subject: `${admin.name} has allocated you ${thing}`, html })
+    await sgMail.send({ to: opts.to, from: personSender(admin, from), subject: pc.headline, html })
     return
   }
 
@@ -984,12 +985,11 @@ export async function sendTrainingReminderEmail(opts: {
 
   const admin = await resolveActor(opts.actorUserId)
   if (admin) {
+    const pc = trainingReminderContent(admin.name, { courseName: opts.courseName, dueDate: opts.dueDate, kind: opts.kind })
     const html = personLedEmail({
-      admin, headline: `${admin.name} sent you a reminder about ${opts.courseName}`,
-      intro: 'You can do it on your phone or computer, and your progress is saved as you go.',
-      details: [{ label: 'Course', value: opts.courseName }, { label: 'Due by', value: fmtDue(opts.dueDate) }],
-      button: { label: c.cta, href: link },
-      footerNote: personFooterNote(admin, 'sent you a training reminder'), logoUrl: LOGO_URL,
+      admin, headline: pc.headline, intro: pc.intro, details: pc.details,
+      button: { label: pc.buttonLabel!, href: link },
+      footerNote: personFooterNote(admin, pc.footerDid), logoUrl: LOGO_URL,
     })
     await sgMail.send({ to: opts.to, from: personSender(admin, from), subject: `${admin.name} sent you a reminder: ${opts.courseName}`, html })
     return
@@ -1140,11 +1140,11 @@ export async function sendFaceToFaceReminderEmail(opts: { to: string; name: stri
 
   const admin = await resolveActor(opts.actorUserId)
   if (admin) {
+    const pc = faceToFaceReminderContent(admin.name, { title: opts.title, dateLabel: opts.dateLabel, trainerLabel: opts.trainerLabel })
     const html = personLedEmail({
-      admin, headline: `${admin.name} sent you a reminder about a training session`,
-      intro: 'You are booked into a face-to-face training session. Please make sure you attend. If you cannot make it, let your manager know as soon as possible.',
-      details: [{ label: 'Training', value: opts.title }, { label: 'Date', value: opts.dateLabel }, { label: 'Delivered by', value: opts.trainerLabel }],
-      footerNote: personFooterNote(admin, 'sent you a session reminder'), logoUrl: LOGO_URL,
+      admin, headline: pc.headline, intro: pc.intro, details: pc.details,
+      button: { label: pc.buttonLabel!, href: hubLink(pc.path!) },
+      footerNote: personFooterNote(admin, pc.footerDid), logoUrl: LOGO_URL,
     })
     await sgMail.send({ to: opts.to, from: personSender(admin, from), subject: `${admin.name} sent you a reminder: ${opts.title} on ${opts.dateLabel}`, html })
     return
@@ -1163,6 +1163,7 @@ export async function sendFaceToFaceReminderEmail(opts: { to: string; name: stri
     <p style="color:#374151;font-size:15px;line-height:1.6;margin:0 0 24px">
       Please make sure you attend. If you can&rsquo;t make it, let your manager know as soon as possible.
     </p>
+    ${hubButton(hubLink('/chat?view=progress'), 'See my training progress')}
     ${emailFooter(opts.orgName)}
   `)
 
@@ -1247,6 +1248,8 @@ export async function sendStaffWelcomeEmail(opts: SendWelcomeEmailOptions): Prom
     <p style="color:#374151;font-size:14px;line-height:1.6;margin:0 0 32px">
       If you have any trouble logging in, please speak to your manager or administrator.
     </p>
+
+    ${hubButton(opts.portalUrl, 'Open my hub')}
 
     ${emailFooter(opts.orgName)}
   `)
@@ -1480,15 +1483,14 @@ export async function sendActionPlanStaffEmail(opts: { to: string; staffName: st
 
   const admin = await resolveActor(opts.actorUserId)
   if (admin) {
-    const what = `${n} audit action${n === 1 ? '' : 's'}`
+    const pc = actionPlanContent(admin.name, opts.actions)
     const html = personLedEmail({
-      admin, headline: `${admin.name} has assigned you ${what}`,
-      intro: `Please complete ${n === 1 ? 'it' : 'them'} and mark ${n === 1 ? 'it' : 'each one'} done in your CareStream hub, under My actions.`,
+      admin, headline: pc.headline, intro: pc.intro,
       bodyHtml: `<table role="presentation" style="border-collapse:separate;width:100%">${actionRowsHtml(opts.actions)}</table>`,
-      button: { label: 'Open my actions', href: hubUrl },
-      footerNote: personFooterNote(admin, `assigned you ${what} from an audit action plan`), logoUrl: LOGO_URL,
+      button: { label: pc.buttonLabel!, href: hubUrl },
+      footerNote: personFooterNote(admin, pc.footerDid), logoUrl: LOGO_URL,
     })
-    await sgMail.send({ to: opts.to, from: personSender(admin, from), subject: `${admin.name} has assigned you ${what}`, html })
+    await sgMail.send({ to: opts.to, from: personSender(admin, from), subject: pc.headline, html })
     return
   }
 

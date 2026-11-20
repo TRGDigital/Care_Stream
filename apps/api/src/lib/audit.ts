@@ -25,6 +25,7 @@ type AuditEventType =
   | 'platform_viewed_staff_record'
   | 'resident_created' | 'resident_updated' | 'resident_archived' | 'resident_archive_confirmed' | 'resident_retention_changed'
   | 'resident_exported' | 'resident_deleted' | 'resident_family_invited' | 'resident_family_link_created' | 'resident_contribution_decided' | 'resident_archive_viewed'
+  | 'staff_photo_set' | 'staff_photo_removed'
   | 'resident_photo_added' | 'resident_photo_decided' | 'resident_photo_deleted'
   | 'resident_reminders_changed' | 'resident_reminders_stopped' | 'resident_reminder_sent'   // family reminder settings changed, stopped by the family, or sent
   | 'resident_video_added' | 'resident_video_decided' | 'resident_video_deleted' | 'resident_video_played'

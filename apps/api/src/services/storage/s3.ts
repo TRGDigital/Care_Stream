@@ -147,6 +147,19 @@ export async function uploadResidentPhoto(params: {
   return s3Key
 }
 
+// Staff profile pictures: one fixed key per person, overwritten on replace. Private; served only through a signed link from the
+// API (lib/staff-photos.ts). The bucket login cannot list, so the key is always built, never searched for.
+export const staffPhotoKey = (tenantId: string, userId: string) => `tenants/${tenantId}/staff/${userId}/photo.jpg`
+export async function uploadStaffPhoto(params: { tenantId: string; userId: string; buffer: Buffer }): Promise<string> {
+  const s3Key = staffPhotoKey(params.tenantId, params.userId)
+  if (USE_LOCAL) { localWrite(s3Key, params.buffer); return s3Key }
+  await getS3().send(new PutObjectCommand({
+    Bucket: BUCKET, Key: s3Key, Body: params.buffer, ContentType: 'image/jpeg',
+    ServerSideEncryption: 'AES256', Metadata: { tenant_id: params.tenantId, user_id: params.userId },
+  }))
+  return s3Key
+}
+
 // Audit evidence: an image attached to a question's answer during an audit.
 export async function uploadAuditEvidence(params: {
   tenantId: string; runId: string; key: string; buffer: Buffer; mimeType: string

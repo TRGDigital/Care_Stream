@@ -8,6 +8,7 @@ import { Menu, X } from 'lucide-react'
 import { createApiClient } from '@/lib/api-client'
 import { SiteImage } from '@/components/site-image'
 import { IncentiveTracker } from '@/components/hub/incentive-tracker'
+import { HeaderAvatar } from '@/components/hub/my-photo'
 
 interface Props {
   userName: string
@@ -55,7 +56,7 @@ export function PortalNav({ userName, userRole }: Props) {
             )}
           </Link>
         ))}
-        <span className="text-sm text-neutral-mid">{userName}</span>
+        <span className="flex items-center gap-2 text-sm text-neutral-mid"><HeaderAvatar name={userName} />{userName}</span>
         <button onClick={() => signOut({ callbackUrl: '/login' })} className="text-sm font-medium text-neutral-mid hover:text-neutral-dark">
           Sign out
         </button>
@@ -89,7 +90,7 @@ export function PortalNav({ userName, userRole }: Props) {
               </Link>
             ))}
             <div className="mt-1 flex items-center justify-between border-t border-gray-100 px-5 pt-3">
-              <span className="truncate text-sm text-neutral-mid">{userName}</span>
+              <span className="flex min-w-0 items-center gap-2 text-sm text-neutral-mid"><HeaderAvatar name={userName} /><span className="truncate">{userName}</span></span>
               <button onClick={() => signOut({ callbackUrl: '/login' })} className="text-sm font-medium text-teal">
                 Sign out
               </button>

@@ -559,6 +559,8 @@ export function createApiClient(token: string) {
           onboarding: Array<{ id: string; completed_at: string | null; due_date: string | null; enrolled_at: string | null; flow_id: string; flow_name: string; flow_kind: string; care_setting: string | null; total_steps: number; completed_steps: number }>
         }>(`/users/${id}`, token),
       record: (id: string) => apiFetch<any>(`/users/${id}/record`, token),
+      setPhoto: (id: string, file: File) => { const f = new FormData(); f.append('photo', file); return apiFetch<{ photo_url: string | null }>(`/users/${id}/photo`, token, { method: 'POST', body: f }) },
+      removePhoto: (id: string) => apiFetch<{ photo_url: null }>(`/users/${id}/photo`, token, { method: 'DELETE' }),
       actions: (id: string) => apiFetch<{ actions: Array<{ id: string; description: string; priority: string; due_date: string | null; status: string; done_at: string | null; run_id: string; audit_name: string }> }>(`/users/${id}/actions`, token),
       remind: (id: string) => apiFetch<{ reminded: boolean; modules: number }>(`/users/${id}/remind`, token, { method: 'POST' }),
       markFollowedUp: (id: string, note?: string) => apiFetch<{ reviewed: boolean; at: string; by: string | null }>(`/users/${id}/follow-up/review`, token, { method: 'POST', body: JSON.stringify({ note }) }),
@@ -1298,7 +1300,9 @@ export function createApiClient(token: string) {
       saveModuleReview: (module_id: string, data: { notes?: string; status?: string }) =>
         apiFetch<{ saved: boolean }>('/me/module-reviews', token, { method: 'POST', body: JSON.stringify({ module_id, ...data }) }),
       progress: () => apiFetch<any>('/me/progress', token),
-      profile: () => apiFetch<{ first_language: string; second_language: string | null; second_language_name: string | null; comms_always_first_language: boolean; allow_language_switching: boolean; can_suggest_translations: boolean }>('/me/profile', token),
+      setPhoto: (file: File) => { const f = new FormData(); f.append('photo', file); return apiFetch<{ photo_url: string | null }>('/me/photo', token, { method: 'POST', body: f }) },
+      removePhoto: () => apiFetch<{ photo_url: null }>('/me/photo', token, { method: 'DELETE' }),
+      profile: () => apiFetch<{ photo_url?: string | null; first_language: string; second_language: string | null; second_language_name: string | null; comms_always_first_language: boolean; allow_language_switching: boolean; can_suggest_translations: boolean }>('/me/profile', token),
       suggestTranslation: (data: { source_text: string; suggested_text: string; lang_code: string; machine_text?: string; content_kind?: string; context_label?: string }) =>
         apiFetch<{ status: 'pending' | 'approved' }>('/me/translation-suggestion', token, { method: 'POST', body: JSON.stringify(data) }),
       counts: () => apiFetch<{ training: number; induction: number; cqc: number; followup: number; annual: number; audits: number; actions: number; programmes: number }>('/me/counts', token),

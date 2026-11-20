@@ -30,6 +30,8 @@ import { printPage, emailDetail } from '../lib/supervision-training-share'
 import { sendTrainingCompletionEmail } from '../services/email/outbound'
 import { generateAuditRecommendations } from './audits'
 import { prisma } from '../db/client'
+import { staffPhotoUrl, setStaffPhoto, removeStaffPhoto } from '../lib/staff-photos'
+import { residentPhotoUploadMiddleware } from '../middleware/upload'
 import { SECTIONS_WITH_ALL_QUESTIONS, shapeRunTemplate, visibleQuestions, answerText, outcomeFor } from '../lib/audit-questions'
 import { completeMyAction, requestExtension, storeSignature } from '../services/audits/action-closeout'
 import { generateAndStoreAuditReport } from '../services/audits/report-pdf'
@@ -93,6 +95,7 @@ meRouter.get('/profile', async (req: Request, res: Response) => {
   ])
   const second = (user?.second_language as string) ?? null
   ok(res, {
+    photo_url:                   await staffPhotoUrl(tenantId, userId),   // own picture (own table, null when none or not set up yet)
     first_language:              (user?.first_language as string) ?? 'eng',
     second_language:             second,
     second_language_name:        second ? languageNameForCode(second, tenant?.custom_languages) : null,
@@ -102,6 +105,22 @@ meRouter.get('/profile', async (req: Request, res: Response) => {
     // Whether this staff member may suggest better translations from the hub.
     can_suggest_translations:    !!user?.can_suggest_translations,
   })
+})
+
+// ─── POST /me/photo, DELETE /me/photo ─────────────────────────────────────────
+// A signed in person (staff, managers, agency workers) sets, replaces or removes only THEIR OWN picture.
+meRouter.post('/photo', residentPhotoUploadMiddleware, async (req: Request, res: Response) => {
+  const userId = (req as any).user.sub, tenantId = (req as any).user.tenant_id
+  const done = await setStaffPhoto({ tenantId, userId, uploadedBy: userId, file: (req as any).file })
+  if (!done.ok) return err(res, done.code, done.message, done.status)
+  void writeAuditLog({ tenant_id: tenantId, user_id: userId, event_type: 'staff_photo_set', entity_type: 'user', entity_id: userId, metadata: { by: 'self' } })
+  ok(res, { photo_url: await staffPhotoUrl(tenantId, userId) })
+})
+
+meRouter.delete('/photo', async (req: Request, res: Response) => {
+  const userId = (req as any).user.sub, tenantId = (req as any).user.tenant_id
+  if (await removeStaffPhoto(tenantId, userId)) void writeAuditLog({ tenant_id: tenantId, user_id: userId, event_type: 'staff_photo_removed', entity_type: 'user', entity_id: userId, metadata: { by: 'self' } })
+  ok(res, { photo_url: null })
 })
 
 // ─── POST /me/translation-suggestion ──────────────────────────────────────────

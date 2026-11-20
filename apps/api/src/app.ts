@@ -66,6 +66,7 @@ import { agentActionsRouter } from './routes/agent-actions'
 import { cronRouter } from './routes/cron'
 import { contentRoutineRouter } from './routes/content-routine'
 import { publicScenariosRouter, scenariosAdminRouter } from './routes/scenarios'
+import { staffPhotoFileRouter } from './lib/staff-photos'
 import { publicFamilyRouter, residentPhotoFileRouter } from './routes/residents-public'
 import { residentsRouter } from './routes/residents'
 import { familyStopRouter } from './routes/family-reminders'
@@ -213,6 +214,8 @@ app.use('/public/family', publicFamilyVideosRouter)   // video upload (chunked) 
 app.use('/public/family', publicFamilyRouter)
 // "This is me" photo files: opened only with a link signed for about five minutes, re-checked on every request. BEFORE requireAuth.
 app.use('/public/resident-photo', residentPhotoFileRouter)
+// Staff profile pictures: signed for about ten minutes, re-checked on every request. BEFORE requireAuth.
+app.use('/public/staff-photo', staffPhotoFileRouter)
 // "This is me" video files: signed for about ten minutes, re-checked on every request, HTTP Range supported. BEFORE requireAuth.
 app.use('/public/resident-video', residentVideoFileRouter)
 

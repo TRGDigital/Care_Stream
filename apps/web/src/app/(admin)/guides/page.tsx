@@ -391,6 +391,14 @@ const GUIDE_SECTIONS: GuideSection[] = [
           </div>
           <div className="mt-3"><Tip>Right after creating a staff member you're offered a quick <strong>Assign training</strong> step, tick the modules that apply (statutory ones are pre-selected). You can always do this later from their detail card too.</Tip></div>
         </SectionBlock>
+        <SectionBlock title="Adding or changing a staff picture">
+          <div className="space-y-3">
+            <Step n={1}>When you add a staff member, use the optional <strong>Picture</strong> choice in the form to pick a photo. You can skip it and add one later.</Step>
+            <Step n={2}>To add, change or remove a picture later, click the person&apos;s name on the Staff page to open their page, then use <strong>Add a picture</strong>, <strong>Change picture</strong> or <strong>Remove</strong> in the <strong>Picture</strong> block.</Step>
+            <Step n={3}>Use a JPEG, PNG or WebP photo up to 5 MB. It is cropped to a square, and any location details stored in the photo are removed. Until there is a picture, the person shows with coloured initials.</Step>
+          </div>
+          <div className="mt-3"><Tip>Staff can add, change or remove their <strong>own</strong> picture too: in the hub, choose <strong>Your picture</strong> in the left menu. The picture shows on the Staff list, on their page and next to their name in the hub.</Tip></div>
+        </SectionBlock>
         <SectionBlock title="Import your whole team from a spreadsheet (CSV)">
           <p className="text-sm text-neutral-mid">
             Setting up a new home? Instead of adding people one at a time, click <strong>Import from CSV</strong> next to the Add staff member button and upload a staff list exported from your rota, HR or payroll system (Excel and Google Sheets both save as CSV). There is a blank template to download if you would rather start from scratch.

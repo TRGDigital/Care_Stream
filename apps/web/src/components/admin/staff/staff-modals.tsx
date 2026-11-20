@@ -3,6 +3,7 @@
 // Staff modals — extracted from the staff page and lazy-loaded (next/dynamic)
 // so this code is only fetched when a user opens one of these dialogs.
 
+import { StaffPictureField } from '@/components/admin/staff-picture-controls'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useSession } from 'next-auth/react'
@@ -517,6 +518,8 @@ export function InviteModal({
   const [linkNote, setLinkNote] = useState<{ ok: boolean; text: string } | null>(null)
   const [superUser, setSuperUser] = useState(false)        // tag them as the company's Super User (paid plans, one per company)
   const [superNote, setSuperNote] = useState<{ ok: boolean; text: string } | null>(null)
+  const [pictureFile, setPictureFile] = useState<File | null>(null)   // optional picture, uploaded right after the person is created
+  const [pictureNote, setPictureNote] = useState<{ ok: boolean; text: string } | null>(null)
 
   function update(k: keyof typeof form) {
     return (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
@@ -578,6 +581,16 @@ export function InviteModal({
         : { ok: false, text: res.login_link_error || 'We could not email the sign-in link. Use Re-send login from their menu, or share the details below.' })
     } else setLinkNote(null)
 
+    // The optional picture goes up right after the person exists. A failure never undoes the new account: say so and point to their page.
+    if (pictureFile) {
+      try {
+        await createApiClient(token).users.setPhoto(res.user.id, pictureFile)
+        setPictureNote({ ok: true, text: `${form.name}'s picture has been added.` })
+      } catch (e: any) {
+        setPictureNote({ ok: false, text: `They were added, but the picture could not be uploaded (${e?.message ?? 'please try again'}). You can add it from their page.` })
+      }
+    } else setPictureNote(null)
+
     // Refresh the list in the background, but keep modal open to show credentials
     onInvited()
     setCreds({ userId: res.user.id, name: form.name, email: form.email, password: res.temp_password, contact: res.contact })
@@ -606,6 +619,9 @@ export function InviteModal({
                 <label className="mb-1.5 block text-sm font-medium text-neutral-dark">Email address</label>
                 <input type="email" required placeholder="jane@carehome.co.uk" value={form.email} onChange={update('email')}
                   className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none focus:border-teal focus:ring-2 focus:ring-teal/20" />
+              </div>
+              <div className="sm:col-span-2">
+                <StaffPictureField name={form.name} file={pictureFile} onChange={setPictureFile} disabled={loading} />
               </div>
 
               <div>
@@ -829,6 +845,11 @@ export function InviteModal({
             {superNote && (
               <div className={`mb-4 rounded-md border px-4 py-3 text-sm ${superNote.ok ? 'border-green-200 bg-green-50 text-green-800' : 'border-amber-200 bg-amber-50 text-amber-900'}`}>
                 {superNote.text}
+              </div>
+            )}
+            {pictureNote && (
+              <div className={`mb-4 rounded-md border px-4 py-3 text-sm ${pictureNote.ok ? 'border-green-200 bg-green-50 text-green-800' : 'border-amber-200 bg-amber-50 text-amber-900'}`}>
+                {pictureNote.text}
               </div>
             )}
             {linkNote && (

@@ -24,6 +24,8 @@ import { sendProactiveTrainingQuestions } from '../services/training/proactive'
 import crypto from 'crypto'
 import { tagSuperUser, untagSuperUser } from '../lib/super-user'
 import { sendSuperUserWelcome } from '../services/super-user-email'
+import { staffPhotoUrls, staffPhotoUrl, setStaffPhoto, removeStaffPhoto } from '../lib/staff-photos'
+import { residentPhotoUploadMiddleware } from '../middleware/upload'
 
 export const usersRouter = Router()
 
@@ -61,7 +63,8 @@ usersRouter.get('/', async (req: Request, res: Response) => {
     orderBy: { created_at: 'asc' },
   })
 
-  ok(res, { users, total: users.length })
+  const photos = await staffPhotoUrls(tenantId, users.map((u: any) => u.id))   // separate table: a missing one just means no pictures
+  ok(res, { users: users.map((u: any) => ({ ...u, photo_url: photos.get(u.id) ?? null })), total: users.length })
 })
 
 // ─── GET /users/:id/actions ───────────────────────────────────────────────────
@@ -145,7 +148,7 @@ usersRouter.get('/:id', async (req: Request, res: Response) => {
     .sort((x, y) => new Date(y.date).getTime() - new Date(x.date).getTime())
 
   const { tenant_id, ...profile } = user
-  ok(res, { user: profile, training: trainingOut, onboarding: onboardingOut, face_to_face: faceToFaceOut })
+  ok(res, { user: { ...profile, photo_url: await staffPhotoUrl(tenantId, String(id)) }, training: trainingOut, onboarding: onboardingOut, face_to_face: faceToFaceOut })
 })
 
 // ─── GET /users/:id/record ────────────────────────────────────────────────────
@@ -157,7 +160,28 @@ usersRouter.get('/:id/record', async (req: Request, res: Response) => {
   const record = await buildStaffRecord(tenantId, String(req.params.id), { includeTeam: true, includeReading: true })
   if (!record) { err(res, 'NOT_FOUND', 'User not found.', 404); return }
   const org = await (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { name: true, logo_url: true } })
-  ok(res, { ...record, org: { name: org?.name ?? '', logo_url: org?.logo_url ?? null } })
+  ok(res, { ...record, photo_url: await staffPhotoUrl(tenantId, String(req.params.id)), org: { name: org?.name ?? '', logo_url: org?.logo_url ?? null } })
+})
+
+// ─── POST /users/:id/photo, DELETE /users/:id/photo ───────────────────────────
+// An admin sets, replaces or removes any staff member's picture in their own home (agency workers too). The picture lives in its
+// own table (lib/staff-photos.ts), so a missing table answers 503 "being set up" and never touches sign in.
+usersRouter.post('/:id/photo', residentPhotoUploadMiddleware, async (req: Request, res: Response) => {
+  const tenantId = req.user!.tenant_id, id = String(req.params.id)
+  const u = await (prisma as any).user.findUnique({ where: { id }, select: { tenant_id: true } }).catch(() => null)
+  if (!u || u.tenant_id !== tenantId) { err(res, 'NOT_FOUND', 'User not found.', 404); return }
+  const done = await setStaffPhoto({ tenantId, userId: id, uploadedBy: req.user!.sub, file: (req as any).file })
+  if (!done.ok) { err(res, done.code, done.message, done.status); return }
+  void writeAuditLog({ tenant_id: tenantId, user_id: req.user!.sub, event_type: 'staff_photo_set', entity_type: 'user', entity_id: id, metadata: { by: 'admin' } })
+  ok(res, { photo_url: await staffPhotoUrl(tenantId, id) })
+})
+
+usersRouter.delete('/:id/photo', async (req: Request, res: Response) => {
+  const tenantId = req.user!.tenant_id, id = String(req.params.id)
+  const u = await (prisma as any).user.findUnique({ where: { id }, select: { tenant_id: true } }).catch(() => null)
+  if (!u || u.tenant_id !== tenantId) { err(res, 'NOT_FOUND', 'User not found.', 404); return }
+  if (await removeStaffPhoto(tenantId, id)) void writeAuditLog({ tenant_id: tenantId, user_id: req.user!.sub, event_type: 'staff_photo_removed', entity_type: 'user', entity_id: id, metadata: { by: 'admin' } })
+  ok(res, { photo_url: null })
 })
 
 // ─── POST /users/:id/remind ──────────────────────────────────────────────────
@@ -674,6 +698,8 @@ usersRouter.post('/:id/deactivate', async (req: Request, res: Response) => {
     data:  { is_active: false, email: archivedEmail(user.email, user.id) },
   })
 
+  // Their picture is personal data and the account no longer needs it, so it goes with the access (the rest of the history stays).
+  if (await removeStaffPhoto(tenantId, String(id))) void writeAuditLog({ tenant_id: tenantId, user_id: req.user!.sub, event_type: 'staff_photo_removed', entity_type: 'user', entity_id: String(id), metadata: { by: 'deactivation' } })
   ok(res, { deactivated: true, released_email: originalEmail(user.email) })
 })
 

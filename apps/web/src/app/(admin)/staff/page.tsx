@@ -10,7 +10,8 @@ import { persistentCache } from '@/lib/page-cache'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { FileSpreadsheet, KeyRound, LineChart, Mail, MoreVertical, Pencil, UserMinus, UserPlus, UserX } from 'lucide-react'
-import { LANGUAGES, CredentialsPanel, InitialAvatar, fmtDate } from '@/components/admin/staff/staff-shared'
+import { StaffAvatar } from '@/components/admin/staff-avatar'
+import { LANGUAGES, CredentialsPanel, fmtDate } from '@/components/admin/staff/staff-shared'
 
 // Staff modals are lazy-loaded — only fetched when a dialog is opened.
 const InviteModal      = dynamic(() => import('@/components/admin/staff/staff-modals').then(m => m.InviteModal),      { ssr: false })
@@ -255,6 +256,15 @@ export default function StaffPage() {
 
   useEffect(load, [session?.accessToken])
 
+  // Picture links expire after about ten minutes. When one fails (a row that sat open, or an old cached list), reload the list once
+  // for all rows instead of once per row.
+  const photoRefreshAt = useRef(0)
+  function refreshPhotos() {
+    if (Date.now() - photoRefreshAt.current < 15_000) return
+    photoRefreshAt.current = Date.now()
+    load()
+  }
+
   const activeUsers   = users.filter(u => u.is_active !== false)
   const inactiveUsers = users.filter(u => u.is_active === false)
   const displayUsers  = tab === 'archived' ? inactiveUsers : activeUsers
@@ -486,7 +496,7 @@ export default function StaffPage() {
                   >
                     <td className="px-6 py-3">
                       <div className="flex items-center gap-2.5">
-                        <InitialAvatar name={u.name} role={u.role} />
+                        <StaffAvatar name={u.name} photoUrl={u.photo_url} size={32} onRefresh={refreshPhotos} />
                         <div className="min-w-0">
                           <button
                             onClick={() => setDetailUserId(u.id)}

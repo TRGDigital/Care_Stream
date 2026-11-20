@@ -3352,6 +3352,25 @@ model ResidentContribution {
 }
 
 // Photos for a "This is me" profile. See prisma/sql/2026-11-20_resident_photos.sql. Private storage only; pending until a manager approves.
+// Staff profile pictures. Deliberately NOT a column on User and without relations: the table is created by
+// prisma/sql/2026-11-21_staff_photos.sql and lib/staff-photos.ts reads it through (prisma as any), so a missing table just means
+// "no picture". Never add this to a User select.
+model StaffPhoto {
+  id          String   @id @default(uuid())
+  tenant_id   String
+  user_id     String   @unique
+  s3_key      String
+  mime        String   @default("image/jpeg")
+  size_bytes  Int      @default(0)
+  width       Int?
+  height      Int?
+  uploaded_by String
+  updated_at  DateTime @default(now())
+
+  @@index([tenant_id])
+  @@map("staff_photos")
+}
+
 model ResidentPhoto {
   id               String    @id @default(uuid())
   tenant_id        String

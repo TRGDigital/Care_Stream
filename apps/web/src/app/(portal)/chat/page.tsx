@@ -31,6 +31,7 @@ import { ChatVideoRow, MessagesFromFamilyButton } from '@/components/hub/residen
 import type { HubVideo } from '@/lib/residents-api'
 import { createResidentsClient } from '@/lib/residents-api'
 import { DisplaySettings } from '@/components/hub/display-settings'
+import { YourPicture } from '@/components/hub/my-photo'
 import Link from 'next/link'
 import { createApiClient, apiAssetUrl, type Citation } from '@/lib/api-client'
 import { persistentCache, hubKey, wasHardReload } from '@/lib/page-cache'
@@ -1187,6 +1188,7 @@ function ChatPageInner() {
           {/* Accessibility: text size + high contrast (available to every hub user, reviewers included) */}
           <div className="mt-1 border-t border-gray-100 pt-2">
             <DisplaySettings />
+            <YourPicture name={userName} />
           </div>
         </div>
 

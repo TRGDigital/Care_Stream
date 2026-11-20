@@ -8,6 +8,8 @@ import { persistentCache } from '@/lib/page-cache'
 import { usePlanFeatures, hasFeature } from '@/lib/use-plan-features'
 import { useIsFree } from '@/components/admin/free-tier'
 import { InfoTip } from '@/components/info-tip'
+import { StaffAvatar } from '@/components/admin/staff-avatar'
+import { StaffPictureBlock } from '@/components/admin/staff-picture-controls'
 import { TrainingCertificate } from '@/components/training-certificate'
 import { SignInLinkButton } from '@/components/admin/staff/sign-in-link'
 import { ViewAsButton } from '@/components/admin/staff/view-as-button'
@@ -338,9 +340,7 @@ export default function StaffRecordPage() {
         <div className="pdf-card rounded-card border border-gray-100 bg-white p-5 shadow-card">
           <div className="flex items-start justify-between gap-4">
             <div className="flex items-center gap-3">
-              <div className={`flex h-12 w-12 items-center justify-center rounded-full text-lg font-bold text-white ${u.role === 'admin' ? 'bg-teal' : 'bg-purple-500'}`}>
-                {(u.name ?? '?').charAt(0).toUpperCase()}
-              </div>
+              <StaffAvatar name={u.name ?? ''} photoUrl={rec.photo_url} size={48} onRefresh={load} />
               <div>
                 <h1 className="text-xl font-bold text-neutral-dark">{u.name}</h1>
                 <p className="text-sm text-neutral-mid">{u.job_role || 'No position set'} · {u.email}</p>
@@ -359,6 +359,26 @@ export default function StaffRecordPage() {
               </div>
             )}
           </div>
+        </div>
+
+        {/* Picture: add, change or remove (not part of the downloaded PDF) */}
+        <div className="pdf-card rounded-card border border-gray-100 bg-white p-5 shadow-card print:hidden">
+          <p className="mb-3 text-sm font-semibold text-neutral-dark">Picture</p>
+          <StaffPictureBlock
+            name={u.name ?? ''}
+            photoUrl={rec.photo_url}
+            idPrefix="staff-record-picture"
+            onRefresh={load}
+            onSet={async file => {
+              const r = await createApiClient(token).users.setPhoto(id, file)
+              setRec((prev: any) => { const next = { ...prev, photo_url: r.photo_url }; persistentCache.set(recKey, next); return next })
+              return r.photo_url
+            }}
+            onRemove={async () => {
+              await createApiClient(token).users.removePhoto(id)
+              setRec((prev: any) => { const next = { ...prev, photo_url: null }; persistentCache.set(recKey, next); return next })
+            }}
+          />
         </div>
 
         {/* Flags */}

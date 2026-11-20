@@ -1,13 +1,13 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { ALL_SCENARIOS } from '@/data/scenarios'
 import { plainText, type Scenario } from '@/lib/scenarios'
 import kwVolumes from '@/lib/keyword-volumes.json'
 
 // The Scenarios tab: every scenario page with its meta information, keywords and content outline.
-// Pages live in src/data/scenarios/*.json; "published" ones are public at /scenarios/<slug> and in
-// the sitemap, "draft" ones are only visible here through Preview.
+// Pages live in src/data/scenarios/*.json (the first 93) or in the database (written by the nightly routine). "published" ones are public at
+// /scenarios/<slug> and in the sitemap, "draft" ones are only visible here through Preview. Database pages have a Publish button.
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
 const SITE = 'https://www.carestreamai.com'
@@ -39,11 +39,41 @@ const Len = ({ n, lo, hi }: { n: number; lo: number; hi: number }) => (
 )
 
 export function ScenariosPanel({ token }: { token: string }) {
-  const list = useMemo(() => [...ALL_SCENARIOS].sort((a, b) => a.order - b.order), [])
+  // Pages from the repository plus the ones the nightly routine writes to the database. A database page can be published or unpublished here.
+  const [dbList, setDbList] = useState<Scenario[]>([])
+  const dbSlugs = useMemo(() => new Set(dbList.map(s => s.slug)), [dbList])
+  const list = useMemo(() => {
+    const m = new Map<string, Scenario>()
+    ALL_SCENARIOS.forEach(s => m.set(s.slug, s))
+    dbList.forEach(s => m.set(s.slug, s))
+    return Array.from(m.values()).sort((a, b) => a.order - b.order)
+  }, [dbList])
   const [open, setOpen] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const [msg, setMsg] = useState<string | null>(null)
   const published = list.filter(s => s.status === 'published')
+  const dbDrafts = dbList.filter(s => s.status === 'draft').length
+
+  const loadDb = useCallback(async () => {
+    try {
+      const r = await fetch(`${API_URL}/admin/scenarios`, { headers: { Authorization: `Bearer ${token}` } })
+      const j = await r.json()
+      if (r.ok) setDbList((j?.data?.scenarios ?? []) as Scenario[])
+    } catch { /* the repository pages still show */ }
+  }, [token])
+  useEffect(() => { loadDb() }, [loadDb])
+
+  async function setStatus(slug: string, status: 'published' | 'draft') {
+    if (status === 'published' && !window.confirm('Publish this scenario? It goes live on the site (hub, home page and sitemap) within about five minutes.')) return
+    setBusy(true); setMsg(null)
+    try {
+      const r = await fetch(`${API_URL}/admin/scenarios/${encodeURIComponent(slug)}/status`, { method: 'PATCH', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify({ status }) })
+      const j = await r.json()
+      if (!r.ok) setMsg(j?.error?.message ?? 'The change failed.')
+      else { setMsg(status === 'published' ? `Published ${slug}. It is live within about five minutes. Use "Request indexing" below once it is live.` : `Unpublished ${slug}. It is a draft again.`); await loadDb() }
+    } catch (e: any) { setMsg(`The change failed: ${e?.message ?? 'unknown error'}`) }
+    setBusy(false)
+  }
 
   async function requestIndexing() {
     if (!published.length) return
@@ -67,7 +97,7 @@ export function ScenariosPanel({ token }: { token: string }) {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="max-w-3xl text-sm text-neutral-mid">
           Situation led pages at <code className="rounded bg-neutral-light px-1 py-0.5 text-xs">/scenarios/&hellip;</code>, shown on the home page under &ldquo;Why should I use CareStream?&rdquo;.
-          {' '}{published.length} published, {list.length - published.length} draft. Open a row to see its meta information, keywords and content outline.
+          {' '}{published.length} published, {list.length - published.length} draft{dbDrafts ? ` (${dbDrafts} written by the nightly routine, waiting for you)` : ''}. Open a row to see its meta information, keywords and content outline.
         </p>
         <div className="flex items-center gap-2">
           <a href="/scenarios" target="_blank" rel="noopener noreferrer" className="rounded-md border border-gray-200 px-3 py-1.5 text-xs font-medium text-neutral-dark hover:bg-neutral-light">Open hub</a>
@@ -100,6 +130,11 @@ export function ScenariosPanel({ token }: { token: string }) {
                   <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${s.status === 'published' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>{s.status}</span>
                   <a href={`/platform/scenarios/preview/${s.slug}`} target="_blank" rel="noopener noreferrer" className="rounded-md border border-gray-200 px-2 py-1 text-xs font-medium text-neutral-mid hover:bg-neutral-light hover:text-neutral-dark">Preview</a>
                   <a href={`/platform/scenarios/preview/${s.slug}?yellowkws`} target="_blank" rel="noopener noreferrer" className="rounded-md border border-yellow-300 bg-yellow-100 px-2 py-1 text-xs font-semibold text-yellow-900 hover:bg-yellow-200">Keywords</a>
+                  {dbSlugs.has(s.slug) && (
+                    s.status === 'published'
+                      ? <button type="button" disabled={busy} onClick={() => setStatus(s.slug, 'draft')} className="rounded-md border border-gray-200 px-2 py-1 text-xs font-medium text-neutral-dark hover:bg-neutral-light disabled:opacity-50">Unpublish</button>
+                      : <button type="button" disabled={busy} onClick={() => setStatus(s.slug, 'published')} className="rounded-md bg-teal px-2 py-1 text-xs font-semibold text-white hover:bg-teal/90 disabled:opacity-50">Publish</button>
+                  )}
                   {s.status === 'published' && <a href={`/scenarios/${s.slug}`} target="_blank" rel="noopener noreferrer" className="rounded-md border border-gray-200 px-2 py-1 text-xs font-medium text-neutral-mid hover:bg-neutral-light hover:text-neutral-dark">Live</a>}
                   <button type="button" onClick={() => setOpen(isOpen ? null : s.slug)} className="rounded-md border border-gray-200 px-2 py-1 text-xs font-medium text-neutral-dark hover:bg-neutral-light">{isOpen ? 'Close' : 'Open'}</button>
                 </div>

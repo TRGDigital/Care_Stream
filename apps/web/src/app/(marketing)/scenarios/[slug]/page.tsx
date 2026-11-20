@@ -8,10 +8,12 @@ import { faqPageSchema, SITE_URL } from '@/lib/schema'
 import { DEFAULT_OG_IMAGE, absoluteImage } from '@/lib/page-meta'
 import { plainText } from '@/lib/scenarios'
 import { getScenarioReadNext } from '@/lib/scenario-readnext'
-import { getPublishedScenario, publishedScenarios } from '@/data/scenarios'
+import { publishedScenarios } from '@/data/scenarios'
+import { getPublishedScenarioAsync } from '@/lib/scenarios-db'
 
 export const revalidate = 300
-export const dynamicParams = false
+// Pages published from the platform after the last deploy are rendered on first visit and cached for five minutes.
+export const dynamicParams = true
 
 export function generateStaticParams() {
   return publishedScenarios().map(s => ({ slug: s.slug }))
@@ -19,7 +21,7 @@ export function generateStaticParams() {
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params
-  const s = getPublishedScenario(slug)
+  const s = await getPublishedScenarioAsync(slug)
   if (!s) return { title: 'Not found' }
   const image = absoluteImage(s.image) || DEFAULT_OG_IMAGE
   return {
@@ -33,7 +35,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
 export default async function ScenarioRoute({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
-  const s = getPublishedScenario(slug)
+  const s = await getPublishedScenarioAsync(slug)
   if (!s) notFound()
   const readNext = await getScenarioReadNext(s.read_next)
   const faqs = s.faqs.groups.flatMap(g => g.items).map(f => ({ question: f.q, answer: plainText(f.a) }))

@@ -1517,6 +1517,20 @@ model ServicePage {
   @@map("service_pages")
 }
 
+model ScenarioPage {
+  id           String    @id @default(uuid())
+  slug         String    @unique
+  status       String    @default("draft")      // 'draft' | 'published'
+  sort_order   Int       @default(0)
+  data         Json                              // the whole page, same shape as apps/web/src/data/scenarios/*.json
+  created_at   DateTime  @default(now())
+  updated_at   DateTime  @updatedAt
+  published_at DateTime?
+
+  @@index([status, sort_order])
+  @@map("scenario_pages")
+}
+
 model UserCasePage {
   id               String   @id @default(uuid())
   slug             String   @unique                          // e.g. policy-gaps

@@ -13,8 +13,7 @@ import type { ScenarioReadNext } from '@/components/marketing/scenario-page'
 // Draft preview for a scenario page. Drafts are not served by the public site, so this page
 // checks the platform admin token and then loads the page content (a separate chunk that
 // is only fetched here) and shows it in the live design. Add ?yellowkws to the address to
-// highlight the page's target keywords. To approve a page, set its status to "published" in
-// src/data/scenarios/<slug>.json and deploy.
+// highlight the page's target keywords. Pages in the database are published with the Publish button in /platform/blog, Scenarios.
 
 export default function ScenarioDraftPreview() {
   const params = useParams<{ slug: string }>()
@@ -30,7 +29,14 @@ export default function ScenarioDraftPreview() {
     // admin call on purpose (the blog list took about 20 seconds and left this page loading).
     createPlatformClient(token).searchMisses.list(1).then(async () => {
       const mod = await import('@/data/scenarios')
-      const found = mod.getAnyScenario(slug)
+      let found = mod.getAnyScenario(slug)
+      if (!found) {
+        // Pages written by the nightly routine live in the database.
+        try {
+          const r = await fetch(`${process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'}/admin/scenarios/${encodeURIComponent(slug)}`, { headers: { Authorization: `Bearer ${token}` } })
+          if (r.ok) found = ((await r.json())?.data?.scenario ?? null) as Scenario | null
+        } catch { /* fall through to "no scenario" */ }
+      }
       setS(found); setState(found ? 'ok' : 'missing')
       if (found) getScenarioReadNext(found.read_next).then(setReadNext).catch(() => setReadNext([]))
     }).catch(() => setState('noauth'))

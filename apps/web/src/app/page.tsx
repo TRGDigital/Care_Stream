@@ -26,6 +26,7 @@ import { getContentSlots, makeSlot } from '@/lib/page-slots'
 import { HOME_SLOTS } from '@/lib/page-slots/home'
 import { HOME_V2_SLOTS } from '@/lib/page-slots/home-v2'
 import { HomePageV2 } from '@/components/marketing/home-page-v2'
+import { allPublishedScenarios } from '@/lib/scenarios-db'
 import {
   Zap, ClipboardCheck, Upload, MessageSquare, Mic,
   BookOpen, Shield, ArrowRight, Check, ShieldAlert,
@@ -1095,7 +1096,7 @@ export default async function HomePage(
         {/* No FAQPage here: this design has no visible FAQ, and structured data must match what is on the page. */}
         <JsonLd data={webApplicationSchema()} />
         <MarketingNav />
-        <HomePageV2 s={makeSlot(HOME_V2_SLOTS, slots)} showFree={await freeLive(searchParams)} />
+        <HomePageV2 s={makeSlot(HOME_V2_SLOTS, slots)} showFree={await freeLive(searchParams)} why={(await allPublishedScenarios()).map(x => ({ slug: x.slug, title: x.card_title, snippet: x.card_snippet, image: x.image, alt: x.image_alt }))} />
         <SiteTracker />
         <MarketingFooter />
         <WebsiteChat />

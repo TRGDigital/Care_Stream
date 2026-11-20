@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { SiteImage } from '@/components/site-image'
 import { PageBreadcrumbJsonLd } from '@/components/page-breadcrumb-json-ld'
 import { SITE_URL } from '@/lib/schema'
-import { publishedScenarios } from '@/data/scenarios'
+import { allPublishedScenarios } from '@/lib/scenarios-db'
 import '@/components/marketing/user-case-page.css'
 import '@/components/marketing/scenario-page.css'
 
@@ -15,8 +15,8 @@ export const metadata: Metadata = {
   alternates: { canonical: `${SITE_URL}/scenarios` },
 }
 
-export default function ScenariosHub() {
-  const list = publishedScenarios()
+export default async function ScenariosHub() {
+  const list = await allPublishedScenarios()
   return (
     <div className="ucpage scn">
       <PageBreadcrumbJsonLd trail={[{ name: 'Scenarios', path: '/scenarios' }]} />

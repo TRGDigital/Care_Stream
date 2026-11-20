@@ -130,10 +130,8 @@ export function MessagesFromFamilyButton({ token }: { token: string }) {
     setRoom(r); setVideos([]); setLoading(true)
     client.hubRoomVideos(r.key).then(d => setVideos(d.videos ?? [])).catch(() => setVideos([])).finally(() => setLoading(false))
   }
-  function show() {
-    setOpen(true)
-    if (rooms.length === 1) chooseRoom(rooms[0])
-  }
+  // Two stages: first the rooms that have videos, then (only after a room is chosen) that room's videos. Even one room is shown as a room.
+  function show() { setOpen(true); setRoom(null); setVideos([]) }
   function backToRooms() { setRoom(null); setVideos([]); void loadRooms() }
   function close() { setOpen(false); setRoom(null); setVideos([]); setFind(''); void loadRooms() }
   function play(v: HubVideo) { setPlaying(v); setWatched(w => (w[v.id] ? w : { ...w, [v.id]: new Date().toISOString() })) }
@@ -160,7 +158,7 @@ export function MessagesFromFamilyButton({ token }: { token: string }) {
           <div role="dialog" aria-modal="true" aria-label="Messages from family" className="flex max-h-[92vh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl bg-white shadow-xl">
             <div className="flex items-center justify-between gap-3 border-b border-gray-200 px-4 py-3">
               <div className="flex min-w-0 items-center gap-2">
-                {room && rooms.length > 1 && (
+                {room && (
                   <button type="button" onClick={backToRooms} aria-label="Back to the list of rooms" className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg text-neutral-mid hover:bg-neutral-light"><ArrowLeft size={20} /></button>
                 )}
                 <h2 className="truncate text-lg font-semibold text-neutral-dark">{room ? room.label : 'Messages from family'}</h2>

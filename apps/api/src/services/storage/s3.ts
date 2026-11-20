@@ -496,6 +496,15 @@ export async function putPrivateObject(key: string, buffer: Buffer, mimeType: st
   await getS3().send(new PutObjectCommand({ Bucket: BUCKET, Key: key, Body: buffer, ContentType: mimeType, ServerSideEncryption: 'AES256' }))
 }
 
+/** Size in bytes of one object, or null when it is not there (or cannot be read). Needs only read access, not permission to list the bucket. */
+export async function objectSize(key: string): Promise<number | null> {
+  if (USE_LOCAL) { try { return fs.statSync(localPath(key)).size } catch { return null } }
+  try {
+    const r = await getS3().send(new HeadObjectCommand({ Bucket: BUCKET, Key: key }))
+    return typeof r.ContentLength === 'number' ? r.ContentLength : null
+  } catch { return null }
+}
+
 /** Objects under a prefix with their sizes (a few dozen at most for one upload). */
 export async function listObjects(prefix: string): Promise<Array<{ key: string; size: number }>> {
   if (USE_LOCAL) {

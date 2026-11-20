@@ -34,7 +34,7 @@ import { cleanText, residentsEnabled } from './residents'
 import { detectVideoContainer, transcodeVideo, VideoError, MAX_SECONDS } from './resident-video-media'
 import { keyOf, words, esc, STOP } from './resident-photos'
 import { scanBuffer, scannerConfigured } from '../services/security/malware-scan'
-import { putPrivateObject, listObjects, deleteObjectsUnder, deleteFile, downloadFile } from '../services/storage/s3'
+import { putPrivateObject, objectSize, deleteObjectsUnder, deleteFile, downloadFile } from '../services/storage/s3'
 
 const db = prisma as any
 
@@ -155,19 +155,24 @@ export async function saveChunk(v: any, n: number, body: Buffer): Promise<{ ok: 
 
 /** Which chunk numbers are safely stored (the page carries on from here after a lost signal). */
 export async function receivedChunks(v: any): Promise<number[]> {
-  const prefix = partsPrefix(v)
+  // The chunk names are known in advance (partKey), so each one is checked directly. The storage login can read and delete
+  // objects but is not allowed to list the bucket, so nothing here may list.
   const have: number[] = []
-  for (const o of await listObjects(prefix)) {
-    const n = Number(o.key.slice(prefix.length))
-    if (Number.isInteger(n) && o.size === expectedChunkSize(v.size_bytes, n)) have.push(n)
+  for (let n = 0; n < (v.total_chunks ?? 0); n++) {
+    if ((await objectSize(partKey(v, n))) === expectedChunkSize(v.size_bytes, n)) have.push(n)
   }
-  return have.sort((a, b) => a - b)
+  return have
+}
+
+/** Deletes a clip's temporary chunks by name (no listing needed). */
+async function dropParts(v: any): Promise<void> {
+  for (let n = 0; n < (v.total_chunks ?? 0); n++) await deleteFile(partKey(v, n))
 }
 
 /** A clip stuck in processing for too long (the function was cut off) is shown as failed so the person can try again. */
 export async function settleStuck(v: any): Promise<any> {
   if (v.state === 'processing' && v.processing_started_at && Date.now() - new Date(v.processing_started_at).getTime() > STUCK_MS) {
-    await deleteObjectsUnder(partsPrefix(v))
+    await dropParts(v)
     return db.residentVideo.update({ where: { id: v.id }, data: { state: 'failed', error: 'That video took too long to process. Please try again with a shorter video.' } })
   }
   return v
@@ -177,7 +182,7 @@ export async function settleStuck(v: any): Promise<any> {
 async function sweepStale(residentId: string): Promise<void> {
   try {
     const old = await db.residentVideo.findMany({ where: { resident_id: residentId, state: { in: ['uploading', 'failed'] }, submitted_at: { lt: new Date(Date.now() - 24 * 3600 * 1000) } }, take: 20 })
-    for (const v of old) { await deleteObjectsUnder(partsPrefix(v)); await db.residentVideo.delete({ where: { id: v.id } }) }
+    for (const v of old) { await dropParts(v); await db.residentVideo.delete({ where: { id: v.id } }) }
   } catch { /* housekeeping only */ }
 }
 
@@ -218,12 +223,12 @@ export async function completeVideo(v: any, edits: { title?: unknown }): Promise
       where: { id: v.id },
       data: { state: 'ready', s3_key: mp4Key, poster_key: posterKey, mime: 'video/mp4', duration_seconds: out.duration, size_bytes: out.size, width: out.width, height: out.height, scan_status: scan, error: null },
     })
-    await deleteObjectsUnder(partsPrefix(v))   // the raw upload is not kept
+    await dropParts(v)   // the raw upload is not kept
     return { ok: true, video: done }
   } catch (e: any) {
     const message = e instanceof VideoError ? e.message : 'That video could not be processed. Please try again with a shorter video.'
     if (!(e instanceof VideoError)) console.error('[resident-video] processing failed:', e?.message ?? e)
-    await deleteObjectsUnder(partsPrefix(v))
+    await dropParts(v)
     await db.residentVideo.update({ where: { id: v.id }, data: { state: 'failed', error: message } }).catch(() => null)
     return { ok: false, status: e instanceof VideoError && e.code === 'NO_FFMPEG' ? 503 : 422, code: e instanceof VideoError ? e.code : 'PROCESS_FAILED', message }
   } finally {
@@ -248,7 +253,7 @@ export function parseRange(header: string | undefined, size: number): { start: n
 export async function removeVideoFiles(v: any): Promise<void> {
   if (v.s3_key) await deleteFile(v.s3_key)
   if (v.poster_key) await deleteFile(v.poster_key)
-  await deleteObjectsUnder(partsPrefix(v))
+  await dropParts(v)
 }
 
 /** Reject: files gone at once, keys blanked, the row kept as a record that it was rejected. */

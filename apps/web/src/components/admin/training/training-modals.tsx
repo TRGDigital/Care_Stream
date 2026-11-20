@@ -164,6 +164,7 @@ export function EnrollmentModal({ api, enrollmentId, onClose, onUpdated }: {
   const [removing,   setRemoving]   = useState(false)
   const [reminding,  setReminding]  = useState(false)
   const [remindMsg,  setRemindMsg]  = useState<{ ok: boolean; text: string } | null>(null)
+  const [showAnswers, setShowAnswers] = useState(false)
 
   useEffect(() => {
     api.training.getEnrollment(enrollmentId)
@@ -288,40 +289,11 @@ export function EnrollmentModal({ api, enrollmentId, onClose, onUpdated }: {
             )}
 
             {data.answers.length > 0 && (
-              <div>
-                <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-neutral-mid">Answers</p>
-                <div className="max-h-48 space-y-2 overflow-y-auto">
-                  {data.module.questions.map((q: any, i: number) => {
-                    const answer  = data.answers.find((a: any) => a.question_id === q.id)
-                    const options = q.options as string[] | undefined
-                    const LABELS  = ['A', 'B', 'C', 'D']
-                    return (
-                      <div key={q.id} className="rounded-lg border border-gray-100 bg-gray-50 px-3 py-2.5">
-                        <p className="text-xs font-medium text-neutral-mid">Q{i + 1}: {q.text}</p>
-                        {options && (
-                          <div className="mt-1.5 space-y-0.5">
-                            {options.map((opt: string, oi: number) => (
-                              <p key={oi} className={`text-xs ${q.correct === oi ? 'font-semibold text-teal' : 'text-neutral-mid'}`}>
-                                {LABELS[oi]}. {opt}{q.correct === oi ? ' (correct)' : ''}
-                              </p>
-                            ))}
-                          </div>
-                        )}
-                        {answer ? (
-                          <div className={`mt-2 flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium ${
-                            answer.is_correct ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-600'
-                          }`}>
-                            {answer.is_correct ? <CheckCircle2 size={11} /> : <AlertCircle size={11} />}
-                            Staff answered: {answer.answer_text} — {answer.is_correct ? 'Correct' : 'Incorrect'}
-                          </div>
-                        ) : (
-                          <p className="mt-1 text-xs italic text-neutral-mid/60">Not answered yet</p>
-                        )}
-                      </div>
-                    )
-                  })}
-                </div>
-              </div>
+              <button type="button" onClick={() => setShowAnswers(true)}
+                className="flex w-full items-center justify-between rounded-lg border border-gray-200 px-3 py-2 text-sm font-medium text-neutral-dark hover:bg-neutral-light">
+                <span>View answers</span>
+                <span className="text-xs font-normal text-neutral-mid">{data.answers.length} of {data.module.questions.length} answered</span>
+              </button>
             )}
 
             <div className="flex items-center gap-3 border-t border-gray-100 pt-4">
@@ -349,6 +321,52 @@ export function EnrollmentModal({ api, enrollmentId, onClose, onUpdated }: {
           </div>
         )}
       </div>
+      {showAnswers && data && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 px-4" onClick={() => setShowAnswers(false)}>
+          <div className="flex max-h-[85vh] w-full max-w-2xl flex-col rounded-2xl bg-white shadow-2xl" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4">
+              <div>
+                <h2 className="font-semibold text-neutral-dark">Answers</h2>
+                <p className="text-xs text-neutral-mid">{data.module?.name ?? ''}</p>
+              </div>
+              <button onClick={() => setShowAnswers(false)} aria-label="Close answers"><X size={18} className="text-neutral-mid" /></button>
+            </div>
+            <div className="overflow-y-auto px-6 py-5">
+                <div className="space-y-2">
+                {data.module.questions.map((q: any, i: number) => {
+                  const answer  = data.answers.find((a: any) => a.question_id === q.id)
+                  const options = q.options as string[] | undefined
+                  const LABELS  = ['A', 'B', 'C', 'D']
+                  return (
+                    <div key={q.id} className="rounded-lg border border-gray-100 bg-gray-50 px-3 py-2.5">
+                      <p className="text-xs font-medium text-neutral-mid">Q{i + 1}: {q.text}</p>
+                      {options && (
+                        <div className="mt-1.5 space-y-0.5">
+                          {options.map((opt: string, oi: number) => (
+                            <p key={oi} className={`text-xs ${q.correct === oi ? 'font-semibold text-teal' : 'text-neutral-mid'}`}>
+                              {LABELS[oi]}. {opt}{q.correct === oi ? ' (correct)' : ''}
+                            </p>
+                          ))}
+                        </div>
+                      )}
+                      {answer ? (
+                        <div className={`mt-2 flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium ${
+                          answer.is_correct ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-600'
+                        }`}>
+                          {answer.is_correct ? <CheckCircle2 size={11} /> : <AlertCircle size={11} />}
+                          Staff answered: {answer.answer_text}. {answer.is_correct ? 'Correct' : 'Incorrect'}
+                        </div>
+                      ) : (
+                        <p className="mt-1 text-xs italic text-neutral-mid/60">Not answered yet</p>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

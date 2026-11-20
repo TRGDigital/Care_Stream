@@ -2244,6 +2244,22 @@ export async function sendContentDraftsEmail(opts: {
 }
 
 
+/** A plain reminder to the platform owner (used by the scheduled routines): a subject and a short message, sent through SendGrid. */
+export async function sendOwnerReminderEmail(opts: { subject: string; message: string }): Promise<void> {
+  ensureInitialised()
+  if (!process.env.SENDGRID_API_KEY) { console.warn('[email] SENDGRID_API_KEY not set, skipping owner reminder email'); return }
+  const to   = process.env.CONTENT_REPORT_EMAIL ?? 'lenny@trgdigital.co.uk'
+  const from = process.env.SENDGRID_FROM_ADDRESS ?? process.env.SENDGRID_FROM_EMAIL ?? `noreply@${INBOUND_DOMAIN}`
+  const esc  = (x: any) => String(x ?? '').replace(/[<>&]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' }[c] as string))
+  const html = emailWrapper(`
+    <p style="color:${NEUTRAL_DARK};font-size:16px;font-weight:700;margin:0 0 10px">${esc(opts.subject)}</p>
+    <div style="white-space:pre-wrap;font-size:13px;line-height:1.6;color:#374151">${esc(String(opts.message ?? '').slice(0, 12000))}</div>
+    ${emailFooter()}
+  `)
+  await sgMail.send({ to, from, subject: opts.subject.slice(0, 150), html, trackingSettings: { clickTracking: { enable: false, enableText: false } } })
+}
+
+
 // ─── "This is me" resident profiles ────────────────────────────────────────────
 function residentFrom(name: string) {
   const fromEmail = process.env.SENDGRID_FROM_ADDRESS ?? process.env.SENDGRID_FROM_EMAIL ?? `noreply@${INBOUND_DOMAIN}`

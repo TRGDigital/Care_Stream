@@ -21,7 +21,7 @@ import { timingSafeEqual } from 'crypto'
 import { prisma } from '../db/client'
 import { ok, err } from '../lib/response'
 import { importBlogDrafts, importCollectionDrafts } from './admin'
-import { sendContentDraftsEmail } from '../services/email/outbound'
+import { sendContentDraftsEmail, sendOwnerReminderEmail } from '../services/email/outbound'
 import { generateContentImage } from '../services/policy-shop/shopImage'
 import bundle from '../data/content-engine/bundle.json'
 import scenarioQueue from '../data/scenario-queue.json'
@@ -159,6 +159,14 @@ contentRoutineRouter.post('/image', async (req: Request, res: Response) => {
 // Looks the drafts up in the database rather than trusting the routine's list, so the email is a true record.
 contentRoutineRouter.post('/notify', async (req: Request, res: Response) => {
   const kind = req.body?.kind
+  // { kind: 'reminder', subject, message }: a one off reminder email to the owner (scheduled by a routine).
+  if (kind === 'reminder') {
+    const subject = String(req.body?.subject ?? '').trim()
+    const message = String(req.body?.message ?? '').trim()
+    if (!subject || !message) { err(res, 'VALIDATION_ERROR', 'A reminder needs a subject and a message.'); return }
+    try { await sendOwnerReminderEmail({ subject, message }) } catch (e: any) { err(res, 'EMAIL_FAILED', String(e?.message ?? e).slice(0, 200)); return }
+    ok(res, { kind, sent: true }); return
+  }
   if (kind !== 'blog' && kind !== 'collections' && kind !== 'scenarios') { err(res, 'VALIDATION_ERROR', "kind must be 'blog', 'collections' or 'scenarios'."); return }
   const since = new Date(Date.now() - 8 * 3600 * 1000)
   const rows = kind === 'scenarios'

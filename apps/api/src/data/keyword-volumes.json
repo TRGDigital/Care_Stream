@@ -1,6 +1,13 @@
 {
  "_source": "Google Keyword Planner, UK, monthly average, pulled 2026-11-13 and 2026-11-18. Phrases missing here had no data (under 10 a month). Close variants share one figure.",
  "volumes": {
+  "this is me dementia": 110,
+  "this is me dementia document": 30,
+  "this is me passport": 50,
+  "dementia life story": 30,
+  "life history dementia": 30,
+  "life story book dementia": 50,
+  "reminiscence photos": 20,
   "dementia photo album": 40,
   "life story photos": 10,
   "photo memory book": 1000,

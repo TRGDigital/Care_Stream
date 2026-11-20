@@ -10,12 +10,12 @@ import { submitUrlsForIndexing, ralfyIndexBalance } from '../services/ralfyindex
 export const seoIndexRouter = Router()
 seoIndexRouter.use(requirePlatformAdmin)
 
-const ALLOWED = /^https:\/\/www\.carestreamai\.com\/scenarios(\/[a-z0-9-]+)?$/
+const ALLOWED = /^https:\/\/www\.carestreamai\.com\/(scenarios(\/[a-z0-9-]+)?|features\/[a-z0-9-]+|blog\/[a-z0-9-]+)$/
 
 seoIndexRouter.post('/submit', async (req: Request, res: Response) => {
   const raw: unknown[] = Array.isArray(req.body?.urls) ? req.body.urls : []
   const urls = Array.from(new Set(raw.map(u => String(u).trim()).filter(u => ALLOWED.test(u)))).slice(0, 50)
-  if (!urls.length) { err(res, 'VALIDATION_ERROR', 'Send one or more https://www.carestreamai.com/scenarios URLs.'); return }
+  if (!urls.length) { err(res, 'VALIDATION_ERROR', 'Send one or more https://www.carestreamai.com/scenarios, /features or /blog URLs.'); return }
 
   const cfg = await (prisma as any).ralfyIndexConfig.findUnique({ where: { id: 'singleton' } }).catch(() => null)
   if (!cfg?.enabled || !cfg?.api_key) { err(res, 'NOT_CONFIGURED', 'RalfyIndex is not set up or is switched off, so nothing was submitted.', 409); return }

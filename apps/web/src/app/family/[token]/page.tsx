@@ -7,6 +7,7 @@ import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import { CheckCircle2, Heart, Info, Loader2, LinkIcon } from 'lucide-react'
 import { getFamilyForm, submitFamilyForm, type FamilyForm } from '@/lib/residents-api'
+import { PhotoBox } from './photo-box'
 
 const FIELD = 'w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-base text-neutral-dark outline-none focus:border-teal focus:ring-2 focus:ring-teal/20'
 
@@ -52,12 +53,13 @@ export default function FamilyFormPage() {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const [done, setDone] = useState(false)
+  const [photoCount, setPhotoCount] = useState(0)
 
   useEffect(() => {
     let live = true
     setLoading(true)
     getFamilyForm(token)
-      .then(f => { if (!live) return; setForm(f); setName(f.invitee_name ?? '') })
+      .then(f => { if (!live) return; setForm(f); setName(f.invitee_name ?? ''); setPhotoCount((f.photos ?? []).filter(p => p.status !== 'rejected').length) })
       .catch((e: any) => { if (live) setLoadErr(e?.status === 410 || e?.status === 404 ? 'gone' : 'other') })
       .finally(() => { if (live) setLoading(false) })
     return () => { live = false }
@@ -82,12 +84,12 @@ export default function FamilyFormPage() {
         <Card icon={<CheckCircle2 size={36} className="text-green-500" />} title="Thank you, that is the family's side">
           In a real link, the answers would now go to the manager. They appear under <strong>Approvals</strong> in the Residents screen, the manager reads each one, and can approve it, edit it or reject it. Staff and the hub chat never see an answer until it is approved. Nothing from this demonstration was saved.
         </Card>
-        <p className="mt-5 text-center"><button type="button" onClick={() => { setDone(false); setAnswers({}); setRelationship('') }} className="text-base font-semibold text-teal hover:underline">Try it again</button></p>
+        <p className="mt-5 text-center"><button type="button" onClick={() => { setDone(false); setAnswers({}); setRelationship(''); setPhotoCount(0) }} className="text-base font-semibold text-teal hover:underline">Try it again</button></p>
       </Shell>
     )
   }
   if (done) {
-    return <Shell><Card icon={<CheckCircle2 size={36} className="text-green-500" />} title="Thank you">Your answers have been sent to the manager at {home}. They will check them before the care team sees them. You can close this page.</Card></Shell>
+    return <Shell><Card icon={<CheckCircle2 size={36} className="text-green-500" />} title="Thank you">What you shared has been sent to the manager at {home}. They will check it before the care team sees it. You can close this page.</Card></Shell>
   }
   if (form.already_submitted) {
     return <Shell><Card icon={<CheckCircle2 size={36} className="text-green-500" />} title="Thank you, you have already shared your answers">If you would like to add more about {resident}, please ask {home} for a new link.</Card></Shell>
@@ -102,7 +104,7 @@ export default function FamilyFormPage() {
     for (const [k, v] of Object.entries(answers)) if (v.trim()) clean[k] = v.trim()
     if (!name.trim()) { setError('Please tell us your name.'); return }
     if (!relationship.trim()) { setError(`Please tell us how you know ${resident}.`); return }
-    if (Object.keys(clean).length === 0) { setError('Please answer at least one question.'); return }
+    if (Object.keys(clean).length === 0 && photoCount === 0) { setError('Please answer at least one question or add a photo.'); return }
     setBusy(true); setError('')
     try {
       await submitFamilyForm(token, { name: name.trim(), relationship: relationship.trim(), answers: clean })
@@ -150,10 +152,15 @@ export default function FamilyFormPage() {
           </div>
         ))}
 
+        {form.photos_enabled && (
+          <PhotoBox token={token} resident={resident} home={home} initial={form.photos ?? []} max={form.max_photos ?? 5} maxMb={form.max_photo_mb ?? 5}
+            captionMax={form.caption_max ?? 140} onCount={setPhotoCount} />
+        )}
+
         {error && <p role="alert" className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-base text-red-700">{error}</p>}
 
         <button type="submit" disabled={busy} className="flex min-h-[52px] w-full items-center justify-center gap-2 rounded-xl bg-teal px-6 py-3 text-lg font-semibold text-white hover:bg-teal-dark disabled:opacity-50">
-          {busy && <Loader2 size={18} className="animate-spin" />} Send my answers
+          {busy && <Loader2 size={18} className="animate-spin" />} Send what I have shared
         </button>
         <p className="pb-8 text-center text-sm text-neutral-mid">If you would like to add more later, ask {home} for a new link.</p>
       </form>

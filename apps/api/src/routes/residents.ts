@@ -8,9 +8,12 @@
 //   POST   /:id/status                   died or moved on: out of the hub and assistant at once, links cancelled, archive task started
 //   POST   /:id/invites                  email a friend or family member a private link (+ /resend, DELETE /:inviteId)
 //   POST   /:id/contributions/:cid/decision   approve (optionally edited) or reject a family answer
+//   POST   /:id/photos                   a manager adds a photo (approved at once)      DELETE /:id/photos/:pid   remove one
+//   POST   /:id/photos/:pid/decision     approve (optionally with an edited caption) or reject a family photo
 //   POST   /:id/archive/confirm | /retention | GET /export | DELETE /:id         archive actions (archive admins only)
 //
-// Family answers are NEVER shown to staff until an admin approves them. Only LIVING residents reach the hub and the assistant.
+// Family answers and photos are NEVER shown to staff until an admin approves them. Only LIVING residents reach the hub and the assistant.
+// Photos are private files served through short-lived signed links (lib/resident-photos.ts) and are never part of the assistant's knowledge.
 
 import { Router, Request, Response, NextFunction } from 'express'
 import { z } from 'zod'
@@ -18,12 +21,17 @@ import { prisma } from '../db/client'
 import { getTenantId } from '../db/tenant-context'
 import { ok, err } from '../lib/response'
 import { requireAdmin } from '../middleware/auth'
+import { residentPhotoUploadMiddleware } from '../middleware/upload'
 import { writeAuditLog } from '../lib/audit'
 import { siteUrl } from '../lib/urls'
+import { deleteFile } from '../services/storage/s3'
 import {
   SECTIONS, SECTION_KEYS, RETENTION_YEARS, INVITE_DAYS, labelFor, residentsEnabled, tablesReady, cleanText, displayName, ageFrom, dateOnly, addYears,
   newInviteToken, canManageArchive, archiveAdmins, archiveAccessIds, saveArchiveAccessIds, syncResidentKnowledge,
 } from '../lib/residents'
+import {
+  photosReady, processAndStorePhoto, cleanCaption, cleanPeople, adminPhotoDto, hubPhotoDto, discardPhotoFile, deleteResidentPhotos,
+} from '../lib/resident-photos'
 import { sendResidentFamilyInviteEmail, sendResidentArchiveTaskEmail } from '../services/email/outbound'
 
 export const residentsRouter = Router()
@@ -78,8 +86,14 @@ async function counts(tenantId: string, ids: string[]) {
     db.residentContribution.groupBy({ by: ['resident_id'], where: { tenant_id: tenantId, resident_id: { in: ids }, status: 'pending' }, _count: { _all: true } }),
     db.residentInvite.groupBy({ by: ['resident_id'], where: { tenant_id: tenantId, resident_id: { in: ids }, revoked_at: null }, _count: { _all: true } }),
   ])
+  const pending = new Map<string, number>(p.map((x: any) => [x.resident_id, x._count._all]))
+  // Photos waiting for approval count towards the same badge. The photos table may not exist yet, which just means none.
+  try {
+    const ph = await db.residentPhoto.groupBy({ by: ['resident_id'], where: { tenant_id: tenantId, resident_id: { in: ids }, status: 'pending' }, _count: { _all: true } })
+    for (const x of ph) pending.set(x.resident_id, (pending.get(x.resident_id) ?? 0) + x._count._all)
+  } catch { /* photos table not created yet */ }
   return {
-    pending: new Map<string, number>(p.map((x: any) => [x.resident_id, x._count._all])),
+    pending,
     invites: new Map<string, number>(i.map((x: any) => [x.resident_id, x._count._all])),
   }
 }
@@ -100,12 +114,18 @@ residentsRouter.get('/hub', async (_req: Request, res: Response) => {
   const off = { enabled: false, section_defs: SECTIONS, residents: [] as unknown[] }
   if (!(await residentsEnabled(tenantId)) || !(await tablesReady())) { ok(res, off); return }
   const rows = await db.resident.findMany({ where: { tenant_id: tenantId, status: 'living' }, orderBy: [{ first_name: 'asc' }, { last_name: 'asc' }], take: 500 })
+  // Approved photos of these living residents only. Missing table = no photos.
+  const photosBy = new Map<string, any[]>()
+  try {
+    const ph = await db.residentPhoto.findMany({ where: { tenant_id: tenantId, resident_id: { in: rows.map((r: any) => r.id) }, status: 'approved', s3_key: { not: '' } }, orderBy: { decided_at: 'desc' }, take: 2000 })
+    for (const p of ph) photosBy.set(p.resident_id, [...(photosBy.get(p.resident_id) ?? []), p])
+  } catch { /* photos table not created yet */ }
   const residents = rows.map((r: any) => {
     const raw = (r.sections ?? {}) as Record<string, string>
     const sections: Record<string, string> = {}
     for (const d of SECTIONS) if (typeof raw[d.key] === 'string' && raw[d.key].trim()) sections[d.key] = raw[d.key]
-    return { id: r.id, display_name: displayName(r), first_name: r.first_name, preferred_name: r.preferred_name ?? null, age: ageFrom(r.dob), room: r.room ?? null, sections, updated_at: r.updated_at.toISOString() }
-  }).filter((r: any) => Object.keys(r.sections).length > 0)
+    return { id: r.id, display_name: displayName(r), first_name: r.first_name, preferred_name: r.preferred_name ?? null, age: ageFrom(r.dob), room: r.room ?? null, sections, photos: (photosBy.get(r.id) ?? []).slice(0, 30).map(hubPhotoDto), updated_at: r.updated_at.toISOString() }
+  }).filter((r: any) => Object.keys(r.sections).length > 0 || r.photos.length > 0)
   ok(res, { enabled: residents.length > 0, section_defs: SECTIONS, residents })
 })
 
@@ -207,8 +227,10 @@ residentsRouter.get('/:id', async (req: Request, res: Response) => {
     db.residentInvite.findMany({ where: { tenant_id: tenantId, resident_id: r.id }, orderBy: { sent_at: 'desc' } }),
     db.residentContribution.findMany({ where: { tenant_id: tenantId, resident_id: r.id }, orderBy: { submitted_at: 'desc' } }),
   ])
-  const pending = contribs.filter((c: any) => c.status === 'pending').length
-  ok(res, { ...dto(r, pending, invites.filter((i: any) => !i.revoked_at).length), invites: invites.map(inviteDto), contributions: contribs.map(contribDto) })
+  let photos: any[] = []
+  try { photos = await db.residentPhoto.findMany({ where: { tenant_id: tenantId, resident_id: r.id }, orderBy: { submitted_at: 'desc' }, take: 500 }) } catch { /* photos table not created yet */ }
+  const pending = contribs.filter((c: any) => c.status === 'pending').length + photos.filter((p: any) => p.status === 'pending').length
+  ok(res, { ...dto(r, pending, invites.filter((i: any) => !i.revoked_at).length), invites: invites.map(inviteDto), contributions: contribs.map(contribDto), photos: photos.map(adminPhotoDto) })
 })
 
 residentsRouter.patch('/:id', async (req: Request, res: Response) => {
@@ -258,6 +280,14 @@ residentsRouter.post('/:id/status', async (req: Request, res: Response) => {
   // Cancel every family link and set aside anything still waiting: none of it may reach staff now.
   await db.residentInvite.updateMany({ where: { tenant_id: tenantId, resident_id: r.id, revoked_at: null }, data: { revoked_at: now } })
   await db.residentContribution.updateMany({ where: { tenant_id: tenantId, resident_id: r.id, status: 'pending' }, data: { status: 'rejected', decided_at: now, decided_by: 'system: resident archived' } })
+  // Photos: approved ones drop out of the hub at once (it only lists photos of living residents, and the file route checks again),
+  // but stay in private storage for the retention period like the written profile, and go with it when it is deleted.
+  // Anything still waiting is set aside and its file removed, because nobody will review it now.
+  try {
+    const waiting = await db.residentPhoto.findMany({ where: { tenant_id: tenantId, resident_id: r.id, status: 'pending' } })
+    for (const p of waiting) await discardPhotoFile(p)
+    await db.residentPhoto.updateMany({ where: { tenant_id: tenantId, resident_id: r.id, status: 'pending' }, data: { status: 'rejected', decided_at: now, decided_by: 'system: resident archived' } })
+  } catch { /* photos table not created yet */ }
   await syncResidentKnowledge(tenantId, r.id)   // removes the assistant's knowledge of them
   void writeAuditLog({ tenant_id: tenantId, user_id: a.id, event_type: 'resident_archived', entity_type: 'resident', entity_id: r.id, metadata: { status: p.data.status } })
 
@@ -398,6 +428,68 @@ residentsRouter.post('/:id/contributions/:cid/decision', async (req: Request, re
   ok(res, contribDto(upd))
 })
 
+// ─── Photos ────────────────────────────────────────────────────────────────────
+// A manager adds a photo directly: approved at once, logged. Family photos arrive through routes/residents-public.ts as PENDING.
+async function photoGate(res: Response): Promise<boolean> {
+  if (await photosReady()) return true
+  err(res, 'NOT_READY', 'Photos are being set up. Please try again shortly.', 503)
+  return false
+}
+
+residentsRouter.post('/:id/photos', residentPhotoUploadMiddleware, async (req: Request, res: Response) => {
+  if (!(await photoGate(res))) return
+  const tenantId = getTenantId()
+  const r = await loadResident(tenantId, String(req.params.id))
+  if (!r) { err(res, 'NOT_FOUND', 'Resident not found.', 404); return }
+  if (r.status !== 'living') { err(res, 'ARCHIVED', 'You cannot add photos to an archived profile.', 409); return }
+  if ((await db.residentPhoto.count({ where: { tenant_id: tenantId, resident_id: r.id, status: { not: 'rejected' } } })) >= 100) { err(res, 'LIMIT', 'A profile can hold up to 100 photos. Delete some first.', 403); return }
+  const done = await processAndStorePhoto({ tenantId, residentId: r.id, file: (req as any).file })
+  if (!done.ok) { err(res, done.code, done.message, done.status); return }
+  const a = await actor(req)
+  const photo = await db.residentPhoto.create({
+    data: {
+      tenant_id: tenantId, resident_id: r.id, invite_id: null, uploaded_by_name: a.name, relationship: null, source: 'manager',
+      caption: cleanCaption(req.body?.caption), people_note: cleanPeople(req.body?.people_note), s3_key: done.s3Key, mime: done.mime, size_bytes: done.size,
+      width: done.width, height: done.height, status: 'approved', scan_status: done.scan, decided_at: new Date(), decided_by: a.email,
+    },
+  })
+  void writeAuditLog({ tenant_id: tenantId, user_id: a.id, event_type: 'resident_photo_added', entity_type: 'resident', entity_id: r.id, metadata: { photo_id: photo.id, source: 'manager' } })
+  ok(res, adminPhotoDto(photo), 201)
+})
+
+residentsRouter.post('/:id/photos/:pid/decision', async (req: Request, res: Response) => {
+  const p = z.object({ decision: z.enum(['approve', 'reject']), caption: z.string().max(400).nullish() }).safeParse(req.body)
+  if (!p.success) { err(res, 'VALIDATION_ERROR', 'decision must be approve or reject.'); return }
+  if (!(await photoGate(res))) return
+  const tenantId = getTenantId()
+  const r = await loadResident(tenantId, String(req.params.id))
+  const ph = r ? await db.residentPhoto.findFirst({ where: { id: String(req.params.pid), resident_id: r.id, tenant_id: tenantId } }) : null
+  if (!r || !ph) { err(res, 'NOT_FOUND', 'Photo not found.', 404); return }
+  if (r.status !== 'living') { err(res, 'ARCHIVED', 'This profile is archived.', 409); return }
+  if (ph.status !== 'pending') { err(res, 'DECIDED', 'This photo has already been decided.', 409); return }
+  const a = await actor(req)
+  const data: Record<string, unknown> = { status: p.data.decision === 'approve' ? 'approved' : 'rejected', decided_at: new Date(), decided_by: a.email }
+  if (p.data.decision === 'approve' && p.data.caption !== undefined) data.caption = cleanCaption(p.data.caption)   // the manager may edit the caption
+  const upd = await db.residentPhoto.update({ where: { id: ph.id }, data })
+  if (p.data.decision === 'reject') { await discardPhotoFile(upd); upd.s3_key = '' }   // a rejected photo is not kept
+  void writeAuditLog({ tenant_id: tenantId, user_id: a.id, event_type: 'resident_photo_decided', entity_type: 'resident', entity_id: r.id, metadata: { decision: p.data.decision, photo_id: ph.id } })
+  ok(res, adminPhotoDto(upd))
+})
+
+residentsRouter.delete('/:id/photos/:pid', async (req: Request, res: Response) => {
+  if (!(await photoGate(res))) return
+  const tenantId = getTenantId()
+  const r = await loadResident(tenantId, String(req.params.id))
+  const ph = r ? await db.residentPhoto.findFirst({ where: { id: String(req.params.pid), resident_id: r.id, tenant_id: tenantId } }) : null
+  if (!r || !ph) { err(res, 'NOT_FOUND', 'Photo not found.', 404); return }
+  if (r.status !== 'living' && !(await canManageArchive(tenantId, req.user!.sub, req.user!.role))) { err(res, 'FORBIDDEN', 'You do not have access to archived residents.', 403); return }
+  const a = await actor(req)
+  if (ph.s3_key) await deleteFile(ph.s3_key)
+  await db.residentPhoto.delete({ where: { id: ph.id } })
+  void writeAuditLog({ tenant_id: tenantId, user_id: a.id, event_type: 'resident_photo_deleted', entity_type: 'resident', entity_id: r.id, metadata: { photo_id: ph.id, status: ph.status } })
+  ok(res, { deleted: true })
+})
+
 // ─── Archive actions ───────────────────────────────────────────────────────────
 async function archived(req: Request, res: Response) {
   const tenantId = getTenantId()
@@ -470,6 +562,7 @@ residentsRouter.delete('/:id', async (req: Request, res: Response) => {
   if (early && (p.data.reason ?? '').length < 5) { err(res, 'REASON_REQUIRED', `This profile is kept until ${dateOnly(ctx.r.retention_until)}. To delete it earlier, give a reason.`); return }
   const a = await actor(req)
   await syncResidentKnowledge(ctx.tenantId, ctx.r.id)   // belt and braces: nothing of theirs left in the assistant
+  await deleteResidentPhotos(ctx.tenantId, ctx.r.id)   // files from storage first, then the rows
   await db.residentContribution.deleteMany({ where: { tenant_id: ctx.tenantId, resident_id: ctx.r.id } })
   await db.residentInvite.deleteMany({ where: { tenant_id: ctx.tenantId, resident_id: ctx.r.id } })
   await db.resident.delete({ where: { id: ctx.r.id } })

@@ -26,6 +26,7 @@ import { ProgressView } from '@/components/hub/progress-view'
 import { MyActionsView } from '@/components/hub/my-actions-view'
 import { SuggestTranslation } from '@/components/hub/suggest-translation'
 import { SupervisionsHubView } from '@/components/hub/supervisions-view'
+import { ResidentPhotosPanel } from '@/components/hub/resident-photos-panel'
 import { DisplaySettings } from '@/components/hub/display-settings'
 import Link from 'next/link'
 import { createApiClient, apiAssetUrl, type Citation } from '@/lib/api-client'
@@ -1444,6 +1445,9 @@ function ChatPageInner() {
             </div>
           </div>
         )}
+
+        {/* "This is me": approved photos of the people the home supports (only when some exist) */}
+        {view === 'chat' && category === 'resident' && hasResidents && session && <ResidentPhotosPanel token={session.accessToken} />}
 
         {/* Chat messages + input — only shown in chat view */}
         {view === 'chat' && <div

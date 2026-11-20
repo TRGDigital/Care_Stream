@@ -74,9 +74,30 @@ export interface ResidentContribution {
   approved_text: string | null  // what was published, if the admin edited it before approving
 }
 
+export type PhotoStatus = 'pending' | 'approved' | 'rejected'
+
+/** A photo as the manager sees it. url is a private link that works for about five minutes (null once a rejected photo's file is removed). */
+export interface ResidentPhoto {
+  id: string
+  invite_id: string | null
+  uploaded_by_name: string
+  relationship: string | null
+  source: 'family' | 'manager'
+  caption: string | null
+  people_note: string | null      // who is in the photo
+  status: PhotoStatus
+  width: number | null
+  height: number | null
+  submitted_at: string
+  decided_at: string | null
+  decided_by: string | null
+  url: string | null
+}
+
 export interface ResidentDetail extends Resident {
   invites: ResidentInvite[]
   contributions: ResidentContribution[]
+  photos: ResidentPhoto[]
 }
 
 export interface ResidentInput {
@@ -97,8 +118,31 @@ export interface HubResident {
   age: number | null
   room: string | null
   sections: Record<string, string>
+  /** Approved photos only. Links last about five minutes, so the hub reloads them while it is open. */
+  photos: HubPhoto[]
   updated_at: string
 }
+
+export interface HubPhoto {
+  id: string
+  caption: string | null
+  people_note: string | null
+  width: number | null
+  height: number | null
+  url: string
+}
+
+/** A family member's own photo. A rejected one has no picture. */
+export interface FamilyPhoto {
+  id: string
+  caption: string | null
+  people_note: string | null
+  status: PhotoStatus
+  url: string | null
+}
+
+/** Photo links come back as a path on the API; this makes the full address for an <img>. */
+export const photoSrc = (path: string | null | undefined) => (path ? `${API_URL}${path}` : '')
 
 /** What a family member sees on the public form. */
 export interface FamilyForm {
@@ -108,6 +152,11 @@ export interface FamilyForm {
   expires_at: string
   already_submitted: boolean
   sections: ResidentSectionDef[]
+  photos_enabled?: boolean
+  photos?: FamilyPhoto[]
+  max_photos?: number
+  max_photo_mb?: number
+  caption_max?: number
   /** True only for the /family/demo link: a sample resident and home, nothing is saved. */
   demo?: boolean
 }
@@ -115,7 +164,8 @@ export interface FamilyForm {
 async function call<T>(path: string, token: string | null, init: RequestInit = {}): Promise<T> {
   const res = await fetch(`${API_URL}${path}`, {
     ...init,
-    headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}), ...(init.headers as Record<string, string> | undefined ?? {}) },
+    // A FormData body (photos) must set its own multipart boundary, so no Content-Type is given for it.
+    headers: { ...(init.body instanceof FormData ? {} : { 'Content-Type': 'application/json' }), ...(token ? { Authorization: `Bearer ${token}` } : {}), ...(init.headers as Record<string, string> | undefined ?? {}) },
   })
   let body: any = null
   try { body = await res.json() } catch { /* leave null */ }
@@ -159,6 +209,16 @@ export function createResidentsClient(token: string) {
     decide: (id: string, contributionId: string, data: { decision: 'approve' | 'reject'; text?: string }) =>
       call<ResidentContribution>(`/residents/${id}/contributions/${contributionId}/decision`, token, { method: 'POST', body: j(data) }),
 
+    /** A manager adds a photo (multipart). Approved at once and logged. JPEG, PNG or WebP, up to 5 MB. */
+    addPhoto: (id: string, file: File, caption: string, people_note: string) => {
+      const f = new FormData(); f.append('photo', file); f.append('caption', caption); f.append('people_note', people_note)
+      return call<ResidentPhoto>(`/residents/${id}/photos`, token, { method: 'POST', body: f })
+    },
+    /** Approve (optionally with an edited caption) or reject a family photo. Rejecting removes the file. */
+    decidePhoto: (id: string, photoId: string, data: { decision: 'approve' | 'reject'; caption?: string | null }) =>
+      call<ResidentPhoto>(`/residents/${id}/photos/${photoId}/decision`, token, { method: 'POST', body: j(data) }),
+    deletePhoto: (id: string, photoId: string) => call<{ deleted: boolean }>(`/residents/${id}/photos/${photoId}`, token, { method: 'DELETE' }),
+
     // Archive actions (admins with the resident archive permission only)
     confirmArchive: (id: string, data: { memory_book: 'shared' | 'declined'; note?: string; remove_family_contacts?: boolean }) =>
       call<Resident>(`/residents/${id}/archive/confirm`, token, { method: 'POST', body: j(data) }),
@@ -182,4 +242,10 @@ export function createResidentsClient(token: string) {
 // Public family form (no sign in; the link token is the key)
 export const getFamilyForm = (token: string) => call<FamilyForm>(`/public/family/${encodeURIComponent(token)}`, null)
 export const submitFamilyForm = (token: string, data: { name: string; relationship: string; answers: Record<string, string> }) =>
-  call<{ submitted: number }>(`/public/family/${encodeURIComponent(token)}`, null, { method: 'POST', body: JSON.stringify(data) })
+  call<{ submitted: number; photos?: number }>(`/public/family/${encodeURIComponent(token)}`, null, { method: 'POST', body: JSON.stringify(data) })
+export const uploadFamilyPhoto = (token: string, file: File, caption: string, people_note: string) => {
+  const f = new FormData(); f.append('photo', file); f.append('caption', caption); f.append('people_note', people_note)
+  return call<{ photo: FamilyPhoto }>(`/public/family/${encodeURIComponent(token)}/photos`, null, { method: 'POST', body: f })
+}
+export const deleteFamilyPhoto = (token: string, photoId: string) =>
+  call<{ deleted: boolean }>(`/public/family/${encodeURIComponent(token)}/photos/${encodeURIComponent(photoId)}`, null, { method: 'DELETE' })

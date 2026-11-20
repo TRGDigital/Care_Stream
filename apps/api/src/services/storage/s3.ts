@@ -133,6 +133,20 @@ export async function uploadEvidenceFile(params: {
   return s3Key
 }
 
+// "This is me" resident photos. Private, tenant and resident scoped; served back only through a short-lived signed link
+// from the API (lib/resident-photos.ts). Never given a public address.
+export async function uploadResidentPhoto(params: {
+  tenantId: string; residentId: string; key: string; buffer: Buffer; mimeType: string
+}): Promise<string> {
+  const s3Key = `tenants/${params.tenantId}/residents/${params.residentId}/photos/${params.key}`
+  if (USE_LOCAL) { localWrite(s3Key, params.buffer); return s3Key }
+  await getS3().send(new PutObjectCommand({
+    Bucket: BUCKET, Key: s3Key, Body: params.buffer, ContentType: params.mimeType,
+    ServerSideEncryption: 'AES256', Metadata: { tenant_id: params.tenantId, resident_id: params.residentId },
+  }))
+  return s3Key
+}
+
 // Audit evidence: an image attached to a question's answer during an audit.
 export async function uploadAuditEvidence(params: {
   tenantId: string; runId: string; key: string; buffer: Buffer; mimeType: string

@@ -84,6 +84,30 @@ export function evidenceUploadMiddleware(req: Request, res: Response, next: Next
   })
 }
 
+// ─── Resident photo upload ("This is me"): one JPEG, PNG or WebP, 5 MB, field "photo" ───
+// The extension and MIME are only a first filter. The route checks the real bytes, scans and re-encodes the image.
+const RESIDENT_PHOTO_EXT = new Set(['.jpg', '.jpeg', '.png', '.webp'])
+export const RESIDENT_PHOTO_MAX_BYTES = 5 * 1024 * 1024
+
+const residentPhotoMulter = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: RESIDENT_PHOTO_MAX_BYTES, files: 1, fields: 6, fieldSize: 2000 },
+  fileFilter: (_req, file, cb) => {
+    const ext = '.' + (file.originalname.split('.').pop()?.toLowerCase() ?? '')
+    if (!RESIDENT_PHOTO_EXT.has(ext) || !['image/jpeg', 'image/png', 'image/webp'].includes(file.mimetype)) { cb(new Error('INVALID_PHOTO_TYPE')); return }
+    cb(null, true)
+  },
+})
+
+export function residentPhotoUploadMiddleware(req: Request, res: Response, next: NextFunction): void {
+  residentPhotoMulter.single('photo')(req, res, (multerErr) => {
+    if (!multerErr) { next(); return }
+    if (multerErr.message === 'INVALID_PHOTO_TYPE') { err(res, 'INVALID_PHOTO_TYPE', 'Please choose a JPEG, PNG or WebP photo.'); return }
+    if (multerErr.code === 'LIMIT_FILE_SIZE') { err(res, 'FILE_TOO_LARGE', 'Each photo must be under 5 MB.', 413); return }
+    err(res, 'UPLOAD_ERROR', 'The photo could not be uploaded. Please try again.', 400)
+  })
+}
+
 export function imageUploadMiddleware(req: Request, res: Response, next: NextFunction): void {
   imageMulter.single('image')(req, res, (multerErr) => {
     if (!multerErr) { next(); return }

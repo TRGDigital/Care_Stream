@@ -25,6 +25,7 @@ type AuditEventType =
   | 'platform_viewed_staff_record'
   | 'resident_created' | 'resident_updated' | 'resident_archived' | 'resident_archive_confirmed' | 'resident_retention_changed'
   | 'resident_exported' | 'resident_deleted' | 'resident_family_invited' | 'resident_family_link_created' | 'resident_contribution_decided' | 'resident_archive_viewed'
+  | 'resident_photo_added' | 'resident_photo_decided' | 'resident_photo_deleted'
   | 'super_user_tagged' | 'super_user_untagged' | 'super_user_consent' | 'super_user_voucher_sent'   // the company's Super User
   | 'audit_run_backdated' | 'audit_run_date_changed'   // an admin started an audit for an earlier day, or changed the date of one
   | 'supervision_training_shared'   // the training detail for a supervision was printed or emailed

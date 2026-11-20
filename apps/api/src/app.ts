@@ -65,7 +65,7 @@ import { policyShopPublicRouter } from './routes/policy-shop-public'
 import { agentActionsRouter } from './routes/agent-actions'
 import { cronRouter } from './routes/cron'
 import { contentRoutineRouter } from './routes/content-routine'
-import { publicFamilyRouter } from './routes/residents-public'
+import { publicFamilyRouter, residentPhotoFileRouter } from './routes/residents-public'
 import { residentsRouter } from './routes/residents'
 import { incentivesRouter } from './routes/incentives'
 import { superUserRouter } from './routes/super-user'
@@ -204,6 +204,8 @@ app.use('/public/collections', publicCollectionsRouter)
 
 // "This is me": the private family form (token link, no sign in). BEFORE requireAuth.
 app.use('/public/family', publicFamilyRouter)
+// "This is me" photo files: opened only with a link signed for about five minutes, re-checked on every request. BEFORE requireAuth.
+app.use('/public/resident-photo', residentPhotoFileRouter)
 
 // Public DB-driven feature pages (the /pricing feature list) — published only, no auth. BEFORE requireAuth.
 app.use('/public/feature-pages', publicFeaturePagesRouter)

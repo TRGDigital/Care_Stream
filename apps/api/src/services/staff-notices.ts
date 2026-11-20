@@ -44,10 +44,12 @@ export async function recordNotices(o: {
   actorUserId?: string | null
   kind: string
   build: (adminName: string) => PersonContent
+  /** Only the owner-only test route sets this, so an admin can see their own overlay. Real allocations never do. */
+  allowSelf?: boolean
 }, deps: NoticeDeps = defaults()): Promise<number> {
   try {
     if (!o.actorUserId || !o.tenantId) return 0
-    const recipients = [...new Set(o.userIds.filter(Boolean))].filter(id => id !== o.actorUserId)
+    const recipients = [...new Set(o.userIds.filter(Boolean))].filter(id => o.allowSelf || id !== o.actorUserId)
     if (!recipients.length) return 0
     const actor = await deps.db.user.findUnique({ where: { id: o.actorUserId }, select: { name: true } })
     if (!actor?.name) return 0

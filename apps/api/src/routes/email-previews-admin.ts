@@ -42,10 +42,9 @@ emailPreviewsAdminRouter.post('/notice', async (req: Request, res: Response) => 
   const find = (email: string) => (prisma as any).user.findFirst({ where: { email: { equals: email, mode: 'insensitive' } }, select: { id: true, name: true, tenant_id: true } }).catch((e: any) => { console.error('[email-previews] user lookup failed:', e?.message ?? e); return null })
   const [recipient, actor] = await Promise.all([find(userEmail), find(actorEmail)])
   if (!recipient || !actor) { err(res, 'NOT_FOUND', 'No user with one of those emails.', 404); return }
-  if (recipient.id === actor.id) { err(res, 'VALIDATION_ERROR', 'The person and the sender must be different users.'); return }
   const cases = personNoticeCases('x')
   if (!cases[name]) { err(res, 'VALIDATION_ERROR', `Choose one of: ${Object.keys(cases).join(', ')}`); return }
-  const made = await recordNotices({ tenantId: recipient.tenant_id, userIds: [recipient.id], actorUserId: actor.id, kind: `sample_${name}`, build: adminName => personNoticeCases(adminName)[name] })
+  const made = await recordNotices({ tenantId: recipient.tenant_id, userIds: [recipient.id], actorUserId: actor.id, kind: `sample_${name}`, allowSelf: true, build: adminName => personNoticeCases(adminName)[name] })
   if (!made) { err(res, 'NOTICE_FAILED', 'The notice was not created. The staff_notices table may not have been created yet.', 503); return }
   ok(res, { created: true, name, user: recipient.name, sender: actor.name })
 })

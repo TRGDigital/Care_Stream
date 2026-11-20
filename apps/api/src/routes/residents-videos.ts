@@ -245,13 +245,13 @@ residentVideosRouter.get('/hub/videos', async (req: Request, res: Response) => {
   const tenantId = getTenantId()
   const off = { enabled: false, people: [] as unknown[], resident: null as unknown, videos: [] as unknown[] }
   if (!(await residentsEnabled(tenantId)) || !(await tablesReady()) || !(await videosReady())) { ok(res, off); return }
-  const living: any[] = await db.resident.findMany({ where: { tenant_id: tenantId, status: 'living' }, select: { id: true, first_name: true, last_name: true, preferred_name: true }, take: 500 })
+  const living: any[] = await db.resident.findMany({ where: { tenant_id: tenantId, status: 'living' }, select: { id: true, first_name: true, last_name: true, preferred_name: true, room: true }, take: 500 })
   const rid = req.query.resident_id ? String(req.query.resident_id) : ''
   if (rid) {
     const r = living.find(x => x.id === rid)
     if (!r) { ok(res, { ...off, enabled: true }); return }
     const rows = await db.residentVideo.findMany({ where: { tenant_id: tenantId, resident_id: r.id, status: 'approved', state: 'ready', s3_key: { not: '' } }, orderBy: { decided_at: 'desc' }, take: HUB_VIDEO_LIMIT })
-    ok(res, { enabled: true, people: [], resident: { id: r.id, name: r.preferred_name || r.first_name }, videos: rows.map(hubVideoDto) })
+    ok(res, { enabled: true, people: [], resident: { id: r.id, name: r.preferred_name || r.first_name }, videos: rows.map((x: any) => hubVideoDto(x, r)) })
     return
   }
   const g = await db.residentVideo.groupBy({ by: ['resident_id'], where: { tenant_id: tenantId, resident_id: { in: living.map(x => x.id) }, status: 'approved', state: 'ready', s3_key: { not: '' } }, _count: { _all: true } })

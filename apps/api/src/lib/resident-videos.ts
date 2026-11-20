@@ -104,7 +104,8 @@ export const adminVideoDto = (v: any) => ({
 })
 
 /** Staff and hub list view: approved clips only, no video link (the player asks for one when play is pressed, which logs the play). */
-export const hubVideoDto = (v: any) => ({
+export const hubVideoDto = (v: any, r?: { first_name?: string; preferred_name?: string | null; room?: string | null }) => ({
+  resident_name: r ? (r.preferred_name || r.first_name || null) : null, room: r?.room ?? null,   // shown beside the video so staff know whose it is and where to find them
   id: v.id, title: v.title ?? null, note: v.note ?? null, uploaded_by_name: v.uploaded_by_name, relationship: v.relationship ?? null,
   submitted_at: iso(v.decided_at ?? v.submitted_at), duration_seconds: v.duration_seconds ?? null, width: v.width ?? null, height: v.height ?? null,
   poster_url: v.poster_key ? signedVideoPath(v.id, 'staff', 'poster') : null,
@@ -347,7 +348,7 @@ export async function videoAnswer(tenantId: string, queryText: string, history: 
   if (!VIDEO_INTENT.test(queryText)) return null
   try {
     if (!(await residentsEnabled(tenantId)) || !(await videosReady())) return null
-    const residents: any[] = await db.resident.findMany({ where: { tenant_id: tenantId, status: 'living' }, select: { id: true, first_name: true, last_name: true, preferred_name: true }, take: 500 })
+    const residents: any[] = await db.resident.findMany({ where: { tenant_id: tenantId, status: 'living' }, select: { id: true, first_name: true, last_name: true, preferred_name: true, room: true }, take: 500 })
     if (!residents.length) return null
     const vids: any[] = await db.residentVideo.findMany({ where: { tenant_id: tenantId, status: 'approved', state: 'ready', s3_key: { not: '' } }, orderBy: { decided_at: 'desc' }, take: 1000 })
     const texts = [queryText, ...history.slice(-6).reverse().map(m => m.content.replace(/<[^>]+>/g, ' '))]
@@ -390,6 +391,6 @@ export async function videoAnswer(tenantId: string, queryText: string, history: 
     else if (terms.length) html = `<p>${name} has ${mine.length} video ${mine.length === 1 ? 'message' : 'messages'}, shown below, but none has a title or note that mentions ${esc(terms.slice(0, 3).join(', '))}.</p><ul>${list}</ul>`
     else html = `<p>Here ${shown.length === 1 ? 'is the video message' : 'are the video messages'} for ${name}, newest first.</p><ul>${list}</ul>`
     html += '<p>I can only tell you each message\'s title and who sent it. I cannot watch or describe a video.</p>'
-    return { html, videos: shown.map(hubVideoDto) }
+    return { html, videos: shown.map(x => hubVideoDto(x, target)) }
   } catch { return null }
 }

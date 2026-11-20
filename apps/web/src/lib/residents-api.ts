@@ -135,6 +135,8 @@ export interface ResidentDetail extends Resident {
 
 /** An approved video message in the hub: no video link (the player asks for one when play is pressed, which logs the play). */
 export interface HubVideo {
+  resident_name?: string | null
+  room?: string | null
   id: string
   title: string | null
   note: string | null

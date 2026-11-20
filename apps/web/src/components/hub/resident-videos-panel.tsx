@@ -43,23 +43,19 @@ function PlayerModal({ client, video, name, onClose }: { client: Client; video: 
     try { const r = await client.playVideo(video.id, true); setSrc(photoSrc(r.url)) } catch { setError('This video is not available. It may have been removed.') }
   }
 
+  // Just the video: a dimmed backdrop, the player, and a small close button. Click outside or press Escape to close.
   return (
-    <div className="fixed inset-0 z-[90] flex flex-col bg-white" role="dialog" aria-modal="true" aria-label={`Video message${video.title ? `: ${video.title}` : ''}`}>
-      <div className="flex items-center justify-between gap-3 border-b border-gray-200 px-4 py-3">
-        <div className="min-w-0">
-          <p className="truncate text-lg font-semibold text-neutral-dark">{video.title || 'Video message'}</p>
-          <p className="truncate text-sm text-neutral-mid">{name ? `For ${name}. ` : ''}{from(video)}{video.submitted_at ? `, ${date(video.submitted_at)}` : ''}</p>
-        </div>
-        <button type="button" onClick={onClose} className="flex min-h-[48px] shrink-0 items-center gap-2 rounded-xl border border-gray-300 px-4 text-base font-semibold text-neutral-dark hover:bg-neutral-light">
-          <X size={20} aria-hidden="true" /> Close
+    <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/70 p-3 sm:p-6" role="dialog" aria-modal="true"
+      aria-label={`Video message${video.title ? `: ${video.title}` : ''}`} onMouseDown={e => { if (e.target === e.currentTarget) onClose() }}>
+      <div className="relative">
+        <button type="button" onClick={onClose} aria-label="Close video"
+          className="absolute -top-3 -right-3 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-white text-neutral-dark shadow-md hover:bg-neutral-light">
+          <X size={20} aria-hidden="true" />
         </button>
-      </div>
-      <div className="flex min-h-0 flex-1 items-center justify-center bg-gray-50 p-2 sm:p-4">
         {error ? <p role="alert" className="max-w-md rounded-xl border border-red-200 bg-red-50 px-5 py-4 text-lg text-red-700">{error}</p>
-          : !src ? <Loader2 size={36} className="animate-spin text-teal" aria-label="Loading" />
-          : <video key={src} src={src} controls autoPlay playsInline preload="auto" poster={photoSrc(video.poster_url)} onError={expired} className="max-h-full max-w-full rounded-xl bg-black" />}
+          : !src ? <div className="flex h-48 w-72 items-center justify-center rounded-xl bg-white"><Loader2 size={36} className="animate-spin text-teal" aria-label="Loading" /></div>
+          : <video key={src} src={src} controls autoPlay playsInline preload="auto" poster={photoSrc(video.poster_url)} onError={expired} className="max-h-[85vh] max-w-[92vw] rounded-xl bg-black" />}
       </div>
-      {video.note && <p className="border-t border-gray-200 px-4 py-3 text-base text-neutral-dark">{video.note}</p>}
     </div>
   )
 }
@@ -78,7 +74,8 @@ function Tile({ v, onPlay }: { v: HubVideo; onPlay: () => void }) {
         </span>
         {v.duration_seconds ? <span className="absolute bottom-1.5 right-1.5 rounded bg-white/90 px-1.5 py-0.5 text-xs font-medium text-neutral-dark">{fmtDuration(v.duration_seconds)}</span> : null}
       </button>
-      <p className="mt-1.5 text-base font-medium leading-snug text-neutral-dark">{v.title || 'Video message'}</p>
+      {(v.resident_name || v.room) && <p className="mt-1.5 text-sm font-semibold text-teal">{[v.resident_name, v.room ? `Room ${v.room}` : ''].filter(Boolean).join(', ')}</p>}
+      <p className="text-base font-medium leading-snug text-neutral-dark">{v.title || 'Video message'}</p>
       <p className="text-sm text-neutral-mid">{from(v)}</p>
       {v.submitted_at && <p className="text-xs text-neutral-mid">{date(v.submitted_at)}</p>}
     </li>

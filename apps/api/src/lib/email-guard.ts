@@ -37,6 +37,15 @@ export function guardMessage(msg: any): any | null {
   return out
 }
 
+/** Links in our emails go straight to carestreamai.com. SendGrid's click tracking rewrites them to url9935.carestreamai.com, which has no
+ *  secure certificate, so browsers warn "This site doesn't support a secure connection" when someone clicks a button. Switch it off on every
+ *  message unless a caller explicitly chose otherwise. */
+export function withoutClickTracking(msg: any): any {
+  if (!msg || typeof msg !== 'object') return msg
+  if (msg.trackingSettings?.clickTracking) return msg
+  return { ...msg, trackingSettings: { ...(msg.trackingSettings ?? {}), clickTracking: { enable: false, enableText: false } } }
+}
+
 const SKIPPED: [any, object] = [{ statusCode: 202, body: '', headers: {} }, {}]
 
 const g = sgMail as any
@@ -45,18 +54,18 @@ if (!g.__csEmailGuard) {
   const send = g.send.bind(g)
   g.send = async (data: any, isMultiple?: boolean, cb?: any) => {
     if (Array.isArray(data)) {
-      const kept = data.map(guardMessage).filter(Boolean)
+      const kept = data.map(guardMessage).filter(Boolean).map(withoutClickTracking)
       if (kept.length === 0) { console.log('[email-guard] skipped: no deliverable recipient'); return SKIPPED }
       return send(kept, isMultiple, cb)
     }
     const m = guardMessage(data)
     if (!m) { console.log('[email-guard] skipped: no deliverable recipient'); return SKIPPED }
-    return send(m, isMultiple, cb)
+    return send(withoutClickTracking(m), isMultiple, cb)
   }
   const sendMultiple = g.sendMultiple.bind(g)
   g.sendMultiple = async (data: any, cb?: any) => {
     const m = guardMessage(data)
     if (!m) { console.log('[email-guard] skipped: no deliverable recipient'); return SKIPPED }
-    return sendMultiple(m, cb)
+    return sendMultiple(withoutClickTracking(m), cb)
   }
 }

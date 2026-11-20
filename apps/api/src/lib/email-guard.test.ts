@@ -20,3 +20,9 @@ test('real recipients stay, unsendable ones are removed', () => {
   const p = guardMessage({ personalizations: [{ to: [{ email: 'a@example.com' }] }, { to: [{ email: 'c@hotmail.com' }] }] })
   assert.equal(p.personalizations.length, 1)
 })
+
+import { withoutClickTracking } from './email-guard'
+test('click tracking is switched off unless a caller chose', () => {
+  assert.equal(withoutClickTracking({ to: 'a@b.com' }).trackingSettings.clickTracking.enable, false)
+  assert.equal(withoutClickTracking({ trackingSettings: { clickTracking: { enable: true } } }).trackingSettings.clickTracking.enable, true)
+})

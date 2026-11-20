@@ -4,7 +4,7 @@
 // and a notice when someone has not replied to the last 3 reminders (reminders to them then stop).
 
 import { useCallback, useEffect, useState } from 'react'
-import { BellRing, Loader2, TriangleAlert } from 'lucide-react'
+import { BellRing, ChevronDown, Loader2, TriangleAlert } from 'lucide-react'
 import type { ResidentDetail, ResidentInvite } from '@/lib/residents-api'
 import { CADENCE_LABELS, WEEKDAYS, type ReminderCadence, type ReminderSetting } from '@/lib/reminders-api'
 import { Field, ErrorBox, inputCls, btnPrimary, errMsg, fmtDate, todayIso } from './ui'
@@ -65,6 +65,7 @@ function ContactRow({ client, resident, invite, setting, onSaved }: { client: Cl
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const [saved, setSaved] = useState(false)
+  const [open, setOpen] = useState(false)   // each name is an accordion, closed until opened
 
   useEffect(() => {
     setCadence(setting?.cadence ?? 'off')
@@ -83,15 +84,18 @@ function ContactRow({ client, resident, invite, setting, onSaved }: { client: Cl
   const on = cadence !== 'off'
   const paused = !!setting?.paused_until && setting.paused_until >= todayIso()
   return (
-    <li className="space-y-3 px-4 py-3">
-      <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <p className="text-sm font-medium text-neutral-dark">{invite.name} <span className="font-normal text-neutral-mid">{invite.relationship}</span></p>
-        <p className="text-xs text-neutral-mid">
+    <li className="px-4 py-3">
+      <button type="button" onClick={() => setOpen(o => !o)} aria-expanded={open} aria-controls={`rm-body-${invite.id}`}
+        className="flex w-full flex-wrap items-center justify-between gap-2 text-left">
+        <span className="text-sm font-medium text-neutral-dark">{invite.name} <span className="font-normal text-neutral-mid">{invite.relationship}</span></span>
+        <span className="flex items-center gap-2 text-xs text-neutral-mid">
           {setting?.cadence && setting.cadence !== 'off'
             ? (setting.stalled ? 'Reminders stopped' : paused ? `Paused until ${fmtDate(setting.paused_until)}` : setting.next_due_at ? `Next reminder ${fmtDate(setting.next_due_at)}` : 'Next reminder being worked out')
             : setting?.stopped_by_family ? 'They stopped the reminders' : 'Reminders off'}
-        </p>
-      </div>
+          <ChevronDown size={16} aria-hidden="true" className={`shrink-0 transition-transform ${open ? 'rotate-180' : ''}`} />
+        </span>
+      </button>
+      {open && <div id={`rm-body-${invite.id}`} className="mt-3 space-y-3">
       {setting?.stalled && <StalledNotice name={invite.name} />}
       <div className="grid gap-3 sm:grid-cols-3">
         <Field label="How often" htmlFor={`rm-c-${invite.id}`}>
@@ -119,6 +123,7 @@ function ContactRow({ client, resident, invite, setting, onSaved }: { client: Cl
         <button type="button" className={btnPrimary} disabled={busy} onClick={save}>{busy && <Loader2 size={14} className="animate-spin" />} Save</button>
         <span role="status" aria-live="polite" className="text-sm text-green-700">{saved ? 'Saved.' : ''}</span>
       </div>
+      </div>}
     </li>
   )
 }

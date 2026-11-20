@@ -36,7 +36,9 @@ publicPagesRouter.get('/index', async (_req: Request, res: Response) => {
 publicPagesRouter.get('/', async (req: Request, res: Response) => {
   const path = String(req.query.path ?? '').trim()
   if (!path) { err(res, 'MISSING_PATH', 'path is required', 400); return }
-  const page = await (prisma as any).sitePage.findFirst({
+  let page: any
+  try {
+    page = await (prisma as any).sitePage.findFirst({
     where:  { path, status: 'published' },
     select: {
       path:           true,
@@ -51,6 +53,11 @@ publicPagesRouter.get('/', async (req: Request, res: Response) => {
       content_slots:  true,
     },
   })
+  } catch (e: any) {
+    // A busy database must answer, not hang the request (an unanswered request keeps the instance and its connections busy).
+    console.error('[site-pages] lookup failed:', e?.message ?? e)
+    err(res, 'SERVICE_BUSY', 'Temporarily busy. Please try again.', 503); return
+  }
   if (!page) { err(res, 'NOT_FOUND', 'Page not found.', 404); return }
   // Not edge-cached: the SEO tool pushes content_slots and needs the change to appear at once.
   // The web app already caches this fetch (Next data cache, 60s) so this doesn't add real load,

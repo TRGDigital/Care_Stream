@@ -163,13 +163,25 @@ usersRouter.get('/:id/record', async (req: Request, res: Response) => {
   ok(res, { ...record, photo_url: await staffPhotoUrl(tenantId, String(req.params.id)), org: { name: org?.name ?? '', logo_url: org?.logo_url ?? null } })
 })
 
+/** The tenant a user belongs to, null when there is no such user, or 'error' when the database could not be reached (so a busy database is not reported as "User not found"). */
+async function lookupStaffTenant(id: string): Promise<string | null | 'error'> {
+  try {
+    const u = await (prisma as any).user.findUnique({ where: { id }, select: { tenant_id: true } })
+    return u ? String(u.tenant_id) : null
+  } catch (e: any) {
+    console.error('[users] staff lookup failed:', e?.message ?? e)
+    return 'error'
+  }
+}
+
 // ─── POST /users/:id/photo, DELETE /users/:id/photo ───────────────────────────
 // An admin sets, replaces or removes any staff member's picture in their own home (agency workers too). The picture lives in its
 // own table (lib/staff-photos.ts), so a missing table answers 503 "being set up" and never touches sign in.
 usersRouter.post('/:id/photo', residentPhotoUploadMiddleware, async (req: Request, res: Response) => {
   const tenantId = req.user!.tenant_id, id = String(req.params.id)
-  const u = await (prisma as any).user.findUnique({ where: { id }, select: { tenant_id: true } }).catch(() => null)
-  if (!u || u.tenant_id !== tenantId) { err(res, 'NOT_FOUND', 'User not found.', 404); return }
+  const found = await lookupStaffTenant(id)
+  if (found === 'error') { err(res, 'SERVICE_BUSY', 'CareStream is busy for a moment. Please try again in a few seconds.', 503); return }
+  if (found === null || found !== tenantId) { err(res, 'NOT_FOUND', 'User not found.', 404); return }
   const done = await setStaffPhoto({ tenantId, userId: id, uploadedBy: req.user!.sub, file: (req as any).file })
   if (!done.ok) { err(res, done.code, done.message, done.status); return }
   void writeAuditLog({ tenant_id: tenantId, user_id: req.user!.sub, event_type: 'staff_photo_set', entity_type: 'user', entity_id: id, metadata: { by: 'admin' } })
@@ -178,8 +190,9 @@ usersRouter.post('/:id/photo', residentPhotoUploadMiddleware, async (req: Reques
 
 usersRouter.delete('/:id/photo', async (req: Request, res: Response) => {
   const tenantId = req.user!.tenant_id, id = String(req.params.id)
-  const u = await (prisma as any).user.findUnique({ where: { id }, select: { tenant_id: true } }).catch(() => null)
-  if (!u || u.tenant_id !== tenantId) { err(res, 'NOT_FOUND', 'User not found.', 404); return }
+  const found = await lookupStaffTenant(id)
+  if (found === 'error') { err(res, 'SERVICE_BUSY', 'CareStream is busy for a moment. Please try again in a few seconds.', 503); return }
+  if (found === null || found !== tenantId) { err(res, 'NOT_FOUND', 'User not found.', 404); return }
   if (await removeStaffPhoto(tenantId, id)) void writeAuditLog({ tenant_id: tenantId, user_id: req.user!.sub, event_type: 'staff_photo_removed', entity_type: 'user', entity_id: id, metadata: { by: 'admin' } })
   ok(res, { photo_url: null })
 })

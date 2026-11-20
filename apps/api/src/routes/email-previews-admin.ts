@@ -20,7 +20,7 @@ emailPreviewsAdminRouter.post('/send', async (req: Request, res: Response) => {
   const to = String(req.body?.to ?? '').trim()
   const actorEmail = String(req.body?.actor_email ?? '').trim().toLowerCase()
   if (!ALLOWED_TO.test(to)) { err(res, 'VALIDATION_ERROR', 'Test emails can only go to a TRG Digital, Orrery or Crossways address.'); return }
-  const actor = await (prisma as any).user.findUnique({ where: { email: actorEmail }, select: { id: true, name: true, tenant_id: true } }).catch(() => null)
+  const actor = await (prisma as any).user.findFirst({ where: { email: { equals: actorEmail, mode: 'insensitive' } }, select: { id: true, name: true, tenant_id: true } }).catch((e: any) => { console.error('[email-previews] actor lookup failed:', e?.message ?? e); return null })
   if (!actor) { err(res, 'NOT_FOUND', 'No user with that email, so there is no one to show as the sender.', 404); return }
   const tenant = await (prisma as any).tenant.findUnique({ where: { id: actor.tenant_id }, select: { name: true } }).catch(() => null)
   const cases = personEmailCases(out, { to, name: 'Amira Khan', orgName: tenant?.name ?? 'Your care service', actorUserId: actor.id }, process.env.FRONTEND_URL ?? 'https://www.carestreamai.com')

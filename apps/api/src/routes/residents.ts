@@ -134,6 +134,24 @@ residentsRouter.get('/hub', async (_req: Request, res: Response) => {
 })
 
 // Everything below is for admins on a plan that has the feature.
+// How many family answers, photos and video messages are waiting for approval, for the badge on "This is me" in the Staff Hub sidebar.
+// Open to any signed in user so the hub can ask quietly; only admins (who can approve) get a number, everyone else gets 0.
+residentsRouter.get('/approvals-badge', async (req: Request, res: Response) => {
+  const tenantId = getTenantId()
+  const none = { count: 0, can_approve: false }
+  if (req.user?.role !== 'admin') { ok(res, none); return }
+  try {
+    if (!(await residentsEnabled(tenantId)) || !(await tablesReady())) { ok(res, none); return }
+    const living: any[] = await db.resident.findMany({ where: { tenant_id: tenantId, status: 'living' }, select: { id: true }, take: 1000 })
+    const ids = living.map(r => r.id)
+    if (!ids.length) { ok(res, { count: 0, can_approve: true }); return }
+    const { pending } = await counts(tenantId, ids)
+    let total = 0
+    for (const n of pending.values()) total += n
+    ok(res, { count: total, can_approve: true })
+  } catch { ok(res, none) }
+})
+
 residentsRouter.use(requireAdmin)
 residentsRouter.use(gate)
 residentsRouter.use('/:id/reminders', residentRemindersRouter)   // family reminder settings (routes/family-reminders.ts)

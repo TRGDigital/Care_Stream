@@ -331,6 +331,8 @@ export function createResidentsClient(token: string) {
 
     /** The staff view: living residents with approved content. enabled is false when the plan lacks it or there are no profiles. */
     hub: () => call<{ enabled: boolean; section_defs: ResidentSectionDef[]; residents: HubResident[] }>('/residents/hub', token),
+    /** Family answers, photos and videos waiting for approval (admins only get a number). Drives the badge on This is me in the hub sidebar. */
+    approvalsBadge: () => call<{ count: number; can_approve: boolean }>('/residents/approvals-badge', token),
   }
 }
 

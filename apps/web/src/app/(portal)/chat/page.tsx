@@ -29,6 +29,7 @@ import { SupervisionsHubView } from '@/components/hub/supervisions-view'
 import { ChatPhotoRow } from '@/components/hub/resident-photos-panel'
 import { ChatVideoRow, MessagesFromFamilyButton } from '@/components/hub/resident-videos-panel'
 import type { HubVideo } from '@/lib/residents-api'
+import { createResidentsClient } from '@/lib/residents-api'
 import { DisplaySettings } from '@/components/hub/display-settings'
 import Link from 'next/link'
 import { createApiClient, apiAssetUrl, type Citation } from '@/lib/api-client'
@@ -490,6 +491,19 @@ function ChatPageInner() {
   }, [session?.accessToken, userId])
   useEffect(() => { refreshDueReview() }, [refreshDueReview])
   const refreshPolicyStuff = useCallback(() => { refreshPolicyApprovals(); refreshDueReview() }, [refreshPolicyApprovals, refreshDueReview])
+
+  // Admins: family answers, photos and video messages waiting for approval (badge on This is me). Checked on load and every minute
+  // while the hub is open, so a new video from a family member shows up without a refresh.
+  const [residentWaiting, setResidentWaiting] = useState(0)
+  useEffect(() => {
+    if (!session?.accessToken || trainingOnly) return
+    let live = true
+    const client = createResidentsClient(session.accessToken)
+    const load = () => client.approvalsBadge().then(r => { if (live) setResidentWaiting(r.count) }).catch(() => {})
+    load()
+    const t = setInterval(load, 60_000)
+    return () => { live = false; clearInterval(t) }
+  }, [session?.accessToken, trainingOnly])
 
   const refreshAuditApprovals = useCallback(() => {
     if (!session?.accessToken || trainingOnly) return
@@ -1092,6 +1106,7 @@ function ChatPageInner() {
             >
               <Heart size={15} />
               This is me
+              {residentWaiting > 0 && <NavBadge count={residentWaiting} className="bg-rose-500" />}
             </button>
           )}
           {!isReviewer && (

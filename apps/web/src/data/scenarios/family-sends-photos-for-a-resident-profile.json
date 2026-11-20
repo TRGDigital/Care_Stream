@@ -1,0 +1,488 @@
+{
+  "slug": "family-sends-photos-for-a-resident-profile",
+  "status": "draft",
+  "order": 95,
+  "title": "A son wants to send photos for a <em>dementia photo album.</em> Every one waits for your approval.",
+  "meta_title": "Dementia Photo Album With Family Photos | CareStreamAI",
+  "meta_description": "Let a relative add photos to a resident's profile by private link. You approve, caption or reject every photo before staff see it.",
+  "eyebrow": "Scenario",
+  "lede": "A son has a shoebox of old prints and wants them to help his mother settle in. You want a dementia photo album your team can actually use, without photos landing on a personal phone. CareStream gives the family a private link, holds every photo for your approval, and shows approved ones to staff. It sits alongside <a href=\"/training-platform\">the rest of your training and knowledge tools</a>.",
+  "fine": "14 day free trial · Set up in a day · UK data residency",
+  "panel": {
+    "title": "One son's photos, step by step",
+    "pill": "Illustration",
+    "rows": [
+      {
+        "label": "Son invited by email",
+        "note": "Day 1",
+        "done": true
+      },
+      {
+        "label": "He adds three photos with captions",
+        "note": "Day 2",
+        "done": true
+      },
+      {
+        "label": "Manager edits, approves or rejects",
+        "note": "Not yet",
+        "done": false
+      },
+      {
+        "label": "Staff can see approved photos",
+        "note": "Not yet",
+        "done": false
+      }
+    ],
+    "meter": 50
+  },
+  "image": "https://api.carestreamai.com/public/policy-shop/image/75f972ed-cd00-4ded-b28d-4f5065f469d5.webp",
+  "image_alt": "A son sits at his kitchen table at home with a shoebox of old printed photographs and a mug of tea, choosing which ones to share for his mother",
+  "card_title": "A son wants to send photos for his mother's profile. Who sees them first?",
+  "card_snippet": "Invite family by private link to add captioned photos to a resident's profile. You approve, edit or reject every photo before the care team can see any of them.",
+  "primary_keyword": "dementia photo album",
+  "secondary_keywords": [
+    "life story photos",
+    "photo memory book"
+  ],
+  "feature_links": [
+    {
+      "title": "Training built from your own policies",
+      "body": "Ad hoc training from your policies, face to face training organised, and wrong answers that become lessons.",
+      "action": "See the feature",
+      "href": "/training-platform"
+    },
+    {
+      "title": "Resident knowledge for your team",
+      "body": "Give staff quick, short answers about the people they care for, drawn from what you have recorded and approved.",
+      "action": "See resident knowledge",
+      "href": "/uses/resident-knowledge"
+    },
+    {
+      "title": "Dementia awareness training",
+      "body": "A course that helps staff understand the person behind the diagnosis.",
+      "action": "See the course",
+      "href": "/staff-training/dementia-awareness"
+    }
+  ],
+  "intro": {
+    "heading": "The photos exist. The question is where they go.",
+    "sub": "A scenario we see in many care settings.",
+    "paragraph": "Mrs Ellis moved in last Thursday. Her son, Tim, came for tea and said he had a shoebox of old prints at home: her wedding in 1962, the allotment, a week in Whitby with her sister Joan. He wants the staff to know who is who. The key worker says that would be wonderful and gives him the manager's mobile number. Tim sends six pictures that evening. They sit in a message thread on one phone, with no names on them, and the night team never sees any of them."
+  },
+  "trail": [
+    {
+      "when": "Thursday",
+      "text": "Mrs Ellis moves in. Her son stays for tea.",
+      "kind": "ok"
+    },
+    {
+      "when": "Thursday evening",
+      "text": "Tim mentions a shoebox of family photos.",
+      "kind": "ok"
+    },
+    {
+      "when": "Friday",
+      "text": "The key worker says, “Please send them. They will help.”",
+      "kind": "ok"
+    },
+    {
+      "when": "Friday night",
+      "text": "Six pictures arrive on the manager's own phone.",
+      "kind": "gap"
+    },
+    {
+      "when": "Saturday",
+      "text": "Nobody knows who Joan is, or where the allotment was.",
+      "kind": "gap"
+    },
+    {
+      "when": "Week two",
+      "text": "A new carer cannot find a way into a conversation.",
+      "kind": "gap"
+    },
+    {
+      "when": "Week three",
+      "text": "Tim asks if the photos helped. Nobody can say.",
+      "kind": "gap"
+    },
+    {
+      "when": "Inspection day",
+      "text": "“How do you use what her family told you?” A phone is not an answer.",
+      "kind": "end"
+    }
+  ],
+  "trail_close": "<b>The family did their part.</b> The gap is between a kind offer and something the team can use safely. Here is how CareStream collects the photos, lets you check each one, and puts only the approved ones in front of staff.",
+  "why": {
+    "heading": "A dementia photo album is more than a nice idea",
+    "sub": "Photos carry names, places and stories that a written profile can only hint at.",
+    "cards": [
+      {
+        "icon": "chat",
+        "title": "A picture starts a conversation",
+        "body": "A carer who has never met Mrs Ellis can say, “Is that you in Whitby?” Life story photos give new and agency staff something warm to say, and the person something to answer."
+      },
+      {
+        "icon": "tick",
+        "title": "Care should reflect the person",
+        "body": "Care must <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/9\">reflect the person's preferences</a>, and where someone cannot decide for themselves the <a href=\"https://www.legislation.gov.uk/ukpga/2005/9/section/4\">Mental Capacity Act asks you to consider their past and present wishes and feelings</a>, and to consult people who care about them. Family are often the best source."
+      },
+      {
+        "icon": "alert",
+        "title": "Photos need a careful gate",
+        "body": "A photo can show other people, or something the resident would not want shared. A manager should look at each one before the whole team does, and the files should not sit in a text thread."
+      }
+    ]
+  },
+  "how": {
+    "heading": "From a private link to photos the team can use.",
+    "sub": "Resident photos are part of the resident profiles feature, in the same system as your <a href=\"/training-platform\">policies and training</a>. They are on Professional and above. See <a href=\"/uses/resident-knowledge\">how staff use resident knowledge</a> too.",
+    "blocks": [
+      {
+        "heading": "The family adds photos through the same private link",
+        "bullets": [
+          "You invite the person by name and email from the resident's record, as you would for written answers. They get a private link and do not create an account",
+          "On the page, under Photos of your relative, they choose a photo, add an optional caption and say who is in it. They can share up to 5 photos on one link",
+          "Each photo can be up to 5MB, in JPEG, PNG or WebP format. The page tells them a manager reviews every photo before staff see it"
+        ],
+        "tags": [
+          {
+            "label": "Resident knowledge",
+            "href": "/uses/resident-knowledge"
+          },
+          {
+            "label": "How CareStream works",
+            "href": "/how-it-works"
+          }
+        ],
+        "mock": {
+          "type": "audit",
+          "audit": "Family page: Photos (example)",
+          "stats": [
+            [
+              "Photos shared",
+              "3 of 5"
+            ],
+            [
+              "Login needed",
+              "None"
+            ]
+          ],
+          "blocks": [
+            [
+              "What a relative sees (example)",
+              [
+                [
+                  "Choose a photo",
+                  ""
+                ],
+                [
+                  "Caption (optional): Our holiday in Whitby, 1974",
+                  ""
+                ],
+                [
+                  "Who is in this photo? (optional): Mum with her sister Joan",
+                  ""
+                ],
+                [
+                  "Wedding day: Waiting for the manager",
+                  "Status shown to the family"
+                ]
+              ]
+            ]
+          ],
+          "caption": "Example only. Names and figures are illustrative."
+        }
+      },
+      {
+        "heading": "You approve, edit or reject every photo first",
+        "bullets": [
+          "Each photo is checked, scanned for viruses and saved again without location data. It then waits on the Approvals tab, and waiting photos count in the Approvals badge",
+          "For each one you can edit the caption and approve it, or reject it. Rejecting removes the photo from storage",
+          "Staff and the hub chat see nothing that is still waiting. You can also add a photo yourself from the resident's record, and those are approved at once"
+        ],
+        "tags": [
+          {
+            "label": "CQC and compliance",
+            "href": "/cqc-compliance"
+          },
+          {
+            "label": "Book a demo",
+            "href": "/demo"
+          }
+        ],
+        "mock": {
+          "type": "audit",
+          "audit": "Residents: Approvals tab (example)",
+          "stats": [
+            [
+              "Photos waiting",
+              "3"
+            ],
+            [
+              "Approved",
+              "5"
+            ],
+            [
+              "Rejected",
+              "1"
+            ]
+          ],
+          "blocks": [
+            [
+              "Photos waiting for approval (example)",
+              [
+                [
+                  "Tim, son. Caption: Wedding day, 1962. Who is in it: Mum and Dad",
+                  "Approve, Reject"
+                ],
+                [
+                  "Tim, son. Caption: Allotment, summer. You can edit it before approving",
+                  "Approve, Reject"
+                ],
+                [
+                  "Tim, son. No caption. A photo with several other people in it",
+                  "Caption can be edited before you approve, or Reject"
+                ]
+              ]
+            ]
+          ],
+          "caption": "Example only. Nothing here has reached the care team."
+        }
+      },
+      {
+        "heading": "Photos stay private, and leave with the person",
+        "bullets": [
+          "Photos are not public. Signed in staff of your service see them through short lived links, and only approved photos of current residents",
+          "When a resident dies or moves on, their photos leave the hub straight away and any photo still waiting is deleted",
+          "Approved files stay in private storage for the retention period, like the written profile, and are then deleted with it"
+        ],
+        "tags": [
+          {
+            "label": "Resident knowledge",
+            "href": "/uses/resident-knowledge"
+          },
+          {
+            "label": "Pricing and plans",
+            "href": "/pricing"
+          }
+        ],
+        "mock": {
+          "type": "audit",
+          "audit": "Residents: Photos (example)",
+          "stats": [
+            [
+              "Shown to staff",
+              "Approved only"
+            ],
+            [
+              "Public address",
+              "None"
+            ]
+          ],
+          "blocks": [
+            [
+              "Photos (example)",
+              [
+                [
+                  "Wedding day, 1962",
+                  "Approved, Delete"
+                ],
+                [
+                  "Allotment, summer",
+                  "Approved, Delete"
+                ],
+                [
+                  "Add photo: Caption (optional), Who is in this photo? (optional)",
+                  "JPEG, PNG or WebP, up to 5MB"
+                ]
+              ]
+            ]
+          ],
+          "caption": "Example only. Illustration, not a real resident."
+        }
+      },
+      {
+        "heading": "The care team finds them in the Staff Hub",
+        "bullets": [
+          "Staff open the This is me chat and ask about a person. Approved photos appear as small pictures under the answer, and a tap makes one bigger",
+          "The chat finds photos from the captions and notes people wrote, not from what is in the picture. A caption of “wedding” will also find “married”",
+          "If no caption matches, it shows that person's photos and says none is captioned that way"
+        ],
+        "tags": [
+          {
+            "label": "Dementia awareness course",
+            "href": "/staff-training/dementia-awareness"
+          },
+          {
+            "label": "Resident knowledge",
+            "href": "/uses/resident-knowledge"
+          }
+        ],
+        "mock": {
+          "type": "audit",
+          "audit": "Staff Hub: ask about a resident (example)",
+          "stats": [
+            [
+              "Source",
+              "Approved photos and captions only"
+            ]
+          ],
+          "blocks": [
+            [
+              "Example question and answer",
+              [
+                [
+                  "Staff asks: Do we have a photo of Mrs Ellis's wedding?",
+                  ""
+                ],
+                [
+                  "Answer: Yes, one captioned “Wedding day, 1962”, added by Tim, her son. The photo appears below the answer",
+                  ""
+                ]
+              ]
+            ]
+          ],
+          "caption": "Example only. Illustration, not a real resident."
+        }
+      }
+    ]
+  },
+  "talk": {
+    "heading": "The questions managers ask, and how CareStream answers them",
+    "sub": "Read this as a conversation. The questions are the ones we hear most.",
+    "items": [
+      {
+        "q": "A relative wants to send photos for our dementia photo album. What do I do?",
+        "a": "You invite them from the resident's record, with their name and email, and CareStream emails a private link. On that page they choose photos, add a caption and say who is in each one. Nothing reaches your team until you have looked at it."
+      },
+      {
+        "q": "Does the family need an account?",
+        "a": "No. The link is the way in, with no login and no password. You can have up to 5 photos on one link, each up to 5MB, and once the family member presses send the link is spent. If they find more later, you send a new link."
+      },
+      {
+        "q": "What stops an unsuitable photo reaching staff?",
+        "a": "You do. Every family photo waits on the Approvals tab. You can edit the caption and approve it, or reject it, and rejecting removes the file. Staff and the chat only ever see approved photos."
+      },
+      {
+        "q": "Can I add photos myself?",
+        "a": "Yes. From the resident's record you can add a photo with a caption and a note on who is in it. Photos you add are approved at once, because you are the approver."
+      },
+      {
+        "q": "Who can see the photos?",
+        "a": "Signed in staff of your service, through short lived links. There is no public web address for a photo. Only approved photos of current residents are shown."
+      },
+      {
+        "q": "Does the chat look at what is in the picture?",
+        "a": "No, and it says so if asked. It finds photos from the captions and notes people wrote, matched by meaning. So a good caption matters. A photo with no caption can still be shown when you look at that person's photos."
+      },
+      {
+        "q": "What happens if the resident passes away or moves on?",
+        "a": "Their photos leave the hub straight away, and any photo still waiting is deleted. Approved files stay in private storage for the retention period, like the written profile, then are deleted with it."
+      },
+      {
+        "q": "Which plan is it on, and can I try it?",
+        "a": "Resident profiles and photos are on Professional and above. There is a 14 day free trial, and the <a href=\"/pricing\">pricing page</a> shows which plan includes it. You can <a href=\"/register\">create an account</a> or <a href=\"/demo\">book a demo</a> to see it first."
+      }
+    ]
+  },
+  "limits": {
+    "heading": "Honest limits: a gathering tool, not a family account",
+    "cards": [
+      {
+        "title": "It is not a printed photo memory book",
+        "body": "CareStream shows approved photos to staff in the hub, with their captions. It does not lay them out as a keepsake you can print or give back to the family. If you want a photo memory book for a resident to enjoy, you would make that separately."
+      },
+      {
+        "title": "Nothing is automatic",
+        "body": "Photos do not reach staff by themselves. A manager has to approve each one, so someone needs to check the Approvals tab. Photos that nobody approves stay hidden from the team."
+      },
+      {
+        "title": "Captions do the work",
+        "body": "The chat cannot see inside a picture or describe it. A photo is found only by its caption and the note on who is in it, so a blank caption is hard to find. It is also on Professional and above, and the family cannot see the profile or message you."
+      }
+    ]
+  },
+  "read_next": [
+    "this-is-me-document",
+    "care-home-policies-the-complete-guide",
+    "dementia-care-training-in-the-uk"
+  ],
+  "faqs": {
+    "heading": "Family photos and resident profiles, answered",
+    "groups": [
+      {
+        "group": "About photos in a profile",
+        "items": [
+          {
+            "q": "What is a dementia photo album in a care home?",
+            "a": "It is a small, personal set of pictures of the person's family, places and past that staff and the person can look at together. In CareStream, approved photos sit with the resident's profile in the Staff Hub. Read more in our <a href=\"/blog/this-is-me-document\">guide to the this is me document</a>."
+          },
+          {
+            "q": "What are life story photos?",
+            "a": "They are photos that tell part of someone's story: a wedding, a job, a pet, a holiday. Staff use them to start conversations and to understand who matters to the person. Captions that name people and places make them far more useful."
+          },
+          {
+            "q": "Is this a photo memory book?",
+            "a": "Not quite. A photo memory book is usually a printed keepsake. CareStream keeps approved photos with captions for staff to use in the hub, and it does not print or lay them out."
+          },
+          {
+            "q": "Can the assistant describe what is in a photo?",
+            "a": "No. It reads the captions and notes that people wrote, and shows the matching photos. It does not look inside a picture."
+          }
+        ]
+      },
+      {
+        "group": "About approval, privacy and limits",
+        "items": [
+          {
+            "q": "How many photos can a relative add, and what size?",
+            "a": "Up to 5 photos on one link, each up to 5MB, as JPEG, PNG or WebP. Each is checked and saved again without location data."
+          },
+          {
+            "q": "Does a manager have to approve every photo?",
+            "a": "Yes. A family photo stays hidden from staff until you approve it. You can edit the caption first, or reject it. Photos you add yourself from the resident record are approved at once."
+          },
+          {
+            "q": "Can the family see the photos we approve?",
+            "a": "The family page only shows each photo they added, marked as waiting, approved or not used by the home. It does not show the profile or other photos."
+          },
+          {
+            "q": "What does the law say about including family?",
+            "a": "Under <a href=\"https://www.legislation.gov.uk/ukpga/2005/9/section/4\">section 4 of the Mental Capacity Act</a>, people who care about someone should be consulted, where practicable, about what is in their best interests. Photos are one way family can show who the person is. Check your own policies on consent and sharing images."
+          }
+        ]
+      }
+    ]
+  },
+  "guide": {
+    "heading": "How to build a good dementia photo album with families",
+    "lede": "A few habits make the difference between photos that sit unseen and ones that change how the team talks to someone. Ask early, ask for names, and check before you approve.",
+    "sections": [
+      {
+        "h3": "Ask for captions, not just pictures",
+        "paragraphs": [
+          "The chat finds photos by their words. Tell relatives that a short caption such as “Wedding day, 1962” or “Whitby with Joan” is the most helpful thing they can add, and that the who is in it box helps staff learn the names."
+        ]
+      },
+      {
+        "h3": "Before you approve a photo",
+        "paragraphs": [
+          "Look at each photo as a new carer would, and as the resident might feel about it. Edit the caption so it is clear and kind. Reject anything that shows other people who might not want it shared, or anything the resident would find upsetting. You can read what the regulation expects in <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/9\">regulation 9 on person-centred care</a>."
+        ],
+        "checklist": [
+          "Is the person in the photo someone the resident would be glad to see?",
+          "Does the caption name the people and the place?",
+          "Does it show anyone else who might not want it shared?",
+          "Would a new carer know how to use it?"
+        ]
+      },
+      {
+        "h3": "Close the loop with the team and the family",
+        "paragraphs": [
+          "Tell the key worker when photos have been approved and show them how to ask the chat. Thank the relative personally. A <a href=\"/staff-training/dementia-awareness\">dementia awareness course</a> helps staff see why these details matter, and the <a href=\"/staff-training/mental-capacity-act-and-dols\">Mental Capacity Act course</a> covers wishes and best interests."
+        ]
+      }
+    ],
+    "note": "This page describes how the software works and is not legal advice. Check your own policies and local guidance for how you collect and share images of residents."
+  }
+}

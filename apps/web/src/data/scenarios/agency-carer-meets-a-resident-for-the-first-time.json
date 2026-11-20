@@ -1,271 +1,528 @@
 {
- "slug": "agency-carer-meets-a-resident-for-the-first-time",
- "status": "published",
- "order": 77,
- "title": "Person centred care examples start on the first shift. <em>Even for an agency carer.</em>",
- "meta_title": "Person Centred Care Examples for Agency Carers | CareStreamAI",
- "meta_description": "An agency carer meets a resident for the first time. Resident profiles and a hub chat share likes, routines and what helps when they are upset.",
- "eyebrow": "Scenario",
- "lede": "A resident tells you she only drinks tea from the blue cup. Your regular carers know. The agency carer on today's shift does not. These person centred care examples show how a <a href=\"/training-platform\">profile in the Staff Hub</a> gives a new face the small, personal facts that matter, without replacing the care plan.",
- "fine": "14 day free trial · Set up in a day · UK data residency",
- "panel": {
-  "title": "An agency carer's first shift",
-  "pill": "Illustration",
-  "rows": [
-   { "label": "Booked through the agency", "note": "Last day on Friday", "done": true },
-   { "label": "Added with first and last day", "note": "Morning of the shift", "done": true },
-   { "label": "Read the resident profile", "note": "Not yet", "done": false },
-   { "label": "Knows what helps when she is upset", "note": "Not yet", "done": false }
+  "slug": "agency-carer-meets-a-resident-for-the-first-time",
+  "status": "published",
+  "order": 77,
+  "title": "Person centred care examples start on the first shift. <em>Even for an agency carer.</em>",
+  "meta_title": "Person Centred Care Examples for Agency Carers | CareStreamAI",
+  "meta_description": "An agency carer meets a resident for the first time. Resident profiles and a hub chat share likes, routines and what helps when they are upset.",
+  "eyebrow": "Scenario",
+  "lede": "A resident tells you she only drinks tea from the blue cup. Your regular carers know. The agency carer on today's shift does not. These person centred care examples show how a <a href=\"/training-platform\">profile in the Staff Hub</a> gives a new face the small, personal facts that matter, without replacing the care plan.",
+  "fine": "14 day free trial · Set up in a day · UK data residency",
+  "panel": {
+    "title": "An agency carer's first shift",
+    "pill": "Illustration",
+    "rows": [
+      {
+        "label": "Booked through the agency",
+        "note": "Last day on Friday",
+        "done": true
+      },
+      {
+        "label": "Added with first and last day",
+        "note": "Morning of the shift",
+        "done": true
+      },
+      {
+        "label": "Read the resident profile",
+        "note": "Not yet",
+        "done": false
+      },
+      {
+        "label": "Knows what helps when she is upset",
+        "note": "Not yet",
+        "done": false
+      }
+    ],
+    "meter": 50
+  },
+  "image": "https://api.carestreamai.com/public/policy-shop/image/6f9e9380-018a-4463-ac3a-36b27a11e86d.webp",
+  "image_alt": "A carer in a different coloured agency tabard is welcomed by a senior carer in a bright care home corridor, both looking at a phone together",
+  "card_title": "An agency carer meets a resident for the first time",
+  "card_snippet": "Likes, routines and what helps when someone is upset are in the regular team's heads. Put them in a resident profile, so a new face can read them in the Staff Hub before the first cup of tea.",
+  "primary_keyword": "person centred care examples",
+  "secondary_keywords": [
+    "resident profile",
+    "life story work",
+    "this is me form"
   ],
-  "meter": 50
- },
- "image": "https://api.carestreamai.com/public/policy-shop/image/6f9e9380-018a-4463-ac3a-36b27a11e86d.webp",
- "image_alt": "A carer in a different coloured agency tabard is welcomed by a senior carer in a bright care home corridor, both looking at a phone together",
- "card_title": "An agency carer meets a resident for the first time",
- "card_snippet": "Likes, routines and what helps when someone is upset are in the regular team's heads. Put them in a resident profile, so a new face can read them in the Staff Hub before the first cup of tea.",
- "primary_keyword": "person centred care examples",
- "secondary_keywords": ["resident profile", "life story work", "this is me form"],
- "feature_links": [
-  { "title": "Training built from your own policies", "body": "Ad hoc training from your policies, face to face training organised, and wrong answers that become lessons.", "action": "See the feature", "href": "/training-platform" },
-  { "title": "What your residents like, in the Staff Hub", "body": "Profiles of the people you support, kept in one place and open to your care team.", "action": "See resident knowledge", "href": "/uses/resident-knowledge" },
-  { "title": "Short training when you need it", "body": "Allocate a short module on a topic, check understanding and close the gaps.", "action": "See adhoc training", "href": "/uses/adhoc-training" }
- ],
- "intro": {
-  "heading": "The agency carer is capable. They just do not know her yet.",
-  "sub": "A scenario we see in many care settings.",
-  "paragraph": "It is eight in the morning and a carer from the agency has arrived to cover a gap. She has the right checks from her agency and years of experience. What she does not have is any idea that Mrs Patel likes her tea weak in the blue cup, hates the radio on before nine, and gets frightened when a stranger helps her to stand. The regular team know. It lives in their heads and in a form in a folder. The new carer is about to find it all out the hard way."
- },
- "trail": [
-  { "when": "07:45", "text": "An agency carer arrives to cover a sickness gap.", "kind": "ok" },
-  { "when": "07:55", "text": "The senior introduces her to the team and shows her the building.", "kind": "ok" },
-  { "when": "08:00", "text": "She is briefed on tasks, the care plan and who needs help first.", "kind": "ok" },
-  { "when": "08:10", "text": "Nobody has time to say how Mrs Patel likes her morning.", "kind": "gap" },
-  { "when": "08:20", "text": "The carer helps her up quickly, a stranger in a hurry. She pulls away.", "kind": "gap" },
-  { "when": "08:35", "text": "The calming trick the team use is written nowhere she can read.", "kind": "gap" },
-  { "when": "Mid morning", "text": "The paper form is in a folder on another floor.", "kind": "gap" },
-  { "when": "Later that week", "text": "A relative asks: “Did anyone know she hates being rushed?”", "kind": "end" }
- ],
- "trail_close": "<b>The carer did nothing wrong.</b> The home simply has no quick way to hand the personal side of care to someone who has just walked in. Here is how a profile in the Staff Hub fills that gap, and where it stops.",
- "why": {
-  "heading": "Good care is personal, and the personal facts live in people's heads",
-  "sub": "A care plan says what support a person needs. It rarely says what makes their morning feel kind.",
-  "cards": [
-   {
-    "icon": "chat",
-    "title": "New faces start from zero",
-    "body": "Agency and bank carers cover a shift, then move on. The regular team cannot share everything about every resident in a handover."
-   },
-   {
-    "icon": "tick",
-    "title": "Little things shape a good day",
-    "body": "A favourite chair, a preferred name, a song that settles them. These make person centred care real, and they are easy to lose when staff change."
-   },
-   {
-    "icon": "alert",
-    "title": "Paper forms stay in folders",
-    "body": "Many homes already do life story work, or fill in a this is me form. If the finished form sits in a file, the new carer cannot see it."
-   }
-  ]
- },
- "how": {
-  "heading": "Know the person before the first cup of tea.",
-  "sub": "This is the profiles feature in the <a href=\"/training-platform\">Staff Hub</a>, in the order a manager and a new carer meet it. Read more about <a href=\"/uses/resident-knowledge\">sharing what residents like with your team</a>.",
-  "blocks": [
+  "feature_links": [
     {
-    "heading": "Build a profile once, from what your team already know",
-    "bullets": [
-     "Managers add a profile for each person with 11 sections, including likes, dislikes, daily routine and what helps when they are upset or anxious",
-     "It is a good home for life story work: where they grew up, their work, the people who matter, their faith and traditions",
-     "Dietary needs stay in the care plan. The profile is about who the person is, and the screen says so"
-    ],
-    "tags": [
-     { "label": "Resident knowledge", "href": "/uses/resident-knowledge" },
-     { "label": "How CareStream works", "href": "/how-it-works" }
-    ],
-    "mock": {
-     "type": "audit",
-     "audit": "Profile (example)",
-     "stats": [["Sections filled", "8 of 11"], ["Last updated", "This week"]],
-     "blocks": [
-      ["Likes", [["Tea", "Weak, in the blue cup"], ["Morning", "Quiet, no radio before nine"]]],
-      ["What helps when she is upset", [["Stay close", "Sit down and slow down"], ["Talk about", "Her garden and her dog Biscuit"]]]
-     ],
-     "caption": "Example only. Your profiles hold what your own team and families tell you."
+      "title": "Training built from your own policies",
+      "body": "Ad hoc training from your policies, face to face training organised, and wrong answers that become lessons.",
+      "action": "See the feature",
+      "href": "/training-platform"
+    },
+    {
+      "title": "What your residents like, in the Staff Hub",
+      "body": "Profiles of the people you support, kept in one place and open to your care team.",
+      "action": "See resident knowledge",
+      "href": "/uses/resident-knowledge"
+    },
+    {
+      "title": "Short training when you need it",
+      "body": "Allocate a short module on a topic, check understanding and close the gaps.",
+      "action": "See adhoc training",
+      "href": "/uses/adhoc-training"
     }
-   },
-   {
-    "heading": "The agency carer reads it, or just asks the hub chat",
-    "bullets": [
-     "Any signed in carer, agency or employed, sees living residents who have a filled section in the Staff Hub. Agency workers use the hub exactly as employed staff do",
-     "The This is me chat answers only from those profiles, in short answers, and says “not recorded in their profile yet” when it does not know",
-     "It does not give clinical advice. It points back to the care plan and the nurse or senior"
-    ],
-    "tags": [
-     { "label": "Staff Hub", "href": "/training-platform" },
-     { "label": "Resident knowledge", "href": "/uses/resident-knowledge" }
-    ],
-    "mock": {
-     "type": "audit",
-     "audit": "This is me chat (example)",
-     "blocks": [
-      ["Carer asks", [["Question", "What helps when Mrs Patel is upset?"]]],
-      ["Answer from her profile", [["Reply", "Sit down beside her and talk about Biscuit, her dog. Take it slowly."], ["Source", "Her resident profile"]]],
-      ["Carer asks", [["Question", "How should I move her?"]]],
-      ["Answer", [["Reply", "That is for the care plan. Please ask the senior or nurse."]]]
-     ],
-     "caption": "Example only. The answers come from your own profiles."
-    }
-   },
-   {
-    "heading": "Add the agency carer for the days they are booked",
-    "bullets": [
-     "Add them as an agency worker with the agency name, first day and last day. Their hub access runs for those dates",
-     "No seat on your plan is used, and we email you three days before it ends. Extend the booking and the warning clears",
-     "Agency workers are not enrolled in every induction. You choose which flows suit them, so a local induction can be short"
-    ],
-    "tags": [
-     { "label": "Care Certificate course", "href": "/staff-training/care-certificate" },
-     { "label": "Induction playbook", "href": "/blog/onboarding-international-care-staff-4-week-induction-playbook" }
-    ],
-    "mock": {
-     "type": "audit",
-     "audit": "Add agency worker (example)",
-     "stats": [["Staff type", "Agency worker"], ["Seat used", "No"]],
-     "blocks": [
-      ["Booking", [["Agency", "Example Care Agency"], ["First day", "Monday"], ["Last day", "Friday"]]],
-      ["What happens", [["Three days before", "You get an email"], ["After the last day", "Access stops 24 hours later"]]]
-     ],
-     "caption": "Example only. Dates and names are for illustration."
-    }
-   },
-   {
-    "heading": "Keep profiles accurate, and let families help",
-    "bullets": [
-     "You can invite a family member or friend by email to a private link, valid for 14 days, with a question for each section",
-     "Their answers wait for a manager to approve or edit them. Staff do not see an unapproved answer",
-     "Admins can see what staff asked the hub assistant in Recent queries, so you learn which facts people look for"
-    ],
-    "tags": [
-     { "label": "CQC and compliance", "href": "/cqc-compliance" },
-     { "label": "Resident knowledge", "href": "/uses/resident-knowledge" }
-    ],
-    "mock": {
-     "type": "audit",
-     "audit": "Family answers (example)",
-     "stats": [["Waiting for approval", "2"], ["Approved this month", "5"]],
-     "blocks": [
-      ["Waiting for a manager", [["Likes", "Sally, her daughter"], ["What helps when upset", "Sally, her daughter"]]],
-      ["Approved", [["Daily routine", "Added to the profile"], ["Important people", "Added to the profile"]]]
-     ],
-     "caption": "Example only. A family link is a short form, not a family login."
-    }
-   }
-  ]
- },
- "talk": {
-  "heading": "The questions managers ask, and how CareStream answers them",
-  "sub": "Read this as a conversation. The questions are the ones we hear most.",
-  "items": [
-   {
-    "q": "What does a profile actually hold?",
-    "a": "Eleven sections: life story and background, interests, likes, dislikes, food and drink they enjoy, daily routine, what helps when they are upset or anxious, how they like to communicate, important people and pets, faith and culture, and anything else. It is about who the person is, not their care record."
-   },
-   {
-    "q": "Can an agency carer really see it?",
-    "a": "Yes. An agency worker is a person with a hub login like any other member of staff, and the profiles are open to any signed in user for living residents who have something filled in. Their access runs for the dates you set, and it stops 24 hours after their last day."
-   },
-   {
-    "q": "How does the This is me chat help a new carer?",
-    "a": "The carer asks in plain words, such as what helps when Mrs Patel is upset, and gets a short answer from her profile. If the profile does not say, it says so and does not guess."
-   },
-   {
-    "q": "Will it tell the carer how to look after someone clinically?",
-    "a": "No. It does not give clinical advice. It points back to the care plan and to the nurse or senior. A profile helps a carer to be personal. It does not tell them how to move, feed or medicate anyone."
-   },
-   {
-    "q": "We already have a paper form. Why change?",
-    "a": "Keep doing the life story work with the resident and their family. The aim is to get what you learn where a carer can find it in seconds, on a phone, mid shift."
-   },
-   {
-    "q": "Who writes the profile, and who checks it?",
-    "a": "Your managers and senior team write it. You can also invite a relative to answer a short set of questions, and you approve or edit every answer before it reaches the care team. You update a profile whenever something changes."
-   },
-   {
-    "q": "Which plans include it?",
-    "a": "Profiles of the people you support are on the Professional and Enterprise plans. See the <a href=\"/pricing\">pricing page</a> for what each plan includes."
-   },
-   {
-    "q": "How do I try it?",
-    "a": "You can start a 14 day free trial on a paid plan by <a href=\"/register\">creating a free account</a>, or <a href=\"/demo\">book a demo</a> and we will walk you through it."
-   }
-  ]
- },
- "limits": {
-  "heading": "A way to know the person, not a replacement for the care plan",
-  "cards": [
-   {
-    "title": "A profile is not a care plan or a risk assessment",
-    "body": "It records likes, routines and what comforts someone. It does not hold needs, risks or medication. An agency carer must still follow the care plan and the instructions of the senior on shift."
-   },
-   {
-    "title": "It does not make anyone read it",
-    "body": "A profile is there when a carer opens it or asks the hub chat. CareStream does not check that every agency carer looked at it before the first visit, so a short word in the handover still matters."
-   },
-   {
-    "title": "It is only as good as what you put in",
-    "body": "If a section is empty, the chat says it is not recorded yet. Profiles need a manager to write them, approve family answers and update them when things change. Available on Professional and above."
-   }
-  ]
- },
- "read_next": [
-  "this-is-me-document",
-  "onboarding-international-care-staff-4-week-induction-playbook"
- ],
- "faqs": {
-  "heading": "Profiles and agency carers, answered",
-  "groups": [
-   {
-    "group": "About the profile",
-    "items": [
-     { "q": "What are some person centred care examples?", "a": "Small, specific things: offering tea the way a person likes it, using the name they prefer, keeping to their morning routine, and knowing what calms them when they are upset. They are easy to do when you know the person, and hard when you do not. A profile records them so a new carer can find them." },
-     { "q": "What is life story work in a care home?", "a": "It is the process of learning about a person's past, their family, work, interests and what matters to them, and recording it so staff can support them as an individual. In CareStream, the life story and background section of a resident profile is one place to hold it. Our guide to the <a href=\"/blog/this-is-me-document\">this is me document</a> goes into it in more detail." },
-     { "q": "Is a profile the same as a this is me form?", "a": "They cover similar ground, such as likes, dislikes and routines, but a CareStream profile is its own thing. It does not copy any published leaflet or form. It lives in the Staff Hub so a carer can read it on their phone or ask the This is me chat." },
-     { "q": "Where do I find which residents have a profile?", "a": "Managers add and edit profiles in the admin area. Staff see living residents who have at least one section filled in." },
-     { "q": "Can family help write a profile?", "a": "Yes. You can email a friend or relative a private link. Their answers wait for you to approve or edit them before the care team can see them." }
-    ]
-   },
-   {
-    "group": "About agency carers and inspection",
-    "items": [
-     { "q": "Do agency carers need to learn about each resident?", "a": "Yes. Care must reflect the person's preferences, so a new carer needs a way to learn them quickly. A profile and the hub chat give a fast start, and the care plan still sets the support." },
-     { "q": "What does the law say about person centred care?", "a": "<a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/9\">Regulation 9 of the 2014 regulations</a> says care and treatment must be appropriate, meet people's needs and reflect their preferences. CQC explains what it expects in its <a href=\"https://www.cqc.org.uk/guidance-regulation/providers/regulations-service-providers-and-managers/health-social-care-act/regulation-9\">guidance on Regulation 9</a>." },
-     { "q": "Does CareStream replace the agency's own checks?", "a": "No. The agency holds its worker's checks, and CareStream does not capture them. CareStream gives time boxed hub access and a local induction. See the <a href=\"/staff-training/care-certificate\">Care Certificate course</a> for core training." },
-     { "q": "What should a care home induction for agency staff include?", "a": "Where things are, who to ask, fire and emergency actions, safeguarding and where the care plan is. Add the personal side. The <a href=\"/blog/onboarding-international-care-staff-4-week-induction-playbook\">induction playbook</a> shows how one home structures it." }
-    ]
-   }
-  ]
- },
- "guide": {
-  "heading": "A practical way to introduce an agency carer to a resident",
-  "lede": "A few habits in the first ten minutes make care feel personal from the start.",
-  "sections": [
-   {
-    "h3": "What a short, useful profile looks like",
-    "paragraphs": [
-     "Write the way you would tell a friend: “weak tea in the blue cup” beats “prefers hot drinks”. Include a name they like, what they enjoy, what they dislike and what helps when they are upset. Add a few lines of life story work, so a stranger has something to talk about.",
-     "The <a href=\"https://www.cqc.org.uk/guidance-regulation/providers/regulations-service-providers-and-managers/health-social-care-act/regulation-9\">CQC guidance on person centred care</a> says staff providing care must be kept up to date with any changes to a person's needs and preferences. A profile you refresh is one way to do that."
-    ]
-   },
-   {
-    "h3": "Four things to do before an agency carer's first visit",
-    "checklist": [
-     "Add them with their agency, first day and last day, so hub access starts and ends on the right dates.",
-     "Tell them where the This is me chat is in the Staff Hub, and which residents they will support today.",
-     "Share the care plan and risk information in the usual way. The profile is an addition, not a substitute.",
-     "Ask them after the shift what was missing from a profile, then update it."
-    ]
-   }
   ],
-  "note": "<b>For the inspector.</b> Keep your care plans, your profiles and the way you introduce new staff together, so you can show care that reflects each person's preferences."
- }
+  "intro": {
+    "heading": "The agency carer is capable. They just do not know her yet.",
+    "sub": "A scenario we see in many care settings.",
+    "paragraph": "It is eight in the morning and a carer from the agency has arrived to cover a gap. She has the right checks from her agency and years of experience. What she does not have is any idea that Mrs Patel likes her tea weak in the blue cup, hates the radio on before nine, and gets frightened when a stranger helps her to stand. The regular team know. It lives in their heads and in a form in a folder. The new carer is about to find it all out the hard way."
+  },
+  "trail": [
+    {
+      "when": "07:45",
+      "text": "An agency carer arrives to cover a sickness gap.",
+      "kind": "ok"
+    },
+    {
+      "when": "07:55",
+      "text": "The senior introduces her to the team and shows her the building.",
+      "kind": "ok"
+    },
+    {
+      "when": "08:00",
+      "text": "She is briefed on tasks, the care plan and who needs help first.",
+      "kind": "ok"
+    },
+    {
+      "when": "08:10",
+      "text": "Nobody has time to say how Mrs Patel likes her morning.",
+      "kind": "gap"
+    },
+    {
+      "when": "08:20",
+      "text": "The carer helps her up quickly, a stranger in a hurry. She pulls away.",
+      "kind": "gap"
+    },
+    {
+      "when": "08:35",
+      "text": "The calming trick the team use is written nowhere she can read.",
+      "kind": "gap"
+    },
+    {
+      "when": "Mid morning",
+      "text": "The paper form is in a folder on another floor.",
+      "kind": "gap"
+    },
+    {
+      "when": "Later that week",
+      "text": "A relative asks: “Did anyone know she hates being rushed?”",
+      "kind": "end"
+    }
+  ],
+  "trail_close": "<b>The carer did nothing wrong.</b> The home simply has no quick way to hand the personal side of care to someone who has just walked in. Here is how a profile in the Staff Hub fills that gap, and where it stops.",
+  "why": {
+    "heading": "Good care is personal, and the personal facts live in people's heads",
+    "sub": "A care plan says what support a person needs. It rarely says what makes their morning feel kind.",
+    "cards": [
+      {
+        "icon": "chat",
+        "title": "New faces start from zero",
+        "body": "Agency and bank carers cover a shift, then move on. The regular team cannot share everything about every resident in a handover."
+      },
+      {
+        "icon": "tick",
+        "title": "Little things shape a good day",
+        "body": "A favourite chair, a preferred name, a song that settles them. These make person centred care real, and they are easy to lose when staff change."
+      },
+      {
+        "icon": "alert",
+        "title": "Paper forms stay in folders",
+        "body": "Many homes already do life story work, or fill in a this is me form. If the finished form sits in a file, the new carer cannot see it."
+      }
+    ]
+  },
+  "how": {
+    "heading": "Know the person before the first cup of tea.",
+    "sub": "This is the profiles feature in the <a href=\"/training-platform\">Staff Hub</a>, in the order a manager and a new carer meet it. Read more about <a href=\"/uses/resident-knowledge\">sharing what residents like with your team</a>.",
+    "blocks": [
+      {
+        "heading": "Build a profile once, from what your team already know",
+        "bullets": [
+          "Managers add a profile for each person with 11 sections, including likes, dislikes, daily routine and what helps when they are upset or anxious",
+          "It is a good home for life story work: where they grew up, their work, the people who matter, their faith and traditions",
+          "Dietary needs stay in the care plan. The profile is about who the person is, and the screen says so"
+        ],
+        "tags": [
+          {
+            "label": "Resident knowledge",
+            "href": "/uses/resident-knowledge"
+          },
+          {
+            "label": "How CareStream works",
+            "href": "/how-it-works"
+          }
+        ],
+        "mock": {
+          "type": "audit",
+          "audit": "Profile (example)",
+          "stats": [
+            [
+              "Sections filled",
+              "8 of 11"
+            ],
+            [
+              "Last updated",
+              "This week"
+            ]
+          ],
+          "blocks": [
+            [
+              "Likes",
+              [
+                [
+                  "Tea",
+                  "Weak, in the blue cup"
+                ],
+                [
+                  "Morning",
+                  "Quiet, no radio before nine"
+                ]
+              ]
+            ],
+            [
+              "What helps when she is upset",
+              [
+                [
+                  "Stay close",
+                  "Sit down and slow down"
+                ],
+                [
+                  "Talk about",
+                  "Her garden and her dog Biscuit"
+                ]
+              ]
+            ]
+          ],
+          "caption": "Example only. Your profiles hold what your own team and families tell you."
+        }
+      },
+      {
+        "heading": "The agency carer reads it, or just asks the hub chat",
+        "bullets": [
+          "Any signed in carer, agency or employed, sees living residents who have a filled section in the Staff Hub. Agency workers use the hub exactly as employed staff do",
+          "The This is me chat answers only from those profiles, in short answers, and says “not recorded in their profile yet” when it does not know",
+          "It does not give clinical advice. It points back to the care plan and the nurse or senior. A carer can also ask for a photo, for example of a wedding, and approved photos with a matching caption appear under the answer."
+        ],
+        "tags": [
+          {
+            "label": "Staff Hub",
+            "href": "/training-platform"
+          },
+          {
+            "label": "Resident knowledge",
+            "href": "/uses/resident-knowledge"
+          }
+        ],
+        "mock": {
+          "type": "audit",
+          "audit": "This is me chat (example)",
+          "blocks": [
+            [
+              "Carer asks",
+              [
+                [
+                  "Question",
+                  "What helps when Mrs Patel is upset?"
+                ]
+              ]
+            ],
+            [
+              "Answer from her profile",
+              [
+                [
+                  "Reply",
+                  "Sit down beside her and talk about Biscuit, her dog. Take it slowly."
+                ],
+                [
+                  "Source",
+                  "Her resident profile"
+                ]
+              ]
+            ],
+            [
+              "Carer asks",
+              [
+                [
+                  "Question",
+                  "How should I move her?"
+                ]
+              ]
+            ],
+            [
+              "Answer",
+              [
+                [
+                  "Reply",
+                  "That is for the care plan. Please ask the senior or nurse."
+                ]
+              ]
+            ]
+          ],
+          "caption": "Example only. The answers come from your own profiles."
+        }
+      },
+      {
+        "heading": "Add the agency carer for the days they are booked",
+        "bullets": [
+          "Add them as an agency worker with the agency name, first day and last day. Their hub access runs for those dates",
+          "No seat on your plan is used, and we email you three days before it ends. Extend the booking and the warning clears",
+          "Agency workers are not enrolled in every induction. You choose which flows suit them, so a local induction can be short"
+        ],
+        "tags": [
+          {
+            "label": "Care Certificate course",
+            "href": "/staff-training/care-certificate"
+          },
+          {
+            "label": "Induction playbook",
+            "href": "/blog/onboarding-international-care-staff-4-week-induction-playbook"
+          }
+        ],
+        "mock": {
+          "type": "audit",
+          "audit": "Add agency worker (example)",
+          "stats": [
+            [
+              "Staff type",
+              "Agency worker"
+            ],
+            [
+              "Seat used",
+              "No"
+            ]
+          ],
+          "blocks": [
+            [
+              "Booking",
+              [
+                [
+                  "Agency",
+                  "Example Care Agency"
+                ],
+                [
+                  "First day",
+                  "Monday"
+                ],
+                [
+                  "Last day",
+                  "Friday"
+                ]
+              ]
+            ],
+            [
+              "What happens",
+              [
+                [
+                  "Three days before",
+                  "You get an email"
+                ],
+                [
+                  "After the last day",
+                  "Access stops 24 hours later"
+                ]
+              ]
+            ]
+          ],
+          "caption": "Example only. Dates and names are for illustration."
+        }
+      },
+      {
+        "heading": "Keep profiles accurate, and let families help",
+        "bullets": [
+          "You can invite a family member or friend by email to a private link, valid for 14 days, with a question for each section",
+          "Their answers wait for a manager to approve or edit them. Staff do not see an unapproved answer",
+          "Admins can see what staff asked the hub assistant in Recent queries, so you learn which facts people look for"
+        ],
+        "tags": [
+          {
+            "label": "CQC and compliance",
+            "href": "/cqc-compliance"
+          },
+          {
+            "label": "Resident knowledge",
+            "href": "/uses/resident-knowledge"
+          }
+        ],
+        "mock": {
+          "type": "audit",
+          "audit": "Family answers (example)",
+          "stats": [
+            [
+              "Waiting for approval",
+              "2"
+            ],
+            [
+              "Approved this month",
+              "5"
+            ]
+          ],
+          "blocks": [
+            [
+              "Waiting for a manager",
+              [
+                [
+                  "Likes",
+                  "Sally, her daughter"
+                ],
+                [
+                  "What helps when upset",
+                  "Sally, her daughter"
+                ]
+              ]
+            ],
+            [
+              "Approved",
+              [
+                [
+                  "Daily routine",
+                  "Added to the profile"
+                ],
+                [
+                  "Important people",
+                  "Added to the profile"
+                ]
+              ]
+            ]
+          ],
+          "caption": "Example only. A family link is a short form, not a family login."
+        }
+      }
+    ]
+  },
+  "talk": {
+    "heading": "The questions managers ask, and how CareStream answers them",
+    "sub": "Read this as a conversation. The questions are the ones we hear most.",
+    "items": [
+      {
+        "q": "What does a profile actually hold?",
+        "a": "Eleven sections: life story and background, interests, likes, dislikes, food and drink they enjoy, daily routine, what helps when they are upset or anxious, how they like to communicate, important people and pets, faith and culture, and anything else. It is about who the person is, not their care record."
+      },
+      {
+        "q": "Can an agency carer really see it?",
+        "a": "Yes. An agency worker is a person with a hub login like any other member of staff, and the profiles are open to any signed in user for living residents who have something filled in. Their access runs for the dates you set, and it stops 24 hours after their last day."
+      },
+      {
+        "q": "How does the This is me chat help a new carer?",
+        "a": "The carer asks in plain words, such as what helps when Mrs Patel is upset, and gets a short answer from her profile. If the profile does not say, it says so and does not guess."
+      },
+      {
+        "q": "Will it tell the carer how to look after someone clinically?",
+        "a": "No. It does not give clinical advice. It points back to the care plan and to the nurse or senior. A profile helps a carer to be personal. It does not tell them how to move, feed or medicate anyone."
+      },
+      {
+        "q": "We already have a paper form. Why change?",
+        "a": "Keep doing the life story work with the resident and their family. The aim is to get what you learn where a carer can find it in seconds, on a phone, mid shift."
+      },
+      {
+        "q": "Who writes the profile, and who checks it?",
+        "a": "Your managers and senior team write it. You can also invite a relative to answer a short set of questions, and you approve or edit every answer before it reaches the care team. You update a profile whenever something changes."
+      },
+      {
+        "q": "Which plans include it?",
+        "a": "Profiles of the people you support are on the Professional and Enterprise plans. See the <a href=\"/pricing\">pricing page</a> for what each plan includes."
+      },
+      {
+        "q": "How do I try it?",
+        "a": "You can start a 14 day free trial on a paid plan by <a href=\"/register\">creating a free account</a>, or <a href=\"/demo\">book a demo</a> and we will walk you through it."
+      }
+    ]
+  },
+  "limits": {
+    "heading": "A way to know the person, not a replacement for the care plan",
+    "cards": [
+      {
+        "title": "A profile is not a care plan or a risk assessment",
+        "body": "It records likes, routines and what comforts someone. It does not hold needs, risks or medication. An agency carer must still follow the care plan and the instructions of the senior on shift."
+      },
+      {
+        "title": "It does not make anyone read it",
+        "body": "A profile is there when a carer opens it or asks the hub chat. CareStream does not check that every agency carer looked at it before the first visit, so a short word in the handover still matters."
+      },
+      {
+        "title": "It is only as good as what you put in",
+        "body": "If a section is empty, the chat says it is not recorded yet. Profiles need a manager to write them, approve family answers and update them when things change. Available on Professional and above."
+      }
+    ]
+  },
+  "read_next": [
+    "this-is-me-document",
+    "onboarding-international-care-staff-4-week-induction-playbook"
+  ],
+  "faqs": {
+    "heading": "Profiles and agency carers, answered",
+    "groups": [
+      {
+        "group": "About the profile",
+        "items": [
+          {
+            "q": "What are some person centred care examples?",
+            "a": "Small, specific things: offering tea the way a person likes it, using the name they prefer, keeping to their morning routine, and knowing what calms them when they are upset. They are easy to do when you know the person, and hard when you do not. A profile records them so a new carer can find them."
+          },
+          {
+            "q": "What is life story work in a care home?",
+            "a": "It is the process of learning about a person's past, their family, work, interests and what matters to them, and recording it so staff can support them as an individual. In CareStream, the life story and background section of a resident profile is one place to hold it. Our guide to the <a href=\"/blog/this-is-me-document\">this is me document</a> goes into it in more detail."
+          },
+          {
+            "q": "Is a profile the same as a this is me form?",
+            "a": "They cover similar ground, such as likes, dislikes and routines, but a CareStream profile is its own thing. It does not copy any published leaflet or form. It lives in the Staff Hub so a carer can read it on their phone or ask the This is me chat."
+          },
+          {
+            "q": "Where do I find which residents have a profile?",
+            "a": "Managers add and edit profiles in the admin area. Staff see living residents who have at least one section filled in."
+          },
+          {
+            "q": "Can family help write a profile?",
+            "a": "Yes. You can email a friend or relative a private link. Their answers wait for you to approve or edit them before the care team can see them. The same link lets them add up to 5 photos too, each up to 5MB, with a caption and a note on who is in it. Every photo waits for your approval, just like the written answers."
+          }
+        ]
+      },
+      {
+        "group": "About agency carers and inspection",
+        "items": [
+          {
+            "q": "Do agency carers need to learn about each resident?",
+            "a": "Yes. Care must reflect the person's preferences, so a new carer needs a way to learn them quickly. A profile and the hub chat give a fast start, and the care plan still sets the support."
+          },
+          {
+            "q": "What does the law say about person centred care?",
+            "a": "<a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/9\">Regulation 9 of the 2014 regulations</a> says care and treatment must be appropriate, meet people's needs and reflect their preferences. CQC explains what it expects in its <a href=\"https://www.cqc.org.uk/guidance-regulation/providers/regulations-service-providers-and-managers/health-social-care-act/regulation-9\">guidance on Regulation 9</a>."
+          },
+          {
+            "q": "Does CareStream replace the agency's own checks?",
+            "a": "No. The agency holds its worker's checks, and CareStream does not capture them. CareStream gives time boxed hub access and a local induction. See the <a href=\"/staff-training/care-certificate\">Care Certificate course</a> for core training."
+          },
+          {
+            "q": "What should a care home induction for agency staff include?",
+            "a": "Where things are, who to ask, fire and emergency actions, safeguarding and where the care plan is. Add the personal side. The <a href=\"/blog/onboarding-international-care-staff-4-week-induction-playbook\">induction playbook</a> shows how one home structures it."
+          }
+        ]
+      }
+    ]
+  },
+  "guide": {
+    "heading": "A practical way to introduce an agency carer to a resident",
+    "lede": "A few habits in the first ten minutes make care feel personal from the start.",
+    "sections": [
+      {
+        "h3": "What a short, useful profile looks like",
+        "paragraphs": [
+          "Write the way you would tell a friend: “weak tea in the blue cup” beats “prefers hot drinks”. Include a name they like, what they enjoy, what they dislike and what helps when they are upset. Add a few lines of life story work, so a stranger has something to talk about.",
+          "The <a href=\"https://www.cqc.org.uk/guidance-regulation/providers/regulations-service-providers-and-managers/health-social-care-act/regulation-9\">CQC guidance on person centred care</a> says staff providing care must be kept up to date with any changes to a person's needs and preferences. A profile you refresh is one way to do that."
+        ]
+      },
+      {
+        "h3": "Four things to do before an agency carer's first visit",
+        "checklist": [
+          "Add them with their agency, first day and last day, so hub access starts and ends on the right dates.",
+          "Tell them where the This is me chat is in the Staff Hub, and which residents they will support today.",
+          "Share the care plan and risk information in the usual way. The profile is an addition, not a substitute.",
+          "Ask them after the shift what was missing from a profile, then update it."
+        ]
+      }
+    ],
+    "note": "<b>For the inspector.</b> Keep your care plans, your profiles and the way you introduce new staff together, so you can show care that reflects each person's preferences."
+  }
 }

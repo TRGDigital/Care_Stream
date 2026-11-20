@@ -1,0 +1,477 @@
+{
+  "slug": "carer-finds-a-photo-to-settle-a-resident",
+  "status": "draft",
+  "order": 96,
+  "title": "Using photos for <em>reminiscence therapy for dementia.</em> Found in seconds, shown under the answer.",
+  "meta_title": "Reminiscence Therapy for Dementia: Find the Photo | CareStreamAI",
+  "meta_description": "A carer asks the Staff Hub chat for a resident's wedding photo and approved photos appear under the answer, found from captions.",
+  "eyebrow": "Scenario",
+  "lede": "It is four in the afternoon, a resident is unsettled, and the carer beside her is new to the unit. Reminiscence therapy for dementia often starts with something as simple as the right photograph. CareStream lets staff ask the chat for one and shows approved photos under the answer. It sits alongside <a href=\"/training-platform\">the rest of your training and knowledge tools</a>.",
+  "fine": "14 day free trial · Set up in a day · UK data residency",
+  "panel": {
+    "title": "One afternoon, step by step",
+    "pill": "Illustration",
+    "rows": [
+      {
+        "label": "Resident becomes unsettled",
+        "note": "4pm",
+        "done": true
+      },
+      {
+        "label": "Carer asks the chat for a wedding photo",
+        "note": "4.02pm",
+        "done": true
+      },
+      {
+        "label": "Approved photo appears under the answer",
+        "note": "Seconds later",
+        "done": true
+      },
+      {
+        "label": "Carer sits down and talks about it",
+        "note": "Her choice",
+        "done": false
+      }
+    ],
+    "meter": 50
+  },
+  "image": "https://api.carestreamai.com/public/policy-shop/image/4b089da1-b760-4976-8ae4-815c9a685204.webp",
+  "image_alt": "A carer sits beside an older woman in a quiet lounge, both looking at a printed wedding photograph held between them, the woman smiling",
+  "card_title": "A resident is unsettled and the carer is new. Can she find the right photo?",
+  "card_snippet": "Staff ask the Staff Hub chat for a photo, such as a wedding, and approved photos appear under the answer, found from the captions a manager approved.",
+  "primary_keyword": "reminiscence therapy for dementia",
+  "secondary_keywords": [
+    "reminiscence therapy",
+    "person centred care"
+  ],
+  "feature_links": [
+    {
+      "title": "Training built from your own policies",
+      "body": "Ad hoc training from your policies, face to face training organised, and wrong answers that become lessons.",
+      "action": "See the feature",
+      "href": "/training-platform"
+    },
+    {
+      "title": "Resident knowledge for your team",
+      "body": "Give staff quick, short answers about the people they care for, drawn from what you have recorded and approved.",
+      "action": "See resident knowledge",
+      "href": "/uses/resident-knowledge"
+    },
+    {
+      "title": "Dementia awareness training",
+      "body": "A course that helps staff understand the person behind the diagnosis.",
+      "action": "See the course",
+      "href": "/staff-training/dementia-awareness"
+    }
+  ],
+  "intro": {
+    "heading": "The photo is in the building. Nobody can find it.",
+    "sub": "A scenario we see in many care settings.",
+    "paragraph": "Mrs Dunn gets restless around four every afternoon. Today the carer with her is Priya, who started on the unit on Monday. The key worker said Mrs Dunn loves talking about her wedding, and that her son had brought in a few photos. Priya has no idea where they are. They might be in a drawer, in a folder on the office computer, or still in the son's message thread. The unit is busy, and Priya does not want to leave Mrs Dunn alone while she hunts for them."
+  },
+  "trail": [
+    {
+      "when": "Four o'clock",
+      "text": "Mrs Dunn becomes restless and starts to look for the door.",
+      "kind": "ok"
+    },
+    {
+      "when": "4.01pm",
+      "text": "Priya sits with her and speaks calmly.",
+      "kind": "ok"
+    },
+    {
+      "when": "4.02pm",
+      "text": "Priya remembers the key worker mentioning the wedding photos.",
+      "kind": "ok"
+    },
+    {
+      "when": "4.05pm",
+      "text": "She cannot find them. They may be in a drawer or on a phone.",
+      "kind": "gap"
+    },
+    {
+      "when": "4.15pm",
+      "text": "She asks a colleague. Nobody is sure who has them.",
+      "kind": "gap"
+    },
+    {
+      "when": "Next week",
+      "text": "The same thing happens again, with a different carer.",
+      "kind": "gap"
+    },
+    {
+      "when": "Month end",
+      "text": "The son asks if the photos have been any use. Nobody knows.",
+      "kind": "gap"
+    },
+    {
+      "when": "Inspection day",
+      "text": "“How do you know what matters to her?” A drawer is not an answer.",
+      "kind": "end"
+    }
+  ],
+  "trail_close": "<b>The photos were there.</b> The gap is between having them and finding the right one in the moment. Here is how CareStream gets approved photos in front of the carer who needs them.",
+  "why": {
+    "heading": "Why the right photo matters in the moment",
+    "sub": "Familiar faces and places can help someone feel safe, when words do not.",
+    "cards": [
+      {
+        "icon": "chat",
+        "title": "A photo gives staff something to say",
+        "body": "Formal and everyday reminiscence both start with something familiar to talk about. A carer new to the unit can say, “Is that your wedding day?” and let the person lead."
+      },
+      {
+        "icon": "tick",
+        "title": "It is part of person centred care",
+        "body": "Care must <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/9\">reflect the person's preferences</a>, and where someone cannot decide for themselves the <a href=\"https://www.legislation.gov.uk/ukpga/2005/9/section/4\">Mental Capacity Act asks you to consider their past and present wishes and feelings</a>. Knowing who and what matters is where it begins."
+      },
+      {
+        "icon": "alert",
+        "title": "Finding it is the hard part",
+        "body": "Photos in drawers, on phones and in folders are hard to find at four o'clock. And a carer should not have to pass round a photo that nobody has checked."
+      }
+    ]
+  },
+  "how": {
+    "heading": "From a question in the chat to a photo on the screen.",
+    "sub": "Photos are part of the resident profiles feature, in the same system as your <a href=\"/training-platform\">policies and training</a>. They are on Professional and above. See <a href=\"/uses/resident-knowledge\">how staff use resident knowledge</a> too.",
+    "blocks": [
+      {
+        "heading": "Photos are gathered and approved before anyone searches",
+        "bullets": [
+          "Family add photos through a private link, up to 5 per link, and a manager can add photos from the resident's record too",
+          "Every family photo waits for a manager on the Approvals tab. The manager can edit the caption, approve it or reject it",
+          "Staff and the chat see only approved photos of current residents"
+        ],
+        "tags": [
+          {
+            "label": "Resident knowledge",
+            "href": "/uses/resident-knowledge"
+          },
+          {
+            "label": "How CareStream works",
+            "href": "/how-it-works"
+          }
+        ],
+        "mock": {
+          "type": "audit",
+          "audit": "Residents: Approvals tab (example)",
+          "stats": [
+            [
+              "Photos waiting",
+              "1"
+            ],
+            [
+              "Approved",
+              "4"
+            ]
+          ],
+          "blocks": [
+            [
+              "Photos waiting for approval (example)",
+              [
+                [
+                  "Sam, son. Caption: Mum and Dad, wedding day, 1962",
+                  "Approve, Reject"
+                ]
+              ]
+            ],
+            [
+              "Approved (example)",
+              [
+                [
+                  "Allotment, summer",
+                  ""
+                ],
+                [
+                  "Whitby with her sister Joan",
+                  ""
+                ]
+              ]
+            ]
+          ],
+          "caption": "Example only. Names and figures are illustrative."
+        }
+      },
+      {
+        "heading": "The carer asks the chat in plain words",
+        "bullets": [
+          "In the Staff Hub, the carer opens the This is me chat and types a question such as “do we have a photo of her wedding?”",
+          "If the question does not name a resident and several have photos, the chat asks who is meant",
+          "The carer does not need to know where the photo is kept or who added it"
+        ],
+        "tags": [
+          {
+            "label": "Dementia awareness course",
+            "href": "/staff-training/dementia-awareness"
+          },
+          {
+            "label": "Resident knowledge",
+            "href": "/uses/resident-knowledge"
+          }
+        ],
+        "mock": {
+          "type": "audit",
+          "audit": "Staff Hub: ask about a resident (example)",
+          "stats": [
+            [
+              "Source",
+              "Approved photos and captions only"
+            ]
+          ],
+          "blocks": [
+            [
+              "Example question",
+              [
+                [
+                  "Staff asks: Do we have a photo of Mrs Dunn's wedding?",
+                  ""
+                ],
+                [
+                  "Chat asks, if no name is given: Which resident do you mean?",
+                  ""
+                ]
+              ]
+            ]
+          ],
+          "caption": "Example only. Illustration, not a real resident."
+        }
+      },
+      {
+        "heading": "Matching photos appear under the answer",
+        "bullets": [
+          "The chat finds photos from the approved captions and notes people wrote, matched by meaning. A caption of “wedding” also finds “married” and “marriage”",
+          "The photos appear as small pictures under the answer. The carer taps one to make it bigger",
+          "If no caption matches, it shows that person's photos and says none is captioned that way"
+        ],
+        "tags": [
+          {
+            "label": "Book a demo",
+            "href": "/demo"
+          },
+          {
+            "label": "CQC and compliance",
+            "href": "/cqc-compliance"
+          }
+        ],
+        "mock": {
+          "type": "audit",
+          "audit": "Staff Hub: answer with photos (example)",
+          "stats": [
+            [
+              "Matched by",
+              "Caption and notes"
+            ],
+            [
+              "Tap",
+              "To enlarge"
+            ]
+          ],
+          "blocks": [
+            [
+              "Example answer",
+              [
+                [
+                  "Answer: Yes. One photo is captioned “Mum and Dad, wedding day, 1962”, added by Sam, her son. It appears below",
+                  ""
+                ],
+                [
+                  "Photo: Mum and Dad, wedding day, 1962",
+                  "Tap to enlarge"
+                ]
+              ]
+            ]
+          ],
+          "caption": "Example only. Illustration, not a real resident."
+        }
+      },
+      {
+        "heading": "The carer uses it, and the person still leads",
+        "bullets": [
+          "The carer sits beside the person, shows the photo and listens. If it does not help, or the person does not want it, they move on",
+          "The chat reads captions only. It never looks inside a picture, and says so if asked to describe one",
+          "The person's wishes and the manager's approval come first. You can delete a photo from the resident's record at any time"
+        ],
+        "tags": [
+          {
+            "label": "Pricing and plans",
+            "href": "/pricing"
+          },
+          {
+            "label": "Staff training",
+            "href": "/staff-training"
+          }
+        ],
+        "mock": {
+          "type": "audit",
+          "audit": "Residents: Photos (example)",
+          "stats": [
+            [
+              "Shown to staff",
+              "Approved only"
+            ],
+            [
+              "Public address",
+              "None"
+            ]
+          ],
+          "blocks": [
+            [
+              "Photos (example)",
+              [
+                [
+                  "Mum and Dad, wedding day, 1962",
+                  "Approved, Delete"
+                ],
+                [
+                  "Whitby with her sister Joan",
+                  "Approved, Delete"
+                ]
+              ]
+            ]
+          ],
+          "caption": "Example only. Illustration, not a real resident."
+        }
+      }
+    ]
+  },
+  "talk": {
+    "heading": "The questions managers ask, and how CareStream answers them",
+    "sub": "Read this as a conversation. The questions are the ones we hear most.",
+    "items": [
+      {
+        "q": "How does a carer find a photo of a resident?",
+        "a": "They open the This is me chat in the Staff Hub and ask, for example, whether there is a photo of the person's wedding. The chat answers, and approved photos that match appear as small pictures under the answer. A tap makes one bigger."
+      },
+      {
+        "q": "How does it know which photo is the wedding?",
+        "a": "From the captions and notes people wrote, matched by meaning. A caption that says “married” will be found by a question about a wedding. It does not look inside a picture. If no caption matches, it shows that person's photos and says none is captioned that way."
+      },
+      {
+        "q": "Is this reminiscence therapy?",
+        "a": "No. CareStream helps staff find an approved photo quickly. What the carer does with it, from a quiet chat to a planned reminiscence session, is up to your team and your own approach. Nothing here is clinical advice."
+      },
+      {
+        "q": "Who decides which photos staff can see?",
+        "a": "A manager. Every family photo waits for approval on the Approvals tab, and you can edit the caption first or reject it. Photos you add yourself from the record are approved at once."
+      },
+      {
+        "q": "What if a resident does not want to see a photo?",
+        "a": "Then the carer does not use it. A photo is a way in to a conversation, not a requirement. Staff need to read the person, and your own care plan and the person's wishes come first."
+      },
+      {
+        "q": "What if the question does not name the resident?",
+        "a": "If several residents have photos, the chat asks who is meant before it shows anything."
+      },
+      {
+        "q": "What happens when someone moves on or passes away?",
+        "a": "Their photos leave the hub straight away. Approved files stay in private storage for the retention period, like the written profile, then are deleted with it."
+      },
+      {
+        "q": "Which plan is it on, and can I try it?",
+        "a": "Resident profiles and photos are on Professional and above. There is a 14 day free trial, and the <a href=\"/pricing\">pricing page</a> shows which plan includes it. You can <a href=\"/register\">create an account</a> or <a href=\"/demo\">book a demo</a> to see it first."
+      }
+    ]
+  },
+  "limits": {
+    "heading": "Honest limits: a way to find the photo, not a therapy",
+    "cards": [
+      {
+        "title": "It reads captions, not pictures",
+        "body": "The chat cannot see inside a photo or describe what is in it. A photo with no useful caption is hard to find by a question, so good captions matter. Photos and captions are not used for the chat's other answers."
+      },
+      {
+        "title": "It does not run a session",
+        "body": "CareStream does not plan, deliver or record reminiscence work, and it does not give clinical advice. It helps a carer find an approved photo. The rest is your team's judgement and the person's choice."
+      },
+      {
+        "title": "It depends on approval",
+        "body": "A photo only appears once a manager has approved it, so someone needs to check the Approvals tab. It is on Professional and above, and the family cannot see the profile or message you."
+      }
+    ]
+  },
+  "read_next": [
+    "this-is-me-document",
+    "dementia-care-training-in-the-uk",
+    "care-home-policies-the-complete-guide"
+  ],
+  "faqs": {
+    "heading": "Photos, the chat and reminiscence, answered",
+    "groups": [
+      {
+        "group": "About reminiscence and photos",
+        "items": [
+          {
+            "q": "What is reminiscence therapy for dementia?",
+            "a": "It generally means helping someone talk about their past, often with photos, music or objects they know. CareStream does not provide it. It helps staff find approved photos for the person, as part of how your team already works. Read more in our <a href=\"/blog/this-is-me-document\">guide to the this is me document</a>."
+          },
+          {
+            "q": "What is the difference between reminiscence therapy and an everyday chat about the past?",
+            "a": "A planned session is usually led by someone trained to run it. An everyday chat is a carer using what they know about the person. A found photo can support either, and your own approach decides which."
+          },
+          {
+            "q": "How does this support person centred care?",
+            "a": "It puts what family and managers know about the person in front of the carer at the moment they need it. That includes names, places and stories. It sits beside the care plan, not in place of it."
+          },
+          {
+            "q": "Can the chat describe a photo?",
+            "a": "No. It finds photos from the captions and notes, and shows them. It does not look inside a picture."
+          }
+        ]
+      },
+      {
+        "group": "About finding and approval",
+        "items": [
+          {
+            "q": "Does the chat show photos that are still waiting for approval?",
+            "a": "No. Staff and the chat see only approved photos of current residents."
+          },
+          {
+            "q": "How are the photos kept?",
+            "a": "Privately. Staff see them through short lived links when signed in, and there is no public web address. Each photo is checked, scanned and saved again without location data."
+          },
+          {
+            "q": "Which photo will it show if I ask for a person's holiday?",
+            "a": "The approved photos whose captions or notes match by meaning, such as a caption about Whitby. If none match, it shows that person's photos and says none is captioned that way."
+          },
+          {
+            "q": "Do we have to use photos?",
+            "a": "No. Photos are optional for each resident. Where there are none, the chat answers from the written profile as usual. See <a href=\"/uses/resident-knowledge\">resident knowledge</a> for more."
+          }
+        ]
+      }
+    ]
+  },
+  "guide": {
+    "heading": "How to use photos well with a person living with dementia",
+    "lede": "A photo is a way in, not a test. A few habits help staff use it kindly: choose the moment, follow the person, and keep the captions clear.",
+    "sections": [
+      {
+        "h3": "Keep captions short and specific",
+        "paragraphs": [
+          "The chat finds photos by their words. Ask relatives for a few plain words and the names of the people in the photo, such as “Wedding day, 1962” or “Whitby with Joan”. Edit any caption before you approve it."
+        ]
+      },
+      {
+        "h3": "Before you use a photo with someone",
+        "paragraphs": [
+          "Read the person's profile first, and follow their lead. Some photos bring comfort and some bring sadness. The person's wishes and your own policies come first. You can read what the regulation expects in <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/9\">regulation 9 on person-centred care</a>."
+        ],
+        "checklist": [
+          "Have I read what the profile says helps this person?",
+          "Is the photo one the person is likely to enjoy?",
+          "Am I ready to put it away if it upsets them?",
+          "Will I note what happened in the usual way?"
+        ]
+      },
+      {
+        "h3": "Help new staff get the habit",
+        "paragraphs": [
+          "Show new and agency staff how to ask the chat in their first shift. A <a href=\"/staff-training/dementia-awareness\">dementia awareness course</a> helps them see why a familiar photo can matter, and the <a href=\"/staff-training/mental-capacity-act-and-dols\">Mental Capacity Act course</a> covers wishes and best interests."
+        ]
+      }
+    ],
+    "note": "This page describes how the software works and is not legal or clinical advice. Check your own policies and local guidance for how you use photos and reminiscence with residents."
+  }
+}

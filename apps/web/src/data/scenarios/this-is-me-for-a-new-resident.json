@@ -1,400 +1,530 @@
 {
- "slug": "this-is-me-for-a-new-resident",
- "status": "published",
- "order": 76,
- "title": "A new resident moves in. Does every carer know the person behind the <em>this is me document?</em>",
- "meta_title": "This Is Me Document for a New Resident | CareStreamAI",
- "meta_description": "Keep a this is me document that staff can actually use. Build a resident profile, invite family to add to it, and let staff ask about the person by name.",
- "eyebrow": "Scenario",
- "lede": "A new resident moves in on Monday, and the this is me document is a half finished page in a folder. CareStream gives each person a <a href=\"/training-platform\">living profile</a> that you build with their family and that staff can ask about by name. It is on the Professional and Enterprise plans.",
- "fine": "14 day free trial · Set up in a day · UK data residency",
- "panel": {
-  "title": "A new resident's first week",
-  "pill": "Illustration",
-  "rows": [
-   {
-    "label": "Moves in, family settle her room",
-    "note": "Day 0",
-    "done": true
-   },
-   {
-    "label": "Profile started with the family",
-    "note": "Day 1",
-    "done": true
-   },
-   {
-    "label": "Family answers checked and approved",
-    "note": "Not yet",
-    "done": false
-   },
-   {
-    "label": "Night staff know how she likes her tea",
-    "note": "Not yet",
-    "done": false
-   }
-  ],
-  "meter": 50
- },
- "image": "https://api.carestreamai.com/public/policy-shop/image/5e70f93b-7a2b-4eb3-a551-a0ee70ed0cec.webp",
- "image_alt": "A care home manager and a new resident's daughter sit at a table in a bright lounge with a tablet showing a simple profile form and a cup of tea each",
- "card_title": "A new resident moved in. Do your staff know the person?",
- "card_snippet": "A this is me document is only useful if staff know what is in it. Build a profile with the family, approve their answers, and let staff ask about the person by name.",
- "primary_keyword": "this is me document",
- "secondary_keywords": [
-  "this is me form",
-  "life story work",
-  "resident profile"
- ],
- "feature_links": [
-  {
-   "title": "Training built from your own policies",
-   "body": "Ad hoc training from your policies, face to face training organised, and wrong answers that become lessons.",
-   "action": "See the feature",
-   "href": "/training-platform"
-  },
-  {
-   "title": "Staff ask, answers come from your documents",
-   "body": "Carers ask a question in the hub and get an answer from your own documents and profiles.",
-   "action": "See how it works",
-   "href": "/uses/resident-knowledge"
-  },
-  {
-   "title": "Dementia awareness training",
-   "body": "A certified course for staff who support people living with dementia.",
-   "action": "See the course",
-   "href": "/staff-training/dementia-awareness"
-  }
- ],
- "intro": {
-  "heading": "The form was filled in. Does anyone know what it says?",
-  "sub": "A scenario we see in many care settings.",
-  "paragraph": "Margaret moves into a care home on a Monday. Her daughter brings a photo of the garden she kept for forty years and a long list of small things: tea strong, radio on low, never a bath before breakfast. The manager promises to write it all up. By Thursday a this is me form exists, but it sits in a folder in the office. The night carer has never seen it. On Friday Margaret is distressed at bedtime and nobody knows that humming her favourite hymn settles her. Here is how it plays out."
- },
- "trail": [
-  {
-   "when": "Monday",
-   "text": "Margaret moves in. Her daughter brings photos and a long list.",
-   "kind": "ok"
-  },
-  {
-   "when": "Monday afternoon",
-   "text": "The manager listens properly and promises to write it all down.",
-   "kind": "ok"
-  },
-  {
-   "when": "Thursday",
-   "text": "A this is me form is filled in and put in her file.",
-   "kind": "ok"
-  },
-  {
-   "when": "Thursday night",
-   "text": "The night carer has never seen it and has no time to go and look.",
-   "kind": "gap"
-  },
-  {
-   "when": "Family memories",
-   "text": "Her son remembers the hymn that calms her. Nobody has asked him.",
-   "kind": "gap"
-  },
-  {
-   "when": "Friday bedtime",
-   "text": "Margaret is upset. The carer tries things that do not help.",
-   "kind": "gap"
-  },
-  {
-   "when": "A month later",
-   "text": "The form is in a folder. New staff have never heard of it.",
-   "kind": "gap"
-  },
-  {
-   "when": "Inspection day",
-   "text": "“How do you know what matters to each person?” A folder is not an answer.",
-   "kind": "end"
-  }
- ],
- "trail_close": "<b>The form was never the problem.</b> The gap is between the page and the person on shift at night. Here is how CareStream closes it, and where it stops.",
- "why": {
-  "heading": "A form in a file does not help the carer at the bedside",
-  "sub": "The detail only matters if the right person has it at the right moment.",
-  "cards": [
-   {
-    "icon": "chat",
-    "title": "Families know things you cannot guess",
-    "body": "The hymn, the favourite chair and the name she likes to be called live in the family's heads. Without a simple way to ask, they stay there."
-   },
-   {
-    "icon": "tick",
-    "title": "Paper is out of reach at 3am",
-    "body": "Night staff, agency staff and new starters rarely open a folder. They need the answer in the moment, in words they can read quickly."
-   },
-   {
-    "icon": "alert",
-    "title": "Profiles go stale",
-    "body": "People change. A page written in week one is wrong by month six unless someone adds to it, and nothing nudges anyone to do so."
-   }
-  ]
- },
- "how": {
-  "heading": "From the first visit to the 3am question",
-  "sub": "This is the profile feature, in the order a manager, a family member and a carer meet it. See also <a href=\"/uses/resident-knowledge\">staff asking questions of your own documents</a> and <a href=\"/how-it-works\">how CareStream works</a>.",
-  "blocks": [
-   {
-    "heading": "Start a profile on day one",
-    "bullets": [
-     "Add the person with their preferred name, then fill in 11 short sections, from life story and background to what helps when they are upset",
-     "Each section takes up to 6,000 characters, so life story work can be as light or as full as you like",
-     "Only admins manage profiles. Dietary needs stay in the care plan, because the profile is about who the person is"
+  "slug": "this-is-me-for-a-new-resident",
+  "status": "published",
+  "order": 76,
+  "title": "A new resident moves in. Does every carer know the person behind the <em>this is me document?</em>",
+  "meta_title": "This Is Me Document for a New Resident | CareStreamAI",
+  "meta_description": "Keep a this is me document that staff can actually use. Build a resident profile, invite family to add to it, and let staff ask about the person by name.",
+  "eyebrow": "Scenario",
+  "lede": "A new resident moves in on Monday, and the this is me document is a half finished page in a folder. CareStream gives each person a <a href=\"/training-platform\">living profile</a> that you build with their family and that staff can ask about by name. It is on the Professional and Enterprise plans.",
+  "fine": "14 day free trial · Set up in a day · UK data residency",
+  "panel": {
+    "title": "A new resident's first week",
+    "pill": "Illustration",
+    "rows": [
+      {
+        "label": "Moves in, family settle her room",
+        "note": "Day 0",
+        "done": true
+      },
+      {
+        "label": "Profile started with the family",
+        "note": "Day 1",
+        "done": true
+      },
+      {
+        "label": "Family answers checked and approved",
+        "note": "Not yet",
+        "done": false
+      },
+      {
+        "label": "Night staff know how she likes her tea",
+        "note": "Not yet",
+        "done": false
+      }
     ],
-    "tags": [
-     {
-      "label": "Training built from your own policies",
+    "meter": 50
+  },
+  "image": "https://api.carestreamai.com/public/policy-shop/image/5e70f93b-7a2b-4eb3-a551-a0ee70ed0cec.webp",
+  "image_alt": "A care home manager and a new resident's daughter sit at a table in a bright lounge with a tablet showing a simple profile form and a cup of tea each",
+  "card_title": "A new resident moved in. Do your staff know the person?",
+  "card_snippet": "A this is me document is only useful if staff know what is in it. Build a profile with the family, approve their answers, and let staff ask about the person by name.",
+  "primary_keyword": "this is me document",
+  "secondary_keywords": [
+    "this is me form",
+    "life story work",
+    "resident profile"
+  ],
+  "feature_links": [
+    {
+      "title": "Training built from your own policies",
+      "body": "Ad hoc training from your policies, face to face training organised, and wrong answers that become lessons.",
+      "action": "See the feature",
       "href": "/training-platform"
-     },
-     {
-      "label": "How CareStream works",
-      "href": "/how-it-works"
-     }
-    ],
-    "mock": {
-     "type": "audit",
-     "audit": "Profile (example, invented resident)",
-     "stats": [
-      ["Sections", "11"],
-      ["Filled in", "7"],
-      ["Family answers waiting", "2"]
-     ],
-     "blocks": [
-      ["Life story and background", [["Example", "Grew up on a farm, then worked as a primary school teacher for 30 years"]]],
-      ["What helps when they are upset or anxious", [["Example", "Quiet company, a cup of tea and humming a favourite hymn"]]],
-      ["How they like to communicate", [["Example", "Likes to be called Peggy, not Margaret"]]]
-     ],
-     "caption": "Example screen with an invented resident. Not a real person."
-    }
-   },
-   {
-    "heading": "Ask the family, and check before staff see it",
-    "bullets": [
-     "Invite a daughter, son or friend by name and email. They get a private link that works for 14 days",
-     "They answer one friendly question for each section. You approve, edit or reject every answer before it reaches the team",
-     "Approved text is added to the profile with their name and relationship beside it"
-    ],
-    "tags": [
-     {
-      "label": "Ask for a demo",
-      "href": "/demo"
-     },
-     {
-      "label": "Pricing and plans",
-      "href": "/pricing"
-     }
-    ],
-    "mock": {
-     "type": "audit",
-     "audit": "Family answers (example, invented resident)",
-     "stats": [
-      ["Link valid for", "14 days"],
-      ["Waiting for approval", "2"],
-      ["Approved", "5"]
-     ],
-     "blocks": [
-      ["Waiting for you to check", [["Likes, from Sam (son)", "Hums an old hymn when she is anxious"], ["Daily routine, from Sam (son)", "Tea first, then the paper"]]],
-      ["Your choices", [["Approve", "Added to the profile"], ["Edit then approve", "You change the wording first"], ["Reject", "Staff never see it"]]]
-     ],
-     "caption": "Example screen with invented people. Family answers stay private until you approve them."
-    }
-   },
-   {
-    "heading": "Staff ask the hub about the person, by name",
-    "bullets": [
-     "In the Staff Hub, carers choose the This is me topic and ask a plain question about a resident",
-     "The answer comes only from the approved profile, in a few short lines",
-     "If the profile does not cover it, the hub says it is not recorded in their profile yet, and does not guess"
-    ],
-    "tags": [
-     {
-      "label": "Staff ask your own documents",
+    },
+    {
+      "title": "Staff ask, answers come from your documents",
+      "body": "Carers ask a question in the hub and get an answer from your own documents and profiles.",
+      "action": "See how it works",
       "href": "/uses/resident-knowledge"
-     },
-     {
-      "label": "Dementia awareness course",
+    },
+    {
+      "title": "Dementia awareness training",
+      "body": "A certified course for staff who support people living with dementia.",
+      "action": "See the course",
       "href": "/staff-training/dementia-awareness"
-     }
-    ],
-    "mock": {
-     "type": "audit",
-     "audit": "Staff Hub, This is me topic (example)",
-     "stats": [
-      ["Topic", "This is me"],
-      ["Source", "Approved profile only"]
-     ],
-     "blocks": [
-      ["Carer asks", [["Question", "What helps Peggy when she is upset at bedtime?"]]],
-      ["The hub answers", [["Answer", "A quiet cup of tea and company. Her son says humming her favourite hymn settles her."], ["If it is not in the profile", "Not recorded in their profile yet. Ask the family or the team."]]]
-     ],
-     "caption": "Example conversation with an invented resident. Clinical questions go back to the care plan and the senior on shift."
     }
-   },
-   {
-    "heading": "Keep it alive, and close it respectfully",
-    "bullets": [
-     "Add to the profile whenever you learn something, so it grows as the person does",
-     "Only living residents with something filled in appear in the hub",
-     "When someone passes away or moves on, they leave the hub and assistant at once, family links are cancelled and the profile is archived"
-    ],
-    "tags": [
-     {
-      "label": "CQC and compliance",
-      "href": "/cqc-compliance"
-     },
-     {
-      "label": "Annual training",
-      "href": "/uses/annual-training"
-     }
-    ],
-    "mock": {
-     "type": "audit",
-     "audit": "Profile upkeep (example, invented resident)",
-     "stats": [
-      ["Status", "Living"],
-      ["Archive kept for", "7 years"]
-     ],
-     "blocks": [
-      ["When someone moves on", [["Hub and assistant", "Removed straight away"], ["Family links", "Cancelled"], ["Pending answers", "Rejected"]]],
-      ["Archive", [["Held for", "7 years, can be extended"], ["Memory book", "Record whether it was shared with the family"]]]
-     ],
-     "caption": "Example screen. Archive steps are handled by the admins you choose."
-    }
-   }
-  ]
- },
- "talk": {
-  "heading": "The questions managers ask, and how CareStream answers them",
-  "sub": "Read this as a conversation. The questions are the ones we hear most.",
-  "items": [
-   {
-    "q": "We already do a this is me form on paper. Why change?",
-    "a": "Paper is fine for the first conversation. The trouble comes later, when night staff and new starters never see it and nobody updates it. <a href=\"/training-platform\">CareStream</a> keeps the same kind of detail where staff can ask about it in seconds, and where you can keep adding."
-   },
-   {
-    "q": "Is this the same as the printed this is me form?",
-    "a": "No. CareStream has its own resident profile with 11 sections. It does not replace any form you already use, and we do not claim it is that form."
-   },
-   {
-    "q": "What goes in the profile?",
-    "a": "Life story, interests, likes and dislikes, food and drink they enjoy, daily routine, what helps when they are upset, how they like to communicate, important people and pets, faith and culture, and anything else. It is about who the person is, not their clinical record."
-   },
-   {
-    "q": "Can families add to it?",
-    "a": "Yes. You invite them by name and email and they get a private link, valid for 14 days. They answer a question for each section. You check every answer before the care team can see it."
-   },
-   {
-    "q": "What can a carer actually do with it?",
-    "a": "In the Staff Hub they pick the This is me topic and ask about a resident by name. The answer comes from the approved profile only. If the detail is not there, the hub says so rather than guessing."
-   },
-   {
-    "q": "Will it give clinical advice?",
-    "a": "No. For anything clinical, such as medication, diet texture or mobility, it points back to the care plan and the nurse or senior on shift. The profile is about the person, not their treatment."
-   },
-   {
-    "q": "Which plan is it on?",
-    "a": "Professional and Enterprise. It is not on Starter. See the <a href=\"/pricing\">pricing page</a> for the plan details."
-   },
-   {
-    "q": "Can I try it before I commit?",
-    "a": "Yes. There is a 14 day free trial on the paid plans. <a href=\"/register\">Create a free account</a> to start, or <a href=\"/demo\">ask for a demo</a>."
-   }
-  ]
- },
- "limits": {
-  "heading": "A way to know the person, not a care record",
-  "cards": [
-   {
-    "title": "It is not your care plan",
-    "body": "The profile holds who someone is. Risks, medication and clinical needs stay in your care plan, and the hub assistant sends clinical questions back there."
-   },
-   {
-    "title": "Families do not get a login",
-    "body": "They answer through a private link that lasts 14 days. They cannot see the profile or message staff, and a new link is needed to add more."
-   },
-   {
-    "title": "It only knows what you put in",
-    "body": "If a detail is not in the approved profile, the hub says it is not recorded yet. Someone still has to ask, listen and write it down."
-   }
-  ]
- },
- "read_next": [
-  "this-is-me-document",
-  "dementia-care-training-in-the-uk",
-  "care-home-staff-incentive-scheme"
- ],
- "faqs": {
-  "heading": "This is me and resident profiles, answered",
-  "groups": [
-   {
-    "group": "About the profile",
-    "items": [
-     {
-      "q": "What should go in a this is me document?",
-      "a": "The things that tell a carer who the person is: their history, routines, likes, what calms them, who matters and what they believe in. Our guide, <a href=\"/blog/this-is-me-document\">the this is me document explained</a>, goes through it in detail."
-     },
-     {
-      "q": "Is a this is me form the same as a resident profile?",
-      "a": "They do the same job, which is helping staff know the person. A this is me form is usually a printed document. CareStream's version is an online record with 11 sections that staff can ask about."
-     },
-     {
-      "q": "What is life story work in a care home?",
-      "a": "It is the practice of learning and recording a person's history, so care fits who they are. A short, true profile is a good start. It does not need to be long to be useful."
-     },
-     {
-      "q": "Who can see a profile?",
-      "a": "Admins manage it. Staff can see living residents who have at least one section filled in, through the hub. Unapproved family answers are never shown to staff."
-     },
-     {
-      "q": "How many residents can I add?",
-      "a": "Up to 500 living residents. Each section holds up to 6,000 characters."
-     },
-     {
-      "q": "Does staff training on dementia still matter?",
-      "a": "Yes. A profile tells staff about one person. Training builds the skills to support anyone. See the <a href=\"/staff-training/dementia-awareness\">dementia awareness course</a>."
-     }
-    ]
-   },
-   {
-    "group": "About inspections",
-    "items": [
-     {
-      "q": "Will an inspector expect to see this?",
-      "a": "Care must reflect people's preferences. <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/9\">Regulation 9</a> says care and treatment must be appropriate, meet needs and reflect preferences. A profile is one way to show you know them. It is not a pass and it is not a regulator record."
-     },
-     {
-      "q": "What does CQC say about preferences and cultural needs?",
-      "a": "The <a href=\"https://www.cqc.org.uk/guidance-regulation/providers/regulations-service-providers-and-managers/health-social-care-act/regulation-9\">CQC guidance on Regulation 9</a> expects care to be based on an assessment of needs and preferences, including cultural, religious and spiritual needs. Your profile can hold that detail, and your care plan stays the formal record."
-     }
-    ]
-   }
-  ]
- },
- "guide": {
-  "heading": "A practical way to build a profile with a family",
-  "lede": "The best profiles are short, true and kept up to date. You do not need to capture a whole life in a week. Start with what helps staff do the next shift well.",
-  "sections": [
-   {
-    "h3": "Life story work that fits a busy week",
-    "paragraphs": [
-     "Life story work can feel like a big project, so many homes put it off. Start small. Ask three questions in the first week: what do you like to be called, what does a good day look like, and what calms them when they are upset. Add the longer history over time, with the family, as you get to know the person.",
-     "Ask the person first, where they can tell you. Family memories add colour, but the resident's own voice comes first."
-    ]
-   },
-   {
-    "h3": "Four checks for the first fortnight",
-    "checklist": [
-     "Day one: add the person with the name they like to be called, and fill in what helps when they are upset.",
-     "Within a week: invite one or two family members or friends to answer the questions.",
-     "Each answer: read it, edit if needed and approve it before staff see it.",
-     "Each month: add one new detail you have learned, so the profile keeps pace with the person."
-    ]
-   }
   ],
-  "note": "<b>For the inspector.</b> Keep the profile separate from the care plan. The profile shows what matters to the person, and the care plan shows how you meet their needs."
- }
+  "intro": {
+    "heading": "The form was filled in. Does anyone know what it says?",
+    "sub": "A scenario we see in many care settings.",
+    "paragraph": "Margaret moves into a care home on a Monday. Her daughter brings a photo of the garden she kept for forty years and a long list of small things: tea strong, radio on low, never a bath before breakfast. The manager promises to write it all up. By Thursday a this is me form exists, but it sits in a folder in the office. The night carer has never seen it. On Friday Margaret is distressed at bedtime and nobody knows that humming her favourite hymn settles her. Here is how it plays out."
+  },
+  "trail": [
+    {
+      "when": "Monday",
+      "text": "Margaret moves in. Her daughter brings photos and a long list.",
+      "kind": "ok"
+    },
+    {
+      "when": "Monday afternoon",
+      "text": "The manager listens properly and promises to write it all down.",
+      "kind": "ok"
+    },
+    {
+      "when": "Thursday",
+      "text": "A this is me form is filled in and put in her file.",
+      "kind": "ok"
+    },
+    {
+      "when": "Thursday night",
+      "text": "The night carer has never seen it and has no time to go and look.",
+      "kind": "gap"
+    },
+    {
+      "when": "Family memories",
+      "text": "Her son remembers the hymn that calms her. Nobody has asked him.",
+      "kind": "gap"
+    },
+    {
+      "when": "Friday bedtime",
+      "text": "Margaret is upset. The carer tries things that do not help.",
+      "kind": "gap"
+    },
+    {
+      "when": "A month later",
+      "text": "The form is in a folder. New staff have never heard of it.",
+      "kind": "gap"
+    },
+    {
+      "when": "Inspection day",
+      "text": "“How do you know what matters to each person?” A folder is not an answer.",
+      "kind": "end"
+    }
+  ],
+  "trail_close": "<b>The form was never the problem.</b> The gap is between the page and the person on shift at night. Here is how CareStream closes it, and where it stops.",
+  "why": {
+    "heading": "A form in a file does not help the carer at the bedside",
+    "sub": "The detail only matters if the right person has it at the right moment.",
+    "cards": [
+      {
+        "icon": "chat",
+        "title": "Families know things you cannot guess",
+        "body": "The hymn, the favourite chair and the name she likes to be called live in the family's heads. Without a simple way to ask, they stay there."
+      },
+      {
+        "icon": "tick",
+        "title": "Paper is out of reach at 3am",
+        "body": "Night staff, agency staff and new starters rarely open a folder. They need the answer in the moment, in words they can read quickly."
+      },
+      {
+        "icon": "alert",
+        "title": "Profiles go stale",
+        "body": "People change. A page written in week one is wrong by month six unless someone adds to it, and nothing nudges anyone to do so."
+      }
+    ]
+  },
+  "how": {
+    "heading": "From the first visit to the 3am question",
+    "sub": "This is the profile feature, in the order a manager, a family member and a carer meet it. See also <a href=\"/uses/resident-knowledge\">staff asking questions of your own documents</a> and <a href=\"/how-it-works\">how CareStream works</a>.",
+    "blocks": [
+      {
+        "heading": "Start a profile on day one",
+        "bullets": [
+          "Add the person with their preferred name, then fill in 11 short sections, from life story and background to what helps when they are upset",
+          "Each section takes up to 6,000 characters, so life story work can be as light or as full as you like",
+          "Only admins manage profiles. Dietary needs stay in the care plan, because the profile is about who the person is"
+        ],
+        "tags": [
+          {
+            "label": "Training built from your own policies",
+            "href": "/training-platform"
+          },
+          {
+            "label": "How CareStream works",
+            "href": "/how-it-works"
+          }
+        ],
+        "mock": {
+          "type": "audit",
+          "audit": "Profile (example, invented resident)",
+          "stats": [
+            [
+              "Sections",
+              "11"
+            ],
+            [
+              "Filled in",
+              "7"
+            ],
+            [
+              "Family answers waiting",
+              "2"
+            ]
+          ],
+          "blocks": [
+            [
+              "Life story and background",
+              [
+                [
+                  "Example",
+                  "Grew up on a farm, then worked as a primary school teacher for 30 years"
+                ]
+              ]
+            ],
+            [
+              "What helps when they are upset or anxious",
+              [
+                [
+                  "Example",
+                  "Quiet company, a cup of tea and humming a favourite hymn"
+                ]
+              ]
+            ],
+            [
+              "How they like to communicate",
+              [
+                [
+                  "Example",
+                  "Likes to be called Peggy, not Margaret"
+                ]
+              ]
+            ]
+          ],
+          "caption": "Example screen with an invented resident. Not a real person."
+        }
+      },
+      {
+        "heading": "Ask the family, and check before staff see it",
+        "bullets": [
+          "Invite a daughter, son or friend by name and email. They get a private link that works for 14 days",
+          "They answer one friendly question for each section. You approve, edit or reject every answer before it reaches the team",
+          "Approved text is added to the profile with their name and relationship beside it"
+        ],
+        "tags": [
+          {
+            "label": "Ask for a demo",
+            "href": "/demo"
+          },
+          {
+            "label": "Pricing and plans",
+            "href": "/pricing"
+          }
+        ],
+        "mock": {
+          "type": "audit",
+          "audit": "Family answers (example, invented resident)",
+          "stats": [
+            [
+              "Link valid for",
+              "14 days"
+            ],
+            [
+              "Waiting for approval",
+              "2"
+            ],
+            [
+              "Approved",
+              "5"
+            ]
+          ],
+          "blocks": [
+            [
+              "Waiting for you to check",
+              [
+                [
+                  "Likes, from Sam (son)",
+                  "Hums an old hymn when she is anxious"
+                ],
+                [
+                  "Daily routine, from Sam (son)",
+                  "Tea first, then the paper"
+                ]
+              ]
+            ],
+            [
+              "Your choices",
+              [
+                [
+                  "Approve",
+                  "Added to the profile"
+                ],
+                [
+                  "Edit then approve",
+                  "You change the wording first"
+                ],
+                [
+                  "Reject",
+                  "Staff never see it"
+                ]
+              ]
+            ]
+          ],
+          "caption": "Example screen with invented people. Family answers stay private until you approve them."
+        }
+      },
+      {
+        "heading": "Staff ask the hub about the person, by name",
+        "bullets": [
+          "In the Staff Hub, carers choose the This is me topic and ask a plain question about a resident",
+          "The answer comes only from the approved profile, in a few short lines",
+          "If the profile does not cover it, the hub says it is not recorded in their profile yet, and does not guess. If a photo is captioned, staff can also ask for it, and it appears under the answer. The chat reads captions only and does not look inside a picture."
+        ],
+        "tags": [
+          {
+            "label": "Staff ask your own documents",
+            "href": "/uses/resident-knowledge"
+          },
+          {
+            "label": "Dementia awareness course",
+            "href": "/staff-training/dementia-awareness"
+          }
+        ],
+        "mock": {
+          "type": "audit",
+          "audit": "Staff Hub, This is me topic (example)",
+          "stats": [
+            [
+              "Topic",
+              "This is me"
+            ],
+            [
+              "Source",
+              "Approved profile only"
+            ]
+          ],
+          "blocks": [
+            [
+              "Carer asks",
+              [
+                [
+                  "Question",
+                  "What helps Peggy when she is upset at bedtime?"
+                ]
+              ]
+            ],
+            [
+              "The hub answers",
+              [
+                [
+                  "Answer",
+                  "A quiet cup of tea and company. Her son says humming her favourite hymn settles her."
+                ],
+                [
+                  "If it is not in the profile",
+                  "Not recorded in their profile yet. Ask the family or the team."
+                ]
+              ]
+            ]
+          ],
+          "caption": "Example conversation with an invented resident. Clinical questions go back to the care plan and the senior on shift."
+        }
+      },
+      {
+        "heading": "Keep it alive, and close it respectfully",
+        "bullets": [
+          "Add to the profile whenever you learn something, so it grows as the person does",
+          "Only living residents with something filled in appear in the hub",
+          "When someone passes away or moves on, they leave the hub and assistant at once, family links are cancelled and the profile is archived"
+        ],
+        "tags": [
+          {
+            "label": "CQC and compliance",
+            "href": "/cqc-compliance"
+          },
+          {
+            "label": "Annual training",
+            "href": "/uses/annual-training"
+          }
+        ],
+        "mock": {
+          "type": "audit",
+          "audit": "Profile upkeep (example, invented resident)",
+          "stats": [
+            [
+              "Status",
+              "Living"
+            ],
+            [
+              "Archive kept for",
+              "7 years"
+            ]
+          ],
+          "blocks": [
+            [
+              "When someone moves on",
+              [
+                [
+                  "Hub and assistant",
+                  "Removed straight away"
+                ],
+                [
+                  "Family links",
+                  "Cancelled"
+                ],
+                [
+                  "Pending answers",
+                  "Rejected"
+                ]
+              ]
+            ],
+            [
+              "Archive",
+              [
+                [
+                  "Held for",
+                  "7 years, can be extended"
+                ],
+                [
+                  "Memory book",
+                  "Record whether it was shared with the family"
+                ]
+              ]
+            ]
+          ],
+          "caption": "Example screen. Archive steps are handled by the admins you choose."
+        }
+      }
+    ]
+  },
+  "talk": {
+    "heading": "The questions managers ask, and how CareStream answers them",
+    "sub": "Read this as a conversation. The questions are the ones we hear most.",
+    "items": [
+      {
+        "q": "We already do a this is me form on paper. Why change?",
+        "a": "Paper is fine for the first conversation. The trouble comes later, when night staff and new starters never see it and nobody updates it. <a href=\"/training-platform\">CareStream</a> keeps the same kind of detail where staff can ask about it in seconds, and where you can keep adding."
+      },
+      {
+        "q": "Is this the same as the printed this is me form?",
+        "a": "No. CareStream has its own resident profile with 11 sections. It does not replace any form you already use, and we do not claim it is that form."
+      },
+      {
+        "q": "What goes in the profile?",
+        "a": "Life story, interests, likes and dislikes, food and drink they enjoy, daily routine, what helps when they are upset, how they like to communicate, important people and pets, faith and culture, and anything else. It is about who the person is, not their clinical record."
+      },
+      {
+        "q": "Can families add to it?",
+        "a": "Yes. You invite them by name and email and they get a private link, valid for 14 days. They answer a question for each section. You check every answer before the care team can see it."
+      },
+      {
+        "q": "What can a carer actually do with it?",
+        "a": "In the Staff Hub they pick the This is me topic and ask about a resident by name. The answer comes from the approved profile only. If the detail is not there, the hub says so rather than guessing."
+      },
+      {
+        "q": "Will it give clinical advice?",
+        "a": "No. For anything clinical, such as medication, diet texture or mobility, it points back to the care plan and the nurse or senior on shift. The profile is about the person, not their treatment."
+      },
+      {
+        "q": "Which plan is it on?",
+        "a": "Professional and Enterprise. It is not on Starter. See the <a href=\"/pricing\">pricing page</a> for the plan details."
+      },
+      {
+        "q": "Can I try it before I commit?",
+        "a": "Yes. There is a 14 day free trial on the paid plans. <a href=\"/register\">Create a free account</a> to start, or <a href=\"/demo\">ask for a demo</a>."
+      }
+    ]
+  },
+  "limits": {
+    "heading": "A way to know the person, not a care record",
+    "cards": [
+      {
+        "title": "It is not your care plan",
+        "body": "The profile holds who someone is. Risks, medication and clinical needs stay in your care plan, and the hub assistant sends clinical questions back there."
+      },
+      {
+        "title": "Families do not get a login",
+        "body": "They answer through a private link that lasts 14 days. They cannot see the profile or message staff, and a new link is needed to add more."
+      },
+      {
+        "title": "It only knows what you put in",
+        "body": "If a detail is not in the approved profile, the hub says it is not recorded yet. Someone still has to ask, listen and write it down."
+      }
+    ]
+  },
+  "read_next": [
+    "this-is-me-document",
+    "dementia-care-training-in-the-uk",
+    "care-home-staff-incentive-scheme"
+  ],
+  "faqs": {
+    "heading": "This is me and resident profiles, answered",
+    "groups": [
+      {
+        "group": "About the profile",
+        "items": [
+          {
+            "q": "What should go in a this is me document?",
+            "a": "The things that tell a carer who the person is: their history, routines, likes, what calms them, who matters and what they believe in. Our guide, <a href=\"/blog/this-is-me-document\">the this is me document explained</a>, goes through it in detail."
+          },
+          {
+            "q": "Is a this is me form the same as a resident profile?",
+            "a": "They do the same job, which is helping staff know the person. A this is me form is usually a printed document. CareStream's version is an online record with 11 sections that staff can ask about."
+          },
+          {
+            "q": "What is life story work in a care home?",
+            "a": "It is the practice of learning and recording a person's history, so care fits who they are. A short, true profile is a good start. It does not need to be long to be useful."
+          },
+          {
+            "q": "Who can see a profile?",
+            "a": "Admins manage it. Staff can see living residents who have at least one section filled in, through the hub. Unapproved family answers are never shown to staff. Photos work the same way. Family can add up to 5 through the same link, every photo waits for a manager to approve it, and staff see only approved photos through short lived private links."
+          },
+          {
+            "q": "How many residents can I add?",
+            "a": "Up to 500 living residents. Each section holds up to 6,000 characters."
+          },
+          {
+            "q": "Does staff training on dementia still matter?",
+            "a": "Yes. A profile tells staff about one person. Training builds the skills to support anyone. See the <a href=\"/staff-training/dementia-awareness\">dementia awareness course</a>."
+          }
+        ]
+      },
+      {
+        "group": "About inspections",
+        "items": [
+          {
+            "q": "Will an inspector expect to see this?",
+            "a": "Care must reflect people's preferences. <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/9\">Regulation 9</a> says care and treatment must be appropriate, meet needs and reflect preferences. A profile is one way to show you know them. It is not a pass and it is not a regulator record."
+          },
+          {
+            "q": "What does CQC say about preferences and cultural needs?",
+            "a": "The <a href=\"https://www.cqc.org.uk/guidance-regulation/providers/regulations-service-providers-and-managers/health-social-care-act/regulation-9\">CQC guidance on Regulation 9</a> expects care to be based on an assessment of needs and preferences, including cultural, religious and spiritual needs. Your profile can hold that detail, and your care plan stays the formal record."
+          }
+        ]
+      }
+    ]
+  },
+  "guide": {
+    "heading": "A practical way to build a profile with a family",
+    "lede": "The best profiles are short, true and kept up to date. You do not need to capture a whole life in a week. Start with what helps staff do the next shift well.",
+    "sections": [
+      {
+        "h3": "Life story work that fits a busy week",
+        "paragraphs": [
+          "Life story work can feel like a big project, so many homes put it off. Start small. Ask three questions in the first week: what do you like to be called, what does a good day look like, and what calms them when they are upset. Add the longer history over time, with the family, as you get to know the person.",
+          "Ask the person first, where they can tell you. Family memories add colour, but the resident's own voice comes first."
+        ]
+      },
+      {
+        "h3": "Four checks for the first fortnight",
+        "checklist": [
+          "Day one: add the person with the name they like to be called, and fill in what helps when they are upset.",
+          "Within a week: invite one or two family members or friends to answer the questions.",
+          "Each answer: read it, edit if needed and approve it before staff see it.",
+          "Each month: add one new detail you have learned, so the profile keeps pace with the person."
+        ]
+      }
+    ],
+    "note": "<b>For the inspector.</b> Keep the profile separate from the care plan. The profile shows what matters to the person, and the care plan shows how you meet their needs."
+  }
 }

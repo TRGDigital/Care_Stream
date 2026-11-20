@@ -78,7 +78,9 @@ export function StaffPictureField({ name, file, onChange, disabled }: { name: st
 }
 
 /** The picture block: avatar, Change, Remove. `onSet` and `onRemove` do the upload and return the new link (or null). */
-export function StaffPictureBlock({ name, photoUrl, onSet, onRemove, onRefresh, idPrefix = 'staff-picture', who = 'their', size = 72 }: {
+export function StaffPictureBlock({ name, photoUrl, onSet, onRemove, onRefresh, idPrefix = 'staff-picture', who = 'their', size = 72, isAdmin = false }: {
+  /** True when the person is an admin: adds the line saying their picture and name appear in emails to their team. */
+  isAdmin?: boolean
   name: string
   photoUrl: string | null | undefined
   onSet: (file: File) => Promise<string | null>
@@ -135,6 +137,7 @@ export function StaffPictureBlock({ name, photoUrl, onSet, onRemove, onRefresh, 
         </div>
       </div>
       <p className="mt-2 text-[11px] text-neutral-mid">JPEG, PNG or WebP, up to 5 MB. It is cropped to a square. Shown as initials when there is no picture.</p>
+      {isAdmin && <p className="mt-1 text-[11px] text-neutral-mid">Your picture and name appear in emails to your team.</p>}
       {error && <p role="alert" className="mt-1 text-xs text-rose-600">{error}</p>}
     </div>
   )

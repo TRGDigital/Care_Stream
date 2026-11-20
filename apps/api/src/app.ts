@@ -67,6 +67,7 @@ import { cronRouter } from './routes/cron'
 import { contentRoutineRouter } from './routes/content-routine'
 import { publicScenariosRouter, scenariosAdminRouter } from './routes/scenarios'
 import { staffPhotoFileRouter } from './lib/staff-photos'
+import { emailAvatarRouter } from './services/email/email-avatar'
 import { publicFamilyRouter, residentPhotoFileRouter } from './routes/residents-public'
 import { residentsRouter } from './routes/residents'
 import { familyStopRouter } from './routes/family-reminders'
@@ -216,6 +217,8 @@ app.use('/public/family', publicFamilyRouter)
 app.use('/public/resident-photo', residentPhotoFileRouter)
 // Staff profile pictures: signed for about ten minutes, re-checked on every request. BEFORE requireAuth.
 app.use('/public/staff-photo', staffPhotoFileRouter)
+// The small picture shown in emails to staff: a link that changes when the picture changes, 404 once it is removed. BEFORE requireAuth.
+app.use('/public/email-avatar', emailAvatarRouter)
 // "This is me" video files: signed for about ten minutes, re-checked on every request, HTTP Range supported. BEFORE requireAuth.
 app.use('/public/resident-video', residentVideoFileRouter)
 

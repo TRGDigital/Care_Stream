@@ -194,7 +194,7 @@ programmesRouter.post('/:id/enrol', requireAdmin, async (req: Request, res: Resp
     ok(res, { enrolled: enrolled.length, units_created: unitsCreated })
 
     // Tell staff there is something waiting, using the existing annual-training email.
-    notifyStaffAllocation(tenantId, enrolled, 'annual_training')
+    notifyStaffAllocation(tenantId, enrolled, 'annual_training', actorId)
       .catch(e => console.error('[programmes/enrol] staff email error:', e))
   } catch (e: any) {
     console.error('[programmes/enrol] failed:', e?.message ?? e)

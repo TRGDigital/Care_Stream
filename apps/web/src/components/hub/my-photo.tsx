@@ -89,7 +89,7 @@ export function YourPicture({ name }: { name: string }) {
               <p className="text-sm text-neutral-mid">You are viewing this hub as someone else, so their picture cannot be changed from here.</p>
             ) : (
               <>
-                <StaffPictureBlock name={name} photoUrl={url} idPrefix="hub-picture" who="your" onRefresh={refresh} onSet={set} onRemove={remove} />
+                <StaffPictureBlock name={name} photoUrl={url} idPrefix="hub-picture" who="your" isAdmin={(session as any)?.user?.role === 'admin'} onRefresh={refresh} onSet={set} onRemove={remove} />
                 <p className="mt-3 text-xs text-neutral-mid">Your managers can also see and change your picture.</p>
               </>
             )}

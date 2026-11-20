@@ -422,8 +422,10 @@ export default function StaffPage() {
           onStaffRolesChange={setStaffRoles}
           onSpecialistRolesChange={setSpecialistRoles}
           onClose={() => setEditUser(null)}
+          onPhotoChanged={(id, url) => setUsers(prev => prev.map(u => u.id === id ? { ...u, photo_url: url } : u))}
           onSaved={(updated: any) => {
-            setUsers(prev => prev.map(u => u.id === updated.id ? updated : u))
+            // The save response has no picture link, so keep the one the list already has.
+            setUsers(prev => prev.map(u => u.id === updated.id ? { ...updated, photo_url: updated.photo_url !== undefined ? updated.photo_url : u.photo_url } : u))
             setEditUser(null)
           }}
         />

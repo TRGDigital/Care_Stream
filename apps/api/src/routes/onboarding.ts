@@ -346,6 +346,7 @@ onboardingRouter.post('/flows/:id/enroll', requireAdmin, async (req, res) => {
             Log in to the portal to get started and complete your induction steps.
           </p>`,
         portalUrl,
+        actorUserId: (req as any).user?.sub,
       })
     ).catch(e => console.error('[onboarding/enroll] Notify error:', e))
   } catch (e: any) {

@@ -1998,6 +1998,7 @@ auditsRouter.post('/assignments', requireAdmin, async (req: Request, res: Respon
   const repeatText = repeat === 'none' ? '' : ` It repeats ${repeat === 'daily' ? 'every day' : repeat === 'weekly' ? 'every week' : repeat === 'monthly' ? 'every month' : 'every quarter'}.`
   notifyUsers(tenantId, 'audit_updates', [user.id], (email, name) => sendAuditUpdateEmail({
     to: email, name, orgName: tenant?.name ?? '', subject: `Audit assigned to you: ${template.name}`,
+    actorUserId: req.user!.sub, personAction: `has assigned you an audit: ${template.name}`,
     bodyHtml: `<p style="color:#374151;font-size:15px;line-height:1.6;margin:0 0 16px"><strong>${template.name}</strong>${subject ? ` (${subject})` : ''} has been assigned to you, due on <strong>${dueText}</strong>.${repeatText}</p><p style="color:#374151;font-size:15px;line-height:1.6;margin:0">You can start it from Audits in the hub.</p>`,
   })).catch(e => console.error('[audits/assignments] notify:', e))
 })
@@ -2876,7 +2877,7 @@ auditsRouter.post('/action-plan/preview-emails', requireAdmin, async (req: Reque
   const iso = (d: number) => new Date(Date.now() + d * day).toISOString()
   try {
     await sendActionPlanStaffEmail({
-      to: me.email, staffName: me.name ?? 'there', orgName,
+      to: me.email, staffName: me.name ?? 'there', orgName, actorUserId: req.user!.sub,
       actions: [
         { description: 'Update the fire evacuation plan to reflect the new bedroom layout.', priority: 'immediate', due_date: iso(7),  audit_name: 'Health & Safety Audit', contractor: null },
         { description: 'Complete refresher training on safe moving and handling.',            priority: 'priority',  due_date: iso(14), audit_name: 'Health & Safety Audit', contractor: null },
@@ -2907,7 +2908,7 @@ auditsRouter.post('/runs/:id/action-plan/generate', requireAuditAccess, async (r
 auditsRouter.post('/runs/:id/action-plan/approve', requireAuditAccess, async (req: Request, res: Response) => {
   const tenantId = req.user!.tenant_id
   try {
-    await approveActionPlan(tenantId, String(req.params.id))
+    await approveActionPlan(tenantId, String(req.params.id), req.user!.sub)
     ok(res, await getActionPlan(tenantId, String(req.params.id)))
   } catch (e: any) { err(res, 'ACTION_APPROVE_FAILED', e.message ?? 'Could not approve the plan.', 500) }
 })

@@ -122,13 +122,13 @@ export async function deleteAction(tenantId: string, actionId: string): Promise<
   await (prisma as any).auditAction.delete({ where: { id: actionId } })
 }
 
-export async function approveActionPlan(tenantId: string, runId: string): Promise<void> {
+export async function approveActionPlan(tenantId: string, runId: string, actorUserId?: string | null): Promise<void> {
   const run = await (prisma as any).auditRun.findFirst({ where: { id: runId, tenant_id: tenantId }, select: { id: true, action_plan_status: true } })
   if (!run) throw new Error('Audit not found')
   const wasDraft = run.action_plan_status === 'draft'
   await (prisma as any).auditRun.update({ where: { id: runId }, data: { action_plan_status: 'approved' } })
   // On the draft→approved transition, email assignees (staff their actions; admins the external ones).
-  if (wasDraft) notifyActionPlanAssignees(tenantId, runId).catch(() => {})
+  if (wasDraft) notifyActionPlanAssignees(tenantId, runId, actorUserId).catch(() => {})
 }
 
 const emailLine = (a: any) => ({
@@ -139,7 +139,7 @@ const emailLine = (a: any) => ({
 
 // Notify assignees when a plan is approved: staff members get the actions assigned to them; admins
 // get the external-contractor actions (which they track). Fire-and-forget, never blocks approval.
-export async function notifyActionPlanAssignees(tenantId: string, runId: string): Promise<void> {
+export async function notifyActionPlanAssignees(tenantId: string, runId: string, actorUserId?: string | null): Promise<void> {
   try {
     const [rows, tenant] = await Promise.all([
       (prisma as any).auditAction.findMany({
@@ -163,7 +163,7 @@ export async function notifyActionPlanAssignees(tenantId: string, runId: string)
         g.actions.push(a); byPerson.set(matches[0].id, g)
       }
       for (const { user: u, actions } of byPerson.values()) {
-        if (u?.email) await sendActionPlanStaffEmail({ to: u.email, staffName: u.name, orgName, actions: actions.map(emailLine) }).catch(() => {})
+        if (u?.email) await sendActionPlanStaffEmail({ to: u.email, staffName: u.name, orgName, actions: actions.map(emailLine), actorUserId }).catch(() => {})
       }
     }
 

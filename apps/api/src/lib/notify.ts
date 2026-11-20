@@ -74,12 +74,12 @@ const ALLOC_PREF: Record<AllocationKind, string> = {
 // Email staff that work has been allocated to them, with a deep link to the hub.
 // Honours the tenant's email preference for that type. (Push is sent separately by
 // the channels that already do it, e.g. CQC delivery + proactive training.)
-export async function notifyStaffAllocation(tenantId: string, userIds: string[], kind: AllocationKind): Promise<void> {
+export async function notifyStaffAllocation(tenantId: string, userIds: string[], kind: AllocationKind, actorUserId?: string | null): Promise<void> {
   if (!userIds.length) return
   const tenant = await (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { name: true } }).catch(() => null)
   const portalUrl = siteUrl()
   await notifyUsers(tenantId, ALLOC_PREF[kind], userIds, (email, name) =>
-    sendStaffAllocationEmail({ to: email, name, orgName: tenant?.name ?? '', kind, portalUrl })
+    sendStaffAllocationEmail({ to: email, name, orgName: tenant?.name ?? '', kind, portalUrl, actorUserId })
   )
 }
 

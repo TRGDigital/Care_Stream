@@ -46,13 +46,13 @@ async function allocateTraining(tenantId: string, userId: string, moduleId: stri
     select: { id: true },
   })
   const kind = mod.source === 'ai_generated' ? 'annual_training' : 'training'
-  notifyStaffAllocation(tenantId, [userId], kind as any).catch(e => console.error('[sup-alloc] training email:', e))
+  notifyStaffAllocation(tenantId, [userId], kind as any, assignedByUserId).catch(e => console.error('[sup-alloc] training email:', e))
   sendProactiveTrainingQuestions(tenantId, [userId], [moduleId]).catch(e => console.error('[sup-alloc] proactive:', e))
   return { allocated: true, enrollment_id: created.id, module_id: moduleId }
 }
 
 // Enrol the staff member on an induction (onboarding) flow.
-async function allocateInduction(tenantId: string, userId: string, flowId: string): Promise<AllocationResult> {
+async function allocateInduction(tenantId: string, userId: string, flowId: string, actorUserId?: string): Promise<AllocationResult> {
   const flow = await (prisma as any).onboardingFlow.findFirst({ where: { id: flowId, tenant_id: tenantId }, include: { steps: true } }).catch(() => null)
   if (!flow) return { allocated: false, error: 'Induction flow not found.' }
   const unmapped = (flow.steps as any[]).filter(s => s.type === 'read_policy' && !s.policy_id).length
@@ -76,14 +76,14 @@ async function allocateInduction(tenantId: string, userId: string, flowId: strin
         <p style="color:#374151;font-size:15px;line-height:1.6;margin:0 0 24px">
           Log in to the portal to get started and complete your induction steps.
         </p>`,
-      portalUrl,
+      portalUrl, actorUserId,
     })
   ).catch(e => console.error('[sup-alloc] induction email:', e))
   return { allocated: true }
 }
 
 // Deliver a CQC prep question to the staff member (creates a CqcStaffDelivery).
-async function allocateCqc(tenantId: string, userId: string, questionId: string): Promise<AllocationResult> {
+async function allocateCqc(tenantId: string, userId: string, questionId: string, actorUserId?: string): Promise<AllocationResult> {
   const q = await (prisma as any).cqcStaffQuestion.findFirst({ where: { id: questionId, tenant_id: tenantId, is_active: true } }).catch(() => null)
   if (!q) return { allocated: false, error: 'CQC prep question not found.' }
 
@@ -104,7 +104,7 @@ Original: ${q.question}`,
   })
   const tenant = await (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { name: true } }).catch(() => null)
   notifyUsers(tenantId, 'cqc_staff_prep', [userId], (email, name) =>
-    sendCqcPrepEmail({ to: email, name, orgName: tenant?.name ?? '', questionCount: 1, portalUrl: siteUrl() })
+    sendCqcPrepEmail({ to: email, name, orgName: tenant?.name ?? '', questionCount: 1, portalUrl: siteUrl(), actorUserId })
   ).catch(e => console.error('[sup-alloc] cqc email:', e))
   sendPushToUsers([userId], { title: 'New CQC practice question', body: 'Tap to answer a quick CQC inspector-style question.', url: '/cqc', tag: 'cqc-prep' }).catch(() => {})
   return { allocated: true }
@@ -117,7 +117,7 @@ export async function allocateFromSupervision(
 ): Promise<AllocationResult> {
   if (!itemId) return { allocated: false, error: 'Nothing selected.' }
   if (type === 'training')  return allocateTraining(tenantId, superviseeUserId, itemId, conductorUserId)
-  if (type === 'induction') return allocateInduction(tenantId, superviseeUserId, itemId)
-  if (type === 'cqc')       return allocateCqc(tenantId, superviseeUserId, itemId)
+  if (type === 'induction') return allocateInduction(tenantId, superviseeUserId, itemId, conductorUserId)
+  if (type === 'cqc')       return allocateCqc(tenantId, superviseeUserId, itemId, conductorUserId)
   return { allocated: false, error: 'Unknown allocation type.' }
 }

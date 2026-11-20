@@ -530,7 +530,7 @@ cqcQuestionsRouter.post('/generate-for-staff', requireAdmin, async (req: Request
       }
       for (const [count, ids] of byCount) {
         notifyUsers(tenantId, 'cqc_staff_prep', ids, (email, name) =>
-          sendCqcPrepEmail({ to: email, name, orgName: tenant?.name ?? '', questionCount: count, portalUrl })
+          sendCqcPrepEmail({ to: email, name, orgName: tenant?.name ?? '', questionCount: count, portalUrl, actorUserId: (req as any).user?.sub })
         ).catch(e => console.error('[cqc/generate-for-staff] Notify error:', e))
       }
       sendPushToUsers(notifyIds, { title: 'New CQC practice questions', body: 'Tap to answer your CQC inspector-style practice questions.', url: '/cqc', tag: 'cqc-prep' }).catch(() => {})
@@ -687,7 +687,7 @@ Original: ${q.question}`,
       const tenant = await (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { name: true } })
       const portalUrl = siteUrl()
       notifyUsers(tenantId, 'cqc_staff_prep', newUserIds, (email, name) =>
-        sendCqcPrepEmail({ to: email, name, orgName: tenant?.name ?? '', questionCount: 1, portalUrl })
+        sendCqcPrepEmail({ to: email, name, orgName: tenant?.name ?? '', questionCount: 1, portalUrl, actorUserId: (req as any).user?.sub })
       ).catch(e => console.error('[cqc/deliver] Notify error:', e))
       // PWA push (additive — the in-hub nudge that replaces WhatsApp over time)
       sendPushToUsers(newUserIds, { title: 'New CQC practice question', body: 'Tap to answer a quick CQC inspector-style question.', url: '/cqc', tag: 'cqc-prep' }).catch(() => {})

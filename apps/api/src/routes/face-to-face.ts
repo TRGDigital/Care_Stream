@@ -406,7 +406,7 @@ faceToFaceRouter.post('/sessions/:id/assign-module', requireAdmin, async (req: R
     // Email the newly-assigned staff a hub link (fire-and-forget).
     if (toCreate.length) {
       const channel = module.source === 'ai_generated' ? 'annual_training' : 'training'
-      notifyStaffAllocation(tenantId, toCreate, channel).catch(e => console.error('[face-to-face/assign] staff email error:', e))
+      notifyStaffAllocation(tenantId, toCreate, channel, assignedBy).catch(e => console.error('[face-to-face/assign] staff email error:', e))
     }
     ok(res, { assigned: validUserIds.length, newly_enrolled: toCreate.length })
   } catch (e: any) { err(res, 'ASSIGN_FAILED', e.message, 500) }
@@ -442,7 +442,7 @@ faceToFaceRouter.post('/sessions/:id/remind', requireAdmin, async (req: Request,
     }
 
     await Promise.allSettled((users as any[]).map(u =>
-      sendFaceToFaceReminderEmail({ to: u.email, name: u.name, orgName: tenant?.name ?? '', title: session.title, dateLabel, trainerLabel })
+      sendFaceToFaceReminderEmail({ to: u.email, name: u.name, orgName: tenant?.name ?? '', title: session.title, dateLabel, trainerLabel, actorUserId: uid(req) })
         .catch(e => console.error('[face-to-face/remind] email error:', e))
     ))
     await (prisma as any).faceToFaceSession.update({ where: { id: session.id }, data: { reminder_sent_at: new Date() } }).catch(() => {})

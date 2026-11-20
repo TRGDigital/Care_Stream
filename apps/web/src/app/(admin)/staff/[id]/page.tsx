@@ -368,6 +368,7 @@ export default function StaffRecordPage() {
             name={u.name ?? ''}
             photoUrl={rec.photo_url}
             idPrefix="staff-record-picture"
+            isAdmin={u?.role === 'admin'}
             onRefresh={load}
             onSet={async file => {
               const r = await createApiClient(token).users.setPhoto(id, file)

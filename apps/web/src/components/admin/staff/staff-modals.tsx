@@ -3,7 +3,8 @@
 // Staff modals — extracted from the staff page and lazy-loaded (next/dynamic)
 // so this code is only fetched when a user opens one of these dialogs.
 
-import { StaffPictureField } from '@/components/admin/staff-picture-controls'
+import { StaffPictureField, StaffPictureBlock } from '@/components/admin/staff-picture-controls'
+import { StaffAvatar } from '@/components/admin/staff-avatar'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useSession } from 'next-auth/react'
@@ -18,7 +19,6 @@ import {
   LanguageSwitchToggle,
   SuggestTranslationsToggle,
   CredentialsPanel,
-  InitialAvatar,
   InlineAddRole,
   ADD_NEW_ROLE,
   fmtDate,
@@ -900,7 +900,10 @@ export function EditModal({
   onSpecialistRolesChange,
   onClose,
   onSaved,
+  onPhotoChanged,
 }: {
+  /** Called after the picture is added, changed or removed here (it saves on its own), so the list can update its avatar. */
+  onPhotoChanged?: (userId: string, photoUrl: string | null) => void
   user:            any
   token:           string
   staffRoles:      string[]
@@ -922,6 +925,7 @@ export function EditModal({
     first_language:  user.first_language  ?? 'eng',
     second_language: user.second_language ?? '',
   })
+  const [photoUrl, setPhotoUrl]           = useState<string | null>(user.photo_url ?? null)
   const [specialisms, setSpecialisms]     = useState<string[]>(Array.isArray(user.specialisms) ? user.specialisms : [])
   const [hasSpecialism, setHasSpecialism] = useState<boolean>(Array.isArray(user.specialisms) && user.specialisms.length > 0)
   const [auditIds, setAuditIds]           = useState<string[]>(Array.isArray(user.audit_template_ids) ? user.audit_template_ids : [])
@@ -987,6 +991,28 @@ export function EditModal({
       <div className="w-full max-w-4xl rounded-card bg-white p-6 shadow-xl">
         <h2 className="mb-5 text-lg font-semibold text-neutral-dark">Edit staff member</h2>
         <p className="mb-5 text-sm text-neutral-mid">Editing <strong className="text-neutral-dark">{user.name}</strong> · {user.email}</p>
+
+        {/* Picture: saves on its own, without pressing Save below */}
+        <div className="mb-5 rounded-lg border border-gray-100 p-4">
+          <p className="mb-3 text-sm font-medium text-neutral-dark">Picture</p>
+          <StaffPictureBlock
+            name={form.name || user.name || ''}
+            photoUrl={photoUrl}
+            idPrefix="edit-staff-picture"
+            size={56}
+            isAdmin={form.role === 'admin'}
+            onRefresh={() => { createApiClient(token).users.get(user.id).then((d: any) => setPhotoUrl(d?.user?.photo_url ?? null)).catch(() => {}) }}
+            onSet={async file => {
+              const r = await createApiClient(token).users.setPhoto(user.id, file)
+              setPhotoUrl(r.photo_url); onPhotoChanged?.(user.id, r.photo_url)
+              return r.photo_url
+            }}
+            onRemove={async () => {
+              await createApiClient(token).users.removePhoto(user.id)
+              setPhotoUrl(null); onPhotoChanged?.(user.id, null)
+            }}
+          />
+        </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid gap-4 sm:grid-cols-2">
@@ -1241,7 +1267,7 @@ export function StaffDetailModal({ userId, token, languages, onClose, onEdit, on
         {/* Header */}
         <div className="mb-5 flex items-start justify-between gap-3">
           <div className="flex items-center gap-3">
-            {user && <InitialAvatar name={user.name} role={user.role} />}
+            {user && <StaffAvatar name={user.name} photoUrl={user.photo_url} size={40} onRefresh={load} />}
             <div>
               <h2 className="text-lg font-semibold text-neutral-dark">{user?.name ?? 'Staff member'}</h2>
               {user && <p className="text-xs text-neutral-mid">{user.email}</p>}

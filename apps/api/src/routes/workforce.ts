@@ -346,7 +346,7 @@ workforceRouter.post('/staff/:userId/supervisions', async (req: Request, res: Re
       `<p style="font-size:15px;margin:0 0 12px">Your ${label} has been booked for <strong>${fmtLong(held)}</strong>${conductorName ? ` with ${escapeHtml(conductorName)}` : ''}.</p>` +
       `<p style="font-size:14px;color:#666;margin:0">You'll get a reminder the day before. You can see it any time in your CareStream hub under <strong>Supervisions</strong>.</p>`
     notifyUsers(tenantId, 'supervision_updates', [userId], (email, name) =>
-      sendTrainingUpdateEmail({ to: email, name, orgName: tenant?.name ?? 'Your service', subject: `Your ${label} is booked for ${fmtLong(held)}`, bodyHtml }),
+      sendTrainingUpdateEmail({ to: email, name, orgName: tenant?.name ?? 'Your service', subject: `Your ${label} is booked for ${fmtLong(held)}`, bodyHtml, actorUserId: conductorId, personAction: `has booked your ${label} for ${fmtLong(held)}` }),
     ).catch(() => {})
   }
 

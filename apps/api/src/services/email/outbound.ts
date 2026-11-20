@@ -7,6 +7,8 @@ import '../../lib/email-guard'   // never email reserved fictional domains (exam
 import { signFeedbackToken } from '../../lib/feedback-token'
 import { siteUrl } from '../../lib/urls'
 import { reminderCopy } from '../../lib/family-reminders-copy'
+import { personLedEmail, personFrom, type PersonAdmin } from './person-email'
+import { resolveActor } from './email-avatar'
 
 const INBOUND_DOMAIN = process.env.INBOUND_EMAIL_DOMAIN ?? 'carestreamai.co.uk'
 const WEB_URL        = siteUrl()
@@ -17,6 +19,14 @@ const PURPLE       = '#9B52B5'
 const PURPLE_DARK  = '#7A3D9A'
 const NEUTRAL_DARK = '#1A1530'
 const NEUTRAL_MID  = '#5E4D70'
+
+// ─── Person-led frame (staff emails an admin triggered) ──────────────────────
+// When the acting admin is known the email shows them (photo, name, role, home) and is sent "<Name> via CareStream".
+// With no acting person, each function keeps its existing branded look.
+const personFooterNote = (admin: PersonAdmin, did: string) =>
+  `You received this because ${admin.name}${admin.homeName ? ` at ${admin.homeName}` : ''} ${did} in CareStream. If you were not expecting it, please speak to your manager.`
+const personSender = (admin: PersonAdmin, email: string) => ({ email, name: personFrom(admin) })
+const fmtDue = (d: Date | string | null | undefined) => d ? new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) : null
 
 // Lazy initialisation — API key may not be set in test environments.
 let initialised = false
@@ -697,11 +707,39 @@ export interface SendTrainingUpdateOptions {
   orgName:  string
   subject:  string
   bodyHtml: string
+  /** The admin who triggered this, when there is one: the email is then person-led and sent "<Name> via CareStream". */
+  actorUserId?:  string | null
+  /** What they did, after their name, for example "has booked your supervision". Used for the headline and subject. */
+  personAction?: string
+}
+
+// Shared by the two free-form update emails (training, audit): person-led when there is an acting admin.
+async function sendUpdateEmail(opts: SendTrainingUpdateOptions & { buttonLabel?: string; buttonHref?: string }): Promise<void> {
+  const from      = process.env.SENDGRID_FROM_ADDRESS ?? `noreply@${INBOUND_DOMAIN}`
+  const firstName = opts.name.split(' ')[0] ?? opts.name
+  const admin = await resolveActor(opts.actorUserId)
+  if (admin) {
+    const action = opts.personAction || 'has sent you an update'
+    const html = personLedEmail({
+      admin, headline: `${admin.name} ${action}`, bodyHtml: opts.bodyHtml,
+      button: opts.buttonHref ? { label: opts.buttonLabel || 'Open in your hub', href: opts.buttonHref } : null,
+      footerNote: personFooterNote(admin, 'sent you this'), logoUrl: LOGO_URL,
+    })
+    await sgMail.send({ to: opts.to, from: personSender(admin, from), subject: `${admin.name} ${action}`, html })
+    return
+  }
+  const html = emailWrapper(`
+    <p style="color:${NEUTRAL_DARK};font-size:15px;margin:0 0 16px">Hi ${firstName},</p>
+    ${opts.bodyHtml}
+    ${emailFooter(opts.orgName)}
+  `)
+  await sgMail.send({ to: opts.to, from, subject: opts.subject, html })
 }
 
 export async function sendTrainingUpdateEmail(opts: SendTrainingUpdateOptions): Promise<void> {
   ensureInitialised()
   if (!process.env.SENDGRID_API_KEY) return
+  if (opts.actorUserId) { await sendUpdateEmail(opts); return }
 
   const from      = process.env.SENDGRID_FROM_ADDRESS ?? `noreply@${INBOUND_DOMAIN}`
   const firstName = opts.name.split(' ')[0] ?? opts.name
@@ -723,6 +761,8 @@ export interface SendAuditUpdateOptions {
   orgName:  string
   subject:  string
   bodyHtml: string
+  actorUserId?:  string | null
+  personAction?: string
 }
 
 // The audit PDF report, emailed to admins when an audit is completed or signed off.
@@ -753,6 +793,7 @@ export async function sendAuditReportEmail(opts: {
 export async function sendAuditUpdateEmail(opts: SendAuditUpdateOptions): Promise<void> {
   ensureInitialised()
   if (!process.env.SENDGRID_API_KEY) return
+  if (opts.actorUserId) { await sendUpdateEmail(opts); return }
 
   const from      = process.env.SENDGRID_FROM_ADDRESS ?? `noreply@${INBOUND_DOMAIN}`
   const firstName = opts.name.split(' ')[0] ?? opts.name
@@ -774,6 +815,7 @@ export interface SendCqcPrepOptions {
   orgName:      string
   questionCount: number
   portalUrl:    string
+  actorUserId?: string | null
 }
 
 export async function sendCqcPrepEmail(opts: SendCqcPrepOptions): Promise<void> {
@@ -782,6 +824,21 @@ export async function sendCqcPrepEmail(opts: SendCqcPrepOptions): Promise<void> 
 
   const from      = process.env.SENDGRID_FROM_ADDRESS ?? `noreply@${INBOUND_DOMAIN}`
   const firstName = opts.name.split(' ')[0] ?? opts.name
+
+  const admin = await resolveActor(opts.actorUserId)
+  if (admin) {
+    const n = opts.questionCount
+    const thing = `${n} CQC prep ${n === 1 ? 'question' : 'questions'}`
+    const html = personLedEmail({
+      admin, headline: `${admin.name} has allocated you ${thing}`,
+      intro: 'Take a few minutes to review and prepare your answers before the next inspection.',
+      details: [{ label: 'Allocated', value: thing }, { label: 'Where', value: 'Your CareStream hub, on your phone or computer' }],
+      button: { label: 'View my CQC questions', href: `${opts.portalUrl}/cqc` },
+      footerNote: personFooterNote(admin, 'allocated you CQC prep questions'), logoUrl: LOGO_URL,
+    })
+    await sgMail.send({ to: opts.to, from: personSender(admin, from), subject: `${admin.name} has allocated you ${thing}`, html })
+    return
+  }
 
   const html = emailWrapper(`
     <p style="color:${NEUTRAL_DARK};font-size:15px;margin:0 0 16px">Hi ${firstName},</p>
@@ -815,6 +872,7 @@ export interface SendOnboardingUpdateOptions {
   subject:   string
   bodyHtml:  string
   portalUrl: string
+  actorUserId?: string | null
 }
 
 export async function sendOnboardingUpdateEmail(opts: SendOnboardingUpdateOptions): Promise<void> {
@@ -823,6 +881,17 @@ export async function sendOnboardingUpdateEmail(opts: SendOnboardingUpdateOption
 
   const from      = process.env.SENDGRID_FROM_ADDRESS ?? `noreply@${INBOUND_DOMAIN}`
   const firstName = opts.name.split(' ')[0] ?? opts.name
+
+  const admin = await resolveActor(opts.actorUserId)
+  if (admin) {
+    const html = personLedEmail({
+      admin, headline: `${admin.name} has enrolled you on an induction`, bodyHtml: opts.bodyHtml,
+      button: { label: 'Start my induction', href: `${opts.portalUrl}/chat?view=induction` },
+      footerNote: personFooterNote(admin, 'enrolled you on an induction'), logoUrl: LOGO_URL,
+    })
+    await sgMail.send({ to: opts.to, from: personSender(admin, from), subject: `${admin.name} has enrolled you on an induction`, html })
+    return
+  }
 
   const html = emailWrapper(`
     <p style="color:${NEUTRAL_DARK};font-size:15px;margin:0 0 16px">Hi ${firstName},</p>
@@ -853,13 +922,31 @@ const ALLOC_COPY: Record<AllocationKind, { noun: string; path: string; cta: stri
   cqc_prep:        { noun: 'CQC prep',          path: '/cqc',                 cta: 'View my CQC questions' },
 }
 
-export async function sendStaffAllocationEmail(opts: { to: string; name: string; orgName: string; kind: AllocationKind; portalUrl: string }): Promise<void> {
+const ALLOC_THING: Record<AllocationKind, string> = {
+  induction: 'an induction', training: 'training', annual_training: 'annual training', follow_up: 'a follow-up', cqc_prep: 'CQC prep questions',
+}
+
+export async function sendStaffAllocationEmail(opts: { to: string; name: string; orgName: string; kind: AllocationKind; portalUrl: string; actorUserId?: string | null }): Promise<void> {
   ensureInitialised()
   if (!process.env.SENDGRID_API_KEY) return
   const c         = ALLOC_COPY[opts.kind]
   const from      = process.env.SENDGRID_FROM_ADDRESS ?? `noreply@${INBOUND_DOMAIN}`
   const firstName = (opts.name || '').split(' ')[0] || 'there'
   const link      = `${opts.portalUrl.replace(/\/$/, '')}${c.path}`
+
+  const admin = await resolveActor(opts.actorUserId)
+  if (admin) {
+    const thing = ALLOC_THING[opts.kind]
+    const html = personLedEmail({
+      admin, headline: `${admin.name} has allocated you ${thing}`,
+      intro: 'Open the hub to get started. You can do it on your phone or computer.',
+      details: [{ label: 'Allocated', value: `New ${c.noun}` }, { label: 'Where', value: 'Your CareStream hub' }],
+      button: { label: c.cta, href: link },
+      footerNote: personFooterNote(admin, `allocated you ${thing}`), logoUrl: LOGO_URL,
+    })
+    await sgMail.send({ to: opts.to, from: personSender(admin, from), subject: `${admin.name} has allocated you ${thing}`, html })
+    return
+  }
 
   const html = emailWrapper(`
     <p style="color:${NEUTRAL_DARK};font-size:15px;margin:0 0 16px">Hi ${firstName},</p>
@@ -886,7 +973,7 @@ export async function sendStaffAllocationEmail(opts: { to: string; name: string;
 // reminder that only says "you have training" is easy to ignore.
 export async function sendTrainingReminderEmail(opts: {
   to: string; name: string; orgName: string; courseName: string; dueDate: Date | null
-  kind: 'training' | 'annual_training'; portalUrl: string
+  kind: 'training' | 'annual_training'; portalUrl: string; actorUserId?: string | null
 }): Promise<void> {
   ensureInitialised()
   if (!process.env.SENDGRID_API_KEY) throw new Error('Email is not configured')
@@ -894,6 +981,19 @@ export async function sendTrainingReminderEmail(opts: {
   const from      = process.env.SENDGRID_FROM_ADDRESS ?? `noreply@${INBOUND_DOMAIN}`
   const firstName = (opts.name || '').split(' ')[0] || 'there'
   const link      = `${opts.portalUrl.replace(/\/$/, '')}${c.path}`
+
+  const admin = await resolveActor(opts.actorUserId)
+  if (admin) {
+    const html = personLedEmail({
+      admin, headline: `${admin.name} sent you a reminder about ${opts.courseName}`,
+      intro: 'You can do it on your phone or computer, and your progress is saved as you go.',
+      details: [{ label: 'Course', value: opts.courseName }, { label: 'Due by', value: fmtDue(opts.dueDate) }],
+      button: { label: c.cta, href: link },
+      footerNote: personFooterNote(admin, 'sent you a training reminder'), logoUrl: LOGO_URL,
+    })
+    await sgMail.send({ to: opts.to, from: personSender(admin, from), subject: `${admin.name} sent you a reminder: ${opts.courseName}`, html })
+    return
+  }
   const course    = opts.courseName.replace(/[&<>"]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch] as string))
   const due       = opts.dueDate
     ? ` It is due by <strong>${opts.dueDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</strong>.`
@@ -1032,11 +1132,23 @@ export async function sendTrainingCompletionEmail(opts: {
 
 // ─── Face-to-face session reminder (admin-triggered) ─────────────────────────
 
-export async function sendFaceToFaceReminderEmail(opts: { to: string; name: string; orgName: string; title: string; dateLabel: string; trainerLabel?: string | null }): Promise<void> {
+export async function sendFaceToFaceReminderEmail(opts: { to: string; name: string; orgName: string; title: string; dateLabel: string; trainerLabel?: string | null; actorUserId?: string | null }): Promise<void> {
   ensureInitialised()
   if (!process.env.SENDGRID_API_KEY) return
   const from      = process.env.SENDGRID_FROM_ADDRESS ?? `noreply@${INBOUND_DOMAIN}`
   const firstName = (opts.name || '').split(' ')[0] || 'there'
+
+  const admin = await resolveActor(opts.actorUserId)
+  if (admin) {
+    const html = personLedEmail({
+      admin, headline: `${admin.name} sent you a reminder about a training session`,
+      intro: 'You are booked into a face-to-face training session. Please make sure you attend. If you cannot make it, let your manager know as soon as possible.',
+      details: [{ label: 'Training', value: opts.title }, { label: 'Date', value: opts.dateLabel }, { label: 'Delivered by', value: opts.trainerLabel }],
+      footerNote: personFooterNote(admin, 'sent you a session reminder'), logoUrl: LOGO_URL,
+    })
+    await sgMail.send({ to: opts.to, from: personSender(admin, from), subject: `${admin.name} sent you a reminder: ${opts.title} on ${opts.dateLabel}`, html })
+    return
+  }
 
   const html = emailWrapper(`
     <p style="color:${NEUTRAL_DARK};font-size:15px;margin:0 0 16px">Hi ${firstName},</p>
@@ -1358,13 +1470,27 @@ function actionRowsHtml(actions: ActionLine[], showContractor = false): string {
   }).join('<tr><td style="height:8px"></td></tr>')
 }
 
-export async function sendActionPlanStaffEmail(opts: { to: string; staffName: string; orgName: string; actions: ActionLine[] }): Promise<void> {
+export async function sendActionPlanStaffEmail(opts: { to: string; staffName: string; orgName: string; actions: ActionLine[]; actorUserId?: string | null }): Promise<void> {
   ensureInitialised()
   if (!process.env.SENDGRID_API_KEY) { console.warn('[email] SENDGRID_API_KEY not set — skipping action-plan staff email'); return }
   const from      = process.env.SENDGRID_FROM_ADDRESS ?? process.env.SENDGRID_FROM_EMAIL ?? `noreply@${INBOUND_DOMAIN}`
   const firstName = opts.staffName.split(' ')[0] || opts.staffName
   const n         = opts.actions.length
   const hubUrl    = `${WEB_URL}/login`
+
+  const admin = await resolveActor(opts.actorUserId)
+  if (admin) {
+    const what = `${n} audit action${n === 1 ? '' : 's'}`
+    const html = personLedEmail({
+      admin, headline: `${admin.name} has assigned you ${what}`,
+      intro: `Please complete ${n === 1 ? 'it' : 'them'} and mark ${n === 1 ? 'it' : 'each one'} done in your CareStream hub, under My actions.`,
+      bodyHtml: `<table role="presentation" style="border-collapse:separate;width:100%">${actionRowsHtml(opts.actions)}</table>`,
+      button: { label: 'Open my actions', href: hubUrl },
+      footerNote: personFooterNote(admin, `assigned you ${what} from an audit action plan`), logoUrl: LOGO_URL,
+    })
+    await sgMail.send({ to: opts.to, from: personSender(admin, from), subject: `${admin.name} has assigned you ${what}`, html })
+    return
+  }
 
   const html = emailWrapper(`
     <p style="color:${NEUTRAL_DARK};font-size:15px;margin:0 0 16px">Hi ${escHtml(firstName)},</p>

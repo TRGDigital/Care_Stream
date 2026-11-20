@@ -622,6 +622,7 @@ trainingRouter.post('/enrollments/:id/remind', requireAdmin, async (req: Request
         to: enr.user.email, name: enr.user.name, orgName: tenant?.name ?? '',
         courseName: enr.module.name, dueDate: enr.due_date ? new Date(enr.due_date) : null,
         kind: enr.module.source === 'ai_generated' ? 'annual_training' : 'training', portalUrl: siteUrl(),
+        actorUserId: (req as any).user.sub,
       })
       emailed = true
     }
@@ -739,8 +740,8 @@ trainingRouter.post('/enroll', requireAdmin, async (req: Request, res: Response)
       // split into My Training vs Annual Training so the link points to the right view.
       const newManualUsers = [...new Set(toCreate.filter(t => !annualSet.has(t.module_id)).map(t => t.user_id))]
       const newAnnualUsers = [...new Set(toCreate.filter(t =>  annualSet.has(t.module_id)).map(t => t.user_id))]
-      notifyStaffAllocation(tenantId, newManualUsers, 'training').catch(e => console.error('[training/enroll] staff email error:', e))
-      notifyStaffAllocation(tenantId, newAnnualUsers, 'annual_training').catch(e => console.error('[training/enroll] staff email error:', e))
+      notifyStaffAllocation(tenantId, newManualUsers, 'training', userId).catch(e => console.error('[training/enroll] staff email error:', e))
+      notifyStaffAllocation(tenantId, newAnnualUsers, 'annual_training', userId).catch(e => console.error('[training/enroll] staff email error:', e))
     }
     sendProactiveTrainingQuestions(tenantId, validUserIds, validModuleIds).catch(e =>
       console.error('[training/enroll] Proactive send error:', e)
@@ -898,7 +899,7 @@ trainingRouter.post('/licences/:id/allocate', requireAdmin, async (req: Request,
     // Tell the staff member their course is ready (the same email the full plan sends on
     // assignment). Not when a manager allocates a licence to themselves.
     if (userId !== adminId) {
-      notifyStaffAllocation(tenantId, [userId], 'annual_training').catch(e => console.error('[training/licences/allocate] staff email error:', e))
+      notifyStaffAllocation(tenantId, [userId], 'annual_training', adminId).catch(e => console.error('[training/licences/allocate] staff email error:', e))
     }
   } catch (e: any) { err(res, 'ALLOCATE_FAILED', e.message, 500) }
 })

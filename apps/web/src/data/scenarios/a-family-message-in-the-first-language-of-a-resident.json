@@ -3,8 +3,8 @@
   "order": 107,
   "title": "Planning care for <em>bilingual dementia?</em> A family message in her own language is easy to collect and safe to play.",
   "meta_title": "Bilingual Dementia: A Family Message in Her Language | CareStreamAI",
-  "meta_description": "Family record a short message in the resident's first language by private link. You approve it, staff play it. CareStream does not translate or subtitle video.",
-  "lede": "A resident who has spoken two languages all her life may find English tiring, and her family know the words and the voice that feel like home. Teams working with bilingual dementia often ask how a relative can send a message in that language. CareStream gives them a private link, holds the video for your approval, and lets staff play it without needing to understand a word. It sits alongside <a href=\"/training-platform\">your training and policy tools</a>.",
+  "meta_description": "A relative records a message in her first language. You read the automatic English translation, check it and approve. Staff play it.",
+  "lede": "A resident who has spoken two languages all her life may find English tiring, and her family know the words and the voice that feel like home. Teams working with bilingual dementia often ask how a relative can send a message in that language, and how a manager can know what it says. CareStream gives them a private link, translates the speech for you to read before you approve, and lets staff play it. It sits alongside <a href=\"/training-platform\">your training and policy tools</a>.",
   "panel": {
     "title": "One grandson's message, step by step",
     "pill": "Illustration",
@@ -20,7 +20,7 @@
         "done": true
       },
       {
-        "label": "Manager previews, writes an English title, approves",
+        "label": "Manager reads the English translation, approves",
         "note": "Not yet",
         "done": false
       },
@@ -107,7 +107,7 @@
       "kind": "end"
     }
   ],
-  "trail_close": "<b>The family could give her something in her own language.</b> The gap is between that and a safe way to use it. Here is how CareStream collects a message, lets you check it, and lets any carer find it.",
+  "trail_close": "<b>The family could give her something in her own language.</b> The gap is between that and a safe way to use it. Here is how CareStream collects a message, shows you what it says, lets you check it, and lets any carer find it.",
   "why": {
     "heading": "Language is part of who a person is",
     "sub": "Staff do not need to understand every word to offer a familiar voice.",
@@ -124,8 +124,8 @@
       },
       {
         "icon": "alert",
-        "title": "You cannot check what you cannot understand",
-        "body": "A clip in another language can still show other people or say something the resident would not want played. A manager still has to approve it, so ask the family for a note on what it is about. <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/10\">Regulation 10</a> includes ensuring the privacy of the person."
+        "title": "A message you cannot read still needs checking",
+        "body": "A clip in another language can still show other people or say something the resident would not want played. CareStream turns the speech into text and an English translation for you to read, but a manager still has to approve it. <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/10\">Regulation 10</a> includes ensuring the privacy of the person."
       }
     ]
   },
@@ -136,9 +136,9 @@
       {
         "heading": "The family record in whichever language they choose",
         "bullets": [
-          "You invite the relative by name and email from the resident's record. They get a private link, with no account. The page they see is in English, but what they record is up to them",
+          "You invite the relative by name and email from the resident's record. They get a private link, with no account. What they record is up to them, in any language",
           "They tap Record a message, which opens the phone camera, or Choose a video. Each clip can be up to 60 seconds, with up to 5 on one link and up to 150MB per upload",
-          "They can add a short title of up to 60 characters and remove a clip before pressing Send. A line above the buttons asks them to share only what they are happy for the care team to play"
+          "They can add a short title of up to 60 characters and remove a clip before pressing Send. A line above the buttons asks them to share only what they are happy for the care team to play, and says that speech in another language is turned into text and translated so a manager can understand it"
         ],
         "tags": [
           {
@@ -190,11 +190,11 @@
         }
       },
       {
-        "heading": "You approve it, and write the title in English if you like",
+        "heading": "You read what is said, check it, and approve",
         "bullets": [
-          "The video waits on the Approvals tab. You can play it there, edit the title and add a note for staff, then choose Approve or Reject",
-          "If you do not speak the language, ask the family for a line on what the message says, or ask a colleague who does. The note field is a good place to put it",
-          "Rejecting removes the video from storage straight away. A video you add yourself is approved at once"
+          "The video waits on the Approvals tab. Play it there. A What is said panel shows the language, the original words and an English translation, marked Machine generated",
+          "Check anything important with someone who speaks the language. If the translation is off, choose Edit translation. Edits record who made them",
+          "You can tick the box to show the English text to staff, then choose Approve or Reject. Rejecting removes the video and its words at once"
         ],
         "tags": [
           {
@@ -221,32 +221,44 @@
           ],
           "blocks": [
             [
-              "Video waiting for approval (example)",
+              "What is said (example)",
               [
+                [
+                  "Machine generated",
+                  ""
+                ],
+                [
+                  "Language: Polish",
+                  ""
+                ],
+                [
+                  "Original text (Polish): a greeting and a bread recipe",
+                  ""
+                ],
+                [
+                  "English translation: Good morning, Babcia. I made your bread today.",
+                  "Edit translation"
+                ],
+                [
+                  "Show the English text to staff when this video is played",
+                  "Off"
+                ],
                 [
                   "Tomasz, grandson, 0:40",
                   "Approve, Reject"
-                ],
-                [
-                  "Title for staff: Tomasz, in Polish, saying good morning",
-                  ""
-                ],
-                [
-                  "Note for staff: Polish. Greeting and a bread recipe",
-                  ""
                 ]
               ]
             ]
           ],
-          "caption": "Example only. Nothing here has reached the care team."
+          "caption": "Example only. Names and words are illustrative. Nothing here has reached the care team."
         }
       },
       {
         "heading": "Staff find it by the title and note, then press play",
         "bullets": [
-          "In the This is me chat a carer asks, for example, “do we have a message in Polish?”. The chat reads the approved title and note only, and the video appears under the answer with the resident's name and room number",
-          "A Messages from family button lists a person's approved videos, newest first. Playing opens just the video on a dimmed backdrop, which suits a tablet",
-          "Each play is logged with who and when. The assistant never watches or describes a video, so it does not know what is said"
+          "In the This is me chat a carer asks, for example, “do we have a message in Polish?”. The chat finds videos by the approved title and note only, and the video appears with the resident's name and room number",
+          "A Messages from family button lists a person's approved videos, newest first. Playing opens just the video on a dimmed backdrop. If you ticked the box, the English text appears under it",
+          "Each play is logged with who and when. The assistant never watches a video or uses the words"
         ],
         "tags": [
           {
@@ -284,17 +296,26 @@
                   "Play"
                 ]
               ]
+            ],
+            [
+              "Under the video (example)",
+              [
+                [
+                  "English translation, machine generated and checked by a manager: Good morning, Babcia. I made your bread today.",
+                  ""
+                ]
+              ]
             ]
           ],
           "caption": "Example only. Illustration, not a real resident."
         }
       },
       {
-        "heading": "No translation or subtitles, and that is stated plainly",
+        "heading": "What the translation does, and what it does not",
         "bullets": [
-          "CareStream does not translate or subtitle video messages. The clip plays as the family recorded it",
-          "Translation on paid plans covers training for staff, and is separate. See <a href=\"/languages\">the languages page</a>. It does not touch these videos",
-          "Videos are private, shown through short lived links to signed in staff only, and leave the hub at once when someone dies or moves on"
+          "The speech is turned into text and translated automatically, in the UK region, or when you press Transcribe and translate. It can be wrong, so it is a guide for you, not a record of what was said",
+          "It is not subtitles in the video, and it is not live. Welsh is not supported. See <a href=\"/languages\">the languages page</a> for staff training translation, which is separate",
+          "Only managers and admins see the words unless you tick the box. They are deleted with the video"
         ],
         "tags": [
           {
@@ -308,28 +329,32 @@
         ],
         "mock": {
           "type": "audit",
-          "audit": "Residents: Video messages (example)",
+          "audit": "Residents: What is said, other states (example)",
           "stats": [
             [
               "Translation of video",
-              "None"
+              "Automatic"
             ],
             [
-              "Public address",
-              "None"
+              "Staff see it",
+              "Only if ticked"
             ]
           ],
           "blocks": [
             [
-              "Video messages (example)",
+              "What you may see (example)",
               [
                 [
-                  "Tomasz, in Polish, saying good morning",
-                  "Approved, Delete"
+                  "Working on it",
+                  ""
                 ],
                 [
-                  "Recently played: a carer played this title",
-                  "Time shown"
+                  "No speech found in this video",
+                  ""
+                ],
+                [
+                  "Language not supported: original text only",
+                  ""
                 ]
               ]
             ]
@@ -345,52 +370,52 @@
     "items": [
       {
         "q": "A grandson wants to record a message in Polish. Can he?",
-        "a": "Yes. You invite him from the resident's record, and on his private link he records or chooses a short video in any language. The page itself is in English. Nothing reaches your team until you have watched it and approved it."
+        "a": "Yes. You invite him from the resident's record, and on his private link he records a short video in any language. A line tells him the speech is turned into text and translated for a manager. Nothing reaches your team until you approve it."
       },
       {
         "q": "Staff do not speak the language. Does that matter?",
-        "a": "Not for playing it. A carer finds the video from its title and note and presses play. It helps to write both in English, and to say in the note what the message is about."
+        "a": "Not for playing it. A carer finds the video from its title and note and presses play. If you tick the box, staff also see the English translation under the video, labelled as machine generated and checked by a manager."
       },
       {
-        "q": "Does CareStream translate or subtitle the video?",
-        "a": "No. It plays exactly as recorded. Translation on the paid plans is for staff training, and does not apply to these videos."
+        "q": "Does CareStream translate the video?",
+        "a": "Yes, for you as the manager. The speech is turned into text and translated into English automatically, and you read it on the Approvals screen before you approve. It is not subtitles and it is not live."
       },
       {
         "q": "How do I check a video I cannot understand?",
-        "a": "You watch it for who is in it and how it feels, and ask the family for a short note of what it says. A colleague who speaks the language can help. You are the approver, so only you can say yes or no."
+        "a": "Read the What is said panel: language, original words and English translation. It is machine generated and can be wrong, so check anything important with someone who speaks the language, and edit the translation if needed. You are the approver."
       },
       {
         "q": "Will it help with dementia confusion?",
         "a": "We would not say that. CareStream does not treat or change anything. It gives staff a personal message to play, safely. How you use it with each person is for you and your team to judge."
       },
       {
-        "q": "Can the assistant tell what is said in it?",
-        "a": "No. It never watches or describes a video, and there is no speech to text. It only knows the title, the note and who sent it."
+        "q": "Can the assistant use what is said in it?",
+        "a": "No. It never watches a video or uses the words or the translation. The chat still finds videos by the title and note you approve, so write those clearly."
       },
       {
         "q": "What happens if the resident moves on?",
-        "a": "Their videos leave the hub straight away, and any still waiting are deleted. Approved files stay in private storage for the retention period, like the written profile, then are deleted with it."
+        "a": "Their videos leave the hub straight away, and any still waiting are deleted with their words. Approved files and their words stay in private storage for the retention period, like the written profile, then are deleted with it."
       },
       {
         "q": "Which plan is it on, and can I try it?",
-        "a": "Resident profiles and videos are on Professional and above. There is a 14 day free trial. You can <a href=\"/register\">create an account</a> or <a href=\"/demo\">book a demo</a>, and the <a href=\"/pricing\">pricing page</a> has the plan details."
+        "a": "Resident profiles, videos and the translation are on Professional and above. There is a 14 day free trial. You can <a href=\"/register\">create an account</a> or <a href=\"/demo\">book a demo</a>, and the <a href=\"/pricing\">pricing page</a> has the plan details."
       }
     ]
   },
   "limits": {
-    "heading": "Honest limits: it plays a message, it does not understand one",
+    "heading": "Honest limits: the translation helps you check, it does not replace a person",
     "cards": [
       {
-        "title": "No translation, no subtitles",
-        "body": "CareStream does not translate, transcribe or subtitle a video. If staff want to know what it says, ask the family for a note, or a colleague who speaks the language."
+        "title": "Machine generated, and it can be wrong",
+        "body": "The translation is automatic. It may miss words or feeling, and not every language it can recognise is guaranteed to translate well. Welsh is not supported. Check anything important with someone who speaks the language."
       },
       {
-        "title": "Finding depends on the title",
-        "body": "The chat reads the title and note only. If you write them in English, English questions will find them. Videos shown in the hub are the newest ten per resident, and a vague title makes a clip harder to find."
+        "title": "Not subtitles, not live, not on by default",
+        "body": "Nothing is added to the video. Staff see the English text only if you tick the box. The chat finds videos by title and note, not by what is said."
       },
       {
         "title": "It is a message, not a conversation",
-        "body": "The family record once and the team plays it back. CareStream does not do video calls, and the resident cannot record a reply. It makes no claim about how any person will respond."
+        "body": "The family record once and the team plays it back. No video calls, no reply from the resident, and no claim about dementia confusion."
       }
     ]
   },
@@ -413,12 +438,12 @@
             "a": "It is one personal item among many. Teams caring for someone with bilingual dementia often record the languages they use and when, then add a voice the person knows. We make no claim about outcomes."
           },
           {
-            "q": "Can staff understand a message in another language?",
-            "a": "They do not need to in order to play it. If you want them to know what it says, add a note in English when you approve it."
+            "q": "Does the system watch the video or describe it?",
+            "a": "The assistant does not. It never watches or describes a video and never uses the words. The system does turn the speech into text and an English translation for the manager to read. It is machine generated and can be wrong."
           },
           {
-            "q": "Does the system watch the video or describe it?",
-            "a": "No. It never watches or describes a video. It only knows the title, the note and who sent it."
+            "q": "Which languages can it read and translate?",
+            "a": "English (UK and US), Arabic, Bengali, Chinese, French, Gujarati, Hindi, Italian, Polish, Portuguese, Punjabi, Romanian, Spanish, Tamil and Urdu. Welsh is not supported. If the language is not supported, you see the original text only, with a message."
           }
         ]
       },
@@ -434,12 +459,8 @@
             "a": "Yes. A family video stays hidden from staff until you approve it. You can edit the title and add a note first, or reject it. Videos you add yourself are approved at once."
           },
           {
-            "q": "Is the page the family sees in other languages?",
-            "a": "The family page is in English. The clip they record can be in any language. If a relative needs help with the page, you may want to help them over the phone."
-          },
-          {
-            "q": "What do the regulations say about involving family?",
-            "a": "Under <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/9\">regulation 9</a>, care must meet needs and reflect preferences, and relevant persons are involved in decisions. <a href=\"https://www.legislation.gov.uk/ukpga/2005/9/section/4\">Section 4 of the Mental Capacity Act 2005</a> asks you to consider a person's past and present wishes. Check your own policies on consent and recordings."
+            "q": "Who can see the words and the translation?",
+            "a": "Only managers and admins, unless you tick the box for that video. They are deleted with the video, whether it is rejected, deleted or the profile is removed."
           }
         ]
       }
@@ -447,30 +468,30 @@
   },
   "guide": {
     "heading": "How to use a first language message well",
-    "lede": "A few habits make the difference between a clip nobody can find and one that helps at the right moment. Ask for a short message, write a clear English title, and check before you approve.",
+    "lede": "A few habits make the difference between a clip nobody can find and one that helps at the right moment. Ask for a short message, read the translation, write a clear English title, and check before you approve.",
     "sections": [
       {
         "h3": "Ask the family for a short, warm message",
         "paragraphs": [
-          "Tell the relative that 30 or 40 seconds is plenty. A greeting, the person's name and one small story is enough. Ask them to put a title on it that says who it is from, and to tell you in a line what it says."
+          "Tell the relative that 30 or 40 seconds is plenty. A greeting, the person's name and one small story is enough. Ask them to put a title on it that says who it is from. Short, clear speech also gives the automatic translation its best chance."
         ]
       },
       {
         "h3": "Before you approve a message",
         "paragraphs": [
-          "Watch it as a new carer would, and as the resident might feel about it. Write the title and note in English so staff can find it. Reject anything that shows other people who might not want it shared. You can read what the law says about <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/10\">dignity and respect in regulation 10</a>."
+          "Watch it as a new carer would, then read the What is said panel. The translation is machine generated, so check anything important with someone who speaks the language. Write the title and note in English so staff can find it. Reject anything that shows other people who might not want it shared. See <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/10\">dignity and respect in regulation 10</a>."
         ],
         "checklist": [
           "Is the speaker someone the resident would be glad to hear?",
-          "Does the title say who it is from and the language?",
+          "Does the translation make sense, and has someone who speaks the language checked anything important?",
           "Does it show anyone else who might not want it shared?",
-          "Would a carer know when to play it?"
+          "Do you want staff to see the English text under the video?"
         ]
       },
       {
         "h3": "Record the language in the profile too",
         "paragraphs": [
-          "A message does not replace knowing the person. Note which languages she uses, the greetings she likes, and when she speaks them. The <a href=\"/staff-training/dementia-awareness\">dementia awareness course</a> helps staff see why these details matter."
+          "A message does not replace knowing the person. Note which languages she uses and when. The <a href=\"/staff-training/dementia-awareness\">dementia awareness course</a> helps staff see why this matters."
         ]
       }
     ],

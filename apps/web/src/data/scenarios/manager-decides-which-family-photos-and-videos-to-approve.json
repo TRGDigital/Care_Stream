@@ -1,0 +1,490 @@
+{
+  "slug": "manager-decides-which-family-photos-and-videos-to-approve",
+  "status": "draft",
+  "order": 104,
+  "title": "Better <em>family involvement in care</em> starts with you choosing what staff see.",
+  "meta_title": "Family Involvement in Care: Approve Photos | CareStreamAI",
+  "meta_description": "A manager reviews family photos and videos on the Approvals tab, edits captions, rejects one unsuitable item and decides what staff see.",
+  "eyebrow": "Scenario",
+  "lede": "Family involvement in care is easy to welcome and harder to manage once the photos and videos start arriving. CareStream lets relatives and friends share through a private link, while a manager decides what staff see. It sits alongside <a href=\"/training-platform\">the rest of your training and knowledge tools</a>.",
+  "fine": "14 day free trial · Set up in a day · UK data residency",
+  "panel": {
+    "title": "One Thursday on the Approvals tab",
+    "pill": "Illustration",
+    "rows": [
+      {
+        "label": "Manager opens the Approvals tab",
+        "note": "9am",
+        "done": true
+      },
+      {
+        "label": "She previews each photo and video",
+        "note": "Before staff see anything",
+        "done": true
+      },
+      {
+        "label": "She edits captions, approves most, rejects one",
+        "note": "Her decision",
+        "done": true
+      },
+      {
+        "label": "She checks the From family tab",
+        "note": "What each relative has shared",
+        "done": false
+      }
+    ],
+    "meter": 50
+  },
+  "image": "https://api.carestreamai.com/public/policy-shop/image/5c11a049-65a0-453a-8b69-52a916dae60c.webp",
+  "image_alt": "A manager at an office desk goes through a small stack of printed photographs, placing most in one neat pile and one in a separate pile, a mug of tea beside her",
+  "card_title": "Families want to share photos and videos. How do you decide what staff see?",
+  "card_snippet": "A manager works through the Approvals tab, previews each family photo and video, edits captions, rejects one that is unsuitable, and checks what each relative has shared.",
+  "primary_keyword": "family involvement in care",
+  "secondary_keywords": [
+    "relatives and friends",
+    "person centred care examples"
+  ],
+  "feature_links": [
+    {
+      "title": "Training built from your own policies",
+      "body": "Ad hoc training from your policies, face to face training organised, and wrong answers that become lessons.",
+      "action": "See the feature",
+      "href": "/training-platform"
+    },
+    {
+      "title": "Resident knowledge for your team",
+      "body": "Give staff quick, short answers about the people they care for, drawn from what you have recorded and approved.",
+      "action": "See resident knowledge",
+      "href": "/uses/resident-knowledge"
+    },
+    {
+      "title": "Dementia awareness training",
+      "body": "A course that helps staff understand the person behind the diagnosis.",
+      "action": "See the course",
+      "href": "/staff-training/dementia-awareness"
+    }
+  ],
+  "intro": {
+    "heading": "Families send things. Somebody has to decide what happens next.",
+    "sub": "A scenario we see in many care settings.",
+    "paragraph": "Dawn manages a care home with a busy mix of long stay and respite residents. Over the last fortnight, relatives have sent a few photos and short videos for four residents. She likes that they want to be involved. What worries her is the middle step. Who looks at each item before the team sees it? Is anyone else in the picture? Does the caption say something a relative might regret? Right now the answer is whoever happens to open the email, and Dawn does not want that to be the system."
+  },
+  "trail": [
+    {
+      "when": "Last week",
+      "text": "Mrs Adeyemi's son asks if he can send photos.",
+      "kind": "ok"
+    },
+    {
+      "when": "Same day",
+      "text": "Dawn says yes. She is pleased he asked.",
+      "kind": "ok"
+    },
+    {
+      "when": "Two days later",
+      "text": "A few photos arrive. The team is glad to have them.",
+      "kind": "ok"
+    },
+    {
+      "when": "That evening",
+      "text": "A carer forwards one to a colleague. Nobody checked it first.",
+      "kind": "gap"
+    },
+    {
+      "when": "Following week",
+      "text": "A photo shows three other residents. Nobody asked them.",
+      "kind": "gap"
+    },
+    {
+      "when": "Midweek",
+      "text": "Dawn cannot tell who has seen what, or when.",
+      "kind": "gap"
+    },
+    {
+      "when": "Month end",
+      "text": "A daughter asks if her dad's video was ever played. No record.",
+      "kind": "gap"
+    },
+    {
+      "when": "Inspection day",
+      "text": "“How do you involve families, and protect privacy?” Two answers, no evidence.",
+      "kind": "end"
+    }
+  ],
+  "trail_close": "<b>Welcoming families is the easy part.</b> The harder part is a clear point where a manager decides. Here is how that looks in CareStream, with the limits stated plainly.",
+  "why": {
+    "heading": "Why a manager's check matters",
+    "sub": "Sharing is generous, and it still needs a second pair of eyes.",
+    "cards": [
+      {
+        "icon": "chat",
+        "title": "Families know the person best",
+        "body": "A daughter's story, a grandson's hello or a photo of a first car tells staff things no assessment can. Good family involvement in care gives staff a way in to a conversation, and gives relatives a way to feel part of daily life."
+      },
+      {
+        "icon": "tick",
+        "title": "It is part of person centred care",
+        "body": "Providers must <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/9\">involve relevant persons in decisions and design care around preferences</a>, and <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/10\">ensure the privacy of the service user</a>. Both matter when families share pictures of someone's life."
+      },
+      {
+        "icon": "alert",
+        "title": "Privacy is not automatic",
+        "body": "A photo can show other residents, or something the person would not want others to see. A caption can name a relative who did not expect it to be shared. Deciding what goes in front of staff is a manager's call."
+      }
+    ]
+  },
+  "how": {
+    "heading": "From a relative's message to something staff are allowed to see.",
+    "sub": "Photos and video messages are part of the resident profiles feature, in the same system as your <a href=\"/training-platform\">policies and training</a>. They are on Professional and above. See <a href=\"/uses/resident-knowledge\">how staff use resident knowledge</a> too.",
+    "blocks": [
+      {
+        "heading": "Relatives and friends share through a private link",
+        "bullets": [
+          "You invite relatives and friends from the resident's Family tab. They open a private link with no login, and can add photos and short video messages",
+          "A line above the buttons asks them to share only what they are happy for the care team to see, and to check anyone else in the photo is comfortable with it",
+          "The link is used up when they press Send, and you can revoke it before then to stop further uploads"
+        ],
+        "tags": [
+          {
+            "label": "Resident knowledge",
+            "href": "/uses/resident-knowledge"
+          },
+          {
+            "label": "How CareStream works",
+            "href": "/how-it-works"
+          }
+        ],
+        "mock": {
+          "type": "audit",
+          "audit": "Residents: Family tab (example)",
+          "stats": [
+            [
+              "Invitations",
+              "3"
+            ],
+            [
+              "Answered",
+              "2"
+            ]
+          ],
+          "blocks": [
+            [
+              "Ask family and friends (example)",
+              [
+                [
+                  "Samuel, son. Photos and a video",
+                  "Answered"
+                ],
+                [
+                  "Joy, friend. No reply yet",
+                  "Sent"
+                ]
+              ]
+            ]
+          ],
+          "caption": "Example only. Names and statuses are illustrative."
+        }
+      },
+      {
+        "heading": "You work through the Approvals tab",
+        "bullets": [
+          "Photos and videos wait on the resident's Approvals tab, and a count shows how many are waiting. Staff see nothing until you approve",
+          "For a photo you can edit the caption. For a video you can preview it, edit the title and add a note for staff",
+          "Choose Approve or Reject. Rejecting removes the file from storage straight away"
+        ],
+        "tags": [
+          {
+            "label": "Dementia awareness course",
+            "href": "/staff-training/dementia-awareness"
+          },
+          {
+            "label": "CQC and compliance",
+            "href": "/cqc-compliance"
+          }
+        ],
+        "mock": {
+          "type": "audit",
+          "audit": "Residents: Approvals tab (example)",
+          "stats": [
+            [
+              "Photos waiting",
+              "3"
+            ],
+            [
+              "Videos waiting",
+              "1"
+            ]
+          ],
+          "blocks": [
+            [
+              "Photos waiting for approval (example)",
+              [
+                [
+                  "Samuel, son. Caption: Mum at the allotment, 1988",
+                  "Approve, Reject"
+                ],
+                [
+                  "Samuel, son. Caption: Christmas party, the whole table",
+                  "Reject"
+                ]
+              ]
+            ],
+            [
+              "Videos waiting for approval (example)",
+              [
+                [
+                  "Samuel, son. Title: Good morning Mum, 40 seconds",
+                  "Preview, Approve, Reject"
+                ]
+              ]
+            ]
+          ],
+          "caption": "Example only. Names and captions are illustrative."
+        }
+      },
+      {
+        "heading": "A photo with other residents in it",
+        "bullets": [
+          "If a photo shows other residents who have not agreed to be in it, reject it. The file is removed at once",
+          "Speak to the relative yourself and say why, kindly. Ask whether they have another picture of the person on their own, or with family",
+          "CareStream does not send the relative a message when you reject something, so the conversation is yours to have"
+        ],
+        "tags": [
+          {
+            "label": "Pricing and plans",
+            "href": "/pricing"
+          },
+          {
+            "label": "Staff training",
+            "href": "/staff-training"
+          }
+        ],
+        "mock": {
+          "type": "audit",
+          "audit": "A kind note to a relative (example)",
+          "stats": [
+            [
+              "Decision",
+              "Rejected"
+            ],
+            [
+              "File",
+              "Removed from storage"
+            ]
+          ],
+          "blocks": [
+            [
+              "Wording your team might use (example)",
+              [
+                [
+                  "Thank you for the Christmas photo. Other residents are in it, so we cannot share it with staff",
+                  ""
+                ],
+                [
+                  "If you have one of Mum on her own or with you, we would love to use that",
+                  ""
+                ]
+              ]
+            ]
+          ],
+          "caption": "Example only. This is a note your own team might write, not a CareStream screen."
+        }
+      },
+      {
+        "heading": "You check what each relative has shared, and who has played a video",
+        "bullets": [
+          "The From family tab lists each relative or friend as a drawer. Open one to see what they sent, when you approved it and who approved it",
+          "On the resident's Profile tab, Recently played shows who played a video message and when. That is a record of plays, not of what anyone felt",
+          "Approved photos and videos can be deleted from the resident's record at any time"
+        ],
+        "tags": [
+          {
+            "label": "Resident knowledge",
+            "href": "/uses/resident-knowledge"
+          },
+          {
+            "label": "Book a demo",
+            "href": "/demo"
+          }
+        ],
+        "mock": {
+          "type": "audit",
+          "audit": "Residents: From family tab (example)",
+          "stats": [
+            [
+              "Photos approved",
+              "2"
+            ],
+            [
+              "Videos approved",
+              "1"
+            ]
+          ],
+          "blocks": [
+            [
+              "Samuel, son (example)",
+              [
+                [
+                  "Mum at the allotment, 1988",
+                  "Approved by the manager"
+                ],
+                [
+                  "Good morning Mum, 40 seconds",
+                  "Approved by the manager"
+                ]
+              ]
+            ],
+            [
+              "Recently played (example)",
+              [
+                [
+                  "A carer played Good morning Mum",
+                  "Thursday 4.10pm"
+                ]
+              ]
+            ]
+          ],
+          "caption": "Example only. Illustration, not a real resident."
+        }
+      }
+    ]
+  },
+  "talk": {
+    "heading": "The questions managers ask, and how CareStream answers them",
+    "sub": "Read this as a conversation. The questions are the ones we hear most.",
+    "items": [
+      {
+        "q": "Who sees a photo or video before I approve it?",
+        "a": "Only you and other managers with access to the resident's record. Staff and the Staff Hub chat see approved items of current residents and nothing else. Pending photos and videos are not shown to staff."
+      },
+      {
+        "q": "What can I change before I approve?",
+        "a": "On a photo you can edit the caption. On a video you can preview it, edit the title and add a note for staff. You cannot trim a video in the browser, and you cannot change what is inside a photo."
+      },
+      {
+        "q": "What happens when I reject something?",
+        "a": "The file is removed from storage straight away. CareStream does not message the relative, so you will want to speak to them yourself, kindly, and ask whether they have a different one."
+      },
+      {
+        "q": "How should we handle a photo with other residents in it?",
+        "a": "Treat it carefully. Other people have their own privacy, and they may not have agreed to appear. Reject it, explain kindly and ask for another. Your own policies decide the rule, and CareStream cannot check who is in a picture."
+      },
+      {
+        "q": "Can I see who has watched a video?",
+        "a": "You can see who played it and when, under Recently played on the resident's Profile tab. Each play is logged. It tells you a video was played. It does not tell you whether it helped."
+      },
+      {
+        "q": "Does the chat watch the videos or look at the photos?",
+        "a": "No. The chat finds items from the titles, captions and notes people wrote, and it never describes a picture or a video. Photos and videos are not used for any of its other answers."
+      },
+      {
+        "q": "What if someone moves on or passes away?",
+        "a": "Photos and videos leave the hub at once and pending ones are deleted. Approved files stay in private storage for the retention period, like the written profile, then are deleted with it."
+      },
+      {
+        "q": "Which plan is it on, and can I try it?",
+        "a": "Resident profiles, photos and videos are on Professional and above, with a 14 day free trial. See the <a href=\"/pricing\">pricing page</a>. You can <a href=\"/register\">create an account</a> or <a href=\"/demo\">book a demo</a> to see it first."
+      }
+    ]
+  },
+  "limits": {
+    "heading": "Honest limits: you decide, and CareStream cannot judge for you",
+    "cards": [
+      {
+        "title": "It cannot see who is in a picture",
+        "body": "CareStream does not look inside photos or videos, so it cannot spot another resident or something unsuitable. That check is yours, on the Approvals tab, before anything reaches staff."
+      },
+      {
+        "title": "Approval is not consent",
+        "body": "Your approval controls what staff see. It does not record that the resident, or anyone else in the picture, agreed. Capture that in the way your own policies require, and keep your own notes."
+      },
+      {
+        "title": "Plays are logged, outcomes are not",
+        "body": "You can see who played a video and when. CareStream does not record how the person responded. It is on Professional and above, and relatives cannot see the profile or message the team through it."
+      }
+    ]
+  },
+  "read_next": [
+    "this-is-me-document",
+    "dementia-care-training-in-the-uk",
+    "care-home-policies-the-complete-guide"
+  ],
+  "faqs": {
+    "heading": "Approving photos and videos, answered",
+    "groups": [
+      {
+        "group": "Involving relatives",
+        "items": [
+          {
+            "q": "What are good person centred care examples involving families?",
+            "a": "Asking a daughter to record a hello for the evening, a son sharing a photo of the allotment, or a friend adding what a person loved to eat. Each gives staff something real to say. CareStream gives relatives a private way to share, and you decide what staff see. Our <a href=\"/blog/this-is-me-document\">guide to the this is me document</a> has more."
+          },
+          {
+            "q": "How do we encourage family involvement in care without more admin?",
+            "a": "You can ask relatives and friends from the Family tab, and set a gentle reminder by email if you wish. Everything they send waits on the Approvals tab in one place."
+          },
+          {
+            "q": "Can relatives see the resident's profile?",
+            "a": "No. They use a private link to add photos, videos or answers. They cannot see the profile, and the link is used up once they press Send."
+          },
+          {
+            "q": "Do we have to use photos and videos?",
+            "a": "No. They are optional for each person. See <a href=\"/uses/resident-knowledge\">resident knowledge</a> for how staff use what you approve."
+          }
+        ]
+      },
+      {
+        "group": "Privacy and records",
+        "items": [
+          {
+            "q": "Are the files private?",
+            "a": "Yes. Staff see them through short lived links when signed in, and there is no public web address. Each photo is checked, scanned and saved again without location data, and videos have location and device details removed."
+          },
+          {
+            "q": "What does the regulation say about privacy?",
+            "a": "<a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/10\">Regulation 10</a> says providers must ensure the privacy of the service user and support their autonomy. Check what that means for your service with your own policies."
+          },
+          {
+            "q": "How does data protection law treat consent?",
+            "a": "The ICO explains that <a href=\"https://ico.org.uk/for-organisations/uk-gdpr-guidance-and-resources/lawful-basis/a-guide-to-lawful-basis/\">consent is one of several lawful bases</a>. If someone withdraws consent, you must stop using their information. Take advice on the right basis for you."
+          },
+          {
+            "q": "Can I delete something I approved earlier?",
+            "a": "Yes. You can delete an approved photo or video from the resident's record at any time. It is removed from the hub and from storage."
+          }
+        ]
+      }
+    ]
+  },
+  "guide": {
+    "heading": "How to review what relatives and friends send, kindly and consistently",
+    "lede": "A quick, repeatable routine keeps the process fair and respectful. A few minutes on a set day each week is usually enough.",
+    "sections": [
+      {
+        "h3": "Decide your rules once, and tell families",
+        "paragraphs": [
+          "Agree what you will and will not accept: no other residents in the picture, nothing that would embarrass the person, short and warm videos. Put it in a sentence in your invitation so relatives know in advance. The <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/9\">person-centred care regulation</a> is a good reminder of why you ask."
+        ],
+        "checklist": [
+          "Does the item show anyone other than the resident or the sender?",
+          "Is the caption or title clear, kind and accurate?",
+          "Would the resident be comfortable if staff saw it?",
+          "If I reject it, have I got a gentle way to explain?"
+        ]
+      },
+      {
+        "h3": "Write captions that staff can find",
+        "paragraphs": [
+          "Edit a caption to a few plain words and a name, such as “Mum at the allotment, 1988”. For a video, use the title to say who it is from and add a note for staff on what it is about. Staff and the chat find items by those words."
+        ]
+      },
+      {
+        "h3": "Close the loop with the relative",
+        "paragraphs": [
+          "Say thank you when you approve, and explain kindly when you reject. If you want staff to understand why this matters, point them to your <a href=\"/staff-training/dementia-awareness\">dementia awareness course</a> and the <a href=\"/staff-training/mental-capacity-act-and-dols\">Mental Capacity Act course</a>, which covers wishes and best interests."
+        ]
+      }
+    ],
+    "note": "This page describes how the software works and is not legal advice. Check your own policies and local guidance for how you collect consent and share family photos and videos."
+  }
+}

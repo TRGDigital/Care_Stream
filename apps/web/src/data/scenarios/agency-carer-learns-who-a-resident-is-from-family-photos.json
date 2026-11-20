@@ -1,0 +1,473 @@
+{
+  "slug": "agency-carer-learns-who-a-resident-is-from-family-photos",
+  "order": 101,
+  "title": "An agency care worker on a first shift can learn who a resident is, <em>from the photos the family approved.</em>",
+  "meta_title": "Agency Care Worker First Shift: Family Photos | CareStreamAI",
+  "meta_description": "An agency carer asks the This is me chat about a resident and sees approved family photos with captions. Manager approved, captions only.",
+  "lede": "An agency care worker arrives for a first shift knowing a name and a room number. The regular team know the stories, but there is no time to tell them all. CareStream lets any signed in carer, including an agency carer given hub access, ask about a resident and see approved family photos with captions. It sits alongside <a href=\"/training-platform\">the rest of your training and knowledge tools</a>.",
+  "panel": {
+    "title": "One first shift, step by step",
+    "pill": "Illustration",
+    "rows": [
+      {
+        "label": "Visiting carer arrives and is told Mr Penhaligon's room",
+        "note": "7.30am",
+        "done": true
+      },
+      {
+        "label": "She asks the chat about him in the Staff Hub",
+        "note": "7.45am",
+        "done": true
+      },
+      {
+        "label": "Approved photos and captions appear under the answer",
+        "note": "Seconds later",
+        "done": true
+      },
+      {
+        "label": "Regular carer adds the rest in person",
+        "note": "Her choice",
+        "done": false
+      }
+    ],
+    "meter": 50
+  },
+  "image_alt": "An agency carer wearing a visitor lanyard and a regular carer stand together at a lounge doorway, the regular carer gently pointing towards an older man in his armchair who holds a framed family photograph",
+  "card_title": "An agency carer starts a shift knowing only a name. What helps her know him?",
+  "card_snippet": "Agency staff get hub access for their booking dates. They ask the This is me chat about a resident and see approved family photos with captions. Manager approved, one thing among others.",
+  "primary_keyword": "agency care worker",
+  "secondary_keywords": [
+    "agency carer",
+    "person centred care examples"
+  ],
+  "feature_links": [
+    {
+      "title": "Training built from your own policies",
+      "body": "Ad hoc training from your policies, face to face training organised, and wrong answers that become lessons.",
+      "action": "See the feature",
+      "href": "/training-platform"
+    },
+    {
+      "title": "Resident knowledge for your team",
+      "body": "Give staff quick, short answers about the people they care for, drawn from what you have recorded and approved.",
+      "action": "See resident knowledge",
+      "href": "/uses/resident-knowledge"
+    },
+    {
+      "title": "Dementia awareness training",
+      "body": "A course that helps staff understand the person behind the diagnosis.",
+      "action": "See the course",
+      "href": "/staff-training/dementia-awareness"
+    }
+  ],
+  "intro": {
+    "heading": "She has a name and a room number. The person is still a stranger.",
+    "sub": "A scenario we see in many care settings.",
+    "paragraph": "Grace is an agency care worker covering a day shift on the lower floor. The handover covers medication, mobility and who needs a drink. It does not cover that Mr Penhaligon drove a bus in Plymouth for thirty years, or that the framed photo on his table is his late wife. Joe, the regular carer, knows all of it, but is helping another resident. Grace does not like to interrupt, so she brings him tea and says very little."
+  },
+  "trail": [
+    {
+      "when": "7.30am",
+      "text": "Grace arrives and gets a clear handover of tasks.",
+      "kind": "ok"
+    },
+    {
+      "when": "8.00am",
+      "text": "Joe shows her round and introduces her to residents.",
+      "kind": "ok"
+    },
+    {
+      "when": "9.00am",
+      "text": "She delivers personal care politely and carefully.",
+      "kind": "ok"
+    },
+    {
+      "when": "10.00am",
+      "text": "Nobody has time to tell her who Mr Penhaligon is.",
+      "kind": "gap"
+    },
+    {
+      "when": "11.00am",
+      "text": "The photos the family sent are in a folder nobody has opened.",
+      "kind": "gap"
+    },
+    {
+      "when": "Next shift",
+      "text": "A different visiting carer arrives and starts from scratch.",
+      "kind": "gap"
+    },
+    {
+      "when": "Next month",
+      "text": "His daughter asks if new staff ever know the family photos.",
+      "kind": "gap"
+    },
+    {
+      "when": "Inspection day",
+      "text": "“How do new and temporary staff get to know people?” A handover sheet is not an answer.",
+      "kind": "end"
+    }
+  ],
+  "trail_close": "<b>The regular team do know him.</b> The gap is between what they carry in their heads and what a new face can find in a minute. Here is how CareStream gives a visiting carer a safe way in.",
+  "why": {
+    "heading": "Why an agency carer needs to know the person",
+    "sub": "Good care starts with knowing who someone is.",
+    "cards": [
+      {
+        "icon": "chat",
+        "title": "Person centred care examples are small",
+        "body": "Knowing he likes tea strong, once drove a bus and keeps his wife's photo close is what makes care personal. Many person centred care examples are that small. They only work if a new carer can find them."
+      },
+      {
+        "icon": "tick",
+        "title": "Preferences must be reflected",
+        "body": "Care must <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/9\">meet needs and reflect preferences</a>, and that applies whoever is on shift. Regular staff hold the knowledge, so a temporary carer is the first to miss it."
+      },
+      {
+        "icon": "alert",
+        "title": "Privacy still matters on day one",
+        "body": "<a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/10\">Regulation 10</a> includes ensuring privacy. Photos that a manager has approved, shown only to signed in staff through short lived links, are safer than pictures passed around on phones."
+      }
+    ]
+  },
+  "how": {
+    "heading": "From a first shift to a face and a story.",
+    "sub": "Resident profiles and photos are on Professional and above, in the same system as your <a href=\"/training-platform\">policies and training</a>. See <a href=\"/uses/resident-knowledge\">how staff use resident knowledge</a> too.",
+    "blocks": [
+      {
+        "heading": "The visitor has hub access for the dates you set",
+        "bullets": [
+          "A manager adds the person as an agency worker with an agency name, a first day and a last day",
+          "Their hub access runs for those dates, and they use the hub the way employed staff do",
+          "They do not use a seat on your plan"
+        ],
+        "tags": [
+          {
+            "label": "Resident knowledge",
+            "href": "/uses/resident-knowledge"
+          },
+          {
+            "label": "How CareStream works",
+            "href": "/how-it-works"
+          }
+        ],
+        "mock": {
+          "type": "audit",
+          "audit": "Staff: add an agency worker (example)",
+          "stats": [
+            [
+              "Staff type",
+              "Agency worker"
+            ],
+            [
+              "Access",
+              "First to last day"
+            ]
+          ],
+          "blocks": [
+            [
+              "Booking (example)",
+              [
+                [
+                  "Agency: example agency name",
+                  ""
+                ],
+                [
+                  "First day, last day: set by you",
+                  ""
+                ],
+                [
+                  "Hub access runs for these dates",
+                  ""
+                ]
+              ]
+            ]
+          ],
+          "caption": "Example only. Nothing here is a real booking."
+        }
+      },
+      {
+        "heading": "She asks the This is me chat",
+        "bullets": [
+          "In the Staff Hub, she opens the This is me chat and asks about the resident, or asks whether there is a photo of his wife",
+          "The chat answers from approved captions and notes, matched by meaning, and shows photos as thumbnails under the answer",
+          "If a question does not name a resident and several have photos, the chat asks who is meant"
+        ],
+        "tags": [
+          {
+            "label": "Dementia awareness course",
+            "href": "/staff-training/dementia-awareness"
+          },
+          {
+            "label": "Resident knowledge",
+            "href": "/uses/resident-knowledge"
+          }
+        ],
+        "mock": {
+          "type": "audit",
+          "audit": "Staff Hub: ask about a resident (example)",
+          "stats": [
+            [
+              "Source",
+              "Approved captions and notes only"
+            ]
+          ],
+          "blocks": [
+            [
+              "Example question and answer",
+              [
+                [
+                  "Visitor asks: Do we have a photo of Mr Penhaligon's wife?",
+                  ""
+                ],
+                [
+                  "Answer: Yes, one captioned “Margaret and Alan, Plymouth bus depot, 1974”. It appears below the answer",
+                  ""
+                ],
+                [
+                  "Tap a picture to enlarge it",
+                  ""
+                ]
+              ]
+            ]
+          ],
+          "caption": "Example only. Illustration, not a real resident."
+        }
+      },
+      {
+        "heading": "A regular carer still makes the introduction",
+        "bullets": [
+          "The photo gives a starting point. Joe adds the tone, the humour and what the day has been like",
+          "Photos are shown only for living residents and only once a manager has approved them",
+          "The chat never looks inside a picture. If there is no caption that matches, it shows the person's photos and says so"
+        ],
+        "tags": [
+          {
+            "label": "CQC and compliance",
+            "href": "/cqc-compliance"
+          },
+          {
+            "label": "Book a demo",
+            "href": "/demo"
+          }
+        ],
+        "mock": {
+          "type": "audit",
+          "audit": "Regular carer's introduction (example)",
+          "stats": [
+            [
+              "Who",
+              "Regular carer"
+            ],
+            [
+              "When",
+              "Start of shift"
+            ]
+          ],
+          "blocks": [
+            [
+              "Example introduction",
+              [
+                [
+                  "Joe: This is Alan. Ask him about the buses.",
+                  ""
+                ],
+                [
+                  "Grace: I saw the photo. Was that the Plymouth depot?",
+                  ""
+                ]
+              ]
+            ]
+          ],
+          "caption": "Example only. Names and wording are invented."
+        }
+      },
+      {
+        "heading": "Private, and the access ends with the booking",
+        "bullets": [
+          "Photos are private, shown only to signed in staff through short lived links, never a public address",
+          "When an agency booking ends, access stays on for 24 hours so a night shift is not cut off, then switches off",
+          "If a resident moves on or dies, their photos leave the hub at once"
+        ],
+        "tags": [
+          {
+            "label": "Pricing and plans",
+            "href": "/pricing"
+          },
+          {
+            "label": "Care home policies guide",
+            "href": "/blog/care-home-policies-the-complete-guide"
+          }
+        ],
+        "mock": {
+          "type": "audit",
+          "audit": "Staff: agency access (example)",
+          "stats": [
+            [
+              "Warning email",
+              "3 days before end"
+            ],
+            [
+              "After end",
+              "Access off"
+            ]
+          ],
+          "blocks": [
+            [
+              "Example agency booking",
+              [
+                [
+                  "Three days before the last day, admins are emailed",
+                  ""
+                ],
+                [
+                  "24 hours after the last day, hub access is switched off",
+                  ""
+                ]
+              ]
+            ]
+          ],
+          "caption": "Example only. Illustration, not a real resident."
+        }
+      }
+    ]
+  },
+  "talk": {
+    "heading": "The questions managers ask, and how CareStream answers them",
+    "sub": "Read this as a conversation. The questions are the ones we hear most.",
+    "items": [
+      {
+        "q": "Can an agency care worker use the Staff Hub?",
+        "a": "Yes, once you add them as an agency worker with a first and last day. Their hub access runs for those dates, they use it as employed staff do, and they do not use a seat on your plan."
+      },
+      {
+        "q": "How does a visiting carer find out about a resident?",
+        "a": "They open the This is me chat in the Staff Hub and ask about the person. The chat answers from approved profile entries and shows approved photos with captions under the answer."
+      },
+      {
+        "q": "Do agency staff see photos that are still waiting for approval?",
+        "a": "No. Every family photo waits for a manager to approve it. Nothing is seen by staff until approved, and photos a manager adds from the resident record are approved at once."
+      },
+      {
+        "q": "Does the chat understand what is in a photo?",
+        "a": "No. It never looks inside a picture. It matches the caption and notes people wrote, by meaning, so a clear caption such as “Margaret and Alan, 1974” does the work."
+      },
+      {
+        "q": "What if the resident has no profile?",
+        "a": "Then there is nothing to show. The chat only answers from approved profile entries, so a resident without one gives a new carer nothing. A short profile and a few captioned photos are the way to start."
+      },
+      {
+        "q": "Does this replace the handover?",
+        "a": "No. It adds to it. The regular team introduce people in person, and the chat gives a visiting carer a quick, private way to look back at what the family approved."
+      },
+      {
+        "q": "Can family add photos without an account?",
+        "a": "Yes. They use a private link on their phone, add up to 5 photos with optional captions, and press Send. A manager approves each one."
+      },
+      {
+        "q": "Which plan is it on, and can I try it?",
+        "a": "Resident profiles and photos are on Professional and above. There is a 14 day free trial, and the <a href=\"/pricing\">pricing page</a> shows which plan includes it. You can <a href=\"/register\">create an account</a> or <a href=\"/demo\">book a demo</a> first."
+      }
+    ]
+  },
+  "limits": {
+    "heading": "Honest limits: a way in, not a full introduction",
+    "cards": [
+      {
+        "title": "Approved photos and captions only",
+        "body": "A photo waits for a manager's approval before anyone on staff sees it. The chat reads captions and notes, not pictures, so an uncaptioned photo is hard to find."
+      },
+      {
+        "title": "No profile, nothing to show",
+        "body": "If a resident has no profile or no approved photos, the chat has nothing to show a new carer. CareStream does not invent a life story. It reflects what you and the family recorded."
+      },
+      {
+        "title": "It does not check the agency or run their induction",
+        "body": "The agency holds the carer's checks, and CareStream does not capture those documents. The photos help a visitor get to know a person. They do not replace your local induction or your handover."
+      }
+    ]
+  },
+  "read_next": [
+    "this-is-me-document",
+    "care-home-policies-the-complete-guide",
+    "dementia-care-training-in-the-uk"
+  ],
+  "faqs": {
+    "heading": "Agency staff, photos and the hub, answered",
+    "groups": [
+      {
+        "group": "About agency staff and the hub",
+        "items": [
+          {
+            "q": "What does an agency care worker need to know on day one?",
+            "a": "Beyond tasks and risks, they need to know who each person is and what matters to them. A photo with a caption and a short profile give a quick start. Your local induction still applies."
+          },
+          {
+            "q": "Is an agency worker the same as an employed carer in the hub?",
+            "a": "In the hub, yes. An agency worker reads policies and uses the chat the way employed staff do, for the dates you set. They are not counted against your staff limit."
+          },
+          {
+            "q": "Where can I see person centred care examples for my team?",
+            "a": "Your own residents give the best ones. Our <a href=\"/blog/this-is-me-document\">guide to the this is me document</a> shows what to record, and the <a href=\"/staff-training/dementia-awareness\">dementia awareness course</a> covers the person behind the diagnosis."
+          },
+          {
+            "q": "What about night shifts at the end of a booking?",
+            "a": "Access stays on for 24 hours after the last day, so a night shift is not cut off part way through. It then switches off."
+          }
+        ]
+      },
+      {
+        "group": "About approval and privacy",
+        "items": [
+          {
+            "q": "Does a manager approve photos before staff see them?",
+            "a": "Yes. A family photo is held until a manager approves, edits the caption of or rejects it. Pending photos show in the Approvals badge."
+          },
+          {
+            "q": "Are photos ever on a public address?",
+            "a": "No. They are shown only to signed in staff of your service through short lived links."
+          },
+          {
+            "q": "What does the law say about preferences and privacy?",
+            "a": "Regulation 9 says care must <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/9\">meet needs and reflect preferences</a>, and <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/10\">regulation 10</a> covers dignity, respect and privacy. Check your own policies."
+          }
+        ]
+      }
+    ]
+  },
+  "guide": {
+    "heading": "How to welcome an agency carer to a resident's story",
+    "lede": "A few habits make the hub useful to visitors and keep your regular team in the lead.",
+    "sections": [
+      {
+        "h3": "Caption photos so a stranger can use them",
+        "paragraphs": [
+          "When you approve a photo, edit the caption so it says who is in it, where and roughly when. Use the who is in the photo note for names. A visitor will ask in plain words, such as who is in the wedding photo, so write for them.",
+          "Aim for a short profile and a handful of captioned photos for each resident, starting with the people agency staff meet most."
+        ]
+      },
+      {
+        "h3": "Before the first shift",
+        "paragraphs": [
+          "Add the booking in good time so hub access is ready on the day. A regular carer should still introduce the person. A photo is a prompt for conversation, and conversation is where person centred care really happens."
+        ],
+        "checklist": [
+          "Is the agency booking added with the right first and last day?",
+          "Do the residents they will care for have a profile and approved photos?",
+          "Will a regular carer make introductions in person?",
+          "Does the visitor know to ask the chat in the Staff Hub?"
+        ]
+      },
+      {
+        "h3": "After the shift",
+        "paragraphs": [
+          "Ask the visiting carer what they found helpful and what was missing. Edit captions that were too vague. See <a href=\"/uses/resident-knowledge\">resident knowledge</a> for the wider picture."
+        ]
+      }
+    ],
+    "note": "This page describes how the software works and is not legal or clinical advice. Your local induction, handover and agency arrangements still apply."
+  },
+  "fine": "14 day free trial · Set up in a day · UK data residency",
+  "eyebrow": "Scenario",
+  "status": "draft",
+  "image": "https://api.carestreamai.com/public/policy-shop/image/6b4255c5-3ded-4da4-8c7c-027bfa318e71.webp"
+}

@@ -1,0 +1,472 @@
+{
+  "slug": "activities-session-built-on-family-photos",
+  "status": "draft",
+  "order": 103,
+  "title": "Planning <em>dementia activities</em> around family photos, one person at a time.",
+  "meta_title": "Dementia Activities Built on Family Photos | CareStreamAI",
+  "meta_description": "An activities coordinator plans a small group session using approved family photos and captions found in the Staff Hub, one resident at a time.",
+  "eyebrow": "Scenario",
+  "lede": "Thursday afternoon is when Ruth, the activities coordinator, plans Friday's session. Good dementia activities often start with something familiar, and for many people that means a photograph from home. CareStream gives staff approved family photos and captions in the Staff Hub, alongside <a href=\"/training-platform\">the rest of your training and knowledge tools</a>.",
+  "fine": "14 day free trial · Set up in a day · UK data residency",
+  "panel": {
+    "title": "Planning one session, step by step",
+    "pill": "Illustration",
+    "rows": [
+      {
+        "label": "Ruth picks three residents for Friday",
+        "note": "Thursday",
+        "done": true
+      },
+      {
+        "label": "She looks at each person's approved photos",
+        "note": "One at a time",
+        "done": true
+      },
+      {
+        "label": "She asks each person if they would like to take part",
+        "note": "Their choice",
+        "done": true
+      },
+      {
+        "label": "The session runs, led by the people at the table",
+        "note": "Friday",
+        "done": false
+      }
+    ],
+    "meter": 50
+  },
+  "image": "https://api.carestreamai.com/public/policy-shop/image/07a9f32c-d396-410a-9dda-cd520b9bec7e.webp",
+  "image_alt": "An activities coordinator sits at a table in a lounge with three residents, laying printed family photographs in the middle of the table, the residents leaning in and smiling",
+  "card_title": "Planning a small group session around family photos? Start with what is already approved.",
+  "card_snippet": "An activities coordinator uses the Staff Hub to find approved family photos and captions for each resident, one at a time, then plans a session the residents can lead.",
+  "primary_keyword": "dementia activities",
+  "secondary_keywords": [
+    "reminiscence box",
+    "dementia activities care home"
+  ],
+  "feature_links": [
+    {
+      "title": "Training built from your own policies",
+      "body": "Ad hoc training from your policies, face to face training organised, and wrong answers that become lessons.",
+      "action": "See the feature",
+      "href": "/training-platform"
+    },
+    {
+      "title": "Resident knowledge for your team",
+      "body": "Give staff quick, short answers about the people they care for, drawn from what you have recorded and approved.",
+      "action": "See resident knowledge",
+      "href": "/uses/resident-knowledge"
+    },
+    {
+      "title": "Dementia awareness training",
+      "body": "A course that helps staff understand the person behind the diagnosis.",
+      "action": "See the course",
+      "href": "/staff-training/dementia-awareness"
+    }
+  ],
+  "intro": {
+    "heading": "The best ideas for the session are scattered across the building.",
+    "sub": "A scenario we see in many care settings.",
+    "paragraph": "Ruth wants Friday's small group session to feel personal. She has three residents in mind: Mr Okafor, Mrs Bell and Mr Lindqvist. Mrs Bell's daughter handed over holiday snaps, Mr Okafor's nephew emailed some pictures, and nobody remembers what Mr Lindqvist's family left. Ruth spends an hour opening drawers and asking colleagues. By the time she has found a handful, the planning time has gone and she is not sure which ones the families were happy to share."
+  },
+  "trail": [
+    {
+      "when": "Thursday, 2pm",
+      "text": "Ruth chooses three residents who enjoy a chat together.",
+      "kind": "ok"
+    },
+    {
+      "when": "2.15pm",
+      "text": "She wants a few personal photos for each person.",
+      "kind": "ok"
+    },
+    {
+      "when": "2.20pm",
+      "text": "She knows families have shared things over the years.",
+      "kind": "ok"
+    },
+    {
+      "when": "2.45pm",
+      "text": "The photos are in a drawer, an inbox and a shared folder.",
+      "kind": "gap"
+    },
+    {
+      "when": "3.30pm",
+      "text": "Some have no names on them. She cannot tell who is who.",
+      "kind": "gap"
+    },
+    {
+      "when": "Friday",
+      "text": "One photo shows another resident. Nobody asked her.",
+      "kind": "gap"
+    },
+    {
+      "when": "Next month",
+      "text": "A daughter asks where her photos were shown. Nobody can say.",
+      "kind": "gap"
+    },
+    {
+      "when": "Inspection day",
+      "text": "“How do you use what families tell you?” The answer is a drawer.",
+      "kind": "end"
+    }
+  ],
+  "trail_close": "<b>The photos existed.</b> What was missing was one checked place to find them, with the words that explain them. Here is how CareStream helps with the finding, and where your team's judgement takes over.",
+  "why": {
+    "heading": "Why a well planned session starts with the person",
+    "sub": "Familiar pictures can open a conversation that a generic activity cannot.",
+    "cards": [
+      {
+        "icon": "chat",
+        "title": "Personal beats generic",
+        "body": "A quiz about the 1960s suits some people. A photo of your own street, your own dog or your own wedding speaks to one person."
+      },
+      {
+        "icon": "tick",
+        "title": "Privacy and dignity are part of the plan",
+        "body": "The regulations ask providers to ensure <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/10\">the privacy of the service user and to support their autonomy</a>. A photo of one person shown to a table of others needs that person's agreement first."
+      },
+      {
+        "icon": "alert",
+        "title": "Unchecked photos cause problems",
+        "body": "A picture with a stranger in it, or one the family did not mean to share round a table, can upset people. Checking before a session is far easier than apologising after it."
+      }
+    ]
+  },
+  "how": {
+    "heading": "From a loose pile of photos to an approved set for each person.",
+    "sub": "Photos are part of the resident profiles feature, in the same system as your <a href=\"/training-platform\">policies and training</a>. They are on Professional and above. See <a href=\"/uses/resident-knowledge\">how staff use resident knowledge</a> too.",
+    "blocks": [
+      {
+        "heading": "Photos arrive through a private link and wait for a manager",
+        "bullets": [
+          "Relatives and friends add photos through a private link, up to 5 per link, with an optional caption and a note on who is in the photo",
+          "Every family photo waits on the Approvals tab. The manager can edit the caption, approve it or reject it",
+          "Staff see only approved photos of current residents, so Ruth is never choosing from an unchecked pile"
+        ],
+        "tags": [
+          {
+            "label": "Resident knowledge",
+            "href": "/uses/resident-knowledge"
+          },
+          {
+            "label": "How CareStream works",
+            "href": "/how-it-works"
+          }
+        ],
+        "mock": {
+          "type": "audit",
+          "audit": "Residents: Approvals tab (example)",
+          "stats": [
+            [
+              "Photos waiting",
+              "2"
+            ],
+            [
+              "Approved",
+              "9"
+            ]
+          ],
+          "blocks": [
+            [
+              "Photos waiting for approval (example)",
+              [
+                [
+                  "Mrs Bell's daughter. Caption: Brighton pier, summer 1974",
+                  "Approve, Reject"
+                ],
+                [
+                  "Mr Okafor's nephew. Caption: The shop on Mill Road",
+                  "Approve, Reject"
+                ]
+              ]
+            ]
+          ],
+          "caption": "Example only. Names and captions are illustrative."
+        }
+      },
+      {
+        "heading": "Ruth looks at one person's photos at a time",
+        "bullets": [
+          "In the Staff Hub, she opens the This is me topic and asks about one resident at a time, so for a group she asks about each person in turn",
+          "She can name the person and the subject, such as “do we have a photo of Mr Okafor's shop?”, and matching photos appear under the answer",
+          "If her question does not name a resident and several have photos, the chat asks who she means"
+        ],
+        "tags": [
+          {
+            "label": "Dementia awareness course",
+            "href": "/staff-training/dementia-awareness"
+          },
+          {
+            "label": "Resident knowledge",
+            "href": "/uses/resident-knowledge"
+          }
+        ],
+        "mock": {
+          "type": "audit",
+          "audit": "Staff Hub: ask about a resident (example)",
+          "stats": [
+            [
+              "Source",
+              "Approved photos and captions only"
+            ],
+            [
+              "Scope",
+              "One resident per question"
+            ]
+          ],
+          "blocks": [
+            [
+              "Example question",
+              [
+                [
+                  "Ruth asks: Do we have a photo of Mr Okafor's shop?",
+                  ""
+                ],
+                [
+                  "Chat answers: One photo is captioned “The shop on Mill Road”, added by his nephew",
+                  ""
+                ]
+              ]
+            ]
+          ],
+          "caption": "Example only. Illustration, not a real resident."
+        }
+      },
+      {
+        "heading": "Captions do the work, so Ruth reads them",
+        "bullets": [
+          "The chat finds photos from the approved captions and notes people wrote, matched by meaning. A caption of “seaside” also finds “beach”",
+          "It does not look inside a picture. A photo with no useful caption is hard to find by asking, so Ruth looks at that person's photos directly instead",
+          "She taps a photo to enlarge it, and reads the caption and the note on who is in it before she decides"
+        ],
+        "tags": [
+          {
+            "label": "Book a demo",
+            "href": "/demo"
+          },
+          {
+            "label": "CQC and compliance",
+            "href": "/cqc-compliance"
+          }
+        ],
+        "mock": {
+          "type": "audit",
+          "audit": "Staff Hub: a person's photos (example)",
+          "stats": [
+            [
+              "Matched by",
+              "Caption and notes"
+            ],
+            [
+              "Tap",
+              "To enlarge"
+            ]
+          ],
+          "blocks": [
+            [
+              "Mrs Bell (example)",
+              [
+                [
+                  "Brighton pier, summer 1974",
+                  "Added by her daughter"
+                ],
+                [
+                  "Allotment with Frank",
+                  "In the photo: Frank, her husband"
+                ]
+              ]
+            ]
+          ],
+          "caption": "Example only. Illustration, not a real resident."
+        }
+      },
+      {
+        "heading": "The team builds the session, and the people at the table lead it",
+        "bullets": [
+          "Ruth asks each person, in a way that suits them, whether they are happy for their photo to be seen by the others. If not, it stays out of the group",
+          "She shows photos on a tablet or phone, and can add real objects of her own, like a reminiscence box with a tin of buttons or an old bus ticket",
+          "CareStream does not plan or run the session. It helps her find approved photos and read what families wrote"
+        ],
+        "tags": [
+          {
+            "label": "Pricing and plans",
+            "href": "/pricing"
+          },
+          {
+            "label": "Staff training",
+            "href": "/staff-training"
+          }
+        ],
+        "mock": {
+          "type": "audit",
+          "audit": "Session notes kept by the team (example)",
+          "stats": [
+            [
+              "Shown to the group",
+              "Only with agreement"
+            ],
+            [
+              "Where the notes live",
+              "Your own records"
+            ]
+          ],
+          "blocks": [
+            [
+              "Friday small group (example)",
+              [
+                [
+                  "Mrs Bell: happy to share Brighton photo",
+                  "Agreed"
+                ],
+                [
+                  "Mr Lindqvist: prefers to look on his own",
+                  "Kept private"
+                ]
+              ]
+            ]
+          ],
+          "caption": "Example only. This is a note your team might keep, not a CareStream screen."
+        }
+      }
+    ]
+  },
+  "talk": {
+    "heading": "The questions managers ask, and how CareStream answers them",
+    "sub": "Read this as a conversation. The questions are the ones we hear most.",
+    "items": [
+      {
+        "q": "Can staff use CareStream to plan dementia activities in our care home?",
+        "a": "It helps with one part of the job: finding approved photos and the captions families wrote. Staff open the Staff Hub, find the person and look at their photos, or ask the This is me chat. The planning, the running of the session and the judgement about each person stay with your team."
+      },
+      {
+        "q": "Can the chat pull photos for a whole group at once?",
+        "a": "No. It works with one resident at a time. If a question does not name a resident and several have photos, it asks who is meant. For a group session, the coordinator looks at each person's photos in turn."
+      },
+      {
+        "q": "How does it know which photo is which?",
+        "a": "It reads the approved captions and the notes on who is in the photo, matched by meaning. It does not look inside a picture and says so if asked to describe one. Photos are not used for the chat's other answers."
+      },
+      {
+        "q": "Can I print the photos for a reminiscence box?",
+        "a": "CareStream does not offer downloads or printing for staff. Photos are shown in the hub to signed in staff. If a family would like a real print in a box, they can bring one in, and your team decides how it is stored and returned."
+      },
+      {
+        "q": "What if a photo shows another resident?",
+        "a": "That is for the manager to decide before approval. The Approvals tab lets you reject a photo, and a rejected file is removed from storage straight away. You can explain kindly to the relative, and ask for another picture without other residents in it."
+      },
+      {
+        "q": "Does a photo need the resident's agreement before we show it to others?",
+        "a": "CareStream cannot record or judge that for you. Your team should ask the person, in the way that works for them, and follow your own policies. If they do not want a photo shown to the group, leave it out."
+      },
+      {
+        "q": "What happens when a resident moves on or passes away?",
+        "a": "Their photos leave the hub at once, and any still waiting for approval are deleted. Approved files stay in private storage for the retention period, like the written profile, then are deleted with it."
+      },
+      {
+        "q": "Which plan is it on, and can I try it?",
+        "a": "Resident profiles and photos are on Professional and above. There is a 14 day free trial, and the <a href=\"/pricing\">pricing page</a> shows which plan includes it. You can <a href=\"/register\">create an account</a> or <a href=\"/demo\">book a demo</a> to see it first."
+      }
+    ]
+  },
+  "limits": {
+    "heading": "Honest limits: a way to find the photo, not a way to run the session",
+    "cards": [
+      {
+        "title": "It does not run or record activities",
+        "body": "CareStream does not plan sessions, keep an activities diary or measure how a session went. It helps staff find approved photos. The session itself belongs to your team."
+      },
+      {
+        "title": "It reads captions, not pictures",
+        "body": "The chat cannot see inside a photo or describe it, and it handles one resident at a time. Ask families for a few clear words and the names of the people in the photo."
+      },
+      {
+        "title": "It cannot decide who consents",
+        "body": "A manager approves each family photo, but approval is not the same as the resident agreeing to be shown to others. That conversation is yours. Photos also cannot be downloaded or printed by staff."
+      }
+    ]
+  },
+  "read_next": [
+    "this-is-me-document",
+    "dementia-care-training-in-the-uk",
+    "care-home-policies-the-complete-guide"
+  ],
+  "faqs": {
+    "heading": "Photos, group sessions and privacy, answered",
+    "groups": [
+      {
+        "group": "Planning sessions",
+        "items": [
+          {
+            "q": "What are good dementia activities care home teams can run with photos?",
+            "a": "Small group chats where each person has one or two pictures that matter to them tend to work well, because people can speak about their own lives. Many teams add objects, like a reminiscence box. CareStream helps you find approved photos. What you do with them is for your team to decide. Our <a href=\"/blog/this-is-me-document\">guide to the this is me document</a> explains how personal histories are gathered."
+          },
+          {
+            "q": "What should go in a reminiscence box?",
+            "a": "Anything familiar and safe to handle that relates to the people using it, such as old tools, fabrics, postcards or tins. CareStream does not manage a reminiscence box, but approved photos and captions can give you ideas for what to include."
+          },
+          {
+            "q": "Do dementia activities in a care home need to be planned around each person?",
+            "a": "They work better when they are. Regulation 9 asks for care that meets each person's needs and preferences, as set out in <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/9\">the person-centred care regulation</a>. Knowing who and what matters to someone is where planning starts."
+          },
+          {
+            "q": "Can the chat describe what is in a photo?",
+            "a": "No. It finds photos from the captions and notes and shows them. It does not look inside a picture."
+          }
+        ]
+      },
+      {
+        "group": "Approval and privacy",
+        "items": [
+          {
+            "q": "Do staff see photos before a manager approves them?",
+            "a": "No. Staff and the chat see only approved photos of current residents. Pending photos wait on the Approvals tab."
+          },
+          {
+            "q": "How are the photos stored?",
+            "a": "Privately. Staff see them through short lived links when signed in, and there is no public web address. Each photo is checked, scanned and saved again without location data."
+          },
+          {
+            "q": "Do we have to use photos with every resident?",
+            "a": "No. Photos are optional for each person. Where there are none, the chat answers from the written profile as usual. See <a href=\"/uses/resident-knowledge\">resident knowledge</a> for more."
+          },
+          {
+            "q": "What do the data protection rules say about consent?",
+            "a": "The ICO explains that <a href=\"https://ico.org.uk/for-organisations/uk-gdpr-guidance-and-resources/lawful-basis/a-guide-to-lawful-basis/\">consent is one of several lawful bases</a>, and that if someone withdraws consent you must stop using their information. Take advice on the right basis for your own service."
+          }
+        ]
+      }
+    ]
+  },
+  "guide": {
+    "heading": "How to plan a photo based session that respects everyone at the table",
+    "lede": "A good small group session is short, calm and led by the people in it. A little preparation helps, mainly in choosing photos and checking who is happy to share what.",
+    "sections": [
+      {
+        "h3": "Choose with the person, not for them",
+        "paragraphs": [
+          "Look at each person's approved photos, then ask what they would like to bring. Some people love a crowd and some prefer to look alone. You can read about the duty to support privacy and autonomy in <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/10\">regulation 10 on dignity and respect</a>."
+        ],
+        "checklist": [
+          "Have I asked each person if they want their photo seen by the group?",
+          "Is there anyone else in the photo who might not want to be shown?",
+          "Do I have a plain caption that tells me who and what it is?",
+          "Am I ready to put it away if it upsets someone?"
+        ]
+      },
+      {
+        "h3": "Keep captions short and specific",
+        "paragraphs": [
+          "Ask relatives for a few plain words and the names of the people in the photo, such as “Brighton pier, summer 1974”. Edit any caption on the Approvals tab before you approve it, because staff and the chat will find the photo by those words."
+        ]
+      },
+      {
+        "h3": "Help the whole team get the habit",
+        "paragraphs": [
+          "Show new and agency staff how to find a person's photos in their first shift. A <a href=\"/staff-training/dementia-awareness\">dementia awareness course</a> helps them see why a familiar picture matters, and the <a href=\"/staff-training/mental-capacity-act-and-dols\">Mental Capacity Act course</a> covers wishes and best interests."
+        ]
+      }
+    ],
+    "note": "This page describes how the software works and is not legal or clinical advice. Check your own policies and local guidance for how you use photos and reminiscence with residents."
+  }
+}

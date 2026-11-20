@@ -1,0 +1,469 @@
+{
+  "slug": "family-abroad-sends-a-christmas-video-message",
+  "order": 102,
+  "title": "A son on the other side of the world wants to send a <em>dementia Christmas</em> greeting. No call, no app, no time zones.",
+  "meta_title": "Dementia Christmas: Video Message From Family | CareStreamAI",
+  "meta_description": "A son abroad records a Christmas greeting on a private link. You approve it, staff play it at a good moment, and a reminder invites another.",
+  "lede": "Christmas is when families who live far away feel the distance most. For a dementia Christmas in a care home, a son's voice can matter more than a card. CareStream gives him a private link to record a short greeting, holds it for your approval, and lets staff play it at a good moment. It sits alongside <a href=\"/training-platform\">the rest of your training and knowledge tools</a>.",
+  "panel": {
+    "title": "One Christmas greeting, step by step",
+    "pill": "Illustration",
+    "rows": [
+      {
+        "label": "Son abroad opens the private link and records a greeting",
+        "note": "Early Dec",
+        "done": true
+      },
+      {
+        "label": "Manager previews, edits the title and approves",
+        "note": "Mid Dec",
+        "done": true
+      },
+      {
+        "label": "Carer plays it with Mrs Wilkes after lunch",
+        "note": "25 Dec",
+        "done": true
+      },
+      {
+        "label": "A reminder gently invites something new",
+        "note": "New year",
+        "done": false
+      }
+    ],
+    "meter": 50
+  },
+  "image_alt": "An older woman and a carer sit together in a lounge with paper decorations and a small Christmas tree behind them, smiling at a small tablet held between them",
+  "card_title": "A son abroad cannot be there at Christmas. Can his voice be?",
+  "card_snippet": "Family record a short Christmas greeting on a private link, with no app or account. A manager approves it, staff play it at a good moment, and a gentle reminder invites another.",
+  "primary_keyword": "dementia christmas",
+  "secondary_keywords": [
+    "reminiscence box",
+    "dementia memory"
+  ],
+  "feature_links": [
+    {
+      "title": "Training built from your own policies",
+      "body": "Ad hoc training from your policies, face to face training organised, and wrong answers that become lessons.",
+      "action": "See the feature",
+      "href": "/training-platform"
+    },
+    {
+      "title": "Resident knowledge for your team",
+      "body": "Give staff quick, short answers about the people they care for, drawn from what you have recorded and approved.",
+      "action": "See resident knowledge",
+      "href": "/uses/resident-knowledge"
+    },
+    {
+      "title": "Dementia awareness training",
+      "body": "A course that helps staff understand the person behind the diagnosis.",
+      "action": "See the course",
+      "href": "/staff-training/dementia-awareness"
+    }
+  ],
+  "intro": {
+    "heading": "He cannot fly home. He wants her to hear him on the day.",
+    "sub": "A scenario we see in many care settings.",
+    "paragraph": "Daniel lives in Perth and has not seen his mother, Mrs Wilkes, for two years. She moved into the home in the spring. He rings on Sundays, but the hours do not line up and calls are hard for her to follow. At Christmas he wants to say more than a card can. He offers to send a clip to the activities lead's phone. She would love to say yes, but she knows she should not keep recordings of residents on a personal phone."
+  },
+  "trail": [
+    {
+      "when": "Autumn",
+      "text": "Mrs Wilkes settles. Her key worker records the family details.",
+      "kind": "ok"
+    },
+    {
+      "when": "1 Dec",
+      "text": "Daniel asks how he can be part of Christmas from Perth.",
+      "kind": "ok"
+    },
+    {
+      "when": "2 Dec",
+      "text": "The activities lead puts up the tree and plans the day.",
+      "kind": "ok"
+    },
+    {
+      "when": "3 Dec",
+      "text": "There is no safe way to receive his clip.",
+      "kind": "gap"
+    },
+    {
+      "when": "10 Dec",
+      "text": "He sends a message on a personal phone instead. It is not approved.",
+      "kind": "gap"
+    },
+    {
+      "when": "25 Dec",
+      "text": "Nobody can find the clip in the hubbub of the day.",
+      "kind": "gap"
+    },
+    {
+      "when": "Boxing Day",
+      "text": "Daniel asks if she heard it. Nobody is sure.",
+      "kind": "gap"
+    },
+    {
+      "when": "Inspection day",
+      "text": "“How do you involve relatives who live far away?” A card on a shelf is all you have.",
+      "kind": "end"
+    }
+  ],
+  "trail_close": "<b>The family wanted to be there.</b> The gap is between a loving offer and a safe way to receive, check and play it. Here is how CareStream closes it, step by step.",
+  "why": {
+    "heading": "Why a voice from far away matters at Christmas",
+    "sub": "Distance is hard for families, and the day carries a lot of feeling.",
+    "cards": [
+      {
+        "icon": "chat",
+        "title": "Voices carry what cards cannot",
+        "body": "Many teams build a dementia Christmas around familiar songs, decorations and talk of past years. A greeting in a son's own voice adds something personal. It is one gentle part of the day, not a promise about how anyone will feel."
+      },
+      {
+        "icon": "tick",
+        "title": "Family views count",
+        "body": "Under <a href=\"https://www.legislation.gov.uk/ukpga/2005/9/section/4\">section 4 of the Mental Capacity Act 2005</a>, a person's past and present wishes and feelings are considered, and so are the views of people interested in their welfare. Care must also <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/9\">reflect preferences</a>."
+      },
+      {
+        "icon": "alert",
+        "title": "Privacy still applies on a festive day",
+        "body": "<a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/10\">Regulation 10</a> includes ensuring privacy. A greeting on a staff phone is a risk. One a manager approved, played from a private link on the home's own device, is safer."
+      }
+    ]
+  },
+  "how": {
+    "heading": "From Perth to the lounge, step by step.",
+    "sub": "Video messages and reminders are part of the resident profiles feature, in the same system as your <a href=\"/training-platform\">policies and training</a>. They are on Professional and above. See <a href=\"/uses/resident-knowledge\">how staff use resident knowledge</a> too.",
+    "blocks": [
+      {
+        "heading": "Daniel records on his phone, with no app or account",
+        "bullets": [
+          "A manager sends the private link by email. Daniel taps Record a message, or Choose a video, and records up to 60 seconds",
+          "He can add a short title and remove a clip before pressing Send. The upload shows progress and can resume after a lost signal",
+          "It is not a call, so time zones do not matter. He records when it suits him, and it waits"
+        ],
+        "tags": [
+          {
+            "label": "Resident knowledge",
+            "href": "/uses/resident-knowledge"
+          },
+          {
+            "label": "How CareStream works",
+            "href": "/how-it-works"
+          }
+        ],
+        "mock": {
+          "type": "audit",
+          "audit": "Family page: record a message (example)",
+          "stats": [
+            [
+              "Length",
+              "Up to 60 seconds"
+            ],
+            [
+              "Videos per link",
+              "Up to 5"
+            ]
+          ],
+          "blocks": [
+            [
+              "Example from the family's page",
+              [
+                [
+                  "Record a message",
+                  ""
+                ],
+                [
+                  "Choose a video",
+                  ""
+                ],
+                [
+                  "Title (optional): Happy Christmas, Mum",
+                  ""
+                ]
+              ]
+            ]
+          ],
+          "caption": "Example only. Wording of the example title is invented."
+        }
+      },
+      {
+        "heading": "You approve it before anyone on staff sees it",
+        "bullets": [
+          "The clip waits on the Approvals tab, where a manager previews it, edits the title, adds a note and approves or rejects it",
+          "Staff and the chat never see a video that is still waiting",
+          "Rejected files are deleted at once. After Send, the link is spent"
+        ],
+        "tags": [
+          {
+            "label": "Dementia awareness course",
+            "href": "/staff-training/dementia-awareness"
+          },
+          {
+            "label": "Resident knowledge",
+            "href": "/uses/resident-knowledge"
+          }
+        ],
+        "mock": {
+          "type": "audit",
+          "audit": "Residents: Approvals tab (example)",
+          "stats": [
+            [
+              "Videos waiting",
+              "1"
+            ],
+            [
+              "Approved",
+              "0"
+            ]
+          ],
+          "blocks": [
+            [
+              "Video waiting for approval (example)",
+              [
+                [
+                  "Daniel, son, 0:50. Title: Happy Christmas, Mum",
+                  "Approve, Reject"
+                ],
+                [
+                  "Note for staff (optional): Daniel by the sea in Perth, Christmas song at the end",
+                  ""
+                ]
+              ]
+            ]
+          ],
+          "caption": "Example only. Nothing here has reached the care team."
+        }
+      },
+      {
+        "heading": "Staff play it at a good moment on the day",
+        "bullets": [
+          "A carer asks the This is me chat for a video from the resident's son, and it appears under the answer with her name and room number",
+          "Playing opens just the video on a dimmed backdrop. The carer sits beside her and chooses the moment",
+          "Each play is logged with who and when, and managers see recent plays on the resident record"
+        ],
+        "tags": [
+          {
+            "label": "CQC and compliance",
+            "href": "/cqc-compliance"
+          },
+          {
+            "label": "Book a demo",
+            "href": "/demo"
+          }
+        ],
+        "mock": {
+          "type": "audit",
+          "audit": "Staff Hub: Messages from family (example)",
+          "stats": [
+            [
+              "Shown",
+              "Newest first"
+            ],
+            [
+              "Per resident",
+              "Up to 10"
+            ]
+          ],
+          "blocks": [
+            [
+              "Messages for Mrs Wilkes (example)",
+              [
+                [
+                  "Happy Christmas, Mum. From Daniel, son",
+                  "Play"
+                ]
+              ]
+            ]
+          ],
+          "caption": "Example only. Illustration, not a real resident."
+        }
+      },
+      {
+        "heading": "A reminder helps him send another in the new year",
+        "bullets": [
+          "A manager can ask a family contact, by email, to add something new: weekly, fortnightly or monthly, on a weekday they prefer",
+          "Each email carries a fresh private link valid for 14 days, and a Stop these reminders link. The default is off",
+          "After 3 reminders with no reply they stop and a manager is told"
+        ],
+        "tags": [
+          {
+            "label": "Pricing and plans",
+            "href": "/pricing"
+          },
+          {
+            "label": "Care home policies guide",
+            "href": "/blog/care-home-policies-the-complete-guide"
+          }
+        ],
+        "mock": {
+          "type": "audit",
+          "audit": "Residents: Family tab, reminders (example)",
+          "stats": [
+            [
+              "Default",
+              "Off"
+            ],
+            [
+              "Cadence",
+              "Weekly, fortnightly or monthly"
+            ]
+          ],
+          "blocks": [
+            [
+              "Reminder for Daniel (example)",
+              [
+                [
+                  "Frequency: monthly, preferred weekday: Sunday",
+                  ""
+                ],
+                [
+                  "Email says: a few words, a photo or a short video message",
+                  ""
+                ]
+              ]
+            ]
+          ],
+          "caption": "Example only. Illustration, not a real resident."
+        }
+      }
+    ]
+  },
+  "talk": {
+    "heading": "The questions managers ask, and how CareStream answers them",
+    "sub": "Read this as a conversation. The questions are the ones we hear most.",
+    "items": [
+      {
+        "q": "Does the family need an app or an account?",
+        "a": "No. They open a private link in the email on their phone, record or choose a video, add a short title and press Send. A manager checks it before staff see it."
+      },
+      {
+        "q": "Does the time difference matter?",
+        "a": "No. It is not a call. Daniel records when he likes, and the clip waits for your approval and for the right moment on your side."
+      },
+      {
+        "q": "How long can a greeting be?",
+        "a": "Up to 60 seconds each, with up to 5 videos per link and up to 150MB per upload. It is converted so it plays on any phone, tablet or computer."
+      },
+      {
+        "q": "Can staff play it before I have checked it?",
+        "a": "No. Every family video waits for a manager to preview and approve it. A manager can edit the title and add a note first."
+      },
+      {
+        "q": "How does a carer find it on the day?",
+        "a": "They open the This is me chat in the Staff Hub and ask. Approved videos appear under the answer with the resident's name and room number. The chat reads the title and note, never the clip."
+      },
+      {
+        "q": "Does it help dementia memory?",
+        "a": "We do not claim that. A voice may spark a smile or talk about past Christmases, or it may not. It is one gentle option, and the carer chooses the moment and judges how it goes."
+      },
+      {
+        "q": "Can the family be reminded to send another?",
+        "a": "Yes. A manager can switch on gentle email reminders for a contact. They stop after 3 with no reply, and each email has a stop link. The default is off."
+      },
+      {
+        "q": "Which plan is it on, and can I try it?",
+        "a": "Resident profiles, photos, videos and reminders are on Professional and above. There is a 14 day free trial, and the <a href=\"/pricing\">pricing page</a> shows which plan includes it. You can <a href=\"/register\">create an account</a> or <a href=\"/demo\">book a demo</a> first."
+      }
+    ]
+  },
+  "limits": {
+    "heading": "Honest limits: a recorded greeting, not a call",
+    "cards": [
+      {
+        "title": "A recording, not a visit",
+        "body": "A greeting is a recording that staff play when they choose. It does not replace a visit, a phone call or your own Christmas plans, and it is only as good as the moment the carer picks."
+      },
+      {
+        "title": "The chat reads titles, not clips",
+        "body": "The chat cannot watch a video or describe what is in it, so a vague title is hard to find. The hub shows up to 10 newest videos per resident."
+      },
+      {
+        "title": "Nothing is promised for the person",
+        "body": "CareStream does not diagnose or treat. It does not claim a message will calm or cheer anyone. The carer chooses the moment, stops if it upsets, and follows the care plan."
+      }
+    ]
+  },
+  "read_next": [
+    "this-is-me-document",
+    "care-home-policies-the-complete-guide",
+    "dementia-care-training-in-the-uk"
+  ],
+  "faqs": {
+    "heading": "Christmas, family video and the hub, answered",
+    "groups": [
+      {
+        "group": "About Christmas and dementia",
+        "items": [
+          {
+            "q": "How can I plan a dementia Christmas in a care home?",
+            "a": "Keep the day familiar and unhurried, involve family where you can, and follow each person's care plan. A video from family is one gentle part. Your <a href=\"/staff-training/dementia-awareness\">dementia awareness training</a> covers how to read how someone is feeling."
+          },
+          {
+            "q": "What is a reminiscence box, and can a video go in one?",
+            "a": "A reminiscence box is a physical collection of objects, photos and keepsakes that prompt memories and conversation. A video message is a digital companion to it. Approved photos can appear in the chat too, found by caption."
+          },
+          {
+            "q": "How can family help with dementia memory?",
+            "a": "Family hold the stories, names and voices. A short message, or a photo with a caption, gives staff something personal to talk about. It supports the person, but it does not change their dementia memory."
+          },
+          {
+            "q": "Where do I note what to record about a person?",
+            "a": "See our <a href=\"/blog/this-is-me-document\">guide to the this is me document</a>."
+          }
+        ]
+      },
+      {
+        "group": "About approval, privacy and reminders",
+        "items": [
+          {
+            "q": "Does a manager approve a video before staff can play it?",
+            "a": "Yes. A family video stays hidden until a manager approves it. Videos a manager adds are approved at once."
+          },
+          {
+            "q": "Can I stop family reminders?",
+            "a": "Yes. A manager can turn them off, and each email has a Stop these reminders link. Reminders stop at once if the person moves on or dies."
+          },
+          {
+            "q": "What does the law say about preferences and privacy?",
+            "a": "Regulation 9 says care must <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/9\">meet needs and reflect preferences</a>, and <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/10\">regulation 10</a> includes ensuring privacy. Check your own policies for recordings."
+          }
+        ]
+      }
+    ]
+  },
+  "guide": {
+    "heading": "How to make a family greeting work on the day",
+    "lede": "A little planning in November makes the difference in December. Here is a simple run of events.",
+    "sections": [
+      {
+        "h3": "Invite early, and say what you need",
+        "paragraphs": [
+          "Email families in November, and tell them the clip should be under a minute and that the home checks it first. A relaxed voice and a short story work better than a long speech. Encourage them to mention the person by name.",
+          "Your reminiscence box, the photos on the wall and the songs you play are all part of the day. The greeting joins them. Link it with the person's profile so staff know the names in it."
+        ]
+      },
+      {
+        "h3": "Choose the moment on the day",
+        "paragraphs": [
+          "Christmas can be busy and loud. Many people do better in a quiet corner, so pick a calm moment, sit beside the person and keep the sound gentle. Stop if they are upset, and note how it went."
+        ],
+        "checklist": [
+          "Is the clip approved and titled so staff can find it?",
+          "Is the tablet charged and the sound gentle?",
+          "Have you chosen a calm moment and a quiet corner?",
+          "Will you tell the family afterwards that it was played?"
+        ]
+      },
+      {
+        "h3": "Keep the door open for the new year",
+        "paragraphs": [
+          "A thank you tells a relative their effort was used. If they have said they would like to send more, switch on a gentle reminder from the Family tab. See <a href=\"/uses/resident-knowledge\">resident knowledge</a> for the wider picture."
+        ]
+      }
+    ],
+    "note": "This page describes how the software works and is not legal or clinical advice. Follow each resident's care plan and your own policies for how you use recordings."
+  },
+  "fine": "14 day free trial · Set up in a day · UK data residency",
+  "eyebrow": "Scenario",
+  "status": "draft",
+  "image": "https://api.carestreamai.com/public/policy-shop/image/62a4af49-eb30-4fd4-86c3-4c05ae18de90.webp"
+}

@@ -12,7 +12,7 @@ import { ErrorBox, Field, inputCls, btnPrimary, btnSecondary, btnDangerOutline, 
 type Client = ReturnType<typeof import('@/lib/residents-api').createResidentsClient>
 const CAPTION_MAX = 140
 
-function Thumb({ photo, onExpired, className }: { photo: ResidentPhoto; onExpired: () => void; className?: string }) {
+export function Thumb({ photo, onExpired, className }: { photo: ResidentPhoto; onExpired: () => void; className?: string }) {
   const retried = useRef(false)
   if (!photo.url) return <div className={`flex items-center justify-center bg-gray-50 ${className ?? ''}`}><ImageOff size={22} className="text-gray-400" aria-hidden="true" /></div>
   return (

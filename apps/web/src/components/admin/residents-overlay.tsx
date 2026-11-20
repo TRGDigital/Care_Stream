@@ -229,7 +229,7 @@ export function ResidentsOverlay({ token, userId, onClose, initialResidentId = n
                           </div>
                         )}
                         {tab === 'family' && <FamilyTab client={client} resident={detail.data} onChanged={refreshAll} />}
-                        {tab === 'from-family' && <FamilyAnswersTab resident={detail.data} sections={sections} />}
+                        {tab === 'from-family' && <FamilyAnswersTab resident={detail.data} sections={sections} onExpired={refreshAll} />}
                         {tab === 'approvals' && <ApprovalsTab client={client} resident={detail.data} sections={sections} onChanged={refreshAll} />}
                       </>
                     ) : null}

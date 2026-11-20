@@ -17,7 +17,7 @@ const NOTE_MAX = 280
 const MAX_MB = 150
 const EXT = /\.(mp4|m4v|mov|webm|3gp|3g2)$/i
 
-function Player({ video, onExpired, className }: { video: ResidentVideo; onExpired: () => void; className?: string }) {
+export function Player({ video, onExpired, className }: { video: ResidentVideo; onExpired: () => void; className?: string }) {
   const retried = useRef(false)
   if (!video.video_url) {
     return (

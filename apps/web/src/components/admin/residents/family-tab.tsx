@@ -3,6 +3,8 @@
 import { useState } from 'react'
 import { Loader2, Mail, RefreshCw, Send, Ban, Link2, Check } from 'lucide-react'
 import type { ResidentDetail } from '@/lib/residents-api'
+import { ReminderCadencePick, FamilyReminders } from './reminders'
+import type { ReminderCadence } from '@/lib/reminders-api'
 import { Field, ErrorBox, StatusChip, inputCls, btnPrimary, btnSecondary, btnDangerOutline, errMsg, fmtDate } from './ui'
 
 type Client = ReturnType<typeof import('@/lib/residents-api').createResidentsClient>
@@ -12,6 +14,7 @@ export function FamilyTab({ client, resident, onChanged }: { client: Client; res
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [rel, setRel] = useState('')
+  const [reminder, setReminder] = useState<ReminderCadence>('off')   // optional gentle reminders chosen with a first invitation
   const [busy, setBusy] = useState(false)
   const [rowBusy, setRowBusy] = useState<string | null>(null)
   const [error, setError] = useState('')
@@ -22,9 +25,13 @@ export function FamilyTab({ client, resident, onChanged }: { client: Client; res
     e.preventDefault()
     setBusy(true); setError(''); setNotice('')
     try {
-      await client.invite(resident.id, { name: name.trim(), email: email.trim(), relationship: rel.trim() })
+      const sent = await client.invite(resident.id, { name: name.trim(), email: email.trim(), relationship: rel.trim() })
       setNotice(`Invitation sent to ${email.trim()}.`)
-      setName(''); setEmail(''); setRel('')
+      if (reminder !== 'off') {
+        try { await client.saveReminder(resident.id, sent.id, { cadence: reminder }) }
+        catch { setNotice(`Invitation sent to ${email.trim()}, but the reminders could not be set. You can set them below.`) }
+      }
+      setName(''); setEmail(''); setRel(''); setReminder('off')
       onChanged()
     } catch (err) { setError(errMsg(err)) } finally { setBusy(false) }
   }
@@ -77,6 +84,7 @@ export function FamilyTab({ client, resident, onChanged }: { client: Client; res
           <input id="fm-rel" required list="fm-rel-list" maxLength={40} placeholder="For example daughter" className={inputCls} value={rel} onChange={e => setRel(e.target.value)} autoComplete="off" />
           <datalist id="fm-rel-list">{RELATIONSHIPS.map(r => <option key={r} value={r} />)}</datalist>
         </Field>
+        <div className="sm:col-span-3 sm:max-w-xs"><ReminderCadencePick value={reminder} onChange={setReminder} /></div>
         <div className="flex flex-wrap gap-2 sm:col-span-3">
           <button type="submit" disabled={busy || !email.trim()} className={btnPrimary} title={email.trim() ? '' : 'Add an email address to send the invitation'}>{busy ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />} Send invitation</button>
           <button type="button" disabled={busy} onClick={makeLink} className={btnSecondary}><Link2 size={14} /> Create link to copy</button>
@@ -135,6 +143,8 @@ export function FamilyTab({ client, resident, onChanged }: { client: Client; res
           })}
         </ul>
       )}
+
+      <FamilyReminders client={client} resident={resident} />
     </div>
   )
 }

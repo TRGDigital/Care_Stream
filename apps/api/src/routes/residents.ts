@@ -32,6 +32,8 @@ import {
 import {
   photosReady, processAndStorePhoto, cleanCaption, cleanPeople, adminPhotoDto, hubPhotoDto, discardPhotoFile, deleteResidentPhotos,
 } from '../lib/resident-photos'
+import { residentRemindersRouter } from './family-reminders'
+import { cancelResidentReminders } from '../lib/family-reminders'
 import { sendResidentFamilyInviteEmail, sendResidentArchiveTaskEmail } from '../services/email/outbound'
 
 export const residentsRouter = Router()
@@ -132,6 +134,7 @@ residentsRouter.get('/hub', async (_req: Request, res: Response) => {
 // Everything below is for admins on a plan that has the feature.
 residentsRouter.use(requireAdmin)
 residentsRouter.use(gate)
+residentsRouter.use('/:id/reminders', residentRemindersRouter)   // family reminder settings (routes/family-reminders.ts)
 
 // ─── Who can action archives ───────────────────────────────────────────────────
 residentsRouter.get('/archive-access', async (req: Request, res: Response) => {
@@ -279,6 +282,7 @@ residentsRouter.post('/:id/status', async (req: Request, res: Response) => {
   })
   // Cancel every family link and set aside anything still waiting: none of it may reach staff now.
   await db.residentInvite.updateMany({ where: { tenant_id: tenantId, resident_id: r.id, revoked_at: null }, data: { revoked_at: now } })
+  await cancelResidentReminders(tenantId, r.id)   // no more family reminders
   await db.residentContribution.updateMany({ where: { tenant_id: tenantId, resident_id: r.id, status: 'pending' }, data: { status: 'rejected', decided_at: now, decided_by: 'system: resident archived' } })
   // Photos: approved ones drop out of the hub at once (it only lists photos of living residents, and the file route checks again),
   // but stay in private storage for the retention period like the written profile, and go with it when it is deleted.
@@ -564,6 +568,7 @@ residentsRouter.delete('/:id', async (req: Request, res: Response) => {
   await syncResidentKnowledge(ctx.tenantId, ctx.r.id)   // belt and braces: nothing of theirs left in the assistant
   await deleteResidentPhotos(ctx.tenantId, ctx.r.id)   // files from storage first, then the rows
   await db.residentContribution.deleteMany({ where: { tenant_id: ctx.tenantId, resident_id: ctx.r.id } })
+  await cancelResidentReminders(ctx.tenantId, ctx.r.id, true)
   await db.residentInvite.deleteMany({ where: { tenant_id: ctx.tenantId, resident_id: ctx.r.id } })
   await db.resident.delete({ where: { id: ctx.r.id } })
   void writeAuditLog({ tenant_id: ctx.tenantId, user_id: a.id, event_type: 'resident_deleted', entity_type: 'resident', entity_id: ctx.r.id, metadata: { early, reason: p.data.reason ?? null } })

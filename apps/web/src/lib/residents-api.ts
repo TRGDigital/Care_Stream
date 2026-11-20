@@ -4,6 +4,8 @@
 // Plans: Professional and Enterprise. Every call can answer 403 FEATURE_NOT_AVAILABLE on a lower plan.
 // Family answers NEVER reach staff until an admin approves them (contribution status 'approved').
 
+import type { ReminderList, ReminderInput, ReminderSetting } from './reminders-api'
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
 
 export type ResidentStatus = 'living' | 'left' | 'deceased'
@@ -233,6 +235,11 @@ export function createResidentsClient(token: string) {
       get: () => call<{ admins: Array<{ id: string; name: string; email: string; has_access: boolean }> }>('/residents/archive-access', token),
       set: (user_ids: string[]) => call<{ saved: boolean }>('/residents/archive-access', token, { method: 'PUT', body: j({ user_ids }) }),
     },
+
+    /** Family reminder settings for each contact of one resident (reminders-api.ts). */
+    reminders: (id: string) => call<ReminderList>(`/residents/${id}/reminders`, token),
+    saveReminder: (id: string, inviteId: string, data: ReminderInput) =>
+      call<{ reminder: ReminderSetting | null }>(`/residents/${id}/reminders/${inviteId}`, token, { method: 'PUT', body: j(data) }),
 
     /** The staff view: living residents with approved content. enabled is false when the plan lacks it or there are no profiles. */
     hub: () => call<{ enabled: boolean; section_defs: ResidentSectionDef[]; residents: HubResident[] }>('/residents/hub', token),

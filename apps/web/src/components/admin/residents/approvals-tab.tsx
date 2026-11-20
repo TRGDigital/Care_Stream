@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { Check, ChevronDown, ChevronRight, Loader2, Pencil, X } from 'lucide-react'
 import type { ResidentContribution, ResidentDetail, ResidentSectionDef } from '@/lib/residents-api'
 import { PhotoApprovals } from './photos'
+import { ReminderNotices } from './reminders'
 import { ErrorBox, inputCls, btnPrimary, btnSecondary, btnDangerOutline, errMsg, fmtDate } from './ui'
 
 type Client = ReturnType<typeof import('@/lib/residents-api').createResidentsClient>
@@ -40,6 +41,8 @@ export function ApprovalsTab({ client, resident, sections, onChanged }: { client
     <div className="space-y-5">
       <p className="text-sm text-neutral-mid">Family answers and photos appear here first. Only what you approve is shown to staff. Photos are never used by the assistant.</p>
       {error && <ErrorBox>{error}</ErrorBox>}
+
+      <ReminderNotices client={client} resident={resident} />
 
       <PhotoApprovals client={client} resident={resident} onChanged={onChanged} />
 

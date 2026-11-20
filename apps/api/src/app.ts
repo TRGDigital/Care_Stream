@@ -68,6 +68,7 @@ import { contentRoutineRouter } from './routes/content-routine'
 import { publicScenariosRouter, scenariosAdminRouter } from './routes/scenarios'
 import { publicFamilyRouter, residentPhotoFileRouter } from './routes/residents-public'
 import { residentsRouter } from './routes/residents'
+import { familyStopRouter } from './routes/family-reminders'
 import { incentivesRouter } from './routes/incentives'
 import { superUserRouter } from './routes/super-user'
 import { standardTrainingRouter } from './routes/standard-training'
@@ -206,6 +207,7 @@ app.use('/public/site-pages', publicPagesRouter)
 app.use('/public/collections', publicCollectionsRouter)
 
 // "This is me": the private family form (token link, no sign in). BEFORE requireAuth.
+app.use('/public/family/stop', familyStopRouter)   // the "Stop these reminders" link in family reminder emails
 app.use('/public/family', publicFamilyRouter)
 // "This is me" photo files: opened only with a link signed for about five minutes, re-checked on every request. BEFORE requireAuth.
 app.use('/public/resident-photo', residentPhotoFileRouter)

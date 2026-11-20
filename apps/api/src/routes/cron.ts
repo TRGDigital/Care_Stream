@@ -23,6 +23,7 @@ import { timingSafeEqual } from 'crypto'
 import { prisma } from '../db/client'
 import { ok, err } from '../lib/response'
 import { runKnowledgeGapDailyJob } from '../services/knowledge-gaps/digest'
+import { runFamilyReminders } from '../lib/family-reminders'
 import { runResidentRetentionReminders } from '../services/residents/retention'
 import { evaluateAllLive } from '../services/incentives/engine'
 import { sendDailyAuditReminders } from '../services/audits/reminders'
@@ -137,6 +138,11 @@ cronRouter.get('/incentives', (req, res) =>
 // Daily: remind the archive admins when an archived "This is me" profile reaches the end of its retention period.
 cronRouter.get('/resident-retention', (req, res) =>
   job('resident-retention', req, res, () => runResidentRetentionReminders()))
+
+// Daily: email family contacts who are due a reminder to add to a "This is me" profile (lib/family-reminders.ts). ?dry=1 works it out and sends nothing.
+// pg_cron job cs-family-reminders (see prisma/sql/2026-11-21_resident_reminders.sql).
+cronRouter.get('/family-reminders', (req, res) =>
+  job('family-reminders', req, res, () => runFamilyReminders({ dryRun: req.query.dry === '1' })))
 
 cronRouter.get('/policy-review-reminders', (req, res) =>
   job('policy-review-reminders', req, res, () => runPolicyReviewReminders({ force: req.query.force === '1' })))

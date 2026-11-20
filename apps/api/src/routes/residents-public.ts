@@ -17,6 +17,7 @@ import {
 import { residentPhotoUploadMiddleware } from '../middleware/upload'
 import { downloadFile, deleteFile } from '../services/storage/s3'
 import { sendResidentFamilySubmissionEmail } from '../services/email/outbound'
+import { noteFamilyReply } from '../lib/family-reminders'
 
 export const publicFamilyRouter = Router()
 const db = prisma as any
@@ -131,6 +132,7 @@ publicFamilyRouter.post('/:token', async (req: Request, res: Response) => {
     })),
   })
   await db.residentInvite.update({ where: { id: live.inv.id }, data: { submitted_at: new Date() } })
+  await noteFamilyReply(live.inv.id)   // a reply restarts the family reminder count
 
   // Tell the admin who sent the invitation. A failed email must never lose the answers.
   try {

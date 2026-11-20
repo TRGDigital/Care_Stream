@@ -6,6 +6,7 @@ import sgMail from '@sendgrid/mail'
 import '../../lib/email-guard'   // never email reserved fictional domains (example.com and similar)
 import { signFeedbackToken } from '../../lib/feedback-token'
 import { siteUrl } from '../../lib/urls'
+import { reminderCopy } from '../../lib/family-reminders-copy'
 
 const INBOUND_DOMAIN = process.env.INBOUND_EMAIL_DOMAIN ?? 'carestreamai.co.uk'
 const WEB_URL        = siteUrl()
@@ -2299,6 +2300,26 @@ export async function sendResidentFamilySubmissionEmail(opts: {
     ${emailFooter(opts.homeName)}
   `)
   await sgMail.send({ to: opts.to, from: residentFrom('CareStream'), subject: `${opts.contributorName} has added to ${opts.residentName}'s profile`, html, trackingSettings: { clickTracking: { enable: false, enableText: false } } })
+}
+
+/** A friendly, plain reminder to a family contact with a fresh private link and a one click stop link. Throws on a send failure so the caller can retry later. */
+export async function sendResidentFamilyReminderEmail(opts: {
+  to: string; inviteeName: string; residentName: string; homeName: string; link: string; stopLink: string; days: number
+}): Promise<void> {
+  ensureInitialised()
+  if (!process.env.SENDGRID_API_KEY) { console.warn('[email] SENDGRID_API_KEY not set, skipping family reminder'); return }
+  const c = reminderCopy({ residentName: opts.residentName, homeName: opts.homeName, days: opts.days })
+  const first = (opts.inviteeName || '').trim().split(' ')[0] || 'there'
+  const html = emailWrapper(`
+    <p style="color:${NEUTRAL_DARK};font-size:15px;margin:0 0 16px">Hello ${escResident(first)},</p>
+    <p style="color:#374151;font-size:15px;line-height:1.6;margin:0 0 16px">${escResident(c.intro)}</p>
+    <p style="color:#374151;font-size:15px;line-height:1.6;margin:0 0 22px">${escResident(c.review)}</p>
+    ${residentButton(opts.link, c.button)}
+    <p style="color:#6b7280;font-size:13px;line-height:1.6;margin:0 0 16px">${escResident(c.expiry)}</p>
+    <p style="color:#6b7280;font-size:13px;line-height:1.6;margin:0">${escResident(c.stopLead)} <a href="${escResident(opts.stopLink)}" style="color:${PURPLE_DARK}">${escResident(c.stop)}</a></p>
+    ${emailFooter(opts.homeName)}
+  `)
+  await sgMail.send({ to: opts.to, from: residentFrom('CareStream'), subject: c.subject, html, trackingSettings: { clickTracking: { enable: false, enableText: false } } })
 }
 
 /** To the admins who hold the resident archive permission: someone has died or moved on and the archive needs actioning. */

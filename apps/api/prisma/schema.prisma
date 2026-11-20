@@ -3379,6 +3379,29 @@ model ResidentPhoto {
   @@map("resident_photos")
 }
 
+// Family reminder settings, one per family contact (invite). See prisma/sql/2026-11-21_resident_reminders.sql.
+model ResidentReminderSetting {
+  id               String    @id @default(uuid())
+  tenant_id        String
+  resident_id      String
+  invite_id        String    @unique
+  cadence          String    @default("off")   // off | weekly | fortnightly | monthly
+  weekday          Int?                          // 0 Sunday to 6 Saturday
+  paused_until     DateTime? @db.Date
+  unanswered_count Int       @default(0)
+  last_sent_at     DateTime?
+  last_reply_at    DateTime?
+  next_due_at      DateTime?
+  stopped_at       DateTime?
+  created_by       String?
+  created_at       DateTime  @default(now())
+  updated_at       DateTime  @updatedAt
+
+  @@index([cadence, next_due_at])
+  @@index([tenant_id, resident_id])
+  @@map("resident_reminder_settings")
+}
+
 
 // ─── Staff incentives (Professional and Enterprise) ─────────────────────────────
 // See prisma/sql/2026-11-17_staff_incentives.sql. No relations on purpose (same as the resident tables).

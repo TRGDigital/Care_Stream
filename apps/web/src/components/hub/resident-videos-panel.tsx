@@ -23,10 +23,12 @@ function PlayerModal({ client, video, name, onClose }: { client: Client; video: 
   const [src, setSrc] = useState('')
   const [error, setError] = useState('')
   const [retried, setRetried] = useState(false)
+  // English text under the video: only present when a manager chose to share it for this video.
+  const [text, setText] = useState<{ text: string; language_name: string | null; label: string } | null>(null)
 
   useEffect(() => {
     let live = true
-    client.playVideo(video.id).then(r => { if (live) setSrc(photoSrc(r.url)) }).catch(() => { if (live) setError('This video is not available. It may have been removed.') })
+    client.playVideo(video.id).then(r => { if (live) { setSrc(photoSrc(r.url)); setText(r.translation ?? null) } }).catch(() => { if (live) setError('This video is not available. It may have been removed.') })
     return () => { live = false }
   }, [client, video.id])
 
@@ -54,7 +56,17 @@ function PlayerModal({ client, video, name, onClose }: { client: Client; video: 
         </button>
         {error ? <p role="alert" className="max-w-md rounded-xl border border-red-200 bg-red-50 px-5 py-4 text-lg text-red-700">{error}</p>
           : !src ? <div className="flex h-48 w-72 items-center justify-center rounded-xl bg-white"><Loader2 size={36} className="animate-spin text-teal" aria-label="Loading" /></div>
-          : <video key={src} src={src} controls autoPlay playsInline preload="auto" poster={photoSrc(video.poster_url)} onError={expired} className="max-h-[85vh] max-w-[92vw] rounded-xl bg-black" />}
+          : (
+            <div className="flex flex-col items-center gap-2">
+              <video key={src} src={src} controls autoPlay playsInline preload="auto" poster={photoSrc(video.poster_url)} onError={expired} className={`${text ? 'max-h-[60vh]' : 'max-h-[85vh]'} max-w-[92vw] rounded-xl bg-black`} />
+              {text && (
+                <div className="max-h-[22vh] w-full max-w-[92vw] overflow-y-auto rounded-xl bg-white px-4 py-3" aria-label="English translation">
+                  <p className="text-xs font-medium text-neutral-mid">{text.label}{text.language_name ? `. Spoken in ${text.language_name}.` : ''}</p>
+                  <p className="mt-1 whitespace-pre-line text-base leading-relaxed text-neutral-dark">{text.text}</p>
+                </div>
+              )}
+            </div>
+          )}
       </div>
     </div>
   )

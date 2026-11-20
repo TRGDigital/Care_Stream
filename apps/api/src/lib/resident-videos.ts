@@ -33,6 +33,7 @@ import { prisma } from '../db/client'
 import { cleanText, residentsEnabled } from './residents'
 import { detectVideoContainer, transcodeVideo, VideoError, MAX_SECONDS } from './resident-video-media'
 import { keyOf, words, esc, STOP } from './resident-photos'
+import { startTranscript, removeTranscriptFor, removeTranscriptsForResident, transcriptsFor, adminTranscriptDto } from './resident-video-transcripts'
 import { scanBuffer, scannerConfigured } from '../services/security/malware-scan'
 import { putPrivateObject, objectSize, deleteObjectsUnder, deleteFile, downloadFile } from '../services/storage/s3'
 
@@ -225,6 +226,9 @@ export async function completeVideo(v: any, edits: { title?: unknown }): Promise
       data: { state: 'ready', s3_key: mp4Key, poster_key: posterKey, mime: 'video/mp4', duration_seconds: out.duration, size_bytes: out.size, width: out.width, height: out.height, scan_status: scan, error: null },
     })
     await dropParts(v)   // the raw upload is not kept
+    // A family clip waits for a manager, who may not speak its language: start the speech job now (quick, it does not wait for the result).
+    // Manager uploads start no job on their own. Never allowed to fail the upload.
+    if (done.source === 'family' && done.status === 'pending') { try { await startTranscript(done) } catch { /* the manager can press the button later */ } }
     return { ok: true, video: done }
   } catch (e: any) {
     const message = e instanceof VideoError ? e.message : 'That video could not be processed. Please try again with a shorter video.'
@@ -250,11 +254,12 @@ export function parseRange(header: string | undefined, size: number): { start: n
 }
 
 // ─── Clean-up ──────────────────────────────────────────────────────────────────
-/** Removes every file of a clip from storage: the processed video, the poster and any temporary chunks. */
+/** Removes every file of a clip from storage: the processed video, the poster and any temporary chunks, and its transcript and translation. */
 export async function removeVideoFiles(v: any): Promise<void> {
   if (v.s3_key) await deleteFile(v.s3_key)
   if (v.poster_key) await deleteFile(v.poster_key)
   await dropParts(v)
+  await removeTranscriptFor(v)   // the words go with the video in every case (reject, delete, retire, profile deletion)
 }
 
 /** Reject: files gone at once, keys blanked, the row kept as a record that it was rejected. */
@@ -291,6 +296,7 @@ export async function deleteResidentVideos(tenantId: string, residentId: string)
   try { rows = await db.residentVideo.findMany({ where: { tenant_id: tenantId, resident_id: residentId } }) } catch { return 0 }
   for (const v of rows) await removeVideoFiles(v)
   await deleteObjectsUnder(baseKey(tenantId, residentId))   // anything left under the folder
+  await removeTranscriptsForResident(tenantId, residentId)   // including any whose clip row is already gone
   await db.residentVideo.deleteMany({ where: { tenant_id: tenantId, resident_id: residentId } })
   await db.residentVideoPlay.deleteMany({ where: { tenant_id: tenantId, resident_id: residentId } }).catch(() => undefined)
   return rows.length
@@ -331,8 +337,9 @@ export async function adminVideosFor(tenantId: string, residentId: string): Prom
     const users: any[] = plays.length ? await db.user.findMany({ where: { id: { in: [...new Set(plays.map(p => p.user_id))] } }, select: { id: true, name: true } }) : []
     const who = new Map(users.map(u => [u.id, u.name]))
     const titles = new Map<string, string | null>(rows.map(r => [r.id, r.title ?? null]))
+    const tr = await transcriptsFor(tenantId, rows.map(r => r.id))
     return {
-      videos: rows.filter(r => r.state !== 'failed').map(adminVideoDto),
+      videos: rows.filter(r => r.state !== 'failed').map(r => ({ ...adminVideoDto(r), transcript: tr.has(r.id) ? adminTranscriptDto(tr.get(r.id)) : null })),
       plays: plays.map(p => ({ id: p.id, video_id: p.video_id, video_title: titles.get(p.video_id) ?? null, user_name: who.get(p.user_id) ?? 'A team member', played_at: p.played_at.toISOString() })),
     }
   } catch { return { videos: [], plays: [] } }

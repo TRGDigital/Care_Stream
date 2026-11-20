@@ -5,9 +5,9 @@
 // deleting, and who has played them recently. Videos are private: each is loaded through a link that lasts about ten minutes, so if one has
 // run out the player asks for a fresh set once.
 
-import { useRef, useState } from 'react'
-import { Check, Clapperboard, Loader2, Play, Trash2, Upload, X } from 'lucide-react'
-import { photoSrc, type ResidentDetail, type ResidentVideo } from '@/lib/residents-api'
+import { useEffect, useRef, useState } from 'react'
+import { Check, Clapperboard, Languages, Loader2, Pencil, Play, Trash2, Upload, X } from 'lucide-react'
+import { photoSrc, type ResidentDetail, type ResidentVideo, type VideoTranscript } from '@/lib/residents-api'
 import { fmtDuration, uploadVideoInChunks } from '@/lib/video-upload'
 import { ErrorBox, Field, inputCls, btnPrimary, btnSecondary, btnDangerOutline, errMsg, fmtDate } from './ui'
 
@@ -33,6 +33,95 @@ export function Player({ video, onExpired, className }: { video: ResidentVideo; 
 }
 
 const sender = (v: ResidentVideo) => (v.source === 'manager' ? `Added by ${v.uploaded_by_name}` : `From ${v.uploaded_by_name}${v.relationship ? `, ${v.relationship}` : ''}`)
+
+/**
+ * "What is said": the speech in a video as text, for the manager only. Machine generated and labelled so. While a transcript is pending the
+ * panel asks the API every few seconds (the API checks the job when asked, there is no background worker). Approving or rejecting never
+ * waits for it. The manager can correct the English text and choose whether staff see it under the video.
+ */
+export function TranscriptPanel({ client, residentId, video }: { client: Client; residentId: string; video: ResidentVideo }) {
+  const [t, setT] = useState<VideoTranscript | null>(video.transcript ?? null)
+  const [busy, setBusy] = useState(false)
+  const [editing, setEditing] = useState(false)
+  const [draft, setDraft] = useState('')
+  const [error, setError] = useState('')
+
+  // A fresh load of the record brings a fresh transcript.
+  useEffect(() => { setT(video.transcript ?? null) }, [video.transcript])
+
+  useEffect(() => {
+    if (t?.state !== 'pending') return
+    let live = true
+    const timer = setInterval(() => {
+      client.videoTranscript(residentId, video.id).then(r => { if (live && r.transcript) setT(r.transcript) }).catch(() => { /* try again on the next tick */ })
+    }, 4000)
+    return () => { live = false; clearInterval(timer) }
+  }, [t?.state, client, residentId, video.id])
+
+  if (video.state !== 'ready') return null
+
+  async function run<R>(fn: () => Promise<R>): Promise<R | undefined> {
+    setBusy(true); setError('')
+    try { return await fn() } catch (e) { setError(errMsg(e)); return undefined } finally { setBusy(false) }
+  }
+  const start = () => run(async () => { const r = await client.transcribeVideo(residentId, video.id); if (r.transcript) setT(r.transcript) })
+  const save = () => run(async () => { const r = await client.updateTranscript(residentId, video.id, { edited_translation_text: draft.trim() || null }); setT(r.transcript); setEditing(false) })
+  const share = (on: boolean) => run(async () => { const r = await client.updateTranscript(residentId, video.id, { show_to_staff: on }); setT(r.transcript) })
+
+  const canRun = !t || t.state === 'failed' || t.state === 'no_speech' || t.state === 'not_available'
+  return (
+    <div className="rounded-lg border border-gray-200 bg-white p-3" aria-label="What is said in this video">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h5 className="flex items-center gap-2 text-sm font-semibold text-neutral-dark"><Languages size={14} aria-hidden="true" /> What is said</h5>
+        {t?.state === 'ready' && <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-neutral-mid">Machine generated</span>}
+      </div>
+
+      {t?.state === 'pending' && <p className="mt-2 flex items-center gap-2 text-sm text-neutral-mid" role="status"><Loader2 size={14} className="animate-spin" /> {t.message}</p>}
+      {t && t.state !== 'pending' && t.state !== 'ready' && <p className="mt-2 text-sm text-neutral-mid" role="status">{t.message}</p>}
+      {!t && <p className="mt-2 text-sm text-neutral-mid">Turn the speech in this video into text, and into English if it is another language, to help you decide. This is optional.</p>}
+      {canRun && (
+        <button type="button" className={`${btnSecondary} mt-2`} disabled={busy} onClick={start}>
+          {busy ? <Loader2 size={14} className="animate-spin" /> : <Languages size={14} />} {t ? 'Try again' : 'Transcribe and translate'}
+        </button>
+      )}
+
+      {t?.state === 'ready' && (
+        <div className="mt-2 space-y-3 text-sm">
+          <p className="text-neutral-dark">{t.language_name ? <>Language: <strong>{t.language_name}</strong></> : 'Language not identified'}{t.message ? <span className="text-neutral-mid">. {t.message}</span> : null}</p>
+          <div>
+            <p className="text-xs font-medium text-neutral-mid">{t.language_name && t.language_name !== 'English' ? `Original text (${t.language_name})` : 'Text'}</p>
+            <p dir="auto" className="mt-0.5 max-h-40 overflow-y-auto whitespace-pre-line rounded bg-gray-50 p-2 text-neutral-dark">{t.original_text || ''}</p>
+          </div>
+          {t.translation !== null && (
+            <div>
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-xs font-medium text-neutral-mid">English translation{t.edited ? `, edited by ${t.edited_by ?? 'a manager'}` : ''}</p>
+                {!editing && <button type="button" className="inline-flex items-center gap-1 text-xs font-medium text-teal hover:underline" onClick={() => { setDraft(t.translation ?? ''); setEditing(true) }}><Pencil size={12} /> Edit translation</button>}
+              </div>
+              {editing ? (
+                <div className="mt-1 space-y-2">
+                  <textarea className={inputCls} rows={5} maxLength={10000} value={draft} onChange={e => setDraft(e.target.value)} aria-label="English translation" />
+                  <div className="flex gap-2">
+                    <button type="button" className={btnPrimary} disabled={busy} onClick={save}>{busy ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />} Save</button>
+                    <button type="button" className={btnSecondary} disabled={busy} onClick={() => setEditing(false)}>Cancel</button>
+                  </div>
+                </div>
+              ) : <p className="mt-0.5 max-h-40 overflow-y-auto whitespace-pre-line rounded bg-gray-50 p-2 text-neutral-dark">{t.translation}</p>}
+            </div>
+          )}
+          <p className="text-xs text-neutral-mid">{t.label}</p>
+          {t.can_share_with_staff && (
+            <label className="flex items-start gap-2 text-sm text-neutral-dark">
+              <input type="checkbox" className="mt-0.5 h-4 w-4" checked={t.show_to_staff} disabled={busy} onChange={e => share(e.target.checked)} />
+              <span>Show the English text to staff when this video is played<span className="block text-xs text-neutral-mid">Staff see it under the video, labelled as a machine translation checked by a manager. It is only shown once the video is approved. Off by default.</span></span>
+            </label>
+          )}
+        </div>
+      )}
+      {error && <div className="mt-2"><ErrorBox>{error}</ErrorBox></div>}
+    </div>
+  )
+}
 
 /** Family videos waiting for approval: preview, who sent it, an editable title and note, approve or reject. */
 export function VideoApprovals({ client, resident, onChanged }: { client: Client; resident: ResidentDetail; onChanged: () => void }) {
@@ -73,7 +162,8 @@ export function VideoApprovals({ client, resident, onChanged }: { client: Client
                 </button>
                 <button type="button" className={btnDangerOutline} disabled={busyId !== null} onClick={() => decide(v, 'reject')}><X size={14} /> Reject</button>
               </div>
-              <p className="text-xs text-neutral-mid">Rejecting removes the video from storage straight away.</p>
+              <p className="text-xs text-neutral-mid">Rejecting removes the video and any text taken from it from storage straight away.</p>
+              <TranscriptPanel client={client} residentId={resident.id} video={v} />
             </div>
           </li>
         ))}
@@ -142,6 +232,7 @@ export function VideoManager({ client, resident, onChanged }: { client: Client; 
                 <p className="text-sm font-medium text-neutral-dark">{v.title || 'Video message'}{v.duration_seconds ? <span className="font-normal text-neutral-mid">, {fmtDuration(v.duration_seconds)}</span> : null}</p>
                 {v.note && <p>{v.note}</p>}
                 <p>{sender(v)}, {fmtDate(v.decided_at ?? v.submitted_at)}</p>
+                <TranscriptPanel client={client} residentId={resident.id} video={v} />
                 <button type="button" className="inline-flex items-center gap-1 font-medium text-red-700 hover:underline" disabled={delId === v.id} onClick={() => remove(v)} aria-label={`Delete video${v.title ? `: ${v.title}` : ''}`}>
                   {delId === v.id ? <Loader2 size={12} className="animate-spin" /> : <Trash2 size={12} />} Delete
                 </button>

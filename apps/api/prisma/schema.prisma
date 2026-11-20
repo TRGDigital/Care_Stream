@@ -3452,6 +3452,31 @@ model ResidentVideoPlay {
   @@map("resident_video_plays")
 }
 
+// What is said in a family video, for the manager's approval (machine generated). See prisma/sql/2026-11-21_resident_video_transcripts.sql.
+// Deleted with the video in every case. Never used by the assistant, for search or for anything else. No relations on purpose.
+model ResidentVideoTranscript {
+  id                      String   @id @default(uuid())
+  tenant_id               String
+  resident_id             String
+  video_id                String   @unique
+  state                   String   @default("pending")   // pending | ready | no_speech | failed | not_available
+  language_code           String?
+  language_name           String?
+  original_text           String?
+  translation_text        String?
+  edited_translation_text String?
+  edited_by               String?
+  show_to_staff           Boolean  @default(false)
+  job_name                String?
+  error                   String?
+  created_at              DateTime @default(now())
+  updated_at              DateTime @default(now()) @updatedAt
+
+  @@index([resident_id])
+  @@index([tenant_id])
+  @@map("resident_video_transcripts")
+}
+
 
 // ─── Staff incentives (Professional and Enterprise) ─────────────────────────────
 // See prisma/sql/2026-11-17_staff_incentives.sql. No relations on purpose (same as the resident tables).

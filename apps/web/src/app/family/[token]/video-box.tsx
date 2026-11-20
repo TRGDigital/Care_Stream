@@ -128,7 +128,7 @@ export function VideoBox({ token, resident, home, initial, max, maxSeconds, maxM
       </div>
 
       <p className="rounded-xl bg-neutral-light px-4 py-3 text-sm leading-relaxed text-neutral-dark">
-        Only share a message you are happy for the care team to play to {resident}. A manager checks every video before staff see it, and it is removed if {resident} moves on. Please try to keep other people out of the picture unless they are happy to be in it.
+        Only share a message you are happy for the care team to play to {resident}. A manager checks every video before staff see it, and it is removed if {resident} moves on. Please try to keep other people out of the picture unless they are happy to be in it. If you speak in a language other than English, the speech is turned into text and translated so a manager can understand it. Only the manager sees this unless they choose to share the English text with staff.
       </p>
 
       {kept.length > 0 && (

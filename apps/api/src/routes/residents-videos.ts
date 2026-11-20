@@ -11,9 +11,12 @@
 //   POST   /:id/videos/:vid/decision       approve (optionally with an edited title and note) or reject (files deleted at once)
 //   PATCH  /:id/videos/:vid                rename or edit the note          DELETE /:id/videos/:vid
 //   GET    /:id/video-plays                recent plays (who and when)
+//   GET    /:id/videos/:vid/transcript     what is said (machine generated); checks a pending speech job first, so the screen polls this
+//   POST   /:id/videos/:vid/transcript     "Transcribe and translate" (family clips start by themselves; managers press it for any clip)
+//   PATCH  /:id/videos/:vid/transcript     { edited_translation_text?, show_to_staff? }  correct the English text, or share it with staff
 // Staff (any signed in user of the home):
 //   GET    /hub/videos                     people with approved clips          GET /hub/videos?resident_id=...   their clips, newest first
-//   POST   /videos/:vid/play               logs the play and returns a fresh streaming link
+//   POST   /videos/:vid/play               logs the play and returns a fresh streaming link (and the English text, only if a manager shared it)
 // Files (public, signed link, mounted at /public/resident-video):  GET /:id?k=video|poster&s=&e=&g=   with HTTP Range support.
 
 import express, { Router, Request, Response, NextFunction } from 'express'
@@ -28,6 +31,9 @@ import {
   videosReady, startVideoUpload, saveChunk, receivedChunks, completeVideo, settleStuck, adminVideoDto, hubVideoDto, familyVideoDto, discardVideoFiles, deleteVideo,
   cleanTitle, cleanNote, adminVideosFor, parseRange, signedVideoPath, verifyVideoSignature, HUB_VIDEO_LIMIT, CHUNK_BYTES,
 } from '../lib/resident-videos'
+import {
+  transcriptsReady, transcriptFor, startTranscript, refreshTranscript, editTranslation, setShowToStaff, adminTranscriptDto, notAvailableDto, staffTranslationFor,
+} from '../lib/resident-video-transcripts'
 import { liveInvite } from './residents-public'
 import { openObjectStream } from '../services/storage/s3'
 
@@ -233,6 +239,61 @@ residentVideosRouter.delete('/:id/videos/:vid', ...admin, async (req: Request, r
   ok(res, { deleted: true })
 })
 
+// ─── What is said (manager only) ───────────────────────────────────────────────
+// Machine generated speech to text and English translation, a decision aid for the manager. Approving or rejecting never waits for it.
+async function loadVideoFor(req: Request) {
+  const tenantId = getTenantId()
+  const r = await loadResident(tenantId, String(req.params.id))
+  const v = r ? await db.residentVideo.findFirst({ where: { id: String(req.params.vid), resident_id: r.id, tenant_id: tenantId } }) : null
+  return { tenantId, r, v }
+}
+
+residentVideosRouter.get('/:id/videos/:vid/transcript', ...admin, async (req: Request, res: Response) => {
+  const { tenantId, r, v } = await loadVideoFor(req)
+  if (!r || !v) { err(res, 'NOT_FOUND', 'Video not found.', 404); return }
+  if (!(await transcriptsReady())) { ok(res, { transcript: notAvailableDto() }); return }
+  let t = await transcriptFor(tenantId, v.id)
+  if (t?.state === 'pending') t = await refreshTranscript(t)   // no background worker: the check happens when the screen asks
+  ok(res, { transcript: t ? adminTranscriptDto(t) : null })
+})
+
+residentVideosRouter.post('/:id/videos/:vid/transcript', ...admin, async (req: Request, res: Response) => {
+  const { tenantId, r, v } = await loadVideoFor(req)
+  if (!r || !v) { err(res, 'NOT_FOUND', 'Video not found.', 404); return }
+  if (r.status !== 'living') { err(res, 'ARCHIVED', 'This profile is archived.', 409); return }
+  if (v.state !== 'ready' || !v.s3_key || v.status === 'rejected') { err(res, 'NOT_READY', 'This video is not ready to be read.', 409); return }
+  if (!(await transcriptsReady())) { ok(res, { transcript: notAvailableDto() }); return }
+  const t = await startTranscript(v)
+  const a = await actor(req)
+  void writeAuditLog({ tenant_id: tenantId, user_id: a.id, event_type: 'resident_video_transcribed', entity_type: 'resident', entity_id: r.id, metadata: { video_id: v.id } })   // never the text
+  ok(res, { transcript: t ? adminTranscriptDto(t) : null }, 202)
+})
+
+residentVideosRouter.patch('/:id/videos/:vid/transcript', ...admin, async (req: Request, res: Response) => {
+  const p = z.object({ edited_translation_text: z.string().max(20000).nullish(), show_to_staff: z.boolean().optional() }).safeParse(req.body)
+  if (!p.success) { err(res, 'VALIDATION_ERROR', 'Please check the text and try again.'); return }
+  const { tenantId, r, v } = await loadVideoFor(req)
+  if (!r || !v) { err(res, 'NOT_FOUND', 'Video not found.', 404); return }
+  if (r.status !== 'living') { err(res, 'ARCHIVED', 'An archived profile cannot be edited.', 409); return }
+  if (!(await transcriptsReady())) { err(res, 'NOT_READY', 'Translation is not switched on yet.', 503); return }
+  let t = await transcriptFor(tenantId, v.id)
+  if (!t) { err(res, 'NOT_FOUND', 'There is no text for this video yet.', 404); return }
+  const a = await actor(req)
+  if (p.data.edited_translation_text !== undefined) {
+    const e = await editTranslation(t, p.data.edited_translation_text, a.name)
+    if (!e.ok) { err(res, e.code, e.message, e.status); return }
+    t = e.row
+    void writeAuditLog({ tenant_id: tenantId, user_id: a.id, event_type: 'resident_video_translation_edited', entity_type: 'resident', entity_id: r.id, metadata: { video_id: v.id } })
+  }
+  if (p.data.show_to_staff !== undefined) {
+    const s = await setShowToStaff(t, p.data.show_to_staff)
+    if (!s.ok) { err(res, s.code, s.message, s.status); return }
+    t = s.row
+    void writeAuditLog({ tenant_id: tenantId, user_id: a.id, event_type: 'resident_video_staff_text_changed', entity_type: 'resident', entity_id: r.id, metadata: { video_id: v.id, show_to_staff: p.data.show_to_staff } })
+  }
+  ok(res, { transcript: adminTranscriptDto(t) })
+})
+
 residentVideosRouter.get('/:id/video-plays', ...admin, async (req: Request, res: Response) => {
   const tenantId = getTenantId()
   const r = await loadResident(tenantId, String(req.params.id))
@@ -274,7 +335,9 @@ residentVideosRouter.post('/videos/:vid/play', async (req: Request, res: Respons
     await db.residentVideo.update({ where: { id: v.id }, data: { last_played_at: now } })
     void writeAuditLog({ tenant_id: tenantId, user_id: req.user!.sub, event_type: 'resident_video_played', entity_type: 'resident', entity_id: v.resident_id, metadata: { video_id: v.id } })   // never the link
   }
-  ok(res, { url: signedVideoPath(v.id, 'staff'), title: v.title ?? null })
+  // The English text is only returned when a manager shared it for this video (and the clip is approved, which was checked above).
+  const text = await staffTranslationFor(v).catch(() => null)
+  ok(res, { url: signedVideoPath(v.id, 'staff'), title: v.title ?? null, translation: text })
 })
 
 // ═══ The file itself ═══════════════════════════════════════════════════════════

@@ -120,6 +120,29 @@ export interface ResidentVideo {
   last_played_at: string | null
   video_url: string | null
   poster_url: string | null
+  /** What is said (managers only). Null until one is asked for or the table is not ready. */
+  transcript?: VideoTranscript | null
+}
+
+export type TranscriptState = 'pending' | 'ready' | 'no_speech' | 'failed' | 'not_available'
+
+/** What is said in a video (managers only). Machine generated. */
+export interface VideoTranscript {
+  state: TranscriptState
+  message: string | null
+  machine_generated: true
+  label: string
+  language_code: string | null
+  language_name: string | null
+  original_text: string | null
+  machine_translation: string | null
+  /** The English text a manager reads: their edit if there is one, else the machine translation. Null when the speech was English. */
+  translation: string | null
+  edited: boolean
+  edited_by: string | null
+  show_to_staff: boolean
+  can_share_with_staff: boolean
+  updated_at: string | null
 }
 
 export interface VideoPlay { id: string; video_id: string; video_title: string | null; user_name: string; played_at: string }
@@ -301,13 +324,19 @@ export function createResidentsClient(token: string) {
       call<ResidentVideo>(`/residents/${id}/videos/${videoId}/decision`, token, { method: 'POST', body: j(data) }),
     updateVideo: (id: string, videoId: string, data: { title?: string | null; note?: string | null }) =>
       call<ResidentVideo>(`/residents/${id}/videos/${videoId}`, token, { method: 'PATCH', body: j(data) }),
+    videoTranscript: (id: string, videoId: string) =>
+      call<{ transcript: VideoTranscript | null }>(`/residents/${id}/videos/${videoId}/transcript`, token),
+    transcribeVideo: (id: string, videoId: string) =>
+      call<{ transcript: VideoTranscript | null }>(`/residents/${id}/videos/${videoId}/transcript`, token, { method: 'POST', body: j({}) }),
+    updateTranscript: (id: string, videoId: string, data: { edited_translation_text?: string | null; show_to_staff?: boolean }) =>
+      call<{ transcript: VideoTranscript }>(`/residents/${id}/videos/${videoId}/transcript`, token, { method: 'PATCH', body: j(data) }),
     deleteVideo: (id: string, videoId: string) => call<{ deleted: boolean }>(`/residents/${id}/videos/${videoId}`, token, { method: 'DELETE' }),
     /** Staff hub: people with approved video messages, or one person's messages (newest first). */
     hubVideoPeople: () => call<{ enabled: boolean; people: Array<{ id: string; name: string; display_name: string; count: number }> }>('/residents/hub/videos', token),
     hubVideos: (residentId: string) =>
       call<{ enabled: boolean; resident: { id: string; name: string } | null; videos: HubVideo[] }>(`/residents/hub/videos?resident_id=${encodeURIComponent(residentId)}`, token),
     /** Press play: logs who played it and returns a fresh private streaming link. */
-    playVideo: (videoId: string, refresh = false) => call<{ url: string; title: string | null }>(`/residents/videos/${videoId}/play`, token, { method: 'POST', body: j({ refresh }) }),
+    playVideo: (videoId: string, refresh = false) => call<{ url: string; title: string | null; translation?: { text: string; language_name: string | null; label: string } | null }>(`/residents/videos/${videoId}/play`, token, { method: 'POST', body: j({ refresh }) }),
 
     // Archive actions (admins with the resident archive permission only)
     confirmArchive: (id: string, data: { memory_book: 'shared' | 'declined'; note?: string; remove_family_contacts?: boolean }) =>

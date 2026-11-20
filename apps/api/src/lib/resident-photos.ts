@@ -135,6 +135,25 @@ export async function deleteResidentPhotos(tenantId: string, residentId: string)
 // image, and the signed links are the same short-lived staff links the hub uses. Living residents with approved photos only.
 const PHOTO_INTENT = /\b(photos?|photographs?|pictures?|pics?|images?)\b/i
 const STOP = new Set(['do','we','have','a','an','the','of','his','her','their','him','them','is','there','any','of','for','on','in','at','to','and','or','show','me','can','you','see','get','got','where','what','who','with','from','about','photo','photos','photograph','photographs','picture','pictures','pic','pics','image','images','that','this','it','its','are','was','were','be','have','has','please','tell','look','looking'])
+// Words that mean the same thing for finding a photo ("wedding" finds a caption that says "married").
+const SYNONYMS: string[][] = [
+  ['wedding', 'weddings', 'married', 'marry', 'marriage', 'bride', 'groom', 'aisle', 'honeymoon', 'newlyweds'],
+  ['birthday', 'birthdays', 'party', 'celebration', 'celebrating', 'anniversary'],
+  ['christmas', 'xmas', 'festive'],
+  ['holiday', 'holidays', 'vacation', 'trip', 'seaside', 'beach', 'abroad'],
+  ['grandchildren', 'grandchild', 'grandkids', 'grandson', 'granddaughter', 'grandchildren'],
+  ['family', 'relatives', 'together', 'portrait'],
+  ['dog', 'dogs', 'puppy', 'pet', 'pets', 'cat', 'cats'],
+  ['garden', 'backgarden', 'allotment', 'greenhouse'],
+  ['army', 'navy', 'raf', 'military', 'forces', 'uniform', 'regiment', 'war'],
+  ['baby', 'babies', 'newborn', 'christening'],
+  ['work', 'job', 'career', 'factory', 'office'],
+]
+const GROUP = new Map<string, number>()
+SYNONYMS.forEach((g, i) => g.forEach(w => GROUP.set(w, i)))
+const stem = (w: string) => w.replace(/(ing|ed|es|s)$/, '')
+/** Same key for words that mean the same thing: a synonym group when there is one, else the stem. */
+const keyOf = (w: string) => (GROUP.has(w) ? `g${GROUP.get(w)}` : GROUP.has(stem(w)) ? `g${GROUP.get(stem(w))}` : stem(w))
 const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
 const words = (s: string) => (s.toLowerCase().match(/[a-z0-9']+/g) ?? []).map(w => w.replace(/'s$/, '')).filter(w => w.length > 1)
 
@@ -175,8 +194,8 @@ export async function photoAnswer(tenantId: string, queryText: string, history: 
     const skip = new Set([...STOP, ...words(`${target.first_name} ${target.last_name} ${target.preferred_name ?? ''}`)])
     const terms = [...new Set(words(queryText).filter(w => !skip.has(w)))]
     const scored = mine.map(p => {
-      const hay = new Set(words(`${p.caption ?? ''} ${p.people_note ?? ''}`).flatMap(w => [w, w.replace(/(ing|ed|s)$/, '')]))
-      return { p, score: terms.filter(t => hay.has(t) || hay.has(t.replace(/(ing|ed|s)$/, ''))).length }
+      const hay = new Set(words(`${p.caption ?? ''} ${p.people_note ?? ''}`).map(keyOf))
+      return { p, score: terms.filter(t => hay.has(keyOf(t))).length }
     })
     const matched = terms.length ? scored.filter(x => x.score > 0).sort((a, b) => b.score - a.score) : []
     const shown = (matched.length ? matched : scored).slice(0, 6).map(x => x.p)

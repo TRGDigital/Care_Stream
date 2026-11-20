@@ -27,6 +27,8 @@ import { MyActionsView } from '@/components/hub/my-actions-view'
 import { SuggestTranslation } from '@/components/hub/suggest-translation'
 import { SupervisionsHubView } from '@/components/hub/supervisions-view'
 import { ChatPhotoRow } from '@/components/hub/resident-photos-panel'
+import { ChatVideoRow, MessagesFromFamilyButton } from '@/components/hub/resident-videos-panel'
+import type { HubVideo } from '@/lib/residents-api'
 import { DisplaySettings } from '@/components/hub/display-settings'
 import Link from 'next/link'
 import { createApiClient, apiAssetUrl, type Citation } from '@/lib/api-client'
@@ -57,6 +59,7 @@ interface ChatMessage {
   suggestedQuestions?: string[]
   queryId?:            string | null
   photos?:             Array<{ id: string; caption: string | null; people_note: string | null; url: string }>   // "This is me": approved photos shown under the answer
+  videos?:             HubVideo[]   // "This is me": approved video messages shown under the answer
   // Language-switch support: the language this answer was generated in, plus a
   // cache of translated versions keyed by language code, so the toggle can flip
   // the displayed answer between the staff member's first and second language.
@@ -874,6 +877,7 @@ function ChatPageInner() {
                 suggestedQuestions: d.suggestedQuestions?.length ? d.suggestedQuestions : undefined,
                 queryId:            d.queryId ?? null,
                 photos:             d.photos?.length ? d.photos : undefined,
+                videos:             d.videos?.length ? d.videos : undefined,
                 genLang,
                 htmlByLang:         { [genLang]: finalHtml },
               } : m,
@@ -1416,6 +1420,7 @@ function ChatPageInner() {
                 </span>
               </div>
               <div className="flex shrink-0 items-center gap-1">
+                {category === 'resident' && session?.accessToken && <MessagesFromFamilyButton token={session.accessToken} />}
                 {secondLang && (
                   <button
                     onClick={() => switchChatLang(!chatSecond)}
@@ -1943,6 +1948,7 @@ function MessageBubble({
         })()}
 
         {msg.photos && msg.photos.length > 0 && !msg.loading && <ChatPhotoRow photos={msg.photos} />}
+        {msg.videos && msg.videos.length > 0 && !msg.loading && <ChatVideoRow videos={msg.videos} />}
 
         {msg.suggestedQuestions && msg.suggestedQuestions.length > 0 && !msg.loading && (
           <div className="mt-3">

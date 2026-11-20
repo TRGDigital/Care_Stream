@@ -134,7 +134,7 @@ export async function deleteResidentPhotos(tenantId: string, residentId: string)
 // the photo" notes (plain text people wrote), and shows the pictures themselves under the answer. The assistant never looks at an
 // image, and the signed links are the same short-lived staff links the hub uses. Living residents with approved photos only.
 const PHOTO_INTENT = /\b(photos?|photographs?|pictures?|pics?|images?)\b/i
-const STOP = new Set(['do','we','have','a','an','the','of','his','her','their','him','them','is','there','any','of','for','on','in','at','to','and','or','show','me','can','you','see','get','got','where','what','who','with','from','about','photo','photos','photograph','photographs','picture','pictures','pic','pics','image','images','that','this','it','its','are','was','were','be','have','has','please','tell','look','looking'])
+export const STOP = new Set(['do','we','have','a','an','the','of','his','her','their','him','them','is','there','any','of','for','on','in','at','to','and','or','show','me','can','you','see','get','got','where','what','who','with','from','about','photo','photos','photograph','photographs','picture','pictures','pic','pics','image','images','that','this','it','its','are','was','were','be','have','has','please','tell','look','looking'])
 // Words that mean the same thing for finding a photo ("wedding" finds a caption that says "married").
 const SYNONYMS: string[][] = [
   ['wedding', 'weddings', 'married', 'marry', 'marriage', 'bride', 'groom', 'aisle', 'honeymoon', 'newlyweds'],
@@ -151,11 +151,11 @@ const SYNONYMS: string[][] = [
 ]
 const GROUP = new Map<string, number>()
 SYNONYMS.forEach((g, i) => g.forEach(w => GROUP.set(w, i)))
-const stem = (w: string) => w.replace(/(ing|ed|es|s)$/, '')
+export const stem = (w: string) => w.replace(/(ing|ed|es|s)$/, '')
 /** Same key for words that mean the same thing: a synonym group when there is one, else the stem. */
-const keyOf = (w: string) => (GROUP.has(w) ? `g${GROUP.get(w)}` : GROUP.has(stem(w)) ? `g${GROUP.get(stem(w))}` : stem(w))
-const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-const words = (s: string) => (s.toLowerCase().match(/[a-z0-9']+/g) ?? []).map(w => w.replace(/'s$/, '')).filter(w => w.length > 1)
+export const keyOf = (w: string) => (GROUP.has(w) ? `g${GROUP.get(w)}` : GROUP.has(stem(w)) ? `g${GROUP.get(stem(w))}` : stem(w))
+export const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+export const words = (s: string) => (s.toLowerCase().match(/[a-z0-9']+/g) ?? []).map(w => w.replace(/'s$/, '')).filter(w => w.length > 1)
 
 export async function photoAnswer(tenantId: string, queryText: string, history: Array<{ role: string; content: string }> = []): Promise<{ html: string; photos: ReturnType<typeof hubPhotoDto>[] } | null> {
   if (!PHOTO_INTENT.test(queryText)) return null

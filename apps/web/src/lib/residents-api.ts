@@ -4,7 +4,7 @@
 // Plans: Professional and Enterprise. Every call can answer 403 FEATURE_NOT_AVAILABLE on a lower plan.
 // Family answers NEVER reach staff until an admin approves them (contribution status 'approved').
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
+export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
 
 export type ResidentStatus = 'living' | 'left' | 'deceased'
 export type InviteStatus = 'sent' | 'opened' | 'submitted' | 'expired' | 'revoked'
@@ -94,10 +94,69 @@ export interface ResidentPhoto {
   url: string | null
 }
 
+export type VideoState = 'uploading' | 'processing' | 'ready' | 'failed'
+
+/** A video message as the manager sees it. The links are private and last about ten minutes. */
+export interface ResidentVideo {
+  id: string
+  invite_id: string | null
+  uploaded_by_name: string
+  relationship: string | null
+  source: 'family' | 'manager'
+  title: string | null
+  note: string | null
+  state: VideoState
+  status: PhotoStatus
+  error: string | null
+  duration_seconds: number | null
+  width: number | null
+  height: number | null
+  size_bytes: number
+  submitted_at: string
+  decided_at: string | null
+  decided_by: string | null
+  last_played_at: string | null
+  video_url: string | null
+  poster_url: string | null
+}
+
+export interface VideoPlay { id: string; video_id: string; video_title: string | null; user_name: string; played_at: string }
+
 export interface ResidentDetail extends Resident {
   invites: ResidentInvite[]
   contributions: ResidentContribution[]
   photos: ResidentPhoto[]
+  /** Video messages (ready or being processed) and the most recent plays. Absent until the API has the videos tables. */
+  videos?: ResidentVideo[]
+  video_plays?: VideoPlay[]
+}
+
+/** An approved video message in the hub: no video link (the player asks for one when play is pressed, which logs the play). */
+export interface HubVideo {
+  id: string
+  title: string | null
+  note: string | null
+  uploaded_by_name: string
+  relationship: string | null
+  submitted_at: string | null
+  duration_seconds: number | null
+  width: number | null
+  height: number | null
+  poster_url: string | null
+}
+
+/** A family member's own video message while they are adding it. */
+export interface FamilyVideo {
+  id: string
+  title: string | null
+  state: VideoState
+  status: PhotoStatus
+  error: string | null
+  duration_seconds: number | null
+  total_chunks: number
+  chunk_bytes: number
+  video_url: string | null
+  poster_url: string | null
 }
 
 export interface ResidentInput {
@@ -157,6 +216,12 @@ export interface FamilyForm {
   max_photos?: number
   max_photo_mb?: number
   caption_max?: number
+  videos_enabled?: boolean
+  videos?: FamilyVideo[]
+  max_videos?: number
+  max_video_seconds?: number
+  max_video_mb?: number
+  video_title_max?: number
   /** True only for the /family/demo link: a sample resident and home, nothing is saved. */
   demo?: boolean
 }
@@ -184,6 +249,8 @@ async function call<T>(path: string, token: string | null, init: RequestInit = {
 export function createResidentsClient(token: string) {
   const j = (v: unknown) => JSON.stringify(v)
   return {
+    /** The sign in token, for the chunked video upload (lib/video-upload.ts), which cannot go through call(). */
+    token,
     /** Section definitions plus what this admin may do. enabled is false on plans without the feature. */
     meta: () => call<{ enabled: boolean; sections: ResidentSectionDef[]; can_manage_archive: boolean; retention_years: number }>('/residents/meta', token),
     /** scope 'current' = living residents; 'archived' = left or deceased (needs the resident archive permission). */
@@ -219,6 +286,25 @@ export function createResidentsClient(token: string) {
       call<ResidentPhoto>(`/residents/${id}/photos/${photoId}/decision`, token, { method: 'POST', body: j(data) }),
     deletePhoto: (id: string, photoId: string) => call<{ deleted: boolean }>(`/residents/${id}/photos/${photoId}`, token, { method: 'DELETE' }),
 
+    // Video messages. A clip goes up in 4 MB chunks (see lib/video-upload.ts), then is processed by the API.
+    videoStart: (id: string, data: { size: number; title?: string; note?: string }) =>
+      call<{ video: ResidentVideo; chunk_bytes: number; total_chunks: number }>(`/residents/${id}/videos/start`, token, { method: 'POST', body: j(data) }),
+    videoStatus: (id: string, videoId: string) =>
+      call<{ video: ResidentVideo; received: number[]; chunk_bytes: number; total_chunks: number }>(`/residents/${id}/videos/${videoId}`, token),
+    videoComplete: (id: string, videoId: string, data: { title?: string }) =>
+      call<{ video: ResidentVideo }>(`/residents/${id}/videos/${videoId}/complete`, token, { method: 'POST', body: j(data) }),
+    decideVideo: (id: string, videoId: string, data: { decision: 'approve' | 'reject'; title?: string | null; note?: string | null }) =>
+      call<ResidentVideo>(`/residents/${id}/videos/${videoId}/decision`, token, { method: 'POST', body: j(data) }),
+    updateVideo: (id: string, videoId: string, data: { title?: string | null; note?: string | null }) =>
+      call<ResidentVideo>(`/residents/${id}/videos/${videoId}`, token, { method: 'PATCH', body: j(data) }),
+    deleteVideo: (id: string, videoId: string) => call<{ deleted: boolean }>(`/residents/${id}/videos/${videoId}`, token, { method: 'DELETE' }),
+    /** Staff hub: people with approved video messages, or one person's messages (newest first). */
+    hubVideoPeople: () => call<{ enabled: boolean; people: Array<{ id: string; name: string; display_name: string; count: number }> }>('/residents/hub/videos', token),
+    hubVideos: (residentId: string) =>
+      call<{ enabled: boolean; resident: { id: string; name: string } | null; videos: HubVideo[] }>(`/residents/hub/videos?resident_id=${encodeURIComponent(residentId)}`, token),
+    /** Press play: logs who played it and returns a fresh private streaming link. */
+    playVideo: (videoId: string, refresh = false) => call<{ url: string; title: string | null }>(`/residents/videos/${videoId}/play`, token, { method: 'POST', body: j({ refresh }) }),
+
     // Archive actions (admins with the resident archive permission only)
     confirmArchive: (id: string, data: { memory_book: 'shared' | 'declined'; note?: string; remove_family_contacts?: boolean }) =>
       call<Resident>(`/residents/${id}/archive/confirm`, token, { method: 'POST', body: j(data) }),
@@ -249,3 +335,11 @@ export const uploadFamilyPhoto = (token: string, file: File, caption: string, pe
 }
 export const deleteFamilyPhoto = (token: string, photoId: string) =>
   call<{ deleted: boolean }>(`/public/family/${encodeURIComponent(token)}/photos/${encodeURIComponent(photoId)}`, null, { method: 'DELETE' })
+
+// Family video upload (chunked, resumable). The page drives it with lib/video-upload.ts.
+const fam = (token: string) => `/public/family/${encodeURIComponent(token)}/videos`
+export const familyVideoStart = (token: string, data: { size: number }) => call<{ video: FamilyVideo }>(`${fam(token)}/start`, null, { method: 'POST', body: JSON.stringify(data) })
+export const familyVideoStatus = (token: string, id: string) => call<{ video: FamilyVideo; received: number[] }>(`${fam(token)}/${encodeURIComponent(id)}`, null)
+export const familyVideoComplete = (token: string, id: string, data: { title?: string }) => call<{ video: FamilyVideo }>(`${fam(token)}/${encodeURIComponent(id)}/complete`, null, { method: 'POST', body: JSON.stringify(data) })
+export const familyVideoTitle = (token: string, id: string, title: string) => call<{ video: FamilyVideo }>(`${fam(token)}/${encodeURIComponent(id)}`, null, { method: 'PATCH', body: JSON.stringify({ title }) })
+export const deleteFamilyVideo = (token: string, id: string) => call<{ deleted: boolean }>(`${fam(token)}/${encodeURIComponent(id)}`, null, { method: 'DELETE' })

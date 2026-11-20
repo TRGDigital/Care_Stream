@@ -487,6 +487,46 @@ export async function uploadTrainingImage(buffer: Buffer): Promise<string> {
   return key
 }
 
+// ─── Resident video messages ("This is me") ──────────────────────────────────
+// Generic private-object helpers used by lib/resident-videos.ts. Uploads arrive in 4 MB chunks (the API body limit is about 4.5 MB),
+// each stored as its own small temporary object, then joined and processed. Everything stays private, tenant and resident scoped.
+
+export async function putPrivateObject(key: string, buffer: Buffer, mimeType: string): Promise<void> {
+  if (USE_LOCAL) { localWrite(key, buffer); return }
+  await getS3().send(new PutObjectCommand({ Bucket: BUCKET, Key: key, Body: buffer, ContentType: mimeType, ServerSideEncryption: 'AES256' }))
+}
+
+/** Objects under a prefix with their sizes (a few dozen at most for one upload). */
+export async function listObjects(prefix: string): Promise<Array<{ key: string; size: number }>> {
+  if (USE_LOCAL) {
+    const dir = localPath(prefix)
+    try { return fs.readdirSync(dir).map(f => ({ key: `${prefix}${f}`, size: fs.statSync(path.join(dir, f)).size })) } catch { return [] }
+  }
+  const out: Array<{ key: string; size: number }> = []
+  let token: string | undefined
+  do {
+    const list = await getS3().send(new ListObjectsV2Command({ Bucket: BUCKET, Prefix: prefix, ContinuationToken: token }))
+    for (const o of list.Contents ?? []) if (o.Key) out.push({ key: o.Key, size: o.Size ?? 0 })
+    token = list.IsTruncated ? list.NextContinuationToken : undefined
+  } while (token)
+  return out
+}
+
+/** Deletes every object under a prefix (a clip's temporary upload parts). */
+export async function deleteObjectsUnder(prefix: string): Promise<void> {
+  if (USE_LOCAL) { try { fs.rmSync(localPath(prefix), { recursive: true, force: true }) } catch { /* ignore */ } return }
+  try {
+    for (const o of await listObjects(prefix)) await getS3().send(new DeleteObjectCommand({ Bucket: BUCKET, Key: o.key }))
+  } catch { /* best effort */ }
+}
+
+/** Streams an object, or just the byte range asked for (inclusive start and end), without loading it into memory. */
+export async function openObjectStream(key: string, range?: { start: number; end: number }): Promise<Readable> {
+  if (USE_LOCAL) return fs.createReadStream(localPath(key), range ? { start: range.start, end: range.end } : undefined) as unknown as Readable
+  const r = await getS3().send(new GetObjectCommand({ Bucket: BUCKET, Key: key, ...(range ? { Range: `bytes=${range.start}-${range.end}` } : {}) }))
+  return r.Body as Readable
+}
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 async function streamToBuffer(stream: Readable): Promise<Buffer> {

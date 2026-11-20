@@ -2282,20 +2282,21 @@ export async function sendResidentFamilyInviteEmail(opts: {
 
 /** To the admin who invited a family member: they have replied, answers are waiting for approval. */
 export async function sendResidentFamilySubmissionEmail(opts: {
-  to: string; adminName: string; homeName: string; residentName: string; contributorName: string; relationship: string; count: number; photoCount?: number; link: string
+  to: string; adminName: string; homeName: string; residentName: string; contributorName: string; relationship: string; count: number; photoCount?: number; videoCount?: number; link: string
 }): Promise<void> {
   ensureInitialised()
   if (!process.env.SENDGRID_API_KEY) { console.warn('[email] SENDGRID_API_KEY not set, skipping resident submission email'); return }
   const first = (opts.adminName || '').trim().split(' ')[0] || 'there'
   const photos = opts.photoCount ?? 0
-  const added = [opts.count > 0 ? `${opts.count} ${opts.count === 1 ? 'answer' : 'answers'}` : '', photos > 0 ? `${photos} ${photos === 1 ? 'photo' : 'photos'}` : ''].filter(Boolean).join(' and ')
+  const videos = opts.videoCount ?? 0
+  const added = [opts.count > 0 ? `${opts.count} ${opts.count === 1 ? 'answer' : 'answers'}` : '', photos > 0 ? `${photos} ${photos === 1 ? 'photo' : 'photos'}` : '', videos > 0 ? `${videos} ${videos === 1 ? 'video message' : 'video messages'}` : ''].filter(Boolean).join(' and ')
   const html = emailWrapper(`
     <p style="color:${NEUTRAL_DARK};font-size:15px;margin:0 0 16px">Hi ${escResident(first)},</p>
     <p style="color:#374151;font-size:15px;line-height:1.6;margin:0 0 16px">
       <strong>${escResident(opts.contributorName)}</strong> (${escResident(opts.relationship)}) has added ${added} about <strong>${escResident(opts.residentName)}</strong>.
       They are waiting for you to read and approve. Staff cannot see them until you do.
     </p>
-    ${residentButton(opts.link, photos > 0 ? (opts.count > 0 ? 'Review the answers and photos' : 'Review the photos') : 'Review the answers')}
+    ${residentButton(opts.link, photos + videos > 0 ? (opts.count > 0 ? 'Review the answers and files' : videos > 0 && photos === 0 ? 'Review the video messages' : 'Review the photos and videos') : 'Review the answers')}
     ${emailFooter(opts.homeName)}
   `)
   await sgMail.send({ to: opts.to, from: residentFrom('CareStream'), subject: `${opts.contributorName} has added to ${opts.residentName}'s profile`, html, trackingSettings: { clickTracking: { enable: false, enableText: false } } })

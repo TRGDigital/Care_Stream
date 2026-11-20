@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { Check, ChevronDown, ChevronRight, Loader2, Pencil, X } from 'lucide-react'
 import type { ResidentContribution, ResidentDetail, ResidentSectionDef } from '@/lib/residents-api'
 import { PhotoApprovals } from './photos'
+import { VideoApprovals } from './videos'
 import { ErrorBox, inputCls, btnPrimary, btnSecondary, btnDangerOutline, errMsg, fmtDate } from './ui'
 
 type Client = ReturnType<typeof import('@/lib/residents-api').createResidentsClient>
@@ -38,12 +39,13 @@ export function ApprovalsTab({ client, resident, sections, onChanged }: { client
 
   return (
     <div className="space-y-5">
-      <p className="text-sm text-neutral-mid">Family answers and photos appear here first. Only what you approve is shown to staff. Photos are never used by the assistant.</p>
+      <p className="text-sm text-neutral-mid">Family answers, photos and videos appear here first. Only what you approve is shown to staff. Photos and videos are never used by the assistant.</p>
       {error && <ErrorBox>{error}</ErrorBox>}
 
       <PhotoApprovals client={client} resident={resident} onChanged={onChanged} />
+      <VideoApprovals client={client} resident={resident} onChanged={onChanged} />
 
-      {groups.length === 0 && !(resident.photos ?? []).some(p => p.status === 'pending') ? (
+      {groups.length === 0 && !(resident.photos ?? []).some(p => p.status === 'pending') && !(resident.videos ?? []).some(v => v.status === 'pending' && v.state === 'ready') ? (
         <p className="rounded-lg border border-dashed border-gray-300 px-4 py-6 text-center text-sm text-neutral-mid">Nothing is waiting for approval.</p>
       ) : groups.map(g => (
         <section key={g.invite_id} className="rounded-lg border border-amber-200 bg-amber-50/40" aria-label={`Answers from ${g.name}`}>

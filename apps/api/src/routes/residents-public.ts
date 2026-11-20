@@ -17,12 +17,13 @@ import {
 import { residentPhotoUploadMiddleware } from '../middleware/upload'
 import { downloadFile, deleteFile } from '../services/storage/s3'
 import { sendResidentFamilySubmissionEmail } from '../services/email/outbound'
+import { videosReady, familyVideoDto, settleInviteVideos, videoLimits } from '../lib/resident-videos'
 
 export const publicFamilyRouter = Router()
 const db = prisma as any
 const DEAD = 'This link is no longer active. Please contact the home if you would still like to share something.'
 
-async function liveInvite(token: string) {
+export async function liveInvite(token: string) {
   if (!token || token.length < 20 || token.length > 100) return null
   if (!(await tablesReady())) return null
   const inv = await db.residentInvite.findUnique({ where: { token_hash: hashToken(token) } })
@@ -39,18 +40,23 @@ async function liveInvite(token: string) {
 const DEMO_TOKEN = 'demo'
 
 const photoLimits = { max_photos: PHOTOS_PER_INVITE, max_photo_mb: 5, caption_max: CAPTION_MAX }
+async function ownVideos(inviteId: string): Promise<any[]> {
+  try { return await db.residentVideo.findMany({ where: { invite_id: inviteId, state: { not: 'failed' }, status: { not: 'rejected' } }, orderBy: { submitted_at: 'asc' }, take: 20 }) } catch { return [] }
+}
 async function ownPhotos(inviteId: string): Promise<any[]> {
   try { return await db.residentPhoto.findMany({ where: { invite_id: inviteId }, orderBy: { submitted_at: 'asc' }, take: 20 }) } catch { return [] }
 }
 
 publicFamilyRouter.get('/:token', async (req: Request, res: Response) => {
   if (req.params.token === DEMO_TOKEN) {
-    ok(res, { resident_name: 'Tim', home_name: 'Sample Care Home', invitee_name: 'Sally', expires_at: '2099-12-31T00:00:00.000Z', already_submitted: false, sections: SECTIONS, demo: true, photos: [], photos_enabled: true, ...photoLimits })
+    ok(res, { resident_name: 'Tim', home_name: 'Sample Care Home', invitee_name: 'Sally', expires_at: '2099-12-31T00:00:00.000Z', already_submitted: false, sections: SECTIONS, demo: true, photos: [], photos_enabled: true, ...photoLimits, videos: [], videos_enabled: true, ...videoLimits })
     return
   }
   const live = await liveInvite(String(req.params.token))
   if (!live) { err(res, 'UNAVAILABLE', DEAD, 410); return }
   const photos = await ownPhotos(live.inv.id)
+  const videos = await ownVideos(live.inv.id)
+  const videosOn = await videosReady()
   if (!live.inv.opened_at) await db.residentInvite.update({ where: { id: live.inv.id }, data: { opened_at: new Date() } }).catch(() => undefined)
   ok(res, {
     resident_name: live.resident.preferred_name || live.resident.first_name,
@@ -62,6 +68,9 @@ publicFamilyRouter.get('/:token', async (req: Request, res: Response) => {
     photos_enabled: await photosReady(),
     photos: photos.map(p => familyPhotoDto(p, live.inv.id)),
     ...photoLimits,
+    videos_enabled: videosOn,
+    videos: videos.map(v => familyVideoDto(v, live.inv.id)),
+    ...videoLimits,
   })
 })
 
@@ -122,7 +131,11 @@ publicFamilyRouter.post('/:token', async (req: Request, res: Response) => {
     .filter(([, v]) => v.length > 0)
   // Photos already uploaded through this link count as part of the submission (a photo-only submission is fine).
   const photoCount = (await ownPhotos(live.inv.id)).filter(ph => ph.status === 'pending').length
-  if (!rows.length && !photoCount) { err(res, 'VALIDATION_ERROR', 'Please answer at least one question or add a photo.', 400); return }
+  // Videos too: a clip still being processed holds up Send; half-finished uploads are thrown away.
+  const vids = await settleInviteVideos(live.inv.id)
+  if (vids.processing > 0) { err(res, 'PROCESSING', 'Your video is still being processed. Please wait a moment and press Send again.', 409); return }
+  const videoCount = vids.sent
+  if (!rows.length && !photoCount && !videoCount) { err(res, 'VALIDATION_ERROR', 'Please answer at least one question or add a photo or video.', 400); return }
 
   const name = cleanText(p.data.name, 100), relationship = cleanText(p.data.relationship, 60)
   if (rows.length) await db.residentContribution.createMany({
@@ -138,12 +151,12 @@ publicFamilyRouter.post('/:token', async (req: Request, res: Response) => {
     if (admin) {
       await sendResidentFamilySubmissionEmail({
         to: admin.email, adminName: admin.name, homeName: live.homeName, residentName: live.resident.preferred_name || live.resident.first_name,
-        contributorName: name, relationship, count: rows.length, photoCount, link: `${siteUrl()}/knowledge`,
+        contributorName: name, relationship, count: rows.length, photoCount, videoCount, link: `${siteUrl()}/knowledge`,
       })
     }
   } catch (e) { console.error('[residents] submission email failed:', e) }
 
-  ok(res, { submitted: rows.length, photos: photoCount }, 201)
+  ok(res, { submitted: rows.length, photos: photoCount, videos: videoCount }, 201)
 })
 
 // ─── The photo file itself ─────────────────────────────────────────────────────

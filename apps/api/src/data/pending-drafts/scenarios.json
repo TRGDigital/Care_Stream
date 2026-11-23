@@ -1,0 +1,3550 @@
+[
+ {
+  "slug": "right-to-work-check-document-next-to-the-record",
+  "status": "draft",
+  "order": 115,
+  "eyebrow": "Scenario",
+  "fine": "14 day free trial · Set up in a day · UK data residency",
+  "title": "A right to work check is only as good as the document you can find. <em>See it beside the record.</em>",
+  "meta_title": "Right to Work Check Records for Care Staff | CareStreamAI",
+  "meta_description": "Keep each right to work check, DBS and reference as a file beside what you recorded, and open it in a window without leaving the register. Enterprise plan.",
+  "lede": "An inspector asks for a carer's <b>right to work check</b>. You know it was done, but the scan is in one place and the note is in another. On the Enterprise plan, CareStream's workforce register lets an admin open the uploaded document in a window over the register, right next to what was recorded. It sits alongside the wider <a href=\"/training-platform\">training and compliance toolkit</a>.",
+  "panel": {
+   "title": "Document and record together",
+   "pill": "Illustration",
+   "rows": [
+    {
+     "label": "Right to work check recorded",
+     "note": "Reference and dates",
+     "done": true
+    },
+    {
+     "label": "Document uploaded to the register",
+     "note": "Held",
+     "done": true
+    },
+    {
+     "label": "Opened beside the record",
+     "note": "Admin view",
+     "done": true
+    },
+    {
+     "label": "Expiry date set and watched",
+     "note": "30 day warning",
+     "done": false
+    }
+   ],
+   "meter": 50
+  },
+  "image": "[to generate: POST /routine/content/image, key right-to-work-check-document-next-to-the-record, scene: A registered manager and a deputy sit at a desk in a care home office, one holding a folder while the other points at a wall planner, window with a garden behind them]",
+  "image_alt": "A registered manager and her deputy check a staff folder together at an office desk in a care home",
+  "card_title": "Can you find the document, not just the note that says it was checked?",
+  "card_snippet": "Keep each staff document as a file beside what you recorded. Admins open it in a window over the register without leaving the page. Enterprise plan.",
+  "primary_keyword": "right to work check",
+  "secondary_keywords": [
+   "safer recruitment",
+   "recruitment compliance",
+   "dbs tracker"
+  ],
+  "feature_links": [
+   {
+    "title": "Training built from your own policies",
+    "body": "Short training from your own policies, checked by questions, for the whole team.",
+    "action": "See the feature",
+    "href": "/training-platform"
+   },
+   {
+    "title": "Workforce compliance register",
+    "body": "DBS, right to work, registration and references in one register, with documents and expiry alerts. Enterprise plan.",
+    "action": "See the register",
+    "href": "/features/workforce-compliance-register-dbs-right-to-work-registration-references"
+   },
+   {
+    "title": "Credential uploads and expiry alerts",
+    "body": "Upload the document, set the dates and let the register warn you before anything lapses.",
+    "action": "See the feature",
+    "href": "/features/credential-document-uploads-expiry-alerts"
+   }
+  ],
+  "intro": {
+   "heading": "You know the check was done. Can you show it?",
+   "sub": "A scenario we see in many care settings.",
+   "paragraph": "A registered manager is asked to show the right to work check for a carer who joined a year and a half ago. She knows it was done, because she did it. The scan sits in a shared drive under a file name nobody remembers. The reference number is on a spreadsheet. The expiry date is in a diary that belongs to someone on leave. Twenty minutes later she has found most of it. Nothing was missing in the end. The trouble was that nothing was in one place, and the inspector watched her look."
+  },
+  "trail": [
+   {
+    "when": "Recruitment",
+    "text": "The manager carries out the right to work check at the interview.",
+    "kind": "ok"
+   },
+   {
+    "when": "Same day",
+    "text": "She scans the document and saves it in the shared drive.",
+    "kind": "ok"
+   },
+   {
+    "when": "Same week",
+    "text": "She notes the reference on the staff spreadsheet.",
+    "kind": "ok"
+   },
+   {
+    "when": "Month two",
+    "text": "The folder is renamed and the scan moves with it.",
+    "kind": "gap"
+   },
+   {
+    "when": "Month ten",
+    "text": "A colleague updates the spreadsheet but not the scan.",
+    "kind": "gap"
+   },
+   {
+    "when": "A year on",
+    "text": "Nobody can say which version is the current one.",
+    "kind": "gap"
+   },
+   {
+    "when": "Before the visit",
+    "text": "The date to look at the check again has passed unseen.",
+    "kind": "gap"
+   },
+   {
+    "when": "Inspection day",
+    "text": "\"Show me the right to work check for this carer.\"",
+    "kind": "end"
+   }
+  ],
+  "trail_close": "<b>The check was done properly.</b> What was missing was one place to hold the document and the record together. Here is how a register does that.",
+  "why": {
+   "heading": "A note is a claim. The document is the evidence.",
+   "sub": "Safer recruitment means being able to produce what you relied on, not just say you did.",
+   "cards": [
+    {
+     "icon": "chat",
+     "title": "Notes drift from documents",
+     "body": "A reference in a spreadsheet and a scan in a drive start together and part company. Each edit makes the gap wider."
+    },
+    {
+     "icon": "tick",
+     "title": "Evidence needs to be found fast",
+     "body": "Regulation 19 says recruitment procedures must be operated effectively, and certain information must be available for each person employed. Fast retrieval is part of that."
+    },
+    {
+     "icon": "alert",
+     "title": "Dates need a watcher",
+     "body": "A check with a time limit needs a date somebody is watching. A diary entry depends on one person being in."
+    }
+   ]
+  },
+  "how": {
+   "heading": "One register, with the document beside the record.",
+   "sub": "This is how the <a href=\"/features/workforce-compliance-register-dbs-right-to-work-registration-references\">workforce compliance register</a> works for a manager preparing for inspection. It is part of the <a href=\"/cqc-compliance\">CQC and compliance</a> area and sits well with the <a href=\"/care-audits/hr-staff-files\">HR staff files audit</a>.",
+   "blocks": [
+    {
+     "heading": "Record the check and upload the document",
+     "bullets": [
+      "Open the person on the register and add the credential, such as right to work, DBS, passport or references",
+      "Record the reference number, issue and expiry dates and any notes, then upload the file",
+      "Uploaded files are content checked and scanned before they are stored"
+     ],
+     "tags": [
+      {
+       "label": "Workforce register",
+       "href": "/features/workforce-compliance-register-dbs-right-to-work-registration-references"
+      },
+      {
+       "label": "Safer recruitment and DBS policy",
+       "href": "/care-policies/safer-recruitment-dbs"
+      }
+     ],
+     "mock": {
+      "type": "audit",
+      "audit": "Workforce register, one staff member (example)",
+      "blocks": [
+       [
+        "Right to work",
+        [
+         [
+          "Reference: example number",
+          "Valid"
+         ],
+         [
+          "Document",
+          "Uploaded"
+         ],
+         [
+          "Expiry",
+          "Set"
+         ]
+        ]
+       ]
+      ],
+      "caption": "Example only. Your register shows your own staff."
+     }
+    },
+    {
+     "heading": "Open the document in a window over the register",
+     "bullets": [
+      "Every credential with an uploaded file has a View button",
+      "The document opens in a window over the register, beside the reference, dates, notes and status",
+      "Close the window and you are still on the same page, with your place kept"
+     ],
+     "tags": [
+      {
+       "label": "Credential uploads and alerts",
+       "href": "/features/credential-document-uploads-expiry-alerts"
+      },
+      {
+       "label": "How CareStream works",
+       "href": "/how-it-works"
+      }
+     ],
+     "mock": {
+      "type": "audit",
+      "audit": "View a document (example)",
+      "blocks": [
+       [
+        "Shown in the window",
+        [
+         [
+          "Document",
+          "The uploaded file"
+         ],
+         [
+          "Reference number",
+          "Example"
+         ],
+         [
+          "Issue and expiry dates",
+          "Example"
+         ],
+         [
+          "Notes and status",
+          "Valid"
+         ]
+        ]
+       ]
+      ],
+      "caption": "Example only. Your screen shows your own team."
+     }
+    },
+    {
+     "heading": "See at a glance what is valid, expiring or missing",
+     "bullets": [
+      "Entries show as valid, expiring (within 30 days) or expired, with missing items visible too",
+      "Admins receive a daily digest email of what is expiring or has expired",
+      "The View button only shows where a file exists, so a missing document is obvious"
+     ],
+     "tags": [
+      {
+       "label": "Registered managers",
+       "href": "/who-its-for/registered-managers"
+      },
+      {
+       "label": "HR and admin teams",
+       "href": "/who-its-for/hr-and-admin-teams"
+      }
+     ],
+     "mock": {
+      "type": "audit",
+      "audit": "Workforce register summary (example)",
+      "blocks": [
+       [
+        "Status",
+        [
+         [
+          "Valid",
+          "22"
+         ],
+         [
+          "Expiring in 30 days",
+          "3"
+         ],
+         [
+          "Expired",
+          "1"
+         ],
+         [
+          "Missing",
+          "2"
+         ]
+        ]
+       ]
+      ],
+      "caption": "Example only. Your screen shows your own team.",
+      "stats": [
+       [
+        "Valid",
+        "22"
+       ],
+       [
+        "Expiring",
+        "3"
+       ],
+       [
+        "Expired",
+        "1"
+       ]
+      ]
+     }
+    },
+    {
+     "heading": "Keep the evidence ready for an inspector or a quality visit",
+     "bullets": [
+      "Pull up a person, open the document and show it beside the record",
+      "Use the register to run your own quarterly look at the staff files",
+      "Pair it with the <a href=\"/care-policies/packs/hr-workforce-pack\">HR and workforce policy pack</a> so the written policy and the records agree"
+     ],
+     "tags": [
+      {
+       "label": "Care audits",
+       "href": "/care-audits"
+      },
+      {
+       "label": "Pricing",
+       "href": "/pricing"
+      }
+     ],
+     "mock": {
+      "type": "audit",
+      "audit": "Quarterly look (example)",
+      "blocks": [
+       [
+        "Steps",
+        [
+         [
+          "Look for expired and expiring entries",
+          "Done"
+         ],
+         [
+          "Open a sample of documents",
+          "Done"
+         ],
+         [
+          "Note what was renewed",
+          "Done"
+         ]
+        ]
+       ]
+      ],
+      "caption": "Example only. Your screen shows your own team."
+     }
+    }
+   ]
+  },
+  "talk": {
+   "heading": "Questions managers ask about holding the check",
+   "sub": "Read this as a conversation. These are the questions we hear most.",
+   "items": [
+    {
+     "q": "Does CareStream carry out the right to work check for us?",
+     "a": "No. The check is the employer's responsibility, and the <a href=\"https://www.gov.uk/government/publications/right-to-work-checks-employers-guide\">GOV.UK employer's guide</a> sets out how to do it. CareStream records what you did, holds the document and reminds you of dates."
+    },
+    {
+     "q": "Which documents can we upload?",
+     "a": "Any staff credential on the register can have a file: DBS, right to work, passport, professional registration, references, and the extra documents for visas, driving and contracts."
+    },
+    {
+     "q": "Who can see the documents?",
+     "a": "Admins only. The register is not shown to staff, and staff cannot upload their own."
+    },
+    {
+     "q": "What if a document is missing?",
+     "a": "The entry shows as missing, and the View button does not appear, so it is easy to spot and chase."
+    },
+    {
+     "q": "Will it warn me before a date runs out?",
+     "a": "Yes. Entries turn to expiring within 30 days, and the daily digest email to admins covers expiring and expired items."
+    },
+    {
+     "q": "Does this prove we are compliant?",
+     "a": "No. It shows what you hold and when it ends. Whether the service meets the regulations is judged by the Care Quality Commission, not by a register."
+    },
+    {
+     "q": "Which plan has the register?",
+     "a": "The Enterprise plan. Look at the <a href=\"/pricing\">pricing page</a> for the current details."
+    },
+    {
+     "q": "Can we try it first?",
+     "a": "There is a 14 day free trial on the paid plans, and you can <a href=\"/demo\">book a demo</a> to see the register with example data."
+    }
+   ]
+  },
+  "limits": {
+   "heading": "What this does not do",
+   "cards": [
+    {
+     "title": "It does not do the check",
+     "body": "The register records and reminds. Right to work and DBS checks remain the employer's responsibility, and CareStream does not advise on a legal outcome."
+    },
+    {
+     "title": "It does not verify a document is genuine",
+     "body": "It stores what you upload. Judging whether a document is valid is still your job, using the official guidance."
+    },
+    {
+     "title": "It is not for staff to use",
+     "body": "Only admins see the register. Staff cannot upload their own documents, and agency workers are held by their agency."
+    }
+   ]
+  },
+  "read_next": [
+   "right-to-work-check-for-employers",
+   "how-often-should-dbs-be-renewed",
+   "what-compliant-actually-means-for-one-care-staff-member"
+  ],
+  "faqs": {
+   "heading": "Right to work checks and staff files, answered",
+   "groups": [
+    {
+     "group": "About the check and the record",
+     "items": [
+      {
+       "q": "What should we keep as evidence of a right to work check?",
+       "a": "Follow the <a href=\"https://www.gov.uk/government/publications/right-to-work-checks-employers-guide\">GOV.UK employer's guide</a>, which explains how to carry out the checks and which documents are acceptable. CareStream stores the document you upload and the details you record."
+      },
+      {
+       "q": "Do we need to check again later?",
+       "a": "For some workers a follow up check is needed. The GOV.UK guide explains when. If a time limit applies, set the date on the register and it will warn you 30 days ahead."
+      },
+      {
+       "q": "What does Regulation 19 say about staff records?",
+       "a": "Regulation 19 requires that persons employed are of good character, have the skills they need and are fit for the work, and that recruitment procedures are operated effectively. Schedule 3 lists the information that must be available, and it includes <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/schedule/3\">proof of identity with a recent photograph</a>."
+      }
+     ]
+    },
+    {
+     "group": "About the register",
+     "items": [
+      {
+       "q": "What does the View button do?",
+       "a": "It opens the uploaded document in a window over the register, next to the reference number, dates, notes and status, so you can check the file against what is recorded."
+      },
+      {
+       "q": "Can staff upload their own right to work document?",
+       "a": "No. The register is admin only, and admins upload the documents."
+      },
+      {
+       "q": "Is it a DBS tracker as well?",
+       "a": "Yes. DBS sits on the same register as right to work, registration and references, each with dates, a file and a status."
+      }
+     ]
+    },
+    {
+     "group": "More about staff files",
+     "items": [
+      {
+       "q": "Is a scan as good as the original?",
+       "a": "That depends on the check you carried out. The GOV.UK employer's guide sets out what the employer must do and what to keep, so follow it. CareStream holds what you upload."
+      },
+      {
+       "q": "Should every document go on the register?",
+       "a": "Hold what your recruitment policy says you rely on. The register has places for DBS, right to work, passport, professional registration and references, and for extras where they apply."
+      },
+      {
+       "q": "What if the file we uploaded is the wrong one?",
+       "a": "Upload the right file and check the record against it. The point of the View window is to catch exactly this, by putting the document beside what you recorded."
+      }
+     ]
+    }
+   ]
+  },
+  "guide": {
+   "heading": "Keeping a staff file you can stand behind",
+   "lede": "A good file is simple. The document, the record and the next date, all in the same place.",
+   "sections": [
+    {
+     "h3": "When you record a check",
+     "paragraphs": [
+      "Record it the same day, while the document is on the desk. Upload the file then, not at the end of the week, because \"later\" is where scans go missing."
+     ],
+     "checklist": [
+      "Record the reference, issue date and expiry date",
+      "Upload the document at the same time",
+      "Add a note if anything is unusual",
+      "Set a date to look at the check again where one applies"
+     ]
+    },
+    {
+     "h3": "When you look at the register",
+     "paragraphs": [
+      "Choose a regular moment, such as the first Monday of each quarter, and use it. Open a handful of documents at random and compare them with the record.",
+      "If something has changed, update the record and the file together so they cannot drift."
+     ],
+     "checklist": [
+      "Look for expired and expiring entries",
+      "Open a sample of documents with View",
+      "Chase anything missing",
+      "Write down what you changed"
+     ]
+    },
+    {
+     "h3": "Answering the inspector on the day",
+     "paragraphs": [
+      "Inspectors ask for evidence in many shapes, and a staff file is one of the commonest. They may pick a name from your rota and ask to see what you hold. What they want is a document that matches the record, and an answer that does not depend on who is in the building.",
+      "Practise it once. Choose a member of staff at random, find the right to work check, open the document, read out the reference and dates, and see how long it took. If it took more than a minute, find out where the time went and fix that first."
+     ],
+     "checklist": [
+      "Pick a name at random each quarter",
+      "Open the document with View",
+      "Read the reference and dates aloud",
+      "Time it and note what slowed you down"
+     ]
+    }
+   ],
+   "note": "Every example here is illustrative. It is not legal advice, and the employer remains responsible for right to work and DBS checks."
+  }
+ },
+ {
+  "slug": "nmc-pin-check-and-revalidation-dates-for-nurses",
+  "status": "draft",
+  "order": 116,
+  "eyebrow": "Scenario",
+  "fine": "14 day free trial · Set up in a day · UK data residency",
+  "title": "An NMC PIN check is only a moment in time. <em>Keep the revalidation date on the register.</em>",
+  "meta_title": "NMC PIN Check and Revalidation Dates | CareStreamAI",
+  "meta_description": "Record the registration body, PIN, certificate and revalidation date for nurses and other registered staff, with expiry warnings. Enterprise plan.",
+  "lede": "A nursing home depends on every registered nurse being on the register, every day. An <b>NMC PIN check</b> is only a moment in time, so the date to check again needs a home. On the Enterprise plan, CareStream's workforce register lets an admin record the professional body, the PIN, the certificate and the renewal or revalidation date. See the <a href=\"/training-platform\">wider training toolkit</a> too.",
+  "panel": {
+   "title": "Registration on the register",
+   "pill": "Illustration",
+   "rows": [
+    {
+     "label": "Body chosen: NMC",
+     "note": "Recorded",
+     "done": true
+    },
+    {
+     "label": "PIN or registration number recorded",
+     "note": "Recorded",
+     "done": true
+    },
+    {
+     "label": "Certificate uploaded",
+     "note": "Held",
+     "done": true
+    },
+    {
+     "label": "Revalidation date watched",
+     "note": "Warning at 30 days",
+     "done": false
+    }
+   ],
+   "meter": 50
+  },
+  "image": "[to generate: POST /routine/content/image, key nmc-pin-check-and-revalidation-dates-for-nurses, scene: A nurse in a plain tunic and a unit manager stand together at a nurses station in a bright nursing home corridor, looking at a wall calendar]",
+  "image_alt": "A nurse and her unit manager look at a wall calendar together at a nurses station in a nursing home corridor",
+  "card_title": "Is every nurse's registration current, and who is watching the dates?",
+  "card_snippet": "Record the registration body, PIN, certificate and renewal date for nurses and other registered staff, and get warned before a date arrives. Enterprise plan.",
+  "primary_keyword": "nmc pin check",
+  "secondary_keywords": [
+   "nmc revalidation",
+   "hcpc register",
+   "professional registration check"
+  ],
+  "feature_links": [
+   {
+    "title": "Training built from your own policies",
+    "body": "Short training from your own policies, checked by questions, for the whole team.",
+    "action": "See the feature",
+    "href": "/training-platform"
+   },
+   {
+    "title": "Workforce compliance register",
+    "body": "DBS, right to work, registration and references in one register, with documents and expiry alerts. Enterprise plan.",
+    "action": "See the register",
+    "href": "/features/workforce-compliance-register-dbs-right-to-work-registration-references"
+   },
+   {
+    "title": "Credential uploads and expiry alerts",
+    "body": "Upload the certificate, set the date and let the register warn you.",
+    "action": "See the feature",
+    "href": "/features/credential-document-uploads-expiry-alerts"
+   }
+  ],
+  "intro": {
+   "heading": "Every nurse's registration needs a date someone is watching.",
+   "sub": "A scenario we see in many care settings.",
+   "paragraph": "The deputy manager of a nursing home keeps a list of nurses and their revalidation dates in the back of a notebook. When she moves to another service, the notebook goes with her. Three weeks later the new deputy is asked, in passing, how many nurses are due to revalidate in the next quarter. Nobody knows. Everyone is registered, as it turns out. But for a few days nobody could say so with confidence, and that is a worse position to be in than it sounds."
+  },
+  "trail": [
+   {
+    "when": "Recruitment",
+    "text": "A nurse joins and her registration is checked on the register.",
+    "kind": "ok"
+   },
+   {
+    "when": "Same day",
+    "text": "Her PIN is written in the staff file.",
+    "kind": "ok"
+   },
+   {
+    "when": "Week one",
+    "text": "Her certificate is filed in a folder.",
+    "kind": "ok"
+   },
+   {
+    "when": "Month nine",
+    "text": "The revalidation date is in the deputy's notebook.",
+    "kind": "gap"
+   },
+   {
+    "when": "Month ten",
+    "text": "The deputy leaves and the notebook goes with her.",
+    "kind": "gap"
+   },
+   {
+    "when": "Month eleven",
+    "text": "Nobody is watching the date.",
+    "kind": "gap"
+   },
+   {
+    "when": "Month twelve",
+    "text": "The nurse is busy and has not mentioned it.",
+    "kind": "gap"
+   },
+   {
+    "when": "A visit",
+    "text": "\"Can you show me that your nurses are all registered?\"",
+    "kind": "end"
+   }
+  ],
+  "trail_close": "<b>The registration was real.</b> What was missing was a date in a place everyone could see. Here is how the register holds it.",
+  "why": {
+   "heading": "A registration is a standing question, not a one off answer.",
+   "sub": "Registered staff are the ones the service most depends on, so their dates deserve a proper home.",
+   "cards": [
+    {
+     "icon": "chat",
+     "title": "Dates live in heads",
+     "body": "A diary or notebook is only as safe as the person carrying it. Staff move on and the dates go with them."
+    },
+    {
+     "icon": "tick",
+     "title": "Several bodies, one habit",
+     "body": "Nurses, pharmacists, therapists, doctors and social workers each have a body and a renewal rhythm. One register can hold the lot."
+    },
+    {
+     "icon": "alert",
+     "title": "A lapse is hard to see late",
+     "body": "If nobody is looking, a lapse is found by accident. A warning before the date turns it into a conversation."
+    }
+   ]
+  },
+  "how": {
+   "heading": "From the PIN to the warning.",
+   "sub": "This is how the <a href=\"/features/workforce-compliance-register-dbs-right-to-work-registration-references\">workforce compliance register</a> holds registration, in the order a manager meets it. See also the <a href=\"/nursing-homes\">nursing homes</a> page and <a href=\"/cqc-compliance\">CQC and compliance</a>.",
+   "blocks": [
+    {
+     "heading": "Choose the professional body and record the number",
+     "bullets": [
+      "Pick the body: NMC, GPhC, HCPC, GMC, Social Work England or Other",
+      "Record the PIN or registration number against the person",
+      "Add notes, such as the registered part or the person's role"
+     ],
+     "tags": [
+      {
+       "label": "Workforce register",
+       "href": "/features/workforce-compliance-register-dbs-right-to-work-registration-references"
+      },
+      {
+       "label": "Nursing homes",
+       "href": "/nursing-homes"
+      }
+     ],
+     "mock": {
+      "type": "audit",
+      "audit": "Professional registration (example)",
+      "blocks": [
+       [
+        "Registration",
+        [
+         [
+          "Body",
+          "NMC"
+         ],
+         [
+          "PIN",
+          "Example number"
+         ],
+         [
+          "Status",
+          "Valid"
+         ]
+        ]
+       ]
+      ],
+      "caption": "Example only. Your screen shows your own team."
+     }
+    },
+    {
+     "heading": "Upload the certificate",
+     "bullets": [
+      "Upload the certificate or a copy of the entry as a file on the person's record",
+      "Uploaded files are content checked and scanned before they are stored",
+      "Admins open the file with View, in a window beside what you recorded"
+     ],
+     "tags": [
+      {
+       "label": "Credential uploads and alerts",
+       "href": "/features/credential-document-uploads-expiry-alerts"
+      },
+      {
+       "label": "How CareStream works",
+       "href": "/how-it-works"
+      }
+     ],
+     "mock": {
+      "type": "audit",
+      "audit": "Certificate held (example)",
+      "blocks": [
+       [
+        "Document",
+        [
+         [
+          "File",
+          "Uploaded"
+         ],
+         [
+          "Opened with",
+          "View"
+         ],
+         [
+          "Shown beside",
+          "Number, dates, notes"
+         ]
+        ]
+       ]
+      ],
+      "caption": "Example only. Your screen shows your own team."
+     }
+    },
+    {
+     "heading": "Set the renewal or revalidation date",
+     "bullets": [
+      "Record the date the registration or revalidation is due",
+      "The entry shows as valid, then expiring within 30 days, then expired",
+      "Admins receive a daily digest email of what is expiring or has expired"
+     ],
+     "tags": [
+      {
+       "label": "Registered managers",
+       "href": "/who-its-for/registered-managers"
+      },
+      {
+       "label": "Pricing",
+       "href": "/pricing"
+      }
+     ],
+     "mock": {
+      "type": "audit",
+      "audit": "Dates at a glance (example)",
+      "blocks": [
+       [
+        "Registered staff",
+        [
+         [
+          "Valid",
+          "9"
+         ],
+         [
+          "Expiring in 30 days",
+          "1"
+         ],
+         [
+          "Expired",
+          "0"
+         ]
+        ]
+       ]
+      ],
+      "caption": "Example only. Your screen shows your own team.",
+      "stats": [
+       [
+        "Valid",
+        "9"
+       ],
+       [
+        "Expiring",
+        "1"
+       ],
+       [
+        "Expired",
+        "0"
+       ]
+      ]
+     }
+    },
+    {
+     "heading": "Look at the whole team each quarter",
+     "bullets": [
+      "Look through the register for expiring and expired entries",
+      "Open a few certificates to check them against the record",
+      "Pair with the <a href=\"/care-audits/hr-staff-files\">HR staff files audit</a> to evidence your own checks"
+     ],
+     "tags": [
+      {
+       "label": "Care audits",
+       "href": "/care-audits"
+      },
+      {
+       "label": "HR staff files audit",
+       "href": "/care-audits/hr-staff-files"
+      }
+     ],
+     "mock": {
+      "type": "audit",
+      "audit": "Quarterly look (example)",
+      "blocks": [
+       [
+        "Steps",
+        [
+         [
+          "Look for expiring and expired",
+          "Done"
+         ],
+         [
+          "Chase the one expiring",
+          "Done"
+         ]
+        ]
+       ]
+      ],
+      "caption": "Example only. Your screen shows your own team."
+     }
+    }
+   ]
+  },
+  "talk": {
+   "heading": "Questions managers ask about registered staff",
+   "sub": "Read this as a conversation.",
+   "items": [
+    {
+     "q": "Does CareStream check the NMC register for us?",
+     "a": "No. It holds what you enter. Looking someone up on the professional register is still a manual task. What changes is that the date and the certificate are in one place and you are warned before a date arrives."
+    },
+    {
+     "q": "Which bodies can we record?",
+     "a": "NMC, GPhC, HCPC, GMC and Social Work England, plus Other for anything else."
+    },
+    {
+     "q": "What is the NMC PIN?",
+     "a": "It is the registration number the NMC gives each registrant. Record it as the number against the person and keep your own record of when you last checked it."
+    },
+    {
+     "q": "Will we be reminded about revalidation?",
+     "a": "Yes. Set the renewal or revalidation date, and the entry turns to expiring 30 days before it. The daily digest email to admins covers it."
+    },
+    {
+     "q": "Who sees this?",
+     "a": "Admins only. Staff do not see the register."
+    },
+    {
+     "q": "Can we use it for non nursing staff?",
+     "a": "Yes, for any role where you hold a professional registration, such as pharmacists, therapists or social workers."
+    },
+    {
+     "q": "Does it replace our own registration checks?",
+     "a": "No. Registration checks are the employer's responsibility. The register records them and reminds you."
+    },
+    {
+     "q": "Which plan is it on?",
+     "a": "The Enterprise plan. You can <a href=\"/demo\">book a demo</a> to see it."
+    }
+   ]
+  },
+  "limits": {
+   "heading": "What this does not do",
+   "cards": [
+    {
+     "title": "It does not look people up",
+     "body": "CareStream does not query the NMC or any other register. You check, and you record."
+    },
+    {
+     "title": "It does not decide whether someone can practise",
+     "body": "Registration status is for the professional body and the employer. The register holds your record of it."
+    },
+    {
+     "title": "It is not a revalidation tool for the nurse",
+     "body": "Staff do not see or use the register. Revalidation itself is done by the nurse with the NMC."
+    }
+   ]
+  },
+  "read_next": [
+   "what-compliant-actually-means-for-one-care-staff-member",
+   "staff-supervision-and-training-records",
+   "mandatory-training-for-care-staff-the-full-list-and-how-often-to-refresh"
+  ],
+  "faqs": {
+   "heading": "Registered staff and the register, answered",
+   "groups": [
+    {
+     "group": "About registration records",
+     "items": [
+      {
+       "q": "How do we keep track of nurse revalidation dates?",
+       "a": "Record the revalidation date against each nurse on the workforce register. It shows as valid, expiring within 30 days or expired, and admins get a daily digest email. The <a href=\"https://www.nmc.org.uk/revalidation/\">NMC explains revalidation</a> on its own site."
+      },
+      {
+       "q": "Can we record HCPC and GMC registration too?",
+       "a": "Yes. You choose the body from a list that includes the HCPC, GMC, GPhC and Social Work England, and add Other for anything else."
+      },
+      {
+       "q": "What should we keep for each registered member of staff?",
+       "a": "The registration number, a copy of the certificate and the date to check again. Regulation 19 says recruitment procedures must be operated effectively, and the <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/19\">regulation</a> is worth reading in full."
+      }
+     ]
+    },
+    {
+     "group": "About the register",
+     "items": [
+      {
+       "q": "Does CareStream run an NMC PIN check?",
+       "a": "No. The register records the PIN you enter and the dates. The check itself is yours."
+      },
+      {
+       "q": "Who can see registration details?",
+       "a": "Admins only."
+      },
+      {
+       "q": "Can staff upload their own certificate?",
+       "a": "No. Admins upload it."
+      }
+     ]
+    },
+    {
+     "group": "More about registered staff",
+     "items": [
+      {
+       "q": "Should the register hold agency nurses?",
+       "a": "No. Agency workers are held by their agency and are left out of the register."
+      },
+      {
+       "q": "How early should we start asking about revalidation?",
+       "a": "There is no fixed rule for the service. The register warns you 30 days before a date, and many managers start the conversation earlier, in supervision."
+      },
+      {
+       "q": "Is this a replacement for our own checks of the professional register?",
+       "a": "No. You still check the body's own register. The workforce register keeps your record, the certificate and the date to look again."
+      }
+     ]
+    },
+    {
+     "group": "Registration, in practice",
+     "items": [
+      {
+       "q": "Does the register show conditions or restrictions on a registration?",
+       "a": "It holds the notes you add. If the professional body shows a condition, record it in the notes and handle it under your own policy."
+      },
+      {
+       "q": "What counts as a registered role in a care home?",
+       "a": "That depends on the service. Nursing homes rely on registered nurses, and some services also employ therapists, pharmacists or social workers. Record the body for each."
+      },
+      {
+       "q": "Can we hold a nursing associate here?",
+       "a": "The body list covers the NMC, and you can record the number and dates in the same way. Use Other if a body is not listed."
+      }
+     ]
+    }
+   ]
+  },
+  "guide": {
+   "heading": "A simple routine for registered staff",
+   "lede": "The routine is short, and it works because it is regular.",
+   "sections": [
+    {
+     "h3": "At recruitment",
+     "paragraphs": [
+      "Check the registration on the professional body's own register and record what you saw, with the number and the date. Upload the certificate straight away."
+     ],
+     "checklist": [
+      "Check the body's own register",
+      "Record the number and the date you checked",
+      "Upload the certificate",
+      "Set the next date to look"
+     ]
+    },
+    {
+     "h3": "Each quarter",
+     "paragraphs": [
+      "Look at the dates for registered staff on the register. Check anything expiring in the next two months with the person, not just on screen."
+     ],
+     "checklist": [
+      "Look for expiring and expired entries",
+      "Talk to anyone due soon",
+      "Check again on the body's register",
+      "Update the record and file together"
+     ]
+    },
+    {
+     "h3": "When a date is close",
+     "paragraphs": [
+      "An expiring entry is a prompt to talk, not a verdict on anyone. Speak to the nurse early, ask how revalidation is going and whether they need anything from you, such as time to complete reflective accounts or a discussion. The professional body sets what a person must do. The service can make it easier.",
+      "Write down what you agreed and when you will look again. If a registration does lapse, the actions that follow depend on your policy and your own professional advice, and are not something the register decides."
+     ],
+     "checklist": [
+      "Speak to the person early",
+      "Ask what support they need",
+      "Record what you agreed",
+      "Set the next date to look"
+     ]
+    },
+    {
+     "h3": "What to put in the notes",
+     "paragraphs": [
+      "The notes field is where the context lives. Record when you last looked at the professional body's own register, who looked, and anything the nurse told you about their revalidation. A short line such as \"checked, no conditions, date confirmed at supervision\" does more good in an inspector's hands than a blank box.",
+      "Keep notes factual and brief. They are part of a staff record, so write what you would be content for the person to read."
+     ],
+     "checklist": [
+      "Date you last checked the body's register",
+      "Who checked",
+      "Anything the person told you",
+      "Date of the next check"
+     ]
+    }
+   ],
+   "note": "Illustrative only. Registration checks and revalidation are for the employer and the professional body. This is not legal or professional advice."
+  }
+ },
+ {
+  "slug": "visa-sponsorship-end-dates-and-driving-documents",
+  "status": "draft",
+  "order": 117,
+  "eyebrow": "Scenario",
+  "fine": "14 day free trial · Set up in a day · UK data residency",
+  "title": "Visa sponsorship end dates are easy to lose. <em>So are driving documents.</em>",
+  "meta_title": "Visa Sponsorship End Dates and Driving Checks | CareStreamAI",
+  "meta_description": "Track visa sponsorship end dates, driving licence, business use insurance and MOT for the staff they apply to, without false missing flags. Enterprise plan.",
+  "lede": "Not every document applies to every carer. A sponsored worker has a <b>visa sponsorship</b> end date, and a home care worker who drives needs a licence, insurance and an MOT. On the Enterprise plan, CareStream's workforce register holds these as extra documents in an \"Also held\" column, never marked missing for staff they do not apply to. Read more on the <a href=\"/training-platform\">wider toolkit</a>.",
+  "panel": {
+   "title": "Extra documents, no false alarms",
+   "pill": "Illustration",
+   "rows": [
+    {
+     "label": "Visa with sponsorship end date",
+     "note": "Held",
+     "done": true
+    },
+    {
+     "label": "Driving licence and insurance",
+     "note": "Held",
+     "done": true
+    },
+    {
+     "label": "MOT for the staff car",
+     "note": "Held",
+     "done": true
+    },
+    {
+     "label": "Sponsorship ending, warning sent",
+     "note": "30 days",
+     "done": false
+    }
+   ],
+   "meter": 50
+  },
+  "image": "[to generate: POST /routine/content/image, key visa-sponsorship-end-dates-and-driving-documents, scene: A home care coordinator stands beside a small car outside a care office while a carer in a plain tabard hands over a folder, bright morning, garden hedge behind]",
+  "image_alt": "A home care coordinator takes a folder from a carer beside a small car outside a care office",
+  "card_title": "Which staff need a visa, a licence or an MOT, and who is watching the dates?",
+  "card_snippet": "Hold visa sponsorship end dates, driving licence, business use insurance and MOT only for the staff they apply to, with warnings before they lapse. Enterprise plan.",
+  "primary_keyword": "visa sponsorship",
+  "secondary_keywords": [
+   "care worker visa",
+   "sponsorship licence",
+   "grey fleet",
+   "business use insurance",
+   "driving licence check"
+  ],
+  "feature_links": [
+   {
+    "title": "Training built from your own policies",
+    "body": "Short training from your own policies, checked by questions, for the whole team.",
+    "action": "See the feature",
+    "href": "/training-platform"
+   },
+   {
+    "title": "Workforce compliance register",
+    "body": "DBS, right to work, registration and references in one register, with documents and expiry alerts. Enterprise plan.",
+    "action": "See the register",
+    "href": "/features/workforce-compliance-register-dbs-right-to-work-registration-references"
+   },
+   {
+    "title": "Domiciliary care",
+    "body": "How CareStream supports home care services, including staff who drive.",
+    "action": "See home care",
+    "href": "/domiciliary-care"
+   }
+  ],
+  "intro": {
+   "heading": "Some documents belong to a few people. Those are the easy ones to lose.",
+   "sub": "A scenario we see in many care settings.",
+   "paragraph": "A home care manager has forty carers. Six are sponsored workers with a time limit on their right to work, and fifteen drive their own cars between visits. Their paperwork lives in different places, because the standard staff checklist has no row for a sponsorship end date or an MOT. A sponsored carer's end date passes quietly in the month the manager is covering a rota gap. A driver's insurance lapses in the same quarter. Both are found by chance. The standard list was fine. It just did not know about the exceptions."
+  },
+  "trail": [
+   {
+    "when": "Recruitment",
+    "text": "A carer joins on a visa with a time limited right to work.",
+    "kind": "ok"
+   },
+   {
+    "when": "Same day",
+    "text": "The manager records the right to work check as usual.",
+    "kind": "ok"
+   },
+   {
+    "when": "Week one",
+    "text": "A second carer is added who uses her own car for visits.",
+    "kind": "ok"
+   },
+   {
+    "when": "Month four",
+    "text": "The licence and insurance are copied into a folder.",
+    "kind": "gap"
+   },
+   {
+    "when": "Month seven",
+    "text": "The standard checklist has no row for a sponsorship end date.",
+    "kind": "gap"
+   },
+   {
+    "when": "Month eight",
+    "text": "The MOT on a staff car runs out unnoticed.",
+    "kind": "gap"
+   },
+   {
+    "when": "Month ten",
+    "text": "A sponsorship end date passes during a busy week.",
+    "kind": "gap"
+   },
+   {
+    "when": "A review",
+    "text": "\"How do you track documents that only some staff hold?\"",
+    "kind": "end"
+   }
+  ],
+  "trail_close": "<b>The checks were sound.</b> The gap was a place for the documents that only some people need. Here is how the register covers them.",
+  "why": {
+   "heading": "The exceptions need the same care as the rule.",
+   "sub": "A list built for everyone misses what applies to a few.",
+   "cards": [
+    {
+     "icon": "chat",
+     "title": "Standard lists miss the exceptions",
+     "body": "A checklist that fits every carer has no row for sponsorship end dates or MOTs. Those fall into side folders."
+    },
+    {
+     "icon": "tick",
+     "title": "A false \"missing\" is a cost too",
+     "body": "If a British driver shows as missing a visa, people stop trusting the red marks. Extra documents should only ever show for the people they apply to."
+    },
+    {
+     "icon": "alert",
+     "title": "Some dates carry real weight",
+     "body": "A sponsorship that is ending, or a licence that has lapsed, changes what a person can do. Both deserve a warning."
+    }
+   ]
+  },
+  "how": {
+   "heading": "Extra documents, in an Also held column.",
+   "sub": "This is how the <a href=\"/features/workforce-compliance-register-dbs-right-to-work-registration-references\">workforce compliance register</a> holds them. See also <a href=\"/domiciliary-care\">home care</a>, <a href=\"/live-in-care\">live in care</a> and <a href=\"/cqc-compliance\">CQC and compliance</a>.",
+   "blocks": [
+    {
+     "heading": "Add a visa and its sponsorship end date",
+     "bullets": [
+      "Record the visa for sponsored workers whose right to work has a time limit",
+      "Add the sponsorship end date as well as the visa dates",
+      "Upload the document and open it any time with View"
+     ],
+     "tags": [
+      {
+       "label": "Workforce register",
+       "href": "/features/workforce-compliance-register-dbs-right-to-work-registration-references"
+      },
+      {
+       "label": "Right to work check post",
+       "href": "/blog/right-to-work-check-for-employers"
+      }
+     ],
+     "mock": {
+      "type": "audit",
+      "audit": "Visa (example)",
+      "blocks": [
+       [
+        "Sponsored worker",
+        [
+         [
+          "Visa",
+          "Held"
+         ],
+         [
+          "Sponsorship ends",
+          "Example date"
+         ],
+         [
+          "Status",
+          "Expiring in 30 days"
+         ]
+        ]
+       ]
+      ],
+      "caption": "Example only. Your screen shows your own team."
+     }
+    },
+    {
+     "heading": "Add driving documents for the staff who drive",
+     "bullets": [
+      "Hold the driving licence, business use insurance and MOT for home care staff who drive",
+      "Upload each document and set its dates",
+      "Staff who do not drive simply have no entry, and are never marked missing"
+     ],
+     "tags": [
+      {
+       "label": "Home care",
+       "href": "/domiciliary-care"
+      },
+      {
+       "label": "Credential uploads and alerts",
+       "href": "/features/credential-document-uploads-expiry-alerts"
+      }
+     ],
+     "mock": {
+      "type": "audit",
+      "audit": "Also held (example)",
+      "blocks": [
+       [
+        "Driving",
+        [
+         [
+          "Driving licence",
+          "Valid"
+         ],
+         [
+          "Business use insurance",
+          "Expiring"
+         ],
+         [
+          "MOT",
+          "Valid"
+         ]
+        ]
+       ]
+      ],
+      "caption": "Example only. Your screen shows your own team."
+     }
+    },
+    {
+     "heading": "Let the colours and the digest do the watching",
+     "bullets": [
+      "Entries use the same colours as everything else: valid, expiring within 30 days, expired",
+      "The daily digest email to admins covers these documents, including a visa whose sponsorship is ending",
+      "Open a document at any time to check it against what is recorded"
+     ],
+     "tags": [
+      {
+       "label": "Registered managers",
+       "href": "/who-its-for/registered-managers"
+      },
+      {
+       "label": "Pricing",
+       "href": "/pricing"
+      }
+     ],
+     "mock": {
+      "type": "audit",
+      "audit": "Digest summary (example)",
+      "blocks": [
+       [
+        "Also held",
+        [
+         [
+          "Valid",
+          "31"
+         ],
+         [
+          "Expiring",
+          "4"
+         ],
+         [
+          "Expired",
+          "0"
+         ]
+        ]
+       ]
+      ],
+      "caption": "Example only. Your screen shows your own team.",
+      "stats": [
+       [
+        "Valid",
+        "31"
+       ],
+       [
+        "Expiring",
+        "4"
+       ],
+       [
+        "Expired",
+        "0"
+       ]
+      ]
+     }
+    },
+    {
+     "heading": "Keep the employment contract with them",
+     "bullets": [
+      "Upload the contract in the same record, with contract type and hours on the contract and holiday tab",
+      "Everything for one person is in one place",
+      "Pair with the <a href=\"/care-policies/packs/hr-workforce-pack\">HR and workforce policy pack</a>"
+     ],
+     "tags": [
+      {
+       "label": "Care audits",
+       "href": "/care-audits"
+      },
+      {
+       "label": "HR staff files audit",
+       "href": "/care-audits/hr-staff-files"
+      }
+     ],
+     "mock": {
+      "type": "audit",
+      "audit": "Contract (example)",
+      "blocks": [
+       [
+        "Details",
+        [
+         [
+          "Contract",
+          "Uploaded"
+         ],
+         [
+          "Type",
+          "Permanent"
+         ],
+         [
+          "Hours",
+          "Example"
+         ]
+        ]
+       ]
+      ],
+      "caption": "Example only. Your screen shows your own team."
+     }
+    }
+   ]
+  },
+  "talk": {
+   "heading": "Questions managers ask about visas and driving",
+   "sub": "Read this as a conversation.",
+   "items": [
+    {
+     "q": "Does CareStream know the rules on sponsorship?",
+     "a": "No. It records the end date you enter and warns you before it arrives. Sponsorship duties and right to work checks are the employer's responsibility, and the <a href=\"https://www.gov.uk/government/publications/right-to-work-checks-employers-guide\">GOV.UK employer's guide</a> is the place to read them."
+    },
+    {
+     "q": "Will my British staff show as missing a visa?",
+     "a": "No. These extra documents are never marked as missing. They only appear for the staff who have one."
+    },
+    {
+     "q": "Which driving documents can we hold?",
+     "a": "Driving licence, business use insurance and MOT."
+    },
+    {
+     "q": "Can we check the licence itself?",
+     "a": "The register holds the document and the dates. A licence holder can share their licence details through <a href=\"https://www.gov.uk/view-driving-licence\">GOV.UK</a>, and checking is your task."
+    },
+    {
+     "q": "Do the alerts cover these documents?",
+     "a": "Yes. The daily digest email to admins includes them, and a visa whose sponsorship is ending is included."
+    },
+    {
+     "q": "Are these staff visible to other staff?",
+     "a": "No. The register is for admins only."
+    },
+    {
+     "q": "What about agency workers?",
+     "a": "Agency workers are held by their agency and are left out of the register."
+    },
+    {
+     "q": "Which plan?",
+     "a": "The Enterprise plan. You can <a href=\"/demo\">book a demo</a>."
+    }
+   ]
+  },
+  "limits": {
+   "heading": "What this does not do",
+   "cards": [
+    {
+     "title": "It does not advise on sponsorship",
+     "body": "CareStream is not an immigration or sponsorship adviser. It records dates and documents you enter."
+    },
+    {
+     "title": "It does not check licences or insurance",
+     "body": "Verification stays with you. The register holds the evidence and the date."
+    },
+    {
+     "title": "It does not manage vehicles or mileage",
+     "body": "There is no mileage, fleet or expenses feature. It simply keeps the documents."
+    }
+   ]
+  },
+  "read_next": [
+   "right-to-work-check-for-employers",
+   "onboarding-international-care-staff-4-week-induction-playbook",
+   "what-compliant-actually-means-for-one-care-staff-member"
+  ],
+  "faqs": {
+   "heading": "Visa and driving documents, answered",
+   "groups": [
+    {
+     "group": "About sponsored workers",
+     "items": [
+      {
+       "q": "How do we track a care worker visa end date?",
+       "a": "Add the visa on the workforce register with the sponsorship end date, and upload the document. The entry will turn to expiring 30 days before and the daily admin digest will include it."
+      },
+      {
+       "q": "Does CareStream manage our sponsorship licence?",
+       "a": "No. It does not manage a sponsorship licence or give immigration advice. It holds the documents and dates for each person."
+      },
+      {
+       "q": "Do we need to do follow up right to work checks?",
+       "a": "The <a href=\"https://www.gov.uk/government/publications/right-to-work-checks-employers-guide\">GOV.UK employer's guide</a> explains when follow up checks are needed. Record the check and its date on the register."
+      }
+     ]
+    },
+    {
+     "group": "About drivers",
+     "items": [
+      {
+       "q": "How do we handle staff who use their own cars for work?",
+       "a": "Hold the driving licence, business use insurance and MOT on the register for the staff who drive, each with dates and a file. Grey fleet policy itself is for you and your insurer to settle."
+      },
+      {
+       "q": "Why are these documents never marked missing?",
+       "a": "Because they only apply to some staff. A carer who does not drive has no entry, so nothing shows as missing."
+      },
+      {
+       "q": "Who sees these documents?",
+       "a": "Admins only."
+      }
+     ]
+    },
+    {
+     "group": "More about extra documents",
+     "items": [
+      {
+       "q": "Can we hold a passport as well?",
+       "a": "Yes. Passport is one of the credentials on the register, along with DBS, right to work, professional registration and references."
+      },
+      {
+       "q": "What if a driver changes cars?",
+       "a": "Record the new insurance and MOT details and upload the new documents, so the register shows what is current for that person."
+      },
+      {
+       "q": "Do sponsored workers appear differently on the register?",
+       "a": "They have a visa entry with a sponsorship end date in the Also held column. Staff without one have no entry and are never marked missing."
+      }
+     ]
+    },
+    {
+     "group": "Driving and sponsorship, in practice",
+     "items": [
+      {
+       "q": "Is the grey fleet our responsibility?",
+       "a": "A service that lets staff use their own vehicles for work will usually want its policy, and its insurer, to say what is required. CareStream holds the documents and dates you decide you need."
+      },
+      {
+       "q": "Do we need business use insurance for every driver?",
+       "a": "That is for your policy and your insurer. The register simply holds the document where you hold one."
+      },
+      {
+       "q": "Can we see all sponsored workers in one place?",
+       "a": "Visa entries sit in the Also held column on the register, so you can see them beside each person's other documents."
+      }
+     ]
+    }
+   ]
+  },
+  "guide": {
+   "heading": "Tracking documents that only some people hold",
+   "lede": "The principle is to give each exception a row, a date and an owner.",
+   "sections": [
+    {
+     "h3": "Decide who the documents apply to",
+     "paragraphs": [
+      "Write down which roles drive for work and which staff are sponsored. The list changes, so look at it when people join and leave."
+     ],
+     "checklist": [
+      "List staff who drive for work",
+      "List sponsored workers and their end dates",
+      "Add the documents when a person joins",
+      "Remove or update when circumstances change"
+     ]
+    },
+    {
+     "h3": "Review the digest each week",
+     "paragraphs": [
+      "The daily digest email is only useful if someone reads it. Choose one person to act on it and a second to cover them."
+     ],
+     "checklist": [
+      "Name the person who reads the digest",
+      "Name their cover",
+      "Act on expiring items within the week",
+      "Record the outcome on the register"
+     ]
+    },
+    {
+     "h3": "Planning ahead for an end date",
+     "paragraphs": [
+      "A visa or sponsorship end date is not only a compliance point. It is a conversation with a person who may be building a life here, and a gap in your rota if the right to work does not continue. The earlier you talk, the more options there are for both of you.",
+      "Use the 30 day warning as the last prompt, not the first. Set your own reminders further out in your diary or supervision, and use the register to hold the facts: the document, the end date and the notes of what was said."
+     ],
+     "checklist": [
+      "Talk to the person well before the end date",
+      "Record what was agreed in the notes",
+      "Check your duties as an employer on GOV.UK",
+      "Keep the document and dates on the register"
+     ]
+    },
+    {
+     "h3": "Keeping the driver's file straight",
+     "paragraphs": [
+      "For staff who use their own cars, the three documents that matter most are the licence, the insurance for business use and the MOT. They run on different dates, so they will drift apart if you check them once and file them together.",
+      "A simple rule helps: treat each document as its own entry with its own date, and open the register whenever a driver changes role, car or area, so the records reflect what they are actually doing."
+     ],
+     "checklist": [
+      "One entry per document",
+      "Dates for each",
+      "Check when a driver changes car or area",
+      "Remove the entry if they stop driving"
+     ]
+    }
+   ],
+   "note": "Illustrative only. Sponsorship duties, right to work and driving checks are the employer's responsibility. This is not legal or immigration advice."
+  }
+ },
+ {
+  "slug": "emergency-contact-form-for-care-staff",
+  "status": "draft",
+  "order": 118,
+  "eyebrow": "Scenario",
+  "fine": "14 day free trial · Set up in a day · UK data residency",
+  "title": "When a carer is taken ill on shift, who do you ring? <em>Keep an emergency contact form on the record.</em>",
+  "meta_title": "Emergency Contact Form for Care Staff Records | CareStreamAI",
+  "meta_description": "Hold staff date of birth, emergency contact and next of kin in one admin only tab, with a Personal column showing what is missing. Enterprise plan.",
+  "lede": "A carer collapses in the kitchen and the manager reaches for the folder. Is the <b>emergency contact form</b> in it, and is it current? On the Enterprise plan, CareStream's workforce register has an admin only Personal details tab for date of birth, emergency contact and next of kin, with a Personal column showing how many of five sections are filled in. See the <a href=\"/training-platform\">wider toolkit</a> too.",
+  "panel": {
+   "title": "Personal details held",
+   "pill": "Illustration",
+   "rows": [
+    {
+     "label": "Date of birth recorded",
+     "note": "Section 1",
+     "done": true
+    },
+    {
+     "label": "Emergency contact recorded",
+     "note": "Section 2",
+     "done": true
+    },
+    {
+     "label": "Next of kin recorded",
+     "note": "Same as contact",
+     "done": true
+    },
+    {
+     "label": "Gaps visible on the register",
+     "note": "3 of 5 filled",
+     "done": false
+    }
+   ],
+   "meter": 50
+  },
+  "image": "[to generate: POST /routine/content/image, key emergency-contact-form-for-care-staff, scene: A deputy manager sits at a desk in a quiet care home office on the phone, a staff noticeboard with a rota behind her, a mug of tea on the desk]",
+  "image_alt": "A deputy manager on the phone at her desk in a quiet care home office, with a staff noticeboard behind her",
+  "card_title": "If a member of staff is taken ill, can you find who to call in a minute?",
+  "card_snippet": "Hold date of birth, emergency contact and next of kin for every member of staff in an admin only tab, and see who has gaps. Enterprise plan.",
+  "primary_keyword": "emergency contact form",
+  "secondary_keywords": [
+   "employee emergency contact form",
+   "next of kin form"
+  ],
+  "feature_links": [
+   {
+    "title": "Training built from your own policies",
+    "body": "Short training from your own policies, checked by questions, for the whole team.",
+    "action": "See the feature",
+    "href": "/training-platform"
+   },
+   {
+    "title": "Workforce compliance register",
+    "body": "DBS, right to work, registration and references in one register, with documents and expiry alerts. Enterprise plan.",
+    "action": "See the register",
+    "href": "/features/workforce-compliance-register-dbs-right-to-work-registration-references"
+   },
+   {
+    "title": "Staff pictures and the register",
+    "body": "See names, faces and status together on one page.",
+    "action": "See the register",
+    "href": "/features/workforce-compliance-register-dbs-right-to-work-registration-references"
+   }
+  ],
+  "intro": {
+   "heading": "The form exists. The question is whether you can find it, and whether it is right.",
+   "sub": "A scenario we see in many care settings.",
+   "paragraph": "On a quiet Sunday a carer feels unwell and is taken to hospital by ambulance. The senior on duty remembers there is a form for this. It is in a folder in the office, in a drawer that is locked, and the key is with the manager who is away. Eventually someone finds a phone number on an old rota. It turns out to belong to a partner who has since moved. Nobody did anything wrong. The form was completed on day one and never looked at again, and that is how most of them end up."
+  },
+  "trail": [
+   {
+    "when": "Day one",
+    "text": "A new carer fills in an emergency contact form on paper.",
+    "kind": "ok"
+   },
+   {
+    "when": "Same day",
+    "text": "It goes into her staff file in the office.",
+    "kind": "ok"
+   },
+   {
+    "when": "Week one",
+    "text": "The file is put in a locked drawer.",
+    "kind": "ok"
+   },
+   {
+    "when": "Month six",
+    "text": "Her partner changes number and she forgets to say.",
+    "kind": "gap"
+   },
+   {
+    "when": "Month nine",
+    "text": "A rota is photocopied with her old number on it.",
+    "kind": "gap"
+   },
+   {
+    "when": "Month twelve",
+    "text": "The key holder is on leave.",
+    "kind": "gap"
+   },
+   {
+    "when": "An incident",
+    "text": "She is taken ill on a Sunday shift.",
+    "kind": "gap"
+   },
+   {
+    "when": "The call",
+    "text": "Nobody can find a number that works.",
+    "kind": "end"
+   }
+  ],
+  "trail_close": "<b>The form was done properly.</b> The gap was an up to date record that an admin could open from anywhere, and a way to see who has nothing recorded. Here is how the register does it.",
+  "why": {
+   "heading": "Emergency details are only useful if they are right.",
+   "sub": "The cost of an out of date number is felt on the worst day.",
+   "cards": [
+    {
+     "icon": "chat",
+     "title": "Paper goes stale quietly",
+     "body": "A form filled in once drifts as lives change. Nobody asks again, so nobody knows."
+    },
+    {
+     "icon": "tick",
+     "title": "One place beats three",
+     "body": "A number on a rota, one in a file and one in a phone are three versions. One record, kept by an admin, is easier to trust."
+    },
+    {
+     "icon": "alert",
+     "title": "Personal data needs care",
+     "body": "Dates of birth and next of kin are personal data. Keeping them in an admin only tab is better than leaving them on a noticeboard or in an open folder."
+    }
+   ]
+  },
+  "how": {
+   "heading": "Personal details, held by admins and visible as gaps.",
+   "sub": "This is how the <a href=\"/features/workforce-compliance-register-dbs-right-to-work-registration-references\">workforce compliance register</a> holds them. See also <a href=\"/who-its-for/hr-and-admin-teams\">HR and admin teams</a> and the <a href=\"/care-audits/hr-staff-files\">HR staff files audit</a>.",
+   "blocks": [
+    {
+     "heading": "Record the basics on the Personal details tab",
+     "bullets": [
+      "Open a person and use the Personal details tab, visible to admins only",
+      "Add date of birth, emergency contact and next of kin",
+      "Use the \"same as emergency contact\" shortcut when they are one person"
+     ],
+     "tags": [
+      {
+       "label": "Workforce register",
+       "href": "/features/workforce-compliance-register-dbs-right-to-work-registration-references"
+      },
+      {
+       "label": "HR and admin teams",
+       "href": "/who-its-for/hr-and-admin-teams"
+      }
+     ],
+     "mock": {
+      "type": "audit",
+      "audit": "Personal details (example)",
+      "blocks": [
+       [
+        "Sections",
+        [
+         [
+          "Date of birth",
+          "Recorded"
+         ],
+         [
+          "Emergency contact",
+          "Example name and number"
+         ],
+         [
+          "Next of kin",
+          "Same as emergency contact"
+         ]
+        ]
+       ]
+      ],
+      "caption": "Example only. Your screen shows your own team."
+     }
+    },
+    {
+     "heading": "See the gaps in the Personal column",
+     "bullets": [
+      "The register shows a Personal column with how many of 5 sections are filled in",
+      "A person with one of five is easy to spot",
+      "Chase the gaps at a team meeting or when staff are in for supervision"
+     ],
+     "tags": [
+      {
+       "label": "Supervisions and training",
+       "href": "/blog/staff-supervision-and-training-records"
+      },
+      {
+       "label": "Care audits",
+       "href": "/care-audits"
+      }
+     ],
+     "mock": {
+      "type": "audit",
+      "audit": "Personal column (example)",
+      "blocks": [
+       [
+        "Sections filled in",
+        [
+         [
+          "A. Example",
+          "5 of 5"
+         ],
+         [
+          "B. Example",
+          "3 of 5"
+         ],
+         [
+          "C. Example",
+          "1 of 5"
+         ]
+        ]
+       ]
+      ],
+      "caption": "Example only. Your screen shows your own team."
+     }
+    },
+    {
+     "heading": "Keep it admin only",
+     "bullets": [
+      "The dashboard area is admin only, so staff do not see other people's details",
+      "Staff do not see the register or the Personal tab",
+      "Admins open it from the same dashboard they use for the rest of CareStream"
+     ],
+     "tags": [
+      {
+       "label": "Trust and data",
+       "href": "/trust"
+      },
+      {
+       "label": "Pricing",
+       "href": "/pricing"
+      }
+     ],
+     "mock": {
+      "type": "audit",
+      "audit": "Who sees what (example)",
+      "blocks": [
+       [
+        "Access",
+        [
+         [
+          "Admins",
+          "Can view and edit"
+         ],
+         [
+          "Staff",
+          "Cannot see the register"
+         ]
+        ]
+       ]
+      ],
+      "caption": "Example only. Your screen shows your own team."
+     }
+    },
+    {
+     "heading": "Update at supervision or when something changes",
+     "bullets": [
+      "Make \"are your details still right?\" a standing question",
+      "Edit the record in a minute, and the Personal column updates",
+      "The register then answers who to call without anyone opening a drawer"
+     ],
+     "tags": [
+      {
+       "label": "Staff supervision post",
+       "href": "/blog/staff-supervision-and-training-records"
+      },
+      {
+       "label": "HR staff files audit",
+       "href": "/care-audits/hr-staff-files"
+      }
+     ],
+     "mock": {
+      "type": "audit",
+      "audit": "Update (example)",
+      "blocks": [
+       [
+        "Change",
+        [
+         [
+          "Emergency number",
+          "Updated"
+         ],
+         [
+          "Column",
+          "5 of 5"
+         ]
+        ]
+       ]
+      ],
+      "caption": "Example only. Your screen shows your own team."
+     }
+    }
+   ]
+  },
+  "talk": {
+   "heading": "Questions managers ask about staff personal details",
+   "sub": "Read this as a conversation.",
+   "items": [
+    {
+     "q": "What does the Personal tab hold?",
+     "a": "Date of birth, emergency contact and next of kin, with a shortcut for \"same as emergency contact\"."
+    },
+    {
+     "q": "Is this data kept safe?",
+     "a": "It is for admins only, in the same dashboard area as the rest of the register. Treat it as personal data under your own data protection policy."
+    },
+    {
+     "q": "What is the Personal column?",
+     "a": "It shows how many of five sections are filled in for each person, so gaps are visible at a glance."
+    },
+    {
+     "q": "Can staff fill in their own details?",
+     "a": "No. Admins enter them, and staff do not see the register."
+    },
+    {
+     "q": "Does a date of birth do anything else?",
+     "a": "It can trigger birthday emails. Only a date of birth entered by an admin triggers anything, and you can switch the emails off in Settings, Notifications."
+    },
+    {
+     "q": "Can I print an emergency contact form from here?",
+     "a": "No. There is no form template in the register. It holds the details you record."
+    },
+    {
+     "q": "Does it call the contact for us?",
+     "a": "No. It holds the details. People still make the call."
+    },
+    {
+     "q": "Which plan?",
+     "a": "The Enterprise plan. You can <a href=\"/demo\">book a demo</a>."
+    }
+   ]
+  },
+  "limits": {
+   "heading": "What this does not do",
+   "cards": [
+    {
+     "title": "It does not contact anyone",
+     "body": "The register stores details. It does not call, text or email an emergency contact."
+    },
+    {
+     "title": "It does not check the details are right",
+     "body": "A number is only as good as the last time someone confirmed it, so ask at supervision."
+    },
+    {
+     "title": "It is not for staff to maintain",
+     "body": "Admins enter and edit the details. Staff do not see the register."
+    }
+   ]
+  },
+  "read_next": [
+   "staff-supervision-and-training-records",
+   "what-compliant-actually-means-for-one-care-staff-member",
+   "care-home-staff-incentive-scheme"
+  ],
+  "faqs": {
+   "heading": "Emergency contacts and staff records, answered",
+   "groups": [
+    {
+     "group": "About the details",
+     "items": [
+      {
+       "q": "What should an emergency contact form include?",
+       "a": "At least a name, relationship and a phone number, and a second number where you can. CareStream holds an emergency contact and a next of kin, and lets you mark them as the same person."
+      },
+      {
+       "q": "How often should we check emergency contact details?",
+       "a": "There is no set rule, so choose a rhythm you can keep, such as at each supervision. Record the change and the Personal column updates."
+      },
+      {
+       "q": "Is next of kin the same as an emergency contact?",
+       "a": "Not always. Someone may want a friend rung first and a relative recorded as next of kin. The register holds both and has a shortcut for when they are the same."
+      }
+     ]
+    },
+    {
+     "group": "About the register",
+     "items": [
+      {
+       "q": "Who can see staff personal details?",
+       "a": "Admins only."
+      },
+      {
+       "q": "Can we see who has not filled in their details?",
+       "a": "Yes. The Personal column shows how many of five sections are complete for each person."
+      },
+      {
+       "q": "Does the register store anything about health?",
+       "a": "No. It holds date of birth, emergency contact and next of kin only."
+      }
+     ]
+    },
+    {
+     "group": "More about personal details",
+     "items": [
+      {
+       "q": "Should we ask for health information here?",
+       "a": "The register does not hold health information. It holds date of birth, emergency contact and next of kin. Health matters belong in the right place under your own policy."
+      },
+      {
+       "q": "Can an emergency contact be someone who is not a relative?",
+       "a": "Yes. It can be anyone the person wants called. Next of kin can be recorded separately, or marked as the same."
+      },
+      {
+       "q": "What if a person does not want to give details?",
+       "a": "Record that they declined, in your own notes, and revisit it at supervision. The Personal column will show the gap, which is a prompt to ask again kindly."
+      }
+     ]
+    },
+    {
+     "group": "Details in practice",
+     "items": [
+      {
+       "q": "Can we record two emergency contacts?",
+       "a": "The register holds an emergency contact and a next of kin. Use the next of kin entry for a second person where they differ."
+      },
+      {
+       "q": "What if someone has no next of kin?",
+       "a": "Record what they tell you and note it. Some people have no family close by, and a friend or neighbour is a perfectly good emergency contact."
+      },
+      {
+       "q": "How do I know a number is right?",
+       "a": "Ask the person to read it back when you enter it, and again at supervision. The register can only hold what it is told."
+      },
+      {
+       "q": "Is an emergency contact a legal requirement for a staff file?",
+       "a": "<a href=\"https://www.legislation.gov.uk/uksi/2014/2936/schedule/3\">Schedule 3</a> of the Health and Social Care Act 2008 (Regulated Activities) Regulations 2014 lists the information that must be available for each person employed, and an emergency contact is not on that list. Holding one is good practice and a matter for your own policy. <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/19\">Regulation 19</a> covers recruitment procedures in general."
+      }
+     ]
+    }
+   ]
+  },
+  "guide": {
+   "heading": "Keeping emergency details useful",
+   "lede": "A short routine beats a perfect form.",
+   "sections": [
+    {
+     "h3": "When someone joins",
+     "paragraphs": [
+      "Ask for the details on day one and enter them straight away. Do not leave it for the file to catch up later."
+     ],
+     "checklist": [
+      "Date of birth entered",
+      "Emergency contact entered",
+      "Next of kin entered or marked the same",
+      "Check the Personal column shows five of five"
+     ]
+    },
+    {
+     "h3": "Keeping them current",
+     "paragraphs": [
+      "Ask the question at supervision. It takes ten seconds and catches changes you would never otherwise hear about."
+     ],
+     "checklist": [
+      "Ask at every supervision",
+      "Update the record there and then",
+      "Look at the Personal column each quarter",
+      "Chase anyone with gaps"
+     ]
+    },
+    {
+     "h3": "Handling personal data with care",
+     "paragraphs": [
+      "A date of birth and the names and numbers of family and friends are personal data. Keep the amount you hold to what you need, and keep it where only the people who need it can see it. In CareStream the Personal details tab is for admins only, and the dashboard area is admin only.",
+      "Tell staff what you hold and why when they join. Most people are happy to give an emergency contact when they know it is there for their sake, and the conversation builds trust at the same time."
+     ],
+     "checklist": [
+      "Hold only what you need",
+      "Tell staff what you hold and why",
+      "Keep access to admins",
+      "Review your data protection policy yearly"
+     ]
+    },
+    {
+     "h3": "Making the form part of induction",
+     "paragraphs": [
+      "Put the emergency contact conversation in the first-week checklist, next to the tour and the fire exits. It is easy to explain, and people are glad to be asked.",
+      "Then put the record straight into the register, while the person is still in the room, so you are not carrying paper from one place to another."
+     ],
+     "checklist": [
+      "Add to the first week checklist",
+      "Enter details while the person is present",
+      "Read the number back",
+      "Show them the shortcut for same as contact"
+     ]
+    }
+   ],
+   "note": "Illustrative only. Handle personal data under your own data protection policy. This is not legal advice."
+  }
+ },
+ {
+  "slug": "employee-holiday-entitlement-and-contract-types-in-care",
+  "status": "draft",
+  "order": 119,
+  "eyebrow": "Scenario",
+  "fine": "14 day free trial · Set up in a day · UK data residency",
+  "title": "Employee holiday entitlement depends on the contract. <em>Hold both in one place.</em>",
+  "meta_title": "Employee Holiday Entitlement and Contracts | CareStreamAI",
+  "meta_description": "Record contract type, hours, probation end and employee holiday entitlement for each person, with the contract uploaded. Entitlement only. Enterprise plan.",
+  "lede": "A carer asks how much leave she has left, and the manager has to find her contract. <b>Employee holiday entitlement</b> depends on the contract, the hours and the leave year, and these often sit in different places. On the Enterprise plan, CareStream's workforce register has an admin only Contract and holiday tab. It records entitlement. It does not book holiday. See the <a href=\"/training-platform\">wider toolkit</a> too.",
+  "panel": {
+   "title": "Contract and entitlement",
+   "pill": "Illustration",
+   "rows": [
+    {
+     "label": "Contract uploaded",
+     "note": "Held",
+     "done": true
+    },
+    {
+     "label": "Contract type and hours recorded",
+     "note": "Permanent, 30 hours",
+     "done": true
+    },
+    {
+     "label": "Probation end date set",
+     "note": "Example",
+     "done": true
+    },
+    {
+     "label": "Holiday entitlement recorded",
+     "note": "Days or hours",
+     "done": false
+    }
+   ],
+   "meter": 50
+  },
+  "image": "[to generate: POST /routine/content/image, key employee-holiday-entitlement-and-contract-types-in-care, scene: A manager and a new carer sit at a table in a bright care home staff room with a folder open between them, cups of tea beside them]",
+  "image_alt": "A care home manager and a new carer sit at a staff room table with a folder open between them",
+  "card_title": "Which contract is she on, and how much leave does she have?",
+  "card_snippet": "Hold the contract, contract type, hours, probation end and holiday entitlement for each person, with the account holiday year set once. Entitlement only. Enterprise plan.",
+  "primary_keyword": "employee holiday entitlement",
+  "secondary_keywords": [
+   "holiday entitlement",
+   "zero hours contract",
+   "fixed term contract",
+   "probation period",
+   "contract types"
+  ],
+  "feature_links": [
+   {
+    "title": "Training built from your own policies",
+    "body": "Short training from your own policies, checked by questions, for the whole team.",
+    "action": "See the feature",
+    "href": "/training-platform"
+   },
+   {
+    "title": "Workforce compliance register",
+    "body": "DBS, right to work, registration and references in one register, with documents and expiry alerts. Enterprise plan.",
+    "action": "See the register",
+    "href": "/features/workforce-compliance-register-dbs-right-to-work-registration-references"
+   },
+   {
+    "title": "Workforce and multi site",
+    "body": "See how the register works across more than one home.",
+    "action": "See the feature",
+    "href": "/features/workforce-and-multi-site"
+   }
+  ],
+  "intro": {
+   "heading": "The answer is in the contract. The trouble is finding it.",
+   "sub": "A scenario we see in many care settings.",
+   "paragraph": "A senior carer asks her manager how many days of leave she has left this year. The manager knows she is permanent, but not her contracted hours, and the entitlement depends on both. The contract is in a file, the hours are on a rota, the holiday year starts in April for some staff and on the anniversary for others. A simple question takes three places to answer. It is not a dispute. It is only a delay, and it comes round every time someone asks."
+  },
+  "trail": [
+   {
+    "when": "Offer",
+    "text": "A carer is offered a permanent contract of 30 hours.",
+    "kind": "ok"
+   },
+   {
+    "when": "Day one",
+    "text": "She signs it and a copy goes in her file.",
+    "kind": "ok"
+   },
+   {
+    "when": "Week one",
+    "text": "Her hours go on the rota.",
+    "kind": "ok"
+   },
+   {
+    "when": "Month three",
+    "text": "Her probation end date is in an email.",
+    "kind": "gap"
+   },
+   {
+    "when": "Month six",
+    "text": "A bank carer joins on a different contract type.",
+    "kind": "gap"
+   },
+   {
+    "when": "Month nine",
+    "text": "Holiday years differ across staff.",
+    "kind": "gap"
+   },
+   {
+    "when": "Month eleven",
+    "text": "She asks how many days she has left.",
+    "kind": "gap"
+   },
+   {
+    "when": "The manager",
+    "text": "Hunts through three places to answer.",
+    "kind": "end"
+   }
+  ],
+  "trail_close": "<b>Nothing here is wrong.</b> The gap is that the contract, the hours and the leave year are held apart. Here is how the register brings them together.",
+  "why": {
+   "heading": "Entitlement follows from the contract, so keep them side by side.",
+   "sub": "A clear record saves time and avoids misunderstandings.",
+   "cards": [
+    {
+     "icon": "chat",
+     "title": "Contracts differ",
+     "body": "Permanent, fixed term, bank and zero hours contracts all carry different expectations. Knowing which one a person is on matters."
+    },
+    {
+     "icon": "tick",
+     "title": "Statutory leave has a baseline",
+     "body": "GOV.UK says <a href=\"https://www.gov.uk/holiday-entitlement-rights\">most workers are entitled to 5.6 weeks of paid holiday a year</a>. What a person gets in your service depends on their contract and hours."
+    },
+    {
+     "icon": "alert",
+     "title": "Probation needs a date",
+     "body": "A probation end date is a point to review someone. Without it in front of you, the review slips."
+    }
+   ]
+  },
+  "how": {
+   "heading": "The contract, the hours and the leave in one tab.",
+   "sub": "This is how the <a href=\"/features/workforce-compliance-register-dbs-right-to-work-registration-references\">workforce compliance register</a> holds them. See also <a href=\"/who-its-for/hr-and-admin-teams\">HR and admin teams</a>, <a href=\"/care-policies/packs/hr-workforce-pack\">HR and workforce policy pack</a> and the <a href=\"/care-audits/hr-staff-files\">HR staff files audit</a>.",
+   "blocks": [
+    {
+     "heading": "Upload the contract and choose the contract type",
+     "bullets": [
+      "Upload the employment contract on the Contract and holiday tab",
+      "Choose the type: permanent, fixed term, bank or zero hours",
+      "Open the contract any time with View"
+     ],
+     "tags": [
+      {
+       "label": "Workforce register",
+       "href": "/features/workforce-compliance-register-dbs-right-to-work-registration-references"
+      },
+      {
+       "label": "HR and workforce policy pack",
+       "href": "/care-policies/packs/hr-workforce-pack"
+      }
+     ],
+     "mock": {
+      "type": "audit",
+      "audit": "Contract (example)",
+      "blocks": [
+       [
+        "Contract",
+        [
+         [
+          "File",
+          "Uploaded"
+         ],
+         [
+          "Type",
+          "Fixed term"
+         ],
+         [
+          "Hours",
+          "30 a week"
+         ]
+        ]
+       ]
+      ],
+      "caption": "Example only. Your screen shows your own team."
+     }
+    },
+    {
+     "heading": "Record hours and the probation end date",
+     "bullets": [
+      "Add the contracted hours",
+      "Add the probation end date",
+      "The end date is there when you plan a review"
+     ],
+     "tags": [
+      {
+       "label": "Staff supervision post",
+       "href": "/blog/staff-supervision-and-training-records"
+      },
+      {
+       "label": "HR and admin teams",
+       "href": "/who-its-for/hr-and-admin-teams"
+      }
+     ],
+     "mock": {
+      "type": "audit",
+      "audit": "Hours and probation (example)",
+      "blocks": [
+       [
+        "Details",
+        [
+         [
+          "Contracted hours",
+          "Example"
+         ],
+         [
+          "Probation ends",
+          "Example date"
+         ],
+         [
+          "Status",
+          "Held"
+         ]
+        ]
+       ]
+      ],
+      "caption": "Example only. Your screen shows your own team."
+     }
+    },
+    {
+     "heading": "Record holiday entitlement, in days or hours",
+     "bullets": [
+      "Set the entitlement in days or in hours, whichever your contracts use",
+      "Set an optional own year start for a person, where theirs differs",
+      "Admins set the account's holiday year start, day and month, once"
+     ],
+     "tags": [
+      {
+       "label": "Pricing",
+       "href": "/pricing"
+      },
+      {
+       "label": "How CareStream works",
+       "href": "/how-it-works"
+      }
+     ],
+     "mock": {
+      "type": "audit",
+      "audit": "Holiday entitlement (example)",
+      "blocks": [
+       [
+        "Entitlement",
+        [
+         [
+          "Amount",
+          "Example days"
+         ],
+         [
+          "Year starts",
+          "Account setting"
+         ],
+         [
+          "Own year start",
+          "Not set"
+         ]
+        ]
+       ]
+      ],
+      "caption": "Example only. Your screen shows your own team."
+     }
+    },
+    {
+     "heading": "Keep to what it does",
+     "bullets": [
+      "It records entitlement. There is no holiday booking, and no balance of leave taken",
+      "Use it as the answer to \"what is her entitlement and contract?\"",
+      "Keep your own system for booking and balances"
+     ],
+     "tags": [
+      {
+       "label": "Care audits",
+       "href": "/care-audits"
+      },
+      {
+       "label": "HR staff files audit",
+       "href": "/care-audits/hr-staff-files"
+      }
+     ],
+     "mock": {
+      "type": "audit",
+      "audit": "What the tab shows (example)",
+      "blocks": [
+       [
+        "Shows",
+        [
+         [
+          "Contract",
+          "Yes"
+         ],
+         [
+          "Entitlement",
+          "Yes"
+         ],
+         [
+          "Holiday booking",
+          "No"
+         ]
+        ]
+       ]
+      ],
+      "caption": "Example only. Your screen shows your own team."
+     }
+    }
+   ]
+  },
+  "talk": {
+   "heading": "Questions managers ask about contracts and leave",
+   "sub": "Read this as a conversation.",
+   "items": [
+    {
+     "q": "Can staff book holiday in CareStream?",
+     "a": "No. CareStream records entitlement only. Holiday booking is not built."
+    },
+    {
+     "q": "Does it work out the leave for me?",
+     "a": "No. It holds the entitlement you enter, in days or hours. Use your own calculation, and the <a href=\"https://www.gov.uk/holiday-entitlement-rights\">GOV.UK guidance</a> for the statutory position."
+    },
+    {
+     "q": "Which contract types can I choose?",
+     "a": "Permanent, fixed term, bank and zero hours."
+    },
+    {
+     "q": "Can we have different leave years?",
+     "a": "Yes. Admins set the account's holiday year start by day and month, and you can add an own year start for a person."
+    },
+    {
+     "q": "Who can see contracts?",
+     "a": "Admins only. The tab is not visible to staff."
+    },
+    {
+     "q": "Does it track probation?",
+     "a": "It records the probation end date. It does not run the probation process."
+    },
+    {
+     "q": "Can I keep the signed contract here?",
+     "a": "Yes. Upload it and open it with View."
+    },
+    {
+     "q": "Which plan?",
+     "a": "The Enterprise plan. You can <a href=\"/demo\">book a demo</a>."
+    }
+   ]
+  },
+  "limits": {
+   "heading": "What this does not do",
+   "cards": [
+    {
+     "title": "It does not book or count leave",
+     "body": "There is no holiday booking and no running balance of days taken. It holds entitlement only."
+    },
+    {
+     "title": "It does not advise on contracts",
+     "body": "It stores what you enter. Employment law advice is for a qualified adviser."
+    },
+    {
+     "title": "It does not run a rota",
+     "body": "There is no rota or time and attendance in CareStream. Keep those where they are."
+    }
+   ]
+  },
+  "read_next": [
+   "staff-supervision-and-training-records",
+   "what-compliant-actually-means-for-one-care-staff-member",
+   "how-do-you-schedule-care-staff-training-around-a-rota"
+  ],
+  "faqs": {
+   "heading": "Contracts and holiday entitlement, answered",
+   "groups": [
+    {
+     "group": "About entitlement",
+     "items": [
+      {
+       "q": "How much holiday are care staff entitled to?",
+       "a": "GOV.UK explains that <a href=\"https://www.gov.uk/holiday-entitlement-rights\">most workers are legally entitled to 5.6 weeks of paid holiday a year</a>, including agency workers and those with irregular hours. Your contracts may give more. CareStream records the entitlement you set."
+      },
+      {
+       "q": "Do zero hours staff get holiday?",
+       "a": "The GOV.UK holiday guidance covers workers with irregular hours, so read it for the detail. CareStream lets you record a zero hours contract type and an entitlement in days or hours."
+      },
+      {
+       "q": "What is a probation period?",
+       "a": "A set time at the start of a job when the employer reviews whether the person is right for the role. CareStream records the end date so you can plan the review."
+      }
+     ]
+    },
+    {
+     "group": "About the tab",
+     "items": [
+      {
+       "q": "Can we book leave in CareStream?",
+       "a": "No. It records entitlement only."
+      },
+      {
+       "q": "Who can see the Contract and holiday tab?",
+       "a": "Admins only."
+      },
+      {
+       "q": "Can we set a different leave year for one person?",
+       "a": "Yes, using the optional own year start."
+      }
+     ]
+    },
+    {
+     "group": "More about contracts",
+     "items": [
+      {
+       "q": "What is a fixed term contract?",
+       "a": "A contract that ends on a set date or when a set task finishes. <a href=\"https://www.gov.uk/contract-types-and-employer-responsibilities\">GOV.UK describes the main contract types</a> and the employer's responsibilities for each. The register records the contract type and the contract itself, so you can see which staff are on one."
+      },
+      {
+       "q": "How long can a probation period be?",
+       "a": "That is for your contract and policy to say, and employment advice is available if you are unsure. CareStream records the probation end date you set."
+      },
+      {
+       "q": "Can we hold a bank worker's contract here?",
+       "a": "Yes. Bank is one of the contract types, with the contract uploaded and hours recorded where they apply."
+      }
+     ]
+    },
+    {
+     "group": "Entitlement, in practice",
+     "items": [
+      {
+       "q": "Is entitlement the same as days remaining?",
+       "a": "No. Entitlement is what a person is due for the leave year. CareStream records it, but does not count days taken or what is left."
+      },
+      {
+       "q": "Can I record entitlement in hours for part time staff?",
+       "a": "Yes. You can record entitlement in days or in hours, whichever matches the contract."
+      },
+      {
+       "q": "Where do bank staff fit?",
+       "a": "Bank is one of the contract types. Record the type, the hours where they apply and the contract itself."
+      },
+      {
+       "q": "Does the register show who is on probation?",
+       "a": "It records the probation end date for each person, so you can see who has a review coming up. The review itself is a conversation you hold, and the date is there to prompt it."
+      },
+      {
+       "q": "Should part time staff have a different entitlement?",
+       "a": "Entitlement usually follows the contract and the hours, so it can differ. Record what each contract says, in days or hours, and use GOV.UK for the statutory baseline."
+      }
+     ]
+    }
+   ]
+  },
+  "guide": {
+   "heading": "A tidy contract record",
+   "lede": "What to hold for each person, and why.",
+   "sections": [
+    {
+     "h3": "At the start",
+     "paragraphs": [
+      "Upload the signed contract and enter the type, hours and probation end date on the same day. Entering it later is where the gaps start."
+     ],
+     "checklist": [
+      "Upload the signed contract",
+      "Choose the contract type",
+      "Enter hours and probation end",
+      "Enter entitlement in days or hours"
+     ]
+    },
+    {
+     "h3": "When something changes",
+     "paragraphs": [
+      "A change in hours or contract type should produce a new file and a new entry, with the old one kept in your own records."
+     ],
+     "checklist": [
+      "Upload the new contract",
+      "Update type and hours",
+      "Update entitlement",
+      "Note the change date"
+     ]
+    },
+    {
+     "h3": "Staying clear about hours and leave",
+     "paragraphs": [
+      "Contracts in care vary a great deal, from full time permanent roles to bank and zero hours work. A short, clear record of the contract type and the hours for each person makes every later conversation easier, from rota planning to a request for leave.",
+      "If your service has more than one leave year, such as a financial year for most staff and an anniversary year for a few, set the account year once and use the own year start for the exceptions, so the register matches what the contracts say."
+     ],
+     "checklist": [
+      "Record the contract type for everyone",
+      "Record contracted hours",
+      "Set the account holiday year start",
+      "Use own year start only for exceptions"
+     ]
+    },
+    {
+     "h3": "Keeping the leave year simple",
+     "paragraphs": [
+      "Choose one holiday year for the account and stick to it unless there is a good reason not to. Mixed years make every later question harder, for you and for the people asking.",
+      "Where a person has a different year, record the start date as their own and put a note on the contract so the reason is clear to whoever looks next."
+     ],
+     "checklist": [
+      "One account year where possible",
+      "Own year start only for exceptions",
+      "A note explaining each exception",
+      "Review at the start of each year"
+     ]
+    }
+   ],
+   "note": "Illustrative only. Holiday and contract law is for the employer and a qualified adviser. This is not legal advice."
+  }
+ },
+ {
+  "slug": "staff-birthdays-emails-in-a-care-home",
+  "status": "draft",
+  "order": 120,
+  "eyebrow": "Scenario",
+  "fine": "14 day free trial · Set up in a day · UK data residency",
+  "title": "Remembering <em>staff birthdays</em> is a small thing that people notice. Let the register do the remembering.",
+  "meta_title": "Staff Birthdays and Birthday Emails in Care | CareStreamAI",
+  "meta_description": "Admins are emailed 7 days before a staff birthday, staff get a happy birthday email on the day, and the register lists the next 60 days. Switch either off.",
+  "lede": "Most care managers want to remember <b>staff birthdays</b>, and most forget one. On the Enterprise plan, CareStream's workforce register emails admins seven days before a birthday, sends the member of staff a happy birthday email on the day, and lists birthdays in the next 60 days in a panel. Both emails can be switched off. See the <a href=\"/training-platform\">wider toolkit</a> too.",
+  "panel": {
+   "title": "Birthdays in the next 60 days",
+   "pill": "Illustration",
+   "rows": [
+    {
+     "label": "Date of birth entered by an admin",
+     "note": "Required",
+     "done": true
+    },
+    {
+     "label": "Admin emailed 7 days before",
+     "note": "Switch on or off",
+     "done": true
+    },
+    {
+     "label": "Happy birthday email on the day",
+     "note": "From the company",
+     "done": true
+    },
+    {
+     "label": "Panel of the next 60 days",
+     "note": "On the register",
+     "done": false
+    }
+   ],
+   "meter": 50
+  },
+  "image": "[to generate: POST /routine/content/image, key staff-birthdays-emails-in-a-care-home, scene: A care home team stand around a table in a bright staff room with a cake and a card, one carer smiling, window with a garden behind]",
+  "image_alt": "A care home team gathers around a cake and a card on a staff room table",
+  "card_title": "Did you remember the cook's birthday this time?",
+  "card_snippet": "Admins get an email a week before a staff birthday, staff get a happy birthday email on the day, and the register lists the next 60 days. Switch either off in Settings. Enterprise plan.",
+  "primary_keyword": "staff birthdays",
+  "secondary_keywords": [
+   "employee birthday",
+   "staff birthday",
+   "employee birthday email"
+  ],
+  "feature_links": [
+   {
+    "title": "Training built from your own policies",
+    "body": "Short training from your own policies, checked by questions, for the whole team.",
+    "action": "See the feature",
+    "href": "/training-platform"
+   },
+   {
+    "title": "Workforce compliance register",
+    "body": "DBS, right to work, registration and references in one register, with documents and expiry alerts. Enterprise plan.",
+    "action": "See the register",
+    "href": "/features/workforce-compliance-register-dbs-right-to-work-registration-references"
+   },
+   {
+    "title": "Care home staff incentive scheme",
+    "body": "Recognise good work alongside the small things like birthdays.",
+    "action": "Read the post",
+    "href": "/blog/care-home-staff-incentive-scheme"
+   }
+  ],
+  "intro": {
+   "heading": "A card on the right day tells people you know them.",
+   "sub": "A scenario we see in many care settings.",
+   "paragraph": "A cook has worked in the home for six years. Her birthday came and went on a busy Thursday and nobody said anything, because the person who normally remembers was on leave. It is not a grievance. She did not mention it. But the following week she told a friend that she felt invisible at work, and the friend told the manager. A small oversight, with a larger effect than it looks. In a sector where people are asked to give a great deal, the small signs that someone noticed count for more than they cost."
+  },
+  "trail": [
+   {
+    "when": "Recruitment",
+    "text": "A cook joins and her birthday is mentioned at interview.",
+    "kind": "ok"
+   },
+   {
+    "when": "Week one",
+    "text": "It is written on a staff birthday list in the office.",
+    "kind": "ok"
+   },
+   {
+    "when": "Month two",
+    "text": "The list is on a noticeboard.",
+    "kind": "ok"
+   },
+   {
+    "when": "Month six",
+    "text": "The person who runs the list changes role.",
+    "kind": "gap"
+   },
+   {
+    "when": "Month nine",
+    "text": "A new noticeboard goes up and the list does not.",
+    "kind": "gap"
+   },
+   {
+    "when": "Her birthday",
+    "text": "The usual person is on leave.",
+    "kind": "gap"
+   },
+   {
+    "when": "Next day",
+    "text": "Nobody says anything.",
+    "kind": "gap"
+   },
+   {
+    "when": "A week later",
+    "text": "She tells a friend she feels overlooked.",
+    "kind": "end"
+   }
+  ],
+  "trail_close": "<b>Nobody meant to forget.</b> The list just depended on one person and one noticeboard. Here is how the register takes that load.",
+  "why": {
+   "heading": "Small recognition matters, and it needs a system.",
+   "sub": "Remembering is a habit, and habits are easier when something prompts them.",
+   "cards": [
+    {
+     "icon": "chat",
+     "title": "Lists depend on one person",
+     "body": "A birthday list on a wall works while its keeper is in. When they move, the list quietly stops."
+    },
+    {
+     "icon": "tick",
+     "title": "A prompt beats good intentions",
+     "body": "A reminder a week ahead gives time to buy a card or plan a cake, and not to scramble on the day."
+    },
+    {
+     "icon": "alert",
+     "title": "Only the right data should trigger anything",
+     "body": "Only a date of birth entered by an admin triggers an email. Nobody gets an email from a date guessed or inferred."
+    }
+   ]
+  },
+  "how": {
+   "heading": "A reminder to the manager, a message to the member of staff.",
+   "sub": "This is how the <a href=\"/features/workforce-compliance-register-dbs-right-to-work-registration-references\">workforce compliance register</a> handles birthdays. See also <a href=\"/who-its-for/registered-managers\">registered managers</a> and the <a href=\"/blog/care-home-staff-incentive-scheme\">staff incentive scheme</a> post.",
+   "blocks": [
+    {
+     "heading": "Enter the date of birth on the Personal details tab",
+     "bullets": [
+      "An admin enters the date of birth, along with emergency contact and next of kin",
+      "Only a date of birth entered by an admin triggers anything",
+      "If no date is entered, nothing is sent"
+     ],
+     "tags": [
+      {
+       "label": "Workforce register",
+       "href": "/features/workforce-compliance-register-dbs-right-to-work-registration-references"
+      },
+      {
+       "label": "Staff register with photos",
+       "href": "/features/workforce-compliance-register-dbs-right-to-work-registration-references"
+      }
+     ],
+     "mock": {
+      "type": "audit",
+      "audit": "Personal details (example)",
+      "blocks": [
+       [
+        "Details",
+        [
+         [
+          "Date of birth",
+          "Entered by an admin"
+         ],
+         [
+          "Birthday emails",
+          "On"
+         ]
+        ]
+       ]
+      ],
+      "caption": "Example only. Your screen shows your own team."
+     }
+    },
+    {
+     "heading": "Admins get an email seven days before",
+     "bullets": [
+      "Admins are emailed 7 days before a staff birthday",
+      "The week gives time to buy a card or plan a small celebration",
+      "The email can be switched off in Settings, Notifications"
+     ],
+     "tags": [
+      {
+       "label": "Registered managers",
+       "href": "/who-its-for/registered-managers"
+      },
+      {
+       "label": "Pricing",
+       "href": "/pricing"
+      }
+     ],
+     "mock": {
+      "type": "audit",
+      "audit": "Admin email (example)",
+      "blocks": [
+       [
+        "Seven days before",
+        [
+         [
+          "To",
+          "Admins"
+         ],
+         [
+          "About",
+          "A. Example"
+         ],
+         [
+          "Birthday",
+          "In 7 days"
+         ]
+        ]
+       ]
+      ],
+      "caption": "Example only. Your screen shows your own team."
+     }
+    },
+    {
+     "heading": "The member of staff gets a happy birthday email on the day",
+     "bullets": [
+      "The email comes from the company, as a simple happy birthday",
+      "It does not show an age and has no button",
+      "It can be switched off in Settings, Notifications"
+     ],
+     "tags": [
+      {
+       "label": "How CareStream works",
+       "href": "/how-it-works"
+      },
+      {
+       "label": "Staff incentive post",
+       "href": "/blog/care-home-staff-incentive-scheme"
+      }
+     ],
+     "mock": {
+      "type": "audit",
+      "audit": "Staff email (example)",
+      "blocks": [
+       [
+        "On the day",
+        [
+         [
+          "To",
+          "The member of staff"
+         ],
+         [
+          "Message",
+          "Happy birthday"
+         ],
+         [
+          "Age shown",
+          "No"
+         ]
+        ]
+       ]
+      ],
+      "caption": "Example only. Your screen shows your own team."
+     }
+    },
+    {
+     "heading": "See the next 60 days on the register",
+     "bullets": [
+      "A panel on the register lists birthdays in the next 60 days",
+      "Use it at a team meeting or when planning a rota gap",
+      "Pair it with recognition in the <a href=\"/blog/care-home-staff-incentive-scheme\">staff incentive scheme</a>"
+     ],
+     "tags": [
+      {
+       "label": "Care audits",
+       "href": "/care-audits"
+      },
+      {
+       "label": "Staff incentive post",
+       "href": "/blog/care-home-staff-incentive-scheme"
+      }
+     ],
+     "mock": {
+      "type": "audit",
+      "audit": "Next 60 days (example)",
+      "blocks": [
+       [
+        "Birthdays",
+        [
+         [
+          "A. Example",
+          "In 3 days"
+         ],
+         [
+          "B. Example",
+          "In 3 weeks"
+         ],
+         [
+          "C. Example",
+          "In 7 weeks"
+         ]
+        ]
+       ]
+      ],
+      "caption": "Example only. Your screen shows your own team."
+     }
+    }
+   ]
+  },
+  "talk": {
+   "heading": "Questions managers ask about birthday emails",
+   "sub": "Read this as a conversation.",
+   "items": [
+    {
+     "q": "Who gets the email a week before?",
+     "a": "Admins. It is a reminder so that you can do something small and kind on the day."
+    },
+    {
+     "q": "What does the staff member receive?",
+     "a": "A happy birthday email from the company on the day. It does not show an age and has no button."
+    },
+    {
+     "q": "Can we turn them off?",
+     "a": "Yes. Both emails have on and off switches in Settings, Notifications."
+    },
+    {
+     "q": "What if we have no date of birth for someone?",
+     "a": "Then nothing is sent. Only a date of birth entered by an admin triggers anything."
+    },
+    {
+     "q": "Can we see who is coming up?",
+     "a": "Yes. A panel on the register lists birthdays in the next 60 days."
+    },
+    {
+     "q": "Does it send gifts or cards?",
+     "a": "No. It sends the emails and shows the list. The card and the cake are yours."
+    },
+    {
+     "q": "Is a date of birth personal data?",
+     "a": "Yes, so treat it under your own data protection policy. It is held on an admin only tab."
+    },
+    {
+     "q": "Which plan?",
+     "a": "The Enterprise plan. You can <a href=\"/demo\">book a demo</a>."
+    }
+   ]
+  },
+  "limits": {
+   "heading": "What this does not do",
+   "cards": [
+    {
+     "title": "It does not celebrate for you",
+     "body": "The emails are a prompt and a greeting. A card, a cake or a word on the day still needs a person."
+    },
+    {
+     "title": "It does not message staff on the shift",
+     "body": "There is no staff messaging. Only the two emails are sent."
+    },
+    {
+     "title": "It does not guess",
+     "body": "Nothing is sent without a date of birth entered by an admin, and either email can be switched off."
+    }
+   ]
+  },
+  "read_next": [
+   "care-home-staff-incentive-scheme",
+   "staff-supervision-and-training-records",
+   "what-compliant-actually-means-for-one-care-staff-member"
+  ],
+  "faqs": {
+   "heading": "Staff birthdays and the register, answered",
+   "groups": [
+    {
+     "group": "About the emails",
+     "items": [
+      {
+       "q": "When are birthday emails sent?",
+       "a": "Admins are emailed 7 days before a staff birthday, and the staff member is sent a happy birthday email on the day."
+      },
+      {
+       "q": "Does the email show the person's age?",
+       "a": "No. It is a simple happy birthday from the company, with no age and no button."
+      },
+      {
+       "q": "Can we switch the emails off?",
+       "a": "Yes, both, in Settings, Notifications."
+      }
+     ]
+    },
+    {
+     "group": "About recognition",
+     "items": [
+      {
+       "q": "How do care homes celebrate staff birthdays?",
+       "a": "Many keep it small: a card signed by the team, a cake at handover or an extra break. The register gives the notice. What you do is up to you and your team."
+      },
+      {
+       "q": "Does this replace recognition schemes?",
+       "a": "No. It covers one small moment. A scheme such as the <a href=\"/blog/care-home-staff-incentive-scheme\">staff incentive scheme</a> covers wider recognition."
+      },
+      {
+       "q": "Where do I enter the date of birth?",
+       "a": "On the Personal details tab of the register, which only admins can see."
+      }
+     ]
+    },
+    {
+     "group": "More about staff birthdays",
+     "items": [
+      {
+       "q": "What if someone does not want a fuss?",
+       "a": "Ask them. A quiet word may be enough, and you can switch either email off in Settings, Notifications."
+      },
+      {
+       "q": "Does the birthday email go to bank staff?",
+       "a": "It goes to any member of staff on the register who has a date of birth entered by an admin. Agency workers are not on the register."
+      },
+      {
+       "q": "Is the happy birthday email sent by a person?",
+       "a": "No. It is sent from the company by CareStream on the day, as a simple greeting."
+      }
+     ]
+    },
+    {
+     "group": "Birthdays, in practice",
+     "items": [
+      {
+       "q": "Can people opt out individually?",
+       "a": "The switches apply to the account. If a person does not want a fuss, leave their date of birth out or have a word with them. Only a date of birth entered by an admin triggers anything."
+      },
+      {
+       "q": "Does the reminder include the person's age?",
+       "a": "The staff email shows no age. The staff email shows no age."
+      },
+      {
+       "q": "Who receives the admin reminder?",
+       "a": "Admins on the account."
+      },
+      {
+       "q": "Do night staff get the same emails?",
+       "a": "Yes. The email goes to any member of staff on the register with a date of birth entered by an admin, whatever shift they work."
+      },
+      {
+       "q": "Should we tell staff that we hold their birthdays?",
+       "a": "Yes. Tell people when you collect their date of birth that it is held on an admin only tab and used for the birthday emails and nothing else, and that either email can be switched off."
+      },
+      {
+       "q": "Are birthday emails part of safer recruitment?",
+       "a": "No. They are a courtesy. <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/19\">Regulation 19</a> and <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/schedule/3\">Schedule 3</a> deal with recruitment procedures and the information held on each person employed, and a birthday email is not part of either."
+      }
+     ]
+    }
+   ]
+  },
+  "guide": {
+   "heading": "A simple birthday habit",
+   "lede": "Small, regular and kind.",
+   "sections": [
+    {
+     "h3": "When the reminder arrives",
+     "paragraphs": [
+      "A week is enough to do something modest. Decide in advance what your service does and keep it the same for everyone, so nobody is left out."
+     ],
+     "checklist": [
+      "Decide your standard gesture",
+      "Buy the card at the start of the week",
+      "Ask the team to sign it",
+      "Mark the day on the handover"
+     ]
+    },
+    {
+     "h3": "Keeping it fair",
+     "paragraphs": [
+      "Treat each person the same, and remember that some people would rather not be made a fuss of. A quiet word can be enough."
+     ],
+     "checklist": [
+      "Same gesture for everyone",
+      "Ask anyone who prefers no fuss",
+      "Include night staff and bank staff",
+      "Look at the 60 day panel monthly"
+     ]
+    },
+    {
+     "h3": "Making it a team habit",
+     "paragraphs": [
+      "A reminder is more useful when it leads somewhere. Agree with your senior team who does what: who buys the card, who brings the cake, who tells the night shift. When the roles are clear, a birthday takes two minutes and never lands on one person.",
+      "Keep the gesture proportionate. A signed card and a mention at handover are plenty for most teams, and the point is that it is the same for everyone."
+     ],
+     "checklist": [
+      "Agree who buys the card",
+      "Agree who tells the night team",
+      "Keep the gesture proportionate",
+      "Review once a year with the team"
+     ]
+    },
+    {
+     "h3": "What the settings do",
+     "paragraphs": [
+      "Both emails are controlled in Settings, Notifications. An admin can switch the seven day reminder off, the happy birthday email off, or both,.",
+      "If you switch the happy birthday email off, nothing changes for the admin reminder, and the other way round. Choose the mix that suits your service."
+     ],
+     "checklist": [
+      "Open Settings, Notifications",
+      "Decide on the admin reminder",
+      "Decide on the staff email",
+      "Tell the team what you chose"
+     ]
+    }
+   ],
+   "note": "Illustrative only. Dates of birth are personal data and should be handled under your own data protection policy."
+  }
+ },
+ {
+  "slug": "staff-register-with-photos-at-a-glance",
+  "status": "draft",
+  "order": 121,
+  "eyebrow": "Scenario",
+  "fine": "14 day free trial · Set up in a day · UK data residency",
+  "title": "Put a face to every name on the <em>staff register</em>. See who is covered and who is not at a glance.",
+  "meta_title": "Staff Register with Photos at a Glance | CareStreamAI",
+  "meta_description": "A staff register that shows each person's picture beside their name, with documents, personal details and extras in columns. Enterprise plan, admins only.",
+  "lede": "In a service with fifty or sixty staff, names on a <b>staff register</b> can be half familiar, especially for new managers, night staff and bank cover. On the Enterprise plan, CareStream's workforce register shows each person's picture next to their name, with their documents, personal details and extras in columns beside it. It is admin only. See the <a href=\"/training-platform\">wider toolkit</a> too.",
+  "panel": {
+   "title": "A register with faces",
+   "pill": "Illustration",
+   "rows": [
+    {
+     "label": "Picture beside each name",
+     "note": "Shown",
+     "done": true
+    },
+    {
+     "label": "Documents and status in columns",
+     "note": "Valid, expiring, expired",
+     "done": true
+    },
+    {
+     "label": "Personal column",
+     "note": "Sections filled in",
+     "done": true
+    },
+    {
+     "label": "Also held column",
+     "note": "Extras",
+     "done": false
+    }
+   ],
+   "meter": 50
+  },
+  "image": "[to generate: POST /routine/content/image, key staff-register-with-photos-at-a-glance, scene: A registered manager at a desk in a bright care home office scrolls a printed staff list while a deputy looks over her shoulder, a window with a garden behind them]",
+  "image_alt": "A registered manager and her deputy review a staff list together at a desk in a care home office",
+  "card_title": "Do you know every name on the list, and who it belongs to?",
+  "card_snippet": "A staff register with a picture beside each name, and documents, personal details and extras in columns. Admins only. Enterprise plan.",
+  "primary_keyword": "staff register",
+  "secondary_keywords": [
+   "employee directory",
+   "staff photo directory"
+  ],
+  "feature_links": [
+   {
+    "title": "Training built from your own policies",
+    "body": "Short training from your own policies, checked by questions, for the whole team.",
+    "action": "See the feature",
+    "href": "/training-platform"
+   },
+   {
+    "title": "Workforce compliance register",
+    "body": "DBS, right to work, registration and references in one register, with documents and expiry alerts. Enterprise plan.",
+    "action": "See the register",
+    "href": "/features/workforce-compliance-register-dbs-right-to-work-registration-references"
+   },
+   {
+    "title": "Workforce and multi site",
+    "body": "See the register across more than one home.",
+    "action": "See the feature",
+    "href": "/features/workforce-and-multi-site"
+   }
+  ],
+  "intro": {
+   "heading": "A list of names is not the same as knowing your team.",
+   "sub": "A scenario we see in many care settings.",
+   "paragraph": "A new registered manager takes over a home with sixty staff. In the first fortnight she is handed a spreadsheet of names, roles and document dates. It is accurate. It is also hard to use, because half the names mean nothing to her yet and the night team are people she has never met. When she sees that a name has an expiring DBS, she cannot picture who it is. She asks around. It takes ten minutes to put a face to a name, and ten minutes is a lot over a day."
+  },
+  "trail": [
+   {
+    "when": "Day one",
+    "text": "A new manager receives the staff spreadsheet.",
+    "kind": "ok"
+   },
+   {
+    "when": "Week one",
+    "text": "She learns the day team and their roles.",
+    "kind": "ok"
+   },
+   {
+    "when": "Week two",
+    "text": "She reads the document dates for the first time.",
+    "kind": "ok"
+   },
+   {
+    "when": "Week three",
+    "text": "Night staff are still names without faces.",
+    "kind": "gap"
+   },
+   {
+    "when": "Week four",
+    "text": "She sees a DBS due and cannot place the person.",
+    "kind": "gap"
+   },
+   {
+    "when": "Month two",
+    "text": "Bank staff add more unfamiliar names.",
+    "kind": "gap"
+   },
+   {
+    "when": "Month three",
+    "text": "She asks around to put faces to dates.",
+    "kind": "gap"
+   },
+   {
+    "when": "A visit",
+    "text": "\"Who is this member of staff?\" and nobody is sure.",
+    "kind": "end"
+   }
+  ],
+  "trail_close": "<b>The spreadsheet was accurate.</b> It was just missing faces and a view of everything in one row. Here is how the register helps.",
+  "why": {
+   "heading": "People are easier to manage when you know who they are.",
+   "sub": "A register that shows pictures is quicker to use and kinder to the team.",
+   "cards": [
+    {
+     "icon": "chat",
+     "title": "Names are only half the story",
+     "body": "A face on the register turns a name into a person, which makes follow up faster and more personal."
+    },
+    {
+     "icon": "tick",
+     "title": "One row, one person",
+     "body": "Documents, personal details and extras in the same row, so you see where each person stands without opening several screens."
+    },
+    {
+     "icon": "alert",
+     "title": "Gaps are easier to see",
+     "body": "When every row has the same columns, a missing item shows. A neat register is a quiet reminder to finish the job."
+    }
+   ]
+  },
+  "how": {
+   "heading": "A register with faces, columns and one place to look.",
+   "sub": "This is how the <a href=\"/features/workforce-compliance-register-dbs-right-to-work-registration-references\">workforce compliance register</a> reads as a whole. See also <a href=\"/who-its-for/registered-managers\">registered managers</a>, <a href=\"/who-its-for/hr-and-admin-teams\">HR and admin teams</a> and <a href=\"/cqc-compliance\">CQC and compliance</a>.",
+   "blocks": [
+    {
+     "heading": "See each person's picture beside their name",
+     "bullets": [
+      "Staff pictures show next to each name on the register",
+      "A face makes it easier to recognise people you have not yet met",
+      "Pictures are for the admin view only"
+     ],
+     "tags": [
+      {
+       "label": "Workforce register",
+       "href": "/features/workforce-compliance-register-dbs-right-to-work-registration-references"
+      },
+      {
+       "label": "Registered managers",
+       "href": "/who-its-for/registered-managers"
+      }
+     ],
+     "mock": {
+      "type": "audit",
+      "audit": "Register rows (example)",
+      "blocks": [
+       [
+        "Staff",
+        [
+         [
+          "A. Example, with picture",
+          "Senior carer"
+         ],
+         [
+          "B. Example, with picture",
+          "Carer"
+         ],
+         [
+          "C. Example, with picture",
+          "Cook"
+         ]
+        ]
+       ]
+      ],
+      "caption": "Example only. Your screen shows your own team."
+     }
+    },
+    {
+     "heading": "Read documents in the status columns",
+     "bullets": [
+      "Each document is valid, expiring within 30 days or expired",
+      "Missing items are visible",
+      "Open any uploaded document with View, beside what you recorded"
+     ],
+     "tags": [
+      {
+       "label": "Credential uploads and alerts",
+       "href": "/features/credential-document-uploads-expiry-alerts"
+      },
+      {
+       "label": "HR staff files audit",
+       "href": "/care-audits/hr-staff-files"
+      }
+     ],
+     "mock": {
+      "type": "audit",
+      "audit": "Status columns (example)",
+      "blocks": [
+       [
+        "Documents",
+        [
+         [
+          "A. Example",
+          "All valid"
+         ],
+         [
+          "B. Example",
+          "DBS expiring"
+         ],
+         [
+          "C. Example",
+          "References missing"
+         ]
+        ]
+       ]
+      ],
+      "caption": "Example only. Your screen shows your own team.",
+      "stats": [
+       [
+        "Valid",
+        "22"
+       ],
+       [
+        "Expiring",
+        "3"
+       ],
+       [
+        "Missing",
+        "2"
+       ]
+      ]
+     }
+    },
+    {
+     "heading": "Check the Personal and Also held columns",
+     "bullets": [
+      "The Personal column shows how many of five sections are filled in",
+      "The Also held column shows visas, driving documents and contracts for the staff who have them",
+      "Extras are never marked missing for staff they do not apply to"
+     ],
+     "tags": [
+      {
+       "label": "Home care",
+       "href": "/domiciliary-care"
+      },
+      {
+       "label": "HR and admin teams",
+       "href": "/who-its-for/hr-and-admin-teams"
+      }
+     ],
+     "mock": {
+      "type": "audit",
+      "audit": "Extra columns (example)",
+      "blocks": [
+       [
+        "Columns",
+        [
+         [
+          "Personal",
+          "4 of 5"
+         ],
+         [
+          "Also held",
+          "Driving licence, MOT"
+         ]
+        ]
+       ]
+      ],
+      "caption": "Example only. Your screen shows your own team."
+     }
+    },
+    {
+     "heading": "Look at birthdays and the whole team in one place",
+     "bullets": [
+      "A panel lists birthdays in the next 60 days",
+      "Use the register in your quarterly look at the team",
+      "Everything is admin only, so staff do not see it"
+     ],
+     "tags": [
+      {
+       "label": "Care audits",
+       "href": "/care-audits"
+      },
+      {
+       "label": "Pricing",
+       "href": "/pricing"
+      }
+     ],
+     "mock": {
+      "type": "audit",
+      "audit": "At a glance (example)",
+      "blocks": [
+       [
+        "Panel",
+        [
+         [
+          "Birthdays in 60 days",
+          "4"
+         ],
+         [
+          "Expiring documents",
+          "3"
+         ]
+        ]
+       ]
+      ],
+      "caption": "Example only. Your screen shows your own team."
+     }
+    }
+   ]
+  },
+  "talk": {
+   "heading": "Questions managers ask about the register as a whole",
+   "sub": "Read this as a conversation.",
+   "items": [
+    {
+     "q": "What do the pictures do?",
+     "a": "Staff pictures show next to each name on the register, so an admin can put a face to a name when looking at documents and dates. <a href=\"/demo\">Book a demo</a> to see it with example data."
+    },
+    {
+     "q": "Who can see the register?",
+     "a": "Admins only. Staff never see it."
+    },
+    {
+     "q": "What columns does it have?",
+     "a": "Documents with their status, a Personal column with sections filled in, and an Also held column for extras."
+    },
+    {
+     "q": "Is it a replacement for our HR system?",
+     "a": "No. It is a record of documents, personal details and entitlement, with reminders. It is not payroll, rota or time and attendance."
+    },
+    {
+     "q": "Does it cover agency staff?",
+     "a": "No. Agency workers are held by their agency and are not on the register."
+    },
+    {
+     "q": "Can we use it for a quick check before a visit?",
+     "a": "Yes. Look for expired and expiring entries and open a few documents with View."
+    },
+    {
+     "q": "Does it prove we are compliant?",
+     "a": "No. It shows what you hold. Whether you meet the regulations is for the Care Quality Commission to judge."
+    },
+    {
+     "q": "Which plan?",
+     "a": "The Enterprise plan. You can <a href=\"/demo\">book a demo</a>."
+    }
+   ]
+  },
+  "limits": {
+   "heading": "What this does not do",
+   "cards": [
+    {
+     "title": "It is not an HR system",
+     "body": "There is no payroll, rota, holiday booking or performance management. It holds documents and details with reminders."
+    },
+    {
+     "title": "It does not replace knowing your team",
+     "body": "A picture helps, but it does not replace walking the floor and talking to people."
+    },
+    {
+     "title": "It is for admins only",
+     "body": "Staff do not see it, and they do not upload their own documents."
+    }
+   ]
+  },
+  "read_next": [
+   "what-compliant-actually-means-for-one-care-staff-member",
+   "staff-supervision-and-training-records",
+   "the-care-compliance-dashboard-nobody-opens-and-how-to-fix-it"
+  ],
+  "faqs": {
+   "heading": "The staff register, answered",
+   "groups": [
+    {
+     "group": "About the register",
+     "items": [
+      {
+       "q": "What is a staff register?",
+       "a": "A list of the people who work in the service with the key details about each. CareStream's workforce register shows a picture, documents with status, personal details and extras, and is admin only."
+      },
+      {
+       "q": "Which documents does it hold?",
+       "a": "DBS, right to work, passport, professional registration, references, and extras such as visas, driving documents and the contract. Regulation 19 and its <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/schedule/3\">Schedule 3</a> list the information that must be available for each person employed."
+      },
+      {
+       "q": "Does it replace a staff photo directory?",
+       "a": "It shows a picture beside each name for admins. It is not a public directory and staff do not see it."
+      }
+     ]
+    },
+    {
+     "group": "About access",
+     "items": [
+      {
+       "q": "Who can see it?",
+       "a": "Admins only."
+      },
+      {
+       "q": "Is it on every plan?",
+       "a": "No. It is on the Enterprise plan."
+      },
+      {
+       "q": "Can we see it across several homes?",
+       "a": "Yes, see the <a href=\"/features/workforce-and-multi-site\">workforce and multi site</a> page for how the group view works."
+      }
+     ]
+    },
+    {
+     "group": "More about the register",
+     "items": [
+      {
+       "q": "Does the register show training too?",
+       "a": "Training results are in the training matrix and the staff record. The workforce register is for documents, personal details and entitlement, with reminders."
+      },
+      {
+       "q": "Is it only useful before an inspection?",
+       "a": "No. It is most useful as a weekly glance. A register you look at often has fewer surprises in it than one you open before a visit."
+      },
+      {
+       "q": "What is the difference between this and a spreadsheet?",
+       "a": "The documents sit behind each entry and open with View, the dates carry colours and a daily digest email, and everything is admin only. A spreadsheet can hold the same facts, but it cannot warn you."
+      }
+     ]
+    },
+    {
+     "group": "The register, in practice",
+     "items": [
+      {
+       "q": "Does the register replace an annual staff file audit?",
+       "a": "No. It helps you run one. The <a href=\"/care-audits/hr-staff-files\">HR staff files audit</a> is a separate free check you can run alongside it."
+      },
+      {
+       "q": "What does a missing entry mean?",
+       "a": "It means no document is recorded for that credential. Extras such as visas and driving documents are never marked missing for staff they do not apply to."
+      },
+      {
+       "q": "Can we use the register for new starters?",
+       "a": "Yes. Adding each person's documents and details as they join gives you a complete row from the start, and the picture makes them easier for the whole management team to place."
+      },
+      {
+       "q": "What does the law say about staff records?",
+       "a": "<a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/19\">Regulation 19</a> of the Health and Social Care Act 2008 (Regulated Activities) Regulations 2014 says recruitment procedures must be operated effectively, and requires the information in Schedule 3 to be available for each person employed. A register helps you hold and find it. It does not decide whether you meet the regulation."
+      }
+     ]
+    }
+   ]
+  },
+  "guide": {
+   "heading": "Using the register as a whole",
+   "lede": "A short routine that suits a busy manager.",
+   "sections": [
+    {
+     "h3": "A weekly glance",
+     "paragraphs": [
+      "Spend five minutes looking at expiring and expired items and the birthday panel. Small, regular looks beat a yearly clean up."
+     ],
+     "checklist": [
+      "Open the register on a set day",
+      "Look for expiring and expired entries",
+      "Look at the next birthdays",
+      "Chase one thing, not everything"
+     ]
+    },
+    {
+     "h3": "A quarterly look",
+     "paragraphs": [
+      "Once a quarter, open a sample of documents with View and compare them to the record. Check the Personal and Also held columns for gaps."
+     ],
+     "checklist": [
+      "Open five documents with View",
+      "Check the Personal column",
+      "Check the Also held column",
+      "Note what you fixed"
+     ]
+    },
+    {
+     "h3": "Getting the register ready for a visit",
+     "paragraphs": [
+      "Before a planned visit, take twenty minutes to look at the register as an outsider would. Look at the statuses, fix what you can, and make a note of what is in hand. An honest, tidy register with items being chased reads better than a perfect one that was clearly cleaned up overnight.",
+      "Remember that the register shows what you hold. It does not tell the inspector how well you support your staff. Be ready to talk about supervision, training and how you know your team, as well as the documents."
+     ],
+     "checklist": [
+      "Look at the status columns and fix what you can",
+      "Note what is in hand",
+      "Open a few documents with View",
+      "Be ready to talk about people, not just papers"
+     ]
+    },
+    {
+     "h3": "What to look for in the columns",
+     "paragraphs": [
+      "Look at the pattern, not just the single row. A column that is mostly green with a few amber entries is healthy. A column that is empty for half the team tells you a document has never been collected, which is a different job from chasing a renewal.",
+      "Do the same with the Personal column. A row with one section filled in needs a conversation, not just a click."
+     ],
+     "checklist": [
+      "Look for patterns, not just rows",
+      "Separate never collected from expiring",
+      "Check the Personal column",
+      "Chase one theme at a time"
+     ]
+    }
+   ],
+   "note": "Illustrative only. The register records and reminds. Employers remain responsible for the checks themselves."
+  }
+ }
+]

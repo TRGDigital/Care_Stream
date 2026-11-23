@@ -36,9 +36,9 @@ scenariosAdminRouter.get('/:slug', async (req: Request, res: Response) => {
 // forbidden HTML or claims, a bad slug) refuse the page; quality points the owner fixes in review (image, keywords, link domains, word counts,
 // read next targets) are saved WITH the page and returned as notes.
 const SOFT = /^(image must be|keywords not used|primary keyword used|secondary keyword|external link domain|read_next slug|words)/i
-scenariosAdminRouter.post('/import', async (req: Request, res: Response) => {
-  const list = Array.isArray(req.body?.scenarios) ? req.body.scenarios.slice(0, 10) : []
-  if (!list.length) { err(res, 'VALIDATION_ERROR', 'scenarios must be a non empty array.'); return }
+
+/** Saves scenario pages as DRAFTS. Never publishes, never overwrites an existing slug. See the route comment above for what refuses a page. */
+export async function importScenarioDrafts(list: any[]) {
   const posts = await (prisma as any).blogPost.findMany({ select: { slug: true } })   // drafts count too: a read next may point at a post still to be published
   const blogSlugs = posts.map((p: any) => p.slug)
   const created: Array<{ slug: string; notes: string[] }> = []
@@ -54,7 +54,13 @@ scenariosAdminRouter.post('/import', async (req: Request, res: Response) => {
     await (prisma as any).scenarioPage.create({ data: { slug, status: 'draft', sort_order: order, data: { ...data, order } } })
     created.push({ slug, notes: [...v.errors.filter(e => SOFT.test(e)), ...v.warnings].slice(0, 12) })
   }
-  ok(res, { created, skipped })
+  return { created, skipped }
+}
+
+scenariosAdminRouter.post('/import', async (req: Request, res: Response) => {
+  const list = Array.isArray(req.body?.scenarios) ? req.body.scenarios.slice(0, 10) : []
+  if (!list.length) { err(res, 'VALIDATION_ERROR', 'scenarios must be a non empty array.'); return }
+  ok(res, await importScenarioDrafts(list))
 })
 
 // PATCH /admin/scenarios/:slug/status  { status: 'published' | 'draft' }

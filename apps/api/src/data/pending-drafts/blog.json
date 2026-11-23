@@ -1,0 +1,72 @@
+[
+ {
+  "title": "A DBS Tracker for Care Homes: Staff Documents and Expiry Dates in One Place",
+  "slug": "dbs-tracker-for-care-homes",
+  "excerpt": "An inspector asks to see a carer's right to work check. Here are the questions about staff documents that come up most, and how a single register with expiry alerts answers them.",
+  "meta_title": "DBS Tracker for Care Homes: Keep Staff Documents in One Place",
+  "meta_description": "Keep DBS, right to work, NMC and driving documents in one register with expiry alerts, so you can answer an inspector's staff file questions with the document in hand.",
+  "feature_image_url": null,
+  "feature_image_alt": "",
+  "content": "<p>\"Show me the right to work check for the carer who joined eighteen months ago.\"</p>\n<p>It is an ordinary request, and the manager knows the check was done. The question is where. The scan is in a shared drive, the original is in a lever arch file, and the visa end date is in the head of the person who is off this week.</p>\n<p>A DBS tracker is the fix most services reach for first, and it is a good start. This post shows how to widen it. One register can hold the DBS, the right to work check, professional registration and the documents that only apply to some staff, with the file behind every entry and a warning before anything lapses. It is built around the questions inspectors tend to ask, because that is how a staff file really gets tested.</p>\n<h2>\"Can I see the document, not the note?\"</h2>\n<p>A spreadsheet that says \"DBS checked\" tells an inspector what you believe. The certificate tells them what is true.</p>\n<p>Regulation 19 of the Health and Social Care Act 2008 (Regulated Activities) Regulations 2014 says persons employed for a regulated activity must be of good character, and that recruitment procedures must be operated effectively. It also says the information listed in Schedule 3 must be available for each person employed. That list includes proof of identity with a recent photograph, and, where required, the criminal record certificate.</p>\n<p>So the document matters. On the CareStream workforce compliance register, every credential with an uploaded file has a View button. It opens the document in a window over the register, next to what you recorded: the reference number, issue and expiry dates, notes and status. You check the file against the entry without leaving the page, and you close the window and carry on down the list.</p>\n<p>The View button only appears when a file has been uploaded. An entry with no file is plain to see, which is the point.</p>\n<h2>\"When does this one run out?\"</h2>\n<p>This is the question a DBS tracker exists to answer, and it is where paper and spreadsheets fail. Nobody opens them until something goes wrong.</p>\n<p>The register colours each entry as valid, expiring or expired. Expiring means within 30 days. CareStream also sends admins a daily digest email of what is expiring or has expired, so the warning reaches you rather than waiting for you to look.</p>\n<p>On DBS renewal, there is no single legal date, so the interval is your policy's decision. We cover the options in our guide on how often a DBS should be renewed. Whatever interval you choose, the register holds the date and nags you about it. Our safer recruitment and DBS policy shows the wording a service can adopt.</p>\n<h2>\"Is their right to work still valid?\"</h2>\n<p>A right to work check is not always a one off. For someone with a time limited right to work, the GOV.UK employer's guide describes follow up checks. The responsibility sits with the employer, and CareStream does not do the check or tell you the legal outcome. What it does is hold the document and the date, and warn you as the date approaches.</p>\n<p>Two extras matter for services that recruit from overseas:</p>\n<ul><li>A visa entry can carry a sponsorship end date, for sponsored workers whose right to work has a time limit.</li><li>The daily digest covers it, including a visa whose sponsorship is ending.</li></ul>\n<p>These sit in an \"Also held\" column on the register. They are never marked as missing for staff they do not apply to. A British carer with no visa is not a red mark on your dashboard.</p>\n<p>For the full picture of the check itself, see our post on the right to work check for employers.</p>\n<h2>\"Are your nurses still registered?\"</h2>\n<p>For a nursing home, the question that worries a manager most is whether every registered nurse's registration is current. Revalidation dates are easy to lose.</p>\n<p>The register has a professional registration entry. You choose the body: the Nursing and Midwifery Council (NMC), the General Pharmaceutical Council (GPhC), the Health and Care Professions Council (HCPC), the General Medical Council (GMC), Social Work England, or Other. You record the PIN or registration number, upload the certificate, and set the renewal or revalidation date. Then it behaves like any other credential: valid, expiring, expired.</p>\n<p>One caution. The register holds what you enter. It does not look the person up on a professional register for you, so checking the register itself stays a manual task. What changes is that the date is no longer in someone's diary.</p>\n<h2>\"What about the staff who drive?\"</h2>\n<p>Home care services and some residential services have staff who drive for work. The register has optional entries for these, shown in the \"Also held\" column:</p>\n<ul><li>driving licence</li><li>business use insurance</li><li>MOT</li></ul>\n<p>They follow the same colours and the same 30 day warning, and they are never marked missing for staff who do not drive. There is also an entry for the employment contract, which you can read more about on the contract and holiday tab described below.</p>\n<h2>\"Who is this person, and who do we call?\"</h2>\n<p>The same register has a Personal details tab, visible to admins only: date of birth, emergency contact and next of kin, with a shortcut for \"same as emergency contact\". A Personal column shows how many of five sections are filled in, so gaps are visible at a glance.</p>\n<p>A Contract and holiday tab holds the contract upload, contract type (permanent, fixed term, bank or zero hours), contracted hours, probation end date and holiday entitlement in days or hours. This is entitlement only. CareStream does not do holiday booking.</p>\n<p>Staff pictures show next to each name on the register, which helps when a manager is looking down a long list of names that are only half familiar.</p>\n<h2>A short checklist for a quarterly look</h2>\n<ol><li>Open the register and look for expired and expiring entries.</li><li>For each expired entry, find out whether the document has been renewed and the file not yet uploaded.</li><li>Use View to check a sample of documents against what is recorded.</li><li>Look at the \"Also held\" column for drivers and sponsored workers.</li><li>Look at the Personal column for people with gaps.</li><li>Note what you changed. A register that is kept up is a better answer than one that was tidied the night before.</li></ol>\n<h2>What the register does not do</h2>\n<p>It is worth being plain about the limits.</p>\n<ul><li>It records and reminds. DBS and right to work rules are the employer's responsibility, and the register does not carry out checks.</li><li>It is for admins only. Staff do not see it and cannot upload their own documents.</li><li>It does not book holiday.</li><li>It is on the Enterprise plan.</li><li>It does not predict or promise an inspection outcome.</li></ul>\n<h2>Try it on your own staff list</h2>\n<p>If your staff documents are spread across drives, files and diaries, begin with the people whose documents are closest to expiring. Our workforce compliance register page shows the screens, and the page on credential uploads and expiry alerts explains how the alerts work. You can try CareStream free for 14 days on a paid plan, and the Enterprise plan includes the register.</p>\n<p>Start with one question from this post, the one you would least like to be asked, and see how quickly you can answer it with the document in your hand.</p>",
+  "category": "guides",
+  "status": "draft",
+  "read_time_minutes": 6,
+  "cta_text": "Create a free CareStream account",
+  "cta_url": "/register?tier=free&source=blog-dbs-tracker-for-care-homes",
+  "cta_type": "feature_page",
+  "faqs": [
+   {
+    "question": "What is a DBS tracker?",
+    "answer": "A DBS tracker is a record of each member of staff's Disclosure and Barring Service check: the certificate number, the date it was issued and any date you have set to look at it again. A good one also keeps the document itself and warns you in good time. CareStream's workforce compliance register does this for DBS and for the other documents a service holds on its staff."
+   },
+   {
+    "question": "How often does a DBS check need to be renewed?",
+    "answer": "There is no single legal renewal date for a DBS certificate. Employers set their own review period in their recruitment policy, and many services use the DBS Update Service. Our guide on how often a DBS should be renewed goes through the options. In CareStream you record the date you want to be reminded and the register warns you 30 days before it."
+   },
+   {
+    "question": "Who is responsible for right to work checks?",
+    "answer": "The employer. The GOV.UK employer's guide sets out how to carry out the checks, when to do follow up checks and which documents are acceptable. CareStream records the check, holds the document and reminds you when a time limit is coming up. It does not carry out the check for you."
+   },
+   {
+    "question": "Can we store NMC registration details in the same place?",
+    "answer": "Yes, on the Enterprise plan. You choose the body (NMC, GPhC, HCPC, GMC, Social Work England or Other), record the registration number or PIN, upload the certificate and set the renewal or revalidation date. The register then treats it like any other expiring document."
+   },
+   {
+    "question": "What does an inspector expect to see in a staff file?",
+    "answer": "Regulation 19 says certain information must be available for each person employed, and Schedule 3 lists it, including proof of identity with a recent photograph, the relevant criminal record certificate, evidence of conduct in previous employment, and a full employment history. What an inspector asks to see on the day is their call. A register helps you produce the document quickly. It does not decide the outcome."
+   },
+   {
+    "question": "Do staff see the register?",
+    "answer": "No. The workforce register is for admins only. Staff do not see it, and the documents are not shown in the Staff Hub."
+   },
+   {
+    "question": "Which plan includes the workforce compliance register?",
+    "answer": "The Enterprise plan. Check the pricing page for the current details."
+   }
+  ],
+  "sources": [
+   {
+    "label": "Regulation 19, Fit and proper persons employed, of the 2014 Regulated Activities Regulations",
+    "url": "https://www.legislation.gov.uk/uksi/2014/2936/regulation/19"
+   },
+   {
+    "label": "Schedule 3, Information required in respect of persons employed",
+    "url": "https://www.legislation.gov.uk/uksi/2014/2936/schedule/3"
+   },
+   {
+    "label": "GOV.UK, Right to work checks: an employer's guide",
+    "url": "https://www.gov.uk/government/publications/right-to-work-checks-employers-guide"
+   }
+  ],
+  "topic_cluster": "workforce-compliance",
+  "previous_slug": "",
+  "primary_keyword": "dbs tracker",
+  "secondary_keywords": [
+   "dbs renewal",
+   "right to work check",
+   "nmc revalidation",
+   "safer recruitment",
+   "recruitment compliance"
+  ]
+ }
+]

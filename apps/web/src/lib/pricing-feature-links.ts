@@ -22,6 +22,7 @@ export const PRICING_FEATURE_LINKS: Record<string, string> = {
   'Gentle family reminders': '/features/family-photos-and-video-messages',
   'Staff incentives': '/features/staff-incentives',
   'Super User (one champion per service)': '/features/super-user',
+  'Shared tablets: staff sign in with a PIN to use their own hub (up to 5, not counted as staff seats)': '/features/shared-tablets',
   'External regulatory knowledge base': '/features/external-regulatory-knowledge-base',
   // Policies and approvals
   'Document version history': '/features/document-versioning',

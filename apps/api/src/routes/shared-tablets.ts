@@ -13,6 +13,7 @@ import { requireAdmin } from '../middleware/auth'
 import { writeAuditLog } from '../lib/audit'
 import { generateAccessToken, generateTabletPersonalToken, TABLET_PERSONAL_MINUTES } from '../services/auth/tokens'
 import { issueRefreshToken, revokeUserRefreshTokens } from '../lib/refresh-tokens'
+import { mintLoginToken, consumeLoginToken } from '../lib/login-tokens'
 import { hashPassword } from '../services/auth/password'
 import { staffPhotoUrls } from '../lib/staff-photos'
 import { sendStaffPinEmail } from '../services/email/outbound'
@@ -94,6 +95,24 @@ tabletPublicRouter.post('/complete', async (req: Request, res: Response) => {
   } catch { notSetUp(res) }
 })
 
+// Back to the tablet itself after a personal session. The return token is single use and only ever minted for a tablet's own account.
+tabletPublicRouter.post('/return', async (req: Request, res: Response) => {
+  try {
+    const used = await consumeLoginToken(String(req.body?.return_token ?? ''))
+    if (!used) { err(res, 'INVALID_TOKEN', 'This tablet needs to be connected again.', 401); return }
+    const [user, device] = await Promise.all([
+      p().user.findUnique({ where: { id: used.user_id }, select: { id: true, tenant_id: true, is_shared: true, name: true } }),
+      p().sharedDevice.findUnique({ where: { user_id: used.user_id } }),
+    ])
+    if (!user?.is_shared || !device || device.revoked_at) { err(res, 'INVALID_TOKEN', 'This tablet needs to be connected again.', 401); return }
+    const tenant = await p().tenant.findUnique({ where: { id: user.tenant_id }, select: { name: true } })
+    ok(res, {
+      access_token: generateAccessToken({ sub: user.id, tenant_id: user.tenant_id, role: 'staff', dev: { t: 'device', d: device.id } }),
+      refresh_token: await issueRefreshToken(user.id), tenant_name: tenant?.name ?? '', user: { id: user.id, name: user.name },
+    })
+  } catch { notSetUp(res) }
+})
+
 // ── A connected tablet ───────────────────────────────────────────────────────
 export const tabletRouter = Router()
 
@@ -130,7 +149,9 @@ tabletRouter.post('/personal/start', async (req: Request, res: Response) => {
     const token = generateTabletPersonalToken({ sub: user.id, tenant_id: tenantId, role: 'staff', dev: { t: 'personal', d: dev.d } })
     await p().sharedSession.create({ data: { tenant_id: tenantId, device_id: dev.d, user_id: user.id } })
     void writeAuditLog({ tenant_id: tenantId, user_id: user.id, event_type: 'shared_tablet_session_started', entity_type: 'shared_device', entity_id: dev.d, metadata: {} })
-    ok(res, { access_token: token, expires_in: TABLET_PERSONAL_MINUTES * 60, user: { id: user.id, name: user.name } })
+    // A one time token that brings this browser back to the tablet itself when the person taps Done (or the tablet times out).
+    const returnToken = await mintLoginToken(req.user!.sub, tenantId, (TABLET_PERSONAL_MINUTES + 10) * 60_000, 'tablet-return')
+    ok(res, { access_token: token, return_token: returnToken, expires_in: TABLET_PERSONAL_MINUTES * 60, user: { id: user.id, name: user.name } })
   } catch { notSetUp(res) }
 })
 

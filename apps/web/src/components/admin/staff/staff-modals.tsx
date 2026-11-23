@@ -5,6 +5,7 @@
 
 import { StaffPictureField, StaffPictureBlock } from '@/components/admin/staff-picture-controls'
 import { StaffAvatar } from '@/components/admin/staff-avatar'
+import { NewTabletForm } from '@/components/admin/shared-tablets'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useSession } from 'next-auth/react'
@@ -476,6 +477,7 @@ export function InviteModal({
   onInvited:       () => void
 }) {
   const [step,      setStep]      = useState<ModalStep>('form')
+  const [sharedTablet, setSharedTablet] = useState(false)
   // Training-only tenants allocate their purchased licences from the Training page —
   // the statutory/adhoc assignment step does not apply to them, so skip it entirely.
   const { data: session } = useSession()
@@ -603,10 +605,19 @@ export function InviteModal({
       <div className={`w-full rounded-card bg-white p-6 shadow-xl ${step === 'form' ? 'max-w-3xl' : 'max-w-md'}`}>
 
         <h2 className="mb-5 text-lg font-semibold text-neutral-dark">
-          {step === 'form' ? 'Add staff member' : step === 'credentials' ? 'Account created' : `Assign training to ${form.name}`}
+          {step === 'form' ? (sharedTablet ? 'Add a shared tablet' : 'Add staff member') : step === 'credentials' ? 'Account created' : `Assign training to ${form.name}`}
         </h2>
 
-        {step === 'form' ? (
+        {step === 'form' && (
+          <label className="mb-5 flex cursor-pointer items-start gap-2.5 rounded-lg border border-gray-200 bg-neutral-light/40 px-3 py-2.5">
+            <input type="checkbox" checked={sharedTablet} onChange={e => setSharedTablet(e.target.checked)} className="mt-0.5" />
+            <span className="text-sm"><span className="font-medium text-neutral-dark">Shared tablet</span> <span className="text-neutral-mid">· for a tablet many staff use on the floor, not a person. Only a name is needed.</span></span>
+          </label>
+        )}
+
+        {step === 'form' && sharedTablet ? (
+          <NewTabletForm token={token} onCancel={onClose} onDone={() => { alert('Tablet added. Print the Connect a tablet poster from Shared tablets, then scan it on the tablet.'); onClose() }} />
+        ) : step === 'form' ? (
           <form onSubmit={handleSubmit} className="space-y-5">
             {/* Core details — two columns */}
             <div className="grid grid-cols-1 gap-x-5 gap-y-4 sm:grid-cols-2">

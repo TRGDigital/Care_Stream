@@ -139,6 +139,7 @@ const DEVICE_ALLOWED: Array<{ methods: string[]; prefix: string }> = [
   { methods: ['GET', 'HEAD', 'OPTIONS'], prefix: '/residents' },
   { methods: ['GET', 'HEAD', 'OPTIONS'], prefix: '/policies' },
   { methods: ['GET', 'POST', 'OPTIONS'], prefix: '/query' },
+  { methods: ['POST'], prefix: '/me/tts' },   // the listen button on an answer
   { methods: ['GET', 'POST', 'OPTIONS'], prefix: '/tablet' },
 ]
 const PERSONAL_BLOCKED: Array<{ methods: string[]; prefix: string }> = [

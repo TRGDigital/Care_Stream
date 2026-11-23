@@ -1007,10 +1007,11 @@ function ChatPageInner() {
           </button>
         </div>
         )}
-        <div className="flex-shrink-0 p-3 space-y-0.5">
+        <div data-hub-links className="flex-shrink-0 p-3 space-y-0.5">
           <p className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-wider text-neutral-mid/70">Learning</p>
           {!isReviewer && (
           <button
+            data-keep
             onClick={() => !hubLocked('chat') && setView('chat')}
             title={hubLocked('chat') ? LOCKED_TITLE : undefined}
             className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors ${view === 'chat' && category !== 'resident' ? 'bg-teal/10 text-teal' : 'text-neutral-mid hover:bg-neutral-light hover:text-neutral-dark'} ${hubLocked('chat') ? lockedCls : ''}`}
@@ -1103,6 +1104,7 @@ function ChatPageInner() {
           )}
           {availableCats?.includes('resident') && !isReviewer && !hubLocked('chat') && (
             <button
+              data-keep
               onClick={openResidentChat}
               className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors ${view === 'chat' && category === 'resident' ? 'bg-teal/10 text-teal' : 'text-neutral-mid hover:bg-neutral-light hover:text-neutral-dark'}`}
             >

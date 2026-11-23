@@ -10,6 +10,7 @@ import { NotificationsOptIn } from '@/components/pwa/notifications-optin'
 import { HubPrefsApplier } from '@/components/hub/hub-prefs-applier'
 import { ViewAsBanner } from '@/components/view-as/view-as-banner'
 import { SuperUserNotice } from '@/components/hub/super-user-notice'
+import { TabletBar } from '@/components/hub/tablet-bar'
 import type { Metadata } from 'next'
 
 // Logged-in app route: never meant for search results. robots.txt already disallows these paths,
@@ -26,13 +27,15 @@ export default async function PortalLayout({ children }: { children: React.React
       <HubPrefsApplier />
       <TenantAgentTools />
       {/* An admin viewing this hub as the person must not register this browser for their notifications or app install. */}
-      {!session.user.impersonation && <PwaRegister />}
-      {!session.user.impersonation && <InstallPrompt />}
-      {!session.user.impersonation && <NotificationsOptIn />}
+      {/* A shared tablet never registers for push or app install (no notifications go to a tablet). */}
+      {!session.user.impersonation && !session.user.device && <PwaRegister />}
+      {!session.user.impersonation && !session.user.device && <InstallPrompt />}
+      {!session.user.impersonation && !session.user.device && <NotificationsOptIn />}
       {/* The Super User's agree-or-decline notice and minutes heartbeat. For an admin using View hub as: never in view mode, and in act mode (test accounts only) the notice shows but nothing is timed. */}
       {(!session.user.impersonation || session.user.impersonation.mode === 'act') && <SuperUserNotice actingAs={!!session.user.impersonation} />}
-      <div className="flex h-[100dvh] flex-col bg-neutral-light">
+      <div className={`flex h-[100dvh] flex-col bg-neutral-light ${session.user.device?.mode === 'device' ? 'cs-tablet-device' : ''}`}>
         <ViewAsBanner />
+        <TabletBar />
         <PortalNav
           userName={session.user.name ?? ''}
           userRole={session.user.role}

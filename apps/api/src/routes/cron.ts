@@ -42,6 +42,7 @@ import { checkRegulationSources } from '../services/regulations/source-monitor'
 import { reviewPendingChanges } from '../services/regulations/change-review'
 import { runCredentialExpiryAllTenants } from '../services/workforce/credentialExpiry'
 import { runStaffBirthdaysAllTenants, runStaffBirthdaysForTenant } from '../services/workforce/staffBirthdays'
+import { remindPostersAllTenants, remindPosterForTenant } from '../services/workforce/tabletPosterReminder'
 import { runSupervisionReminders } from '../services/workforce/supervisionReminders'
 import { runAgencyAccess } from '../services/workforce/agencyAccess'
 import { runPolicyReviewReminders } from '../services/policies/review-reminders'
@@ -178,6 +179,10 @@ cronRouter.get('/credential-expiry', (req, res) =>
 // Daily: staff birthdays. Admins are told 7 days ahead; the staff member gets a happy birthday email from the company on the day.
 // Query options (cron secret only): tenant=<id> runs just that account, dry=1 sends nothing, preview_to=<email> sends the emails only
 // there and logs nothing (needs tenant; add on=YYYY-MM-DD to pretend today is that date so a real birthday shows up).
+// Daily: admins of accounts with shared tablets are reminded every quarter to print a new Connect a tablet poster. ?tenant=&dry=1 to check one account.
+cronRouter.get('/tablet-poster-reminders', (req, res) =>
+  job('tablet-poster-reminders', req, res, async () => typeof req.query.tenant === 'string' ? { due: await remindPosterForTenant(req.query.tenant, req.query.dry === '1') } : remindPostersAllTenants()))
+
 cronRouter.get('/staff-birthdays', (req, res) =>
   job('staff-birthdays', req, res, async () => {
     const tenant = typeof req.query.tenant === 'string' ? req.query.tenant : undefined

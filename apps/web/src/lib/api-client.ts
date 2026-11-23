@@ -838,6 +838,20 @@ export function createApiClient(token: string) {
         }>('/sites/overview', token),
     },
 
+    tablets: {
+      list: () => apiFetch<{ tablets: Array<{ id: string; name: string; location: string | null; connected: boolean; revoked: boolean; paired_at: string | null; paired_by: string | null; last_seen_at: string | null }>; poster: { exists: boolean; rotated_at: string | null; days_old: number | null; due: boolean }; pins: { staff_total: number; with_pin: number }; max_tablets: number }>('/tablets', token),
+      create: (name: string, location?: string) => apiFetch<{ tablet: { id: string; name: string } }>('/tablets', token, { method: 'POST', body: JSON.stringify({ name, location }) }),
+      update: (id: string, data: { name?: string; location?: string }) => apiFetch<{ updated: boolean }>(`/tablets/${id}`, token, { method: 'PATCH', body: JSON.stringify(data) }),
+      revoke: (id: string) => apiFetch<{ revoked: boolean }>(`/tablets/${id}/revoke`, token, { method: 'POST' }),
+      revokeAll: () => apiFetch<{ revoked: number }>('/tablets/revoke-all', token, { method: 'POST' }),
+      posterKey: () => apiFetch<{ key: string; home_name: string; rotated_at: string }>('/tablets/poster/key', token),
+      rotatePoster: () => apiFetch<{ key: string; rotated_at: string }>('/tablets/poster/rotate', token, { method: 'POST' }),
+      pin: (userId: string, action: 'resend' | 'regenerate' | 'show') => apiFetch<{ sent?: boolean; to?: string; name: string; pin?: string }>(`/tablets/staff/${userId}/pin/${action}`, token, { method: 'POST' }),
+      sendAllPins: () => apiFetch<{ sent: number; skipped: number }>('/tablets/pins/send-all', token, { method: 'POST', body: JSON.stringify({ confirm: true }) }),
+      roster: () => apiFetch<{ people: Array<{ id: string; name: string; photo_url: string | null; has_pin: boolean }> }>('/tablet/roster', token),
+      startPersonal: (user_id: string, pin: string) => apiFetch<{ access_token: string; return_token: string; expires_in: number; user: { id: string; name: string } }>('/tablet/personal/start', token, { method: 'POST', body: JSON.stringify({ user_id, pin }) }),
+      endPersonal: () => apiFetch<{ ended: boolean }>('/tablet/personal/end', token, { method: 'POST' }),
+    },
     workforce: {
       // Training and supervisions, linked (feature flag supervision_training on the account, Enterprise). Whether it is on comes from billing.summary().features.supervision_training.
       trainingDetail: (userId: string, supervisionId?: string) =>

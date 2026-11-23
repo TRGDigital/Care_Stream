@@ -9,7 +9,8 @@ import { createApiClient, type StaffContact } from '@/lib/api-client'
 import { persistentCache } from '@/lib/page-cache'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { FileSpreadsheet, KeyRound, LineChart, Mail, MoreVertical, Pencil, UserMinus, UserPlus, UserX } from 'lucide-react'
+import { Eye, FileSpreadsheet, KeyRound, LineChart, Mail, MoreVertical, Pencil, RefreshCw, Tablet, UserMinus, UserPlus, UserX } from 'lucide-react'
+import { SharedTabletsPanel, staffPinAction } from '@/components/admin/shared-tablets'
 import { StaffAvatar } from '@/components/admin/staff-avatar'
 import { LANGUAGES, CredentialsPanel, fmtDate } from '@/components/admin/staff/staff-shared'
 
@@ -63,7 +64,7 @@ function ActionMenu({
   function openMenu() {
     if (!btnRef.current) return
     const rect        = btnRef.current.getBoundingClientRect()
-    const menuHeight  = 168 // approx height of the four-item dropdown
+    const menuHeight  = 280 // approx height of the dropdown (with the three PIN items)
     const spaceBelow  = window.innerHeight - rect.bottom
     const right       = window.innerWidth - rect.right
 
@@ -85,6 +86,13 @@ function ActionMenu({
       await createApiClient(token).users.loginLink(user.id, true)
       alert(`Sign-in link sent to ${user.email}. If it does not arrive in a few minutes, check the spam folder.`)
     } catch (e: any) { alert(e?.message || 'We could not send the sign-in link.') } finally { setWorking(false) }
+  }
+
+  // Tablet PIN: show it (logged), email it again, or make a new one. Never shown unless "Show PIN" is chosen.
+  async function handlePin(action: 'show' | 'resend' | 'regenerate') {
+    setOpen(false)
+    setWorking(true)
+    try { const m = await staffPinAction(token, user.id, user.name, action); if (m) alert(m) } catch (e: any) { alert(e?.message || 'That did not work.') } finally { setWorking(false) }
   }
 
   // Reset password: changes it straight away and shows the new one once (with an option to email it).
@@ -161,6 +169,21 @@ function ActionMenu({
             <KeyRound size={15} className="shrink-0 text-neutral-mid transition-colors group-hover:text-teal" />
             Reset password
           </button>
+          {user.is_active && !user.is_agency && (<>
+            <div className="mx-2 my-1.5 border-t border-gray-100" />
+            <button onClick={() => handlePin('resend')} className="group flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-neutral-dark transition-colors hover:bg-neutral-light">
+              <Tablet size={15} className="shrink-0 text-neutral-mid transition-colors group-hover:text-teal" />
+              Re-send PIN
+            </button>
+            <button onClick={() => handlePin('regenerate')} className="group flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-neutral-dark transition-colors hover:bg-neutral-light">
+              <RefreshCw size={15} className="shrink-0 text-neutral-mid transition-colors group-hover:text-teal" />
+              Regenerate PIN
+            </button>
+            <button onClick={() => handlePin('show')} className="group flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-neutral-dark transition-colors hover:bg-neutral-light">
+              <Eye size={15} className="shrink-0 text-neutral-mid transition-colors group-hover:text-teal" />
+              Show PIN
+            </button>
+          </>)}
           <div className="mx-2 my-1.5 border-t border-gray-100" />
           {user.is_active ? (
             <button
@@ -204,6 +227,7 @@ export default function StaffPage() {
   const [catalog,      setCatalog]     = useState<{ code: string; name: string }[]>(snap0?.catalog ?? [])
   const [loading,      setLoading]     = useState(!snap0)
   const [showInvite,   setShowInvite]  = useState(false)
+  const [showTablets,  setShowTablets] = useState(false)
   const [showImport,   setShowImport]  = useState(false)
   const [showHubInvite, setShowHubInvite] = useState(false)
   useSearchIntent({ 'add-staff': () => setShowInvite(true), 'import-staff': () => setShowImport(true), 'hub-invites': () => setShowHubInvite(true) })
@@ -285,6 +309,10 @@ export default function StaffPage() {
           <Button onClick={() => setShowHubInvite(true)} size="md" variant="secondary">
             <Mail size={15} className="mr-2" />
             Hub invites
+          </Button>
+          <Button onClick={() => setShowTablets(true)} size="md" variant="secondary">
+            <Tablet size={15} className="mr-2" />
+            Shared tablets
           </Button>
           <Button onClick={() => setShowImport(true)} size="md" variant="secondary">
             <FileSpreadsheet size={15} className="mr-2" />
@@ -373,6 +401,7 @@ export default function StaffPage() {
         </p>
       )}
 
+      {showTablets && session?.accessToken && <SharedTabletsPanel token={session.accessToken} onClose={() => setShowTablets(false)} />}
       {/* Invite modal */}
       {showInvite && (
         <InviteModal

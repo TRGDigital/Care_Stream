@@ -12,6 +12,8 @@ const API_URL = process.env.API_URL ?? 'http://localhost:4000'
 
 // An admin looking at a staff member's hub ("view hub as"). Comes from the claims in the short lived token; ends when it expires.
 export type Impersonation = { by: string; byName: string; mode: 'view' | 'act'; expiresAt: number }
+// A shared tablet's session. 'device' = the tablet itself (chat and This is me only); 'personal' = a staff member who entered their PIN on it.
+export type TabletDevice = { mode: 'device' | 'personal'; id: string; expiresAt: number }
 
 declare module 'next-auth' {
   interface User {
@@ -25,6 +27,7 @@ declare module 'next-auth' {
     isReviewer?: boolean
     tier?: string
     impersonation?: Impersonation
+    device?: TabletDevice
   }
   interface Session {
     accessToken: string
@@ -41,6 +44,7 @@ declare module 'next-auth' {
       isReviewer?: boolean
       tier?: string
       impersonation?: Impersonation
+      device?: TabletDevice
     }
   }
 }
@@ -57,6 +61,7 @@ declare module 'next-auth/jwt' {
     isReviewer?: boolean
     tier?: string
     impersonation?: Impersonation
+    device?: TabletDevice
   }
 }
 
@@ -107,6 +112,7 @@ export const authOptions: NextAuthOptions = {
               auditAccess:  payload.role === 'admin',
               tier:         payload.imp && typeof credentials.tier === 'string' && credentials.tier ? credentials.tier : 'full',
               // A "view hub as" token: the claims say who is looking and how; the API enforces it, this only lets the banner show it.
+              ...(payload.dev ? { device: { mode: payload.dev.t === 'personal' ? 'personal' : 'device', id: String(payload.dev.d), expiresAt: Number(payload.exp) * 1000 } } : {}),
               ...(payload.imp ? { impersonation: { by: String(payload.imp.by), byName: String(payload.imp.by_name ?? 'An admin'), mode: payload.imp.mode === 'act' ? 'act' : 'view', expiresAt: Number(payload.exp) * 1000 } } : {}),
             }
           } catch { return null }
@@ -197,6 +203,7 @@ export const authOptions: NextAuthOptions = {
         token.isReviewer   = user.isReviewer ?? false
         token.tier         = user.tier ?? 'full'
         token.impersonation = user.impersonation
+        token.device = user.device
         // Decode expiry so we can proactively refresh before it hits
         try {
           const payload = JSON.parse(Buffer.from(user.accessToken.split('.')[1], 'base64').toString())
@@ -207,6 +214,11 @@ export const authOptions: NextAuthOptions = {
 
       // A "view hub as" session has no refresh token: when its token runs out it simply ends.
       if (token.impersonation) {
+        return Date.now() < (token.accessTokenExpiry as number) ? token : { ...token, error: 'RefreshAccessTokenError' }
+      }
+
+      // A personal session on a shared tablet has no refresh token either: it ends when it ends (the tablet then returns itself to the device session).
+      if (token.device?.mode === 'personal') {
         return Date.now() < (token.accessTokenExpiry as number) ? token : { ...token, error: 'RefreshAccessTokenError' }
       }
 
@@ -262,6 +274,7 @@ export const authOptions: NextAuthOptions = {
       session.user.isReviewer    = token.isReviewer
       session.user.tier          = token.tier
       session.user.impersonation = token.impersonation
+      session.user.device = token.device
       return session
     },
   },

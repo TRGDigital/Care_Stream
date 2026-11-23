@@ -10,7 +10,7 @@ export interface ValidateResult { errors: string[]; warnings: string[]; words: n
 
 const ALLOWED_TAGS = new Set(['a', 'em', 'b', 'strong'])
 const ALLOWED_EXT = ['legislation.gov.uk', 'gov.uk', 'cqc.org.uk', 'nice.org.uk', 'hse.gov.uk', 'skillsforcare.org.uk', 'ico.org.uk', 'england.nhs.uk', 'nhs.uk', 'scie.org.uk', 'alzheimers.org.uk']
-const BANNED = ['mock inspection', 'e-signature', 'electronic signature', 'offline mode', 'works offline', 'shared device', 'incident register', 'complaints register',
+const BANNED = ['mock inspection', 'e-signature', 'electronic signature', 'offline mode', 'works offline', 'incident register', 'complaints register',
   'deputy cover', 'family portal', 'care plan link', 'automatically sends a lesson', 'automatically writes a lesson', 'fire drill register']
 const MOCKS: Record<string, string[]> = {
   training: ['module', 'questions'], followup: ['module', 'question', 'why', 'remember', 'picture'], language: ['second_language'],

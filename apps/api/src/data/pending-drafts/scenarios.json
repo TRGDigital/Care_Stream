@@ -3546,5 +3546,2983 @@
    ],
    "note": "Illustrative only. The register records and reminds. Employers remain responsible for the checks themselves."
   }
+ },
+ {
+  "slug": "forgotten-pin-on-a-shared-tablet-what-a-manager-does",
+  "status": "draft",
+  "order": 122,
+  "eyebrow": "Scenario",
+  "fine": "14 day free trial · Set up in a day · UK data residency",
+  "title": "A <em>forgotten PIN</em> on the night shift should not lock a carer out of the tablet. Here is what a manager does.",
+  "meta_title": "Forgotten PIN on a Shared Tablet: What to Do | CareStreamAI",
+  "meta_description": "A carer has forgotten their PIN and the tablet will not let them in. Re-send, regenerate or show a PIN from the Staff page. Paid plans, up to five tablets.",
+  "lede": "A carer on a late shift taps her picture on the shared tablet, types her four digits and gets it wrong. Five times. She is locked out for a few minutes and has a <b>forgotten PIN</b> she cannot look up. CareStream gives managers three controlled ways to deal with it from the Staff page, each logged and limited. See the <a href=\"/features/staff-hub\">staff hub</a> to see what a signed in carer reaches.",
+  "panel": {
+   "title": "A PIN problem, solved at the Staff page",
+   "pill": "Illustration",
+   "rows": [
+    {
+     "label": "Re-send the same PIN by email",
+     "note": "Three an hour",
+     "done": true
+    },
+    {
+     "label": "Regenerate a new PIN",
+     "note": "Emailed to the person",
+     "done": true
+    },
+    {
+     "label": "Show PIN to the admin",
+     "note": "Logged",
+     "done": true
+    },
+    {
+     "label": "Five wrong tries",
+     "note": "Locked for 5 minutes",
+     "done": false
+    }
+   ],
+   "meter": 60
+  },
+  "image": "[to generate: POST /routine/content/image, key forgotten-pin-on-a-shared-tablet-what-a-manager-does, scene: A deputy manager in a bright care home office looks at a laptop while a carer in a tunic stands beside her holding a mug, a window with a garden behind them]",
+  "image_alt": "A deputy manager and a carer in a care home office look together at a laptop on a desk",
+  "card_title": "Someone forgot their tablet PIN. What does the manager do?",
+  "card_snippet": "Re-send, regenerate or show a PIN from the three dots menu on the Staff page. Each is logged and limited. Paid plans.",
+  "primary_keyword": "forgotten pin",
+  "secondary_keywords": [
+   "reset pin",
+   "pin login"
+  ],
+  "feature_links": [
+   {
+    "title": "Training built from your own policies",
+    "body": "Short training from your own policies, checked by questions, for the whole team.",
+    "action": "See the feature",
+    "href": "/training-platform"
+   },
+   {
+    "title": "Staff hub",
+    "body": "The hub staff reach once they sign in with their own PIN.",
+    "action": "See the hub",
+    "href": "/features/staff-hub"
+   },
+   {
+    "title": "Policy and guidance chat",
+    "body": "Ask a question about your own policies and get a plain answer.",
+    "action": "See the chat",
+    "href": "/features/web-chat-interface"
+   }
+  ],
+  "intro": {
+   "heading": "A PIN is only useful if people can recover it quickly.",
+   "sub": "A scenario we see in homes that use one or two tablets for the whole team.",
+   "paragraph": "A home has two shared tablets and a team of forty. Staff were sent their four digit PIN by email when the tablets were set up, and most of them used it once in the first week. A month later a carer who works nights wants to check a policy in her own hub. She cannot remember the number and the email is buried under others. She tries a few guesses, and the tablet locks her out for five minutes. The manager is not on shift. The senior on duty does not know what to do, and the carer gives up and asks a colleague who has a signed in tablet to read the policy out. A small problem, and a familiar one."
+  },
+  "trail": [
+   {
+    "when": "Week one",
+    "text": "Every member of staff is emailed a random PIN.",
+    "kind": "ok"
+   },
+   {
+    "when": "Week two",
+    "text": "Most staff sign in once to try it.",
+    "kind": "ok"
+   },
+   {
+    "when": "Week four",
+    "text": "A carer on nights cannot remember hers.",
+    "kind": "gap"
+   },
+   {
+    "when": "Late shift",
+    "text": "She guesses three times and gets it wrong.",
+    "kind": "gap"
+   },
+   {
+    "when": "Late shift",
+    "text": "Five wrong tries lock her for five minutes.",
+    "kind": "gap"
+   },
+   {
+    "when": "Late shift",
+    "text": "The senior does not know how to help.",
+    "kind": "gap"
+   },
+   {
+    "when": "Next day",
+    "text": "A colleague reads the policy out instead.",
+    "kind": "gap"
+   },
+   {
+    "when": "By the weekend",
+    "text": "\"I never use the tablet, I can't get in.\"",
+    "kind": "end"
+   }
+  ],
+  "trail_close": "<b>The PIN was not the failure.</b> The recovery route was. A manager who knows where Re-send, Regenerate and Show PIN sit can fix this in a minute. Here is how.",
+  "why": {
+   "heading": "Forgetting a PIN is normal, so plan for it.",
+   "sub": "Four digits that you use once a week are easy to lose.",
+   "cards": [
+    {
+     "icon": "alert",
+     "title": "People forget numbers they rarely use",
+     "body": "A PIN login used once a month fades. The sensible plan is a quick, safe way back in, not a rule that staff must remember it."
+    },
+    {
+     "icon": "tick",
+     "title": "The fix should be quick and logged",
+     "body": "A manager can send the PIN again, or issue a new one, in the three dots menu on the Staff page. The action is limited to three an hour per person and recorded."
+    },
+    {
+     "icon": "chat",
+     "title": "Guessing should not be a strategy",
+     "body": "Five wrong tries locks that person for five minutes, so a forgotten PIN cannot become a guessing game at the tablet."
+    }
+   ]
+  },
+  "how": {
+   "heading": "What to do, in the order a manager would do it.",
+   "sub": "Everything sits in the three dots menu next to the person's name on the Staff page. See the <a href=\"/who-its-for/registered-managers\">registered managers</a> page for how this fits a manager's week.",
+   "blocks": [
+    {
+     "heading": "Re-send the PIN they already have",
+     "bullets": [
+      "Open the Staff page and find the person",
+      "Choose Re-send from the three dots menu",
+      "The same four digit PIN is emailed to them again, shown as sent by the administrator"
+     ],
+     "tags": [
+      {
+       "label": "Staff hub",
+       "href": "/features/staff-hub"
+      },
+      {
+       "label": "Registered managers",
+       "href": "/who-its-for/registered-managers"
+      }
+     ],
+     "mock": {
+      "type": "audit",
+      "audit": "Re-send (example)",
+      "blocks": [
+       [
+        "Menu",
+        [
+         [
+          "Re-send PIN",
+          "Same PIN, new email"
+         ],
+         [
+          "Regenerate PIN",
+          "New PIN"
+         ],
+         [
+          "Show PIN",
+          "Logged"
+         ]
+        ]
+       ]
+      ],
+      "caption": "Example only. Your screen shows your own team."
+     }
+    },
+    {
+     "heading": "Regenerate if the email is not safe",
+     "bullets": [
+      "Choose Regenerate to make a new random PIN",
+      "The new PIN is emailed to the person",
+      "Use it if the old email was seen by someone else or has been forwarded"
+     ],
+     "tags": [
+      {
+       "label": "Information governance policy",
+       "href": "/care-policies/information-governance"
+      },
+      {
+       "label": "Data protection policy",
+       "href": "/care-policies/data-protection-gdpr"
+      }
+     ],
+     "mock": {
+      "type": "audit",
+      "audit": "Regenerate (example)",
+      "blocks": [
+       [
+        "Result",
+        [
+         [
+          "Old PIN",
+          "No longer used"
+         ],
+         [
+          "New PIN",
+          "Emailed"
+         ]
+        ]
+       ]
+      ],
+      "caption": "Example only. Your screen shows your own team."
+     }
+    },
+    {
+     "heading": "Show a PIN only when you must",
+     "bullets": [
+      "Administrators never see a PIN unless they choose Show PIN",
+      "Show PIN is logged, so there is a record of who looked",
+      "Use it in person, for example with a member of staff who has no access to their email"
+     ],
+     "tags": [
+      {
+       "label": "GDPR audit",
+       "href": "/care-audits/gdpr-audit-checklist"
+      },
+      {
+       "label": "Pricing",
+       "href": "/pricing"
+      }
+     ],
+     "mock": {
+      "type": "audit",
+      "audit": "Show PIN (example)",
+      "blocks": [
+       [
+        "Record",
+        [
+         [
+          "Action",
+          "Show PIN"
+         ],
+         [
+          "Logged",
+          "Yes"
+         ]
+        ]
+       ]
+      ],
+      "caption": "Example only. Your screen shows your own team."
+     }
+    },
+    {
+     "heading": "Know the limits and the lockout",
+     "bullets": [
+      "Each of Re-send, Regenerate and Show is limited to three an hour per person",
+      "Five wrong tries locks that person for five minutes",
+      "Wait out the five minutes, or ask a manager if it is urgent"
+     ],
+     "tags": [
+      {
+       "label": "Night shift policy access",
+       "href": "/blog/night-shift-policy-access"
+      },
+      {
+       "label": "Care workers",
+       "href": "/who-its-for/care-workers"
+      }
+     ],
+     "mock": {
+      "type": "audit",
+      "audit": "Limits (example)",
+      "blocks": [
+       [
+        "Limits",
+        [
+         [
+          "Per person",
+          "3 an hour"
+         ],
+         [
+          "Wrong tries",
+          "5, then 5 minutes"
+         ]
+        ]
+       ]
+      ],
+      "caption": "Example only. Your screen shows your own team.",
+      "stats": [
+       [
+        "Re-send",
+        "3/hr"
+       ],
+       [
+        "Regenerate",
+        "3/hr"
+       ],
+       [
+        "Show",
+        "3/hr"
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  "talk": {
+   "heading": "Questions managers ask about a forgotten PIN",
+   "sub": "Read this as a conversation.",
+   "items": [
+    {
+     "q": "A carer has forgotten her PIN. What do I do first?",
+     "a": "Open the Staff page, find her name and use the three dots menu. Re-send emails her the same PIN again. It is the quickest option when she can still reach her email."
+    },
+    {
+     "q": "When should I regenerate instead?",
+     "a": "When you do not want the old PIN to stay valid, for example if the email might have been seen by someone else. Regenerate makes a new random PIN and emails it. That is how you reset a PIN in CareStream."
+    },
+    {
+     "q": "Can I see someone's PIN?",
+     "a": "Only if you choose Show PIN, and that is logged. Administrators never see a PIN in the normal course of things."
+    },
+    {
+     "q": "How often can I do this for the same person?",
+     "a": "Re-send, Regenerate and Show are each limited to three an hour per person."
+    },
+    {
+     "q": "What if she keeps getting it wrong?",
+     "a": "Five wrong tries locks that person for five minutes. After that she can try again, or you can send her PIN again while she waits."
+    },
+    {
+     "q": "Is there a reset PIN button?",
+     "a": "Not by that name. Regenerate is the reset PIN action: it makes a new random PIN and emails it. Re-send keeps the same PIN."
+    },
+    {
+     "q": "Do staff choose their own PIN?",
+     "a": "No. CareStream makes a random four digit PIN and emails it. New staff get theirs with their welcome once the account has a tablet."
+    },
+    {
+     "q": "Does a locked out carer lose access to Chat?",
+     "a": "No. Anyone can use Chat and This is me on a connected tablet without identifying themselves. A PIN is needed for the person's own hub."
+    },
+    {
+     "q": "Does the PIN go to the tablet?",
+     "a": "No. Tablets never receive email or push notifications. The PIN is emailed to the person."
+    }
+   ]
+  },
+  "limits": {
+   "heading": "What this does not do",
+   "cards": [
+    {
+     "title": "It does not remove the need for judgement",
+     "body": "If you think a PIN has been shared or seen, use Regenerate. The software cannot tell you whether a PIN was misused."
+    },
+    {
+     "title": "It does not decide your policy",
+     "body": "How long staff may use the tablet, and what your own rule is on sharing a PIN, are your decisions. Write them into your information governance policy."
+    },
+    {
+     "title": "It does not include agency workers",
+     "body": "Agency workers are not listed on tablets, so they have no PIN to forget."
+    }
+   ]
+  },
+  "read_next": [
+   "staff-supervision-and-training-records",
+   "chasing-staff-training-completions",
+   "night-shift-policy-access"
+  ],
+  "faqs": {
+   "heading": "A forgotten PIN, answered",
+   "groups": [
+    {
+     "group": "About the PIN",
+     "items": [
+      {
+       "q": "What is a forgotten PIN on a shared tablet?",
+       "a": "It is when a member of staff cannot remember the four digit number they use to open their own hub on a tablet. CareStream's Staff page lets an administrator send it again, make a new one or, if needed, show it."
+      },
+      {
+       "q": "How do I reset a PIN in CareStream?",
+       "a": "To reset a PIN, use Regenerate in the three dots menu on the Staff page. It makes a new random PIN and emails it to the person. You can also Re-send the same PIN."
+      },
+      {
+       "q": "Who sees the PIN?",
+       "a": "The member of staff, in their email. Administrators never see it unless they choose Show PIN, which is logged."
+      }
+     ]
+    },
+    {
+     "group": "About the lockout",
+     "items": [
+      {
+       "q": "How long is the lockout?",
+       "a": "Five minutes after five wrong tries."
+      },
+      {
+       "q": "Can a stranger lock a colleague out?",
+       "a": "Wrong guesses are limited per person and per poster, so a stranger at a tablet cannot simply lock people out one after another."
+      },
+      {
+       "q": "Is the lockout the same on every tablet?",
+       "a": "The lockout is for that person. It is five wrong tries and five minutes."
+      }
+     ]
+    },
+    {
+     "group": "About the email",
+     "items": [
+      {
+       "q": "What does the email look like?",
+       "a": "It is shown as sent by the administrator, with the PIN in the message. It follows the same setup as other staff emails."
+      },
+      {
+       "q": "What if the email address on the record is wrong?",
+       "a": "Correct the email on the Staff page first, then Re-send. A PIN sent to an old address is not safe."
+      },
+      {
+       "q": "Do new starters get a PIN?",
+       "a": "Yes, with their welcome, once the account has a tablet."
+      }
+     ]
+    },
+    {
+     "group": "In practice",
+     "items": [
+      {
+       "q": "Should I tell staff to write their PIN down?",
+       "a": "That is your own policy decision. A written PIN in a pocket is a risk, and Re-send is quick, so most homes are better off encouraging staff to ask rather than write it down."
+      },
+      {
+       "q": "Is a four digit PIN secure enough?",
+       "a": "It is one layer. A person also has to connect through the poster, which needs their name and PIN, and wrong guesses are limited. CareStream records and controls access. Your own data protection decisions and the <a href=\"https://ico.org.uk/for-organisations/uk-gdpr-guidance-and-resources/security/a-guide-to-data-security/\">ICO's data security guidance</a> still apply."
+      },
+      {
+       "q": "Where is it recorded?",
+       "a": "PIN events are recorded in the audit log, along with set up and connection events. <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/17\">Regulation 17</a> asks providers to keep records securely, and the log helps you show who did what."
+      },
+      {
+       "q": "Which plans?",
+       "a": "All paid plans: Starter, Professional and Enterprise. Not the Free plan."
+      }
+     ]
+    }
+   ]
+  },
+  "guide": {
+   "heading": "A routine for PIN problems",
+   "lede": "Short and practical, so any senior can follow it.",
+   "sections": [
+    {
+     "h3": "Make it a two minute job",
+     "paragraphs": [
+      "Decide who on each shift can use the Staff page, and tell them where the three dots menu is. A forgotten PIN is a small task, but only if the person on duty knows it exists.",
+      "Put a line in your induction for the team lead: where Re-send sits, and that Show PIN is for emergencies only."
+     ],
+     "checklist": [
+      "Name who can use the Staff page",
+      "Show them the three dots menu",
+      "Say when to Re-send and when to Regenerate",
+      "Keep Show PIN for emergencies"
+     ]
+    },
+    {
+     "h3": "Use Re-send first, Regenerate when in doubt",
+     "paragraphs": [
+      "Most forgotten PINs need only a Re-send. If there is a chance the email was forwarded, read over a shoulder, or sent to the wrong address, regenerate."
+     ],
+     "checklist": [
+      "Re-send when the email is safe",
+      "Regenerate when it may not be",
+      "Check the email address on the record"
+     ]
+    },
+    {
+     "h3": "Watch for a pattern",
+     "paragraphs": [
+      "If three or four people forget their PIN in the same week, the problem is not them. It may be that staff were sent PINs before the tablet was ready, or that the email went to junk. Send a short reminder of how the tablet works, and check where the welcome emails landed."
+     ],
+     "checklist": [
+      "Count PIN requests in a month",
+      "Look for emails in junk",
+      "Send a short reminder to the team"
+     ]
+    },
+    {
+     "h3": "Keep the log in mind",
+     "paragraphs": [
+      "PIN events are recorded in the audit log. If a PIN is shown, you want to be able to say why. Keep a short note of who asked and why, in your own records, for the rare case you need it."
+     ],
+     "checklist": [
+      "Note why Show PIN was used",
+      "Keep the note with your information governance records",
+      "Review requests quarterly"
+     ]
+    }
+   ],
+   "note": "Illustrative only. CareStream records and controls access. The provider remains responsible for its own policies and data protection decisions."
+  }
+ },
+ {
+  "slug": "this-is-me-profiles-on-a-shared-tablet-for-the-floor",
+  "status": "draft",
+  "order": 123,
+  "eyebrow": "Scenario",
+  "fine": "14 day free trial · Set up in a day · UK data residency",
+  "title": "<em>This is me dementia</em> profiles within reach on the floor, on a shared tablet that anyone on shift can open.",
+  "meta_title": "This Is Me Dementia Profiles on a Shared Tablet | CareStreamAI",
+  "meta_description": "Put resident This is me profiles on a shared tablet in a staff area, read only, so carers can check preferences without a phone. Paid plans.",
+  "lede": "A carer is sitting with a new resident who is anxious in the afternoon. Her phone is in her locker, and the paper file is at the other end of the building. In a home with a phone ban, the <b>This is me dementia</b> profile can sit on a shared tablet in a staff area. It is read only and needs no sign in. See the <a href=\"/features/resident-profiles-this-is-me\">resident profiles</a> feature for how a profile is built.",
+  "panel": {
+   "title": "A profile at hand, read only",
+   "pill": "Illustration",
+   "rows": [
+    {
+     "label": "This is me on the tablet",
+     "note": "Read only",
+     "done": true
+    },
+    {
+     "label": "No sign in needed",
+     "note": "Anyone on the connected tablet",
+     "done": true
+    },
+    {
+     "label": "Editing happens elsewhere",
+     "note": "Not on the tablet",
+     "done": false
+    },
+    {
+     "label": "Tablet kept in a staff area",
+     "note": "Your decision",
+     "done": false
+    }
+   ],
+   "meter": 55
+  },
+  "image": "[to generate: POST /routine/content/image, key this-is-me-profiles-on-a-shared-tablet-for-the-floor, scene: A carer sits at a small table in a quiet care home lounge, holding a tablet while an older resident chats beside her, a window with a garden behind them]",
+  "image_alt": "A carer and an older resident sit at a small table in a care home lounge looking together at a tablet",
+  "card_title": "Can a carer see a resident's This is me without a phone?",
+  "card_snippet": "On a shared tablet, This is me is available read only to anyone using the connected tablet. Paid plans.",
+  "primary_keyword": "this is me dementia",
+  "secondary_keywords": [
+   "this is me form",
+   "about me profile"
+  ],
+  "feature_links": [
+   {
+    "title": "Training built from your own policies",
+    "body": "Short training from your own policies, checked by questions, for the whole team.",
+    "action": "See the feature",
+    "href": "/training-platform"
+   },
+   {
+    "title": "Resident profiles, This is me",
+    "body": "A life story profile for each resident, with what matters to them.",
+    "action": "See the feature",
+    "href": "/features/resident-profiles-this-is-me"
+   },
+   {
+    "title": "Family photos and video messages",
+    "body": "Share photos and messages with a resident's family.",
+    "action": "See the feature",
+    "href": "/features/family-photos-and-video-messages"
+   }
+  ],
+  "intro": {
+   "heading": "A good profile only helps if staff can reach it.",
+   "sub": "A scenario we see in homes with a phone ban and a small team on each floor.",
+   "paragraph": "A home has spent months getting life story information into resident profiles. Families have helped. The key worker knows the detail, and so does the activities lead. But the carer who works the night shift on the first floor does not carry a phone, and the profile lives on a computer in the office. When Mrs B wakes distressed, the carer tries what she knows, and it does not work. The information that would have helped, what Mrs B liked to hear and what she called her late husband, was written down in the profile and was three flights of stairs away."
+  },
+  "trail": [
+   {
+    "when": "Months before",
+    "text": "Families help to complete the profiles.",
+    "kind": "ok"
+   },
+   {
+    "when": "Week one",
+    "text": "The key worker reads each profile.",
+    "kind": "ok"
+   },
+   {
+    "when": "Week two",
+    "text": "The profiles sit on an office computer.",
+    "kind": "gap"
+   },
+   {
+    "when": "Night shift",
+    "text": "A resident wakes distressed.",
+    "kind": "gap"
+   },
+   {
+    "when": "Night shift",
+    "text": "The carer has no phone, by the home's policy.",
+    "kind": "gap"
+   },
+   {
+    "when": "Night shift",
+    "text": "She tries what she knows, and it does not work.",
+    "kind": "gap"
+   },
+   {
+    "when": "Morning",
+    "text": "The key worker finds the answer in the profile.",
+    "kind": "gap"
+   },
+   {
+    "when": "A review",
+    "text": "\"We wrote it down. Nobody could get at it.\"",
+    "kind": "end"
+   }
+  ],
+  "trail_close": "<b>The information existed.</b> It was not in the right place at the right time. A shared tablet in a staff area can put it there, without bringing a personal phone onto the floor.",
+  "why": {
+   "heading": "Knowing the person is the heart of dementia care.",
+   "sub": "A This is me profile only works when it is read at the moment it is needed.",
+   "cards": [
+    {
+     "icon": "chat",
+     "title": "The detail is what comforts",
+     "body": "A name, a song, a trade, a favourite chair. The detail in a profile is what a carer reaches for when words do not work."
+    },
+    {
+     "icon": "tick",
+     "title": "Reading should be quick",
+     "body": "Open the tablet, choose This is me, find the resident and read. No sign in is needed, so a new carer or a bank worker can do it in seconds."
+    },
+    {
+     "icon": "alert",
+     "title": "Editing belongs somewhere else",
+     "body": "The tablet is read only. A profile is changed by the people who maintain it, not by whoever picks up a tablet at three in the morning."
+    }
+   ]
+  },
+  "how": {
+   "heading": "How a profile reaches the floor, step by step.",
+   "sub": "This is how a connected <a href=\"/features/web-chat-interface\">tablet</a> and the <a href=\"/features/resident-profiles-this-is-me\">resident profiles</a> work together. For the thinking behind a good profile, see our <a href=\"/blog/this-is-me-document\">guide to the This is me document</a>.",
+   "blocks": [
+    {
+     "heading": "Build the profile with the family and key worker",
+     "bullets": [
+      "Gather the detail that matters: routines, likes, dislikes, worries and comforts",
+      "Use a This is me form your service already trusts, or build the profile in CareStream",
+      "Keep it plain, short and in the person's own words where you can"
+     ],
+     "tags": [
+      {
+       "label": "This is me document",
+       "href": "/blog/this-is-me-document"
+      },
+      {
+       "label": "Resident profiles",
+       "href": "/features/resident-profiles-this-is-me"
+      }
+     ],
+     "mock": {
+      "type": "audit",
+      "audit": "The profile (example)",
+      "blocks": [
+       [
+        "Sections",
+        [
+         [
+          "What I like to be called",
+          "Example only"
+         ],
+         [
+          "What helps when I am worried",
+          "Example only"
+         ],
+         [
+          "My day",
+          "Example only"
+         ]
+        ]
+       ]
+      ],
+      "caption": "Example only. Your screen shows your own team."
+     }
+    },
+    {
+     "heading": "Connect the tablet and keep it in a staff area",
+     "bullets": [
+      "An administrator adds the tablet on the Staff page and staff connect it with their own PIN",
+      "A connected tablet opens on Chat and This is me",
+      "Keep it where only staff go, because the profiles are open to anyone using the tablet"
+     ],
+     "tags": [
+      {
+       "label": "Information governance policy",
+       "href": "/care-policies/information-governance"
+      },
+      {
+       "label": "Data protection policy",
+       "href": "/care-policies/data-protection-gdpr"
+      }
+     ],
+     "mock": {
+      "type": "audit",
+      "audit": "Tablet mode (example)",
+      "blocks": [
+       [
+        "Shows",
+        [
+         [
+          "Chat",
+          "Policy and guidance assistant"
+         ],
+         [
+          "This is me",
+          "Read only"
+         ]
+        ]
+       ]
+      ],
+      "caption": "Example only. Your screen shows your own team."
+     }
+    },
+    {
+     "heading": "Read the profile when it is needed",
+     "bullets": [
+      "Choose This is me and find the resident",
+      "Read what matters before a visit, an activity or a difficult moment",
+      "Use it with a family member or the key worker if you can"
+     ],
+     "tags": [
+      {
+       "label": "Care workers",
+       "href": "/who-its-for/care-workers"
+      },
+      {
+       "label": "Residential care",
+       "href": "/residential-care"
+      }
+     ],
+     "mock": {
+      "type": "audit",
+      "audit": "Reading (example)",
+      "blocks": [
+       [
+        "Use",
+        [
+         [
+          "Anxious in the afternoon",
+          "Check what helps"
+         ],
+         [
+          "New to the home",
+          "Read first"
+         ]
+        ]
+       ]
+      ],
+      "caption": "Example only. Your screen shows your own team."
+     }
+    },
+    {
+     "heading": "Keep the profile alive",
+     "bullets": [
+      "Review each profile with the family and key worker when something changes",
+      "Make changes where profiles are edited, not on the tablet",
+      "Ask staff what they used, and add it"
+     ],
+     "tags": [
+      {
+       "label": "Nursing homes",
+       "href": "/nursing-homes"
+      },
+      {
+       "label": "Family photos and messages",
+       "href": "/features/family-photos-and-video-messages"
+      }
+     ],
+     "mock": {
+      "type": "audit",
+      "audit": "Review (example)",
+      "blocks": [
+       [
+        "Routine",
+        [
+         [
+          "Review",
+          "When something changes"
+         ],
+         [
+          "Edited by",
+          "Those who maintain profiles"
+         ]
+        ]
+       ]
+      ],
+      "caption": "Example only. Your screen shows your own team."
+     }
+    }
+   ]
+  },
+  "talk": {
+   "heading": "Questions managers ask about profiles on a tablet",
+   "sub": "Read this as a conversation.",
+   "items": [
+    {
+     "q": "Can a carer edit a profile on the tablet?",
+     "a": "No. This is me on the tablet is read only."
+    },
+    {
+     "q": "Does a carer need a PIN to read it?",
+     "a": "No. Anyone using the connected tablet can use This is me and Chat without identifying themselves. The PIN is for a person's own hub."
+    },
+    {
+     "q": "Is that safe for resident information?",
+     "a": "It is a reason to keep the tablet in a staff area, not in a lounge or reception. Where it lives is your decision, and your information governance policy should say so."
+    },
+    {
+     "q": "Is there a This is me form we can use?",
+     "a": "You can build resident profiles in CareStream, and many homes also use a form such as the one from the Alzheimer's Society. Both fit the same idea: what matters to the person, in their words."
+    },
+    {
+     "q": "Is it the same as a care plan?",
+     "a": "No. It sits beside the care plan. It records the person, not the tasks."
+    },
+    {
+     "q": "Can families help with the profile?",
+     "a": "Yes. Families often know the detail best, and the family photos and messages feature works alongside the profile."
+    },
+    {
+     "q": "Do bank and agency staff see it?",
+     "a": "Anyone using the connected tablet can use This is me without signing in, so yes. Agency workers are not listed on tablets for personal sessions."
+    },
+    {
+     "q": "Which plan?",
+     "a": "All paid plans: Starter, Professional and Enterprise. Not the Free plan."
+    }
+   ]
+  },
+  "limits": {
+   "heading": "What this does not do",
+   "cards": [
+    {
+     "title": "It is not a care plan",
+     "body": "A profile tells staff about the person. It does not replace risk assessments, care plans or records of care."
+    },
+    {
+     "title": "It does not edit on the tablet",
+     "body": "Changes to a profile are made where profiles are maintained, not from the tablet."
+    },
+    {
+     "title": "It does not hide a profile from the tablet",
+     "body": "Anyone using a connected tablet can read This is me, so the tablet belongs in a staff area and the decision is yours."
+    }
+   ]
+  },
+  "read_next": [
+   "this-is-me-document",
+   "life-story-work-dementia-photos-and-video-messages",
+   "person-centred-language-care-plans"
+  ],
+  "faqs": {
+   "heading": "This is me on a shared tablet, answered",
+   "groups": [
+    {
+     "group": "About This is me",
+     "items": [
+      {
+       "q": "What is a This is me form?",
+       "a": "It is a short document that tells staff about a person: what they like, what comforts them and what worries them. The Alzheimer's Society publishes a <a href=\"https://www.alzheimers.org.uk/get-support/publications-factsheets/this-is-me\">This is me</a> form widely used in dementia care."
+      },
+      {
+       "q": "What is an about me profile?",
+       "a": "A plain summary of the person in their own words. In CareStream the resident profile fills the same role, with photos and detail from the family."
+      },
+      {
+       "q": "Does it matter which format we use?",
+       "a": "What matters is that it is person centred, up to date and easy to reach. The detail is what helps."
+      }
+     ]
+    },
+    {
+     "group": "About the tablet",
+     "items": [
+      {
+       "q": "Who can read the profile on the tablet?",
+       "a": "Anyone using the connected tablet, with no sign in. It is read only."
+      },
+      {
+       "q": "Where should the tablet live?",
+       "a": "In a staff area, away from visitors. That is your decision."
+      },
+      {
+       "q": "Can the tablet show other things?",
+       "a": "Chat, the policy and guidance assistant, and This is me. A person's own hub appears only after they enter their own PIN."
+      }
+     ]
+    },
+    {
+     "group": "About dementia care",
+     "items": [
+      {
+       "q": "Why do profiles matter in dementia care?",
+       "a": "The <a href=\"https://www.nhs.uk/conditions/dementia/\">NHS</a> describes how dementia affects memory, communication and behaviour. A profile gives staff the person's own detail to draw on when those change."
+      },
+      {
+       "q": "Is there a link to life story work?",
+       "a": "Yes. Life story work is the wider practice of gathering and sharing a person's history. A profile is one product of it."
+      },
+      {
+       "q": "How often should we review profiles?",
+       "a": "When something changes, and at a regular point you set, such as with the care plan review."
+      }
+     ]
+    },
+    {
+     "group": "In practice",
+     "items": [
+      {
+       "q": "What if a family does not want a profile shared?",
+       "a": "Talk to them first and decide what goes in. The profile holds what you choose to record."
+      },
+      {
+       "q": "Does CareStream write the profile?",
+       "a": "The profile is yours. The family and key worker supply the detail."
+      },
+      {
+       "q": "Can staff use it on a night shift?",
+       "a": "Yes, a connected tablet is open all shift. The home decides where it sits."
+      },
+      {
+       "q": "Does it record who read a profile?",
+       "a": "This page does not claim that. Chat questions on the tablet are recorded against the tablet, and in a personal session against the person."
+      }
+     ]
+    }
+   ]
+  },
+  "guide": {
+   "heading": "Getting profiles onto the floor",
+   "lede": "A short routine that suits a busy home.",
+   "sections": [
+    {
+     "h3": "Start with the residents who need it most",
+     "paragraphs": [
+      "Begin with residents who are new, anxious in the afternoon or who have recently moved room. A profile pays back first where staff know the person least."
+     ],
+     "checklist": [
+      "List residents new to the home",
+      "List those who are most distressed",
+      "Complete these profiles first"
+     ]
+    },
+    {
+     "h3": "Put the tablet where staff will use it",
+     "paragraphs": [
+      "A tablet in a drawer helps nobody. Put it where staff pass often, such as the nurses' station or a staff room, and tell the team it is there. Add a line to your induction."
+     ],
+     "checklist": [
+      "Choose one staff only spot",
+      "Tell night staff first",
+      "Add it to induction"
+     ]
+    },
+    {
+     "h3": "Ask staff what helped",
+     "paragraphs": [
+      "After a month, ask what staff read and what they would add. A short chat in handover is enough. Add what they say to the profile where profiles are edited."
+     ],
+     "checklist": [
+      "Ask at handover",
+      "Note what helped",
+      "Add it to the profile"
+     ]
+    },
+    {
+     "h3": "Review with the family",
+     "paragraphs": [
+      "Share the profile with the family at the care plan review and ask what is missing. Families often add the detail that matters most."
+     ],
+     "checklist": [
+      "Share at the review",
+      "Ask what is missing",
+      "Update and note the date"
+     ]
+    }
+   ],
+   "note": "Illustrative only. The tablet shows This is me read only. The provider remains responsible for where the tablet is kept and its own policies."
+  }
+ },
+ {
+  "slug": "shift-handover-with-a-shared-tablet-and-no-phones",
+  "status": "draft",
+  "order": 124,
+  "eyebrow": "Scenario",
+  "fine": "14 day free trial · Set up in a day · UK data residency",
+  "title": "A calmer <em>shift handover</em> when one shared tablet sits in the room and phones stay in the lockers.",
+  "meta_title": "Shift Handover With a Shared Tablet | CareStreamAI",
+  "meta_description": "Use a shared tablet at shift handover to check a This is me profile or a policy question without personal phones. It holds no handover notes.",
+  "lede": "The early shift is handing over, and the new team asks about a resident who has just moved in and a policy question that came up at breakfast. Phones are in the lockers. At <b>shift handover</b>, a shared tablet in the room can show the resident's profile and answer a policy question in plain words. It does not hold your handover notes, and this page is clear about that. See the <a href=\"/features/web-chat-interface\">chat feature</a> for what it can answer.",
+  "panel": {
+   "title": "A tablet in the handover room",
+   "pill": "Illustration",
+   "rows": [
+    {
+     "label": "Open This is me for a new resident",
+     "note": "Read only",
+     "done": true
+    },
+    {
+     "label": "Ask Chat a policy question",
+     "note": "Plain answer",
+     "done": true
+    },
+    {
+     "label": "Handover notes",
+     "note": "Not held in CareStream",
+     "done": false
+    },
+    {
+     "label": "Personal sign in not needed",
+     "note": "For Chat and This is me",
+     "done": true
+    }
+   ],
+   "meter": 50
+  },
+  "image": "[to generate: POST /routine/content/image, key shift-handover-with-a-shared-tablet-and-no-phones, scene: Two care teams in a small staff room at the change of shift, one carer holds a paper sheet while a colleague points at a tablet on the table, a window with a garden behind them]",
+  "image_alt": "Two care teams gather around a table in a staff room at the change of shift with a tablet and a paper sheet",
+  "card_title": "Can a shared tablet help at handover?",
+  "card_snippet": "Check a This is me profile or ask Chat a policy question at handover. CareStream does not hold the notes.",
+  "primary_keyword": "shift handover",
+  "secondary_keywords": [
+   "handover sheet",
+   "handover notes",
+   "nursing handover"
+  ],
+  "feature_links": [
+   {
+    "title": "Training built from your own policies",
+    "body": "Short training from your own policies, checked by questions, for the whole team.",
+    "action": "See the feature",
+    "href": "/training-platform"
+   },
+   {
+    "title": "Policy and guidance chat",
+    "body": "Ask a question about your own policies and get a plain answer.",
+    "action": "See the chat",
+    "href": "/features/web-chat-interface"
+   },
+   {
+    "title": "Resident profiles, This is me",
+    "body": "A life story profile for each resident, with what matters to them.",
+    "action": "See the feature",
+    "href": "/features/resident-profiles-this-is-me"
+   }
+  ],
+  "intro": {
+   "heading": "Handover is where small things get lost, and where small things get found.",
+   "sub": "A scenario we see in homes with fixed handover times and a phone ban.",
+   "paragraph": "Handover in a busy home lasts fifteen minutes. The outgoing senior reads from a handover sheet, the incoming team listens, and a few questions come up. Who is new? What was said to the family? What does our policy say about a resident who refuses a meal for a second day? The senior thinks she knows. A carer thinks it is different. Nobody has a phone, the policy file is in the office, and the question is parked until the manager arrives. It is a small delay, but the question is about a resident who is not eating, and that matters. By then the shift has started and the team has moved on."
+  },
+  "trail": [
+   {
+    "when": "Early shift",
+    "text": "The outgoing senior reads the handover sheet.",
+    "kind": "ok"
+   },
+   {
+    "when": "Handover",
+    "text": "A resident is new, and the team has not met her.",
+    "kind": "gap"
+   },
+   {
+    "when": "Handover",
+    "text": "A policy question comes up.",
+    "kind": "gap"
+   },
+   {
+    "when": "Handover",
+    "text": "Staff disagree about what the policy says.",
+    "kind": "gap"
+   },
+   {
+    "when": "Handover",
+    "text": "Nobody has a phone, and the file is in the office.",
+    "kind": "gap"
+   },
+   {
+    "when": "Handover",
+    "text": "The question is parked.",
+    "kind": "gap"
+   },
+   {
+    "when": "Mid shift",
+    "text": "The team does what it thinks is right.",
+    "kind": "gap"
+   },
+   {
+    "when": "A review",
+    "text": "\"We should have checked at the time.\"",
+    "kind": "end"
+   }
+  ],
+  "trail_close": "<b>The handover itself was fine.</b> It was the missing second source that hurt. A shared tablet in the room gives the team one place to check a profile or a policy before the shift starts.",
+  "why": {
+   "heading": "A handover is better with a second source in the room.",
+   "sub": "The sheet says what happened. The tablet can say what matters and what the policy says.",
+   "cards": [
+    {
+     "icon": "chat",
+     "title": "Answers while everyone is there",
+     "body": "A policy question is settled while the whole team is in the room, not parked until a manager arrives."
+    },
+    {
+     "icon": "tick",
+     "title": "New residents are not strangers",
+     "body": "A resident who has just moved in can be read about together, in their own words, before the shift starts."
+    },
+    {
+     "icon": "alert",
+     "title": "The sheet stays the sheet",
+     "body": "Your handover sheet is your own record. The tablet adds a check on it. It does not replace it."
+    }
+   ]
+  },
+  "how": {
+   "heading": "Using a tablet at handover, step by step.",
+   "sub": "This is how it fits with the <a href=\"/features/resident-profiles-this-is-me\">resident profiles</a> and your <a href=\"/care-policies/shift-handover-communication\">handover policy</a>.",
+   "blocks": [
+    {
+     "heading": "Keep your own handover sheet",
+     "bullets": [
+      "Keep the sheet or notes you already use, on paper or in your own system",
+      "CareStream does not hold notes from handover or a handover record",
+      "Decide in your policy what a good handover contains"
+     ],
+     "tags": [
+      {
+       "label": "Shift handover policy",
+       "href": "/care-policies/shift-handover-communication"
+      },
+      {
+       "label": "Registered managers",
+       "href": "/who-its-for/registered-managers"
+      }
+     ],
+     "mock": {
+      "type": "audit",
+      "audit": "Your sheet (example)",
+      "blocks": [
+       [
+        "Handover sheet",
+        [
+         [
+          "Who is new",
+          "Your own record"
+         ],
+         [
+          "What changed overnight",
+          "Your own record"
+         ]
+        ]
+       ]
+      ],
+      "caption": "Example only. Your screen shows your own team."
+     }
+    },
+    {
+     "heading": "Check a new resident in This is me",
+     "bullets": [
+      "Open This is me on the tablet and find the resident",
+      "Read what matters to them before the first shift",
+      "Anyone on the connected tablet can do this without a PIN"
+     ],
+     "tags": [
+      {
+       "label": "This is me document",
+       "href": "/blog/this-is-me-document"
+      },
+      {
+       "label": "Resident profiles",
+       "href": "/features/resident-profiles-this-is-me"
+      }
+     ],
+     "mock": {
+      "type": "audit",
+      "audit": "This is me (example)",
+      "blocks": [
+       [
+        "New resident",
+        [
+         [
+          "Likes",
+          "Example only"
+         ],
+         [
+          "What helps",
+          "Example only"
+         ]
+        ]
+       ]
+      ],
+      "caption": "Example only. Your screen shows your own team."
+     }
+    },
+    {
+     "heading": "Ask Chat the policy question",
+     "bullets": [
+      "Type the question in plain words",
+      "Read the answer to the whole team",
+      "Chat questions asked on the tablet are recorded against the tablet"
+     ],
+     "tags": [
+      {
+       "label": "Policy chat",
+       "href": "/features/web-chat-interface"
+      },
+      {
+       "label": "Information governance policy",
+       "href": "/care-policies/information-governance"
+      }
+     ],
+     "mock": {
+      "type": "audit",
+      "audit": "Chat (example)",
+      "blocks": [
+       [
+        "Question",
+        [
+         [
+          "Refused a meal twice",
+          "What does our policy say?"
+         ],
+         [
+          "Answer",
+          "From your own policies"
+         ]
+        ]
+       ]
+      ],
+      "caption": "Example only. Your screen shows your own team."
+     }
+    },
+    {
+     "heading": "Sign in only for your own things",
+     "bullets": [
+      "After handover, staff can tap their picture and enter their own PIN to see their training or actions",
+      "The session returns to the tablet screen after Done or about two minutes untouched",
+      "Nothing personal stays on the screen for the next person"
+     ],
+     "tags": [
+      {
+       "label": "Staff hub",
+       "href": "/features/staff-hub"
+      },
+      {
+       "label": "Care workers",
+       "href": "/who-its-for/care-workers"
+      }
+     ],
+     "mock": {
+      "type": "audit",
+      "audit": "Personal session (example)",
+      "blocks": [
+       [
+        "Session",
+        [
+         [
+          "Who's using it?",
+          "Tap your picture"
+         ],
+         [
+          "Ends",
+          "Done or two minutes"
+         ]
+        ]
+       ]
+      ],
+      "caption": "Example only. Your screen shows your own team."
+     }
+    }
+   ]
+  },
+  "talk": {
+   "heading": "Questions managers ask about handover and the tablet",
+   "sub": "Read this as a conversation.",
+   "items": [
+    {
+     "q": "Does CareStream hold our notes from handover?",
+     "a": "No. Your sheet or notes stay in whatever system you use. The tablet adds Chat and This is me."
+    },
+    {
+     "q": "Is there a handover form we can use?",
+     "a": "Our handover policy is a starting point for what a handover should cover. Use your own handover form with it."
+    },
+    {
+     "q": "Can we type handover notes into the tablet?",
+     "a": "No. The tablet does not record them."
+    },
+    {
+     "q": "What can the team do with the tablet at handover?",
+     "a": "Open a resident's This is me profile, or ask Chat a question about your own policies."
+    },
+    {
+     "q": "Who can use it?",
+     "a": "Anyone using the connected tablet can use Chat and This is me without signing in."
+    },
+    {
+     "q": "Is the question recorded?",
+     "a": "Chat questions asked on the tablet are recorded against the tablet. In a personal session they are recorded against the person."
+    },
+    {
+     "q": "What about a nursing handover?",
+     "a": "A nursing handover has clinical content that belongs in your clinical record. The tablet helps with the policy and the person, not the clinical record."
+    },
+    {
+     "q": "What if two people want the tablet at once?",
+     "a": "It is one screen, so agree a simple order. Most teams open the profile or ask the question once, as a group, at the start of handover. If more people need it, a second tablet can be added on a paid plan, up to five in all."
+    },
+    {
+     "q": "Do we need one tablet per floor?",
+     "a": "That is your decision. You can add up to five tablets per account on a paid plan, each with a name and optional location, such as Ward 2 tablet."
+    }
+   ]
+  },
+  "limits": {
+   "heading": "What this does not do",
+   "cards": [
+    {
+     "title": "It is not a handover record",
+     "body": "There are no notes, tasks or sign off on the tablet. Your own sheet remains the record."
+    },
+    {
+     "title": "It does not decide what is safe",
+     "body": "A policy answer is a prompt for a conversation. Decisions about a resident are made by trained staff, who know the person and the situation in a way no screen does."
+    },
+    {
+     "title": "It does not replace a good handover",
+     "body": "The tablet is a second source. The conversation between the outgoing and incoming team is still the core."
+    }
+   ]
+  },
+  "read_next": [
+   "night-shift-policy-access",
+   "how-do-you-schedule-care-staff-training-around-a-rota",
+   "this-is-me-document"
+  ],
+  "faqs": {
+   "heading": "Shift handover and a shared tablet, answered",
+   "groups": [
+    {
+     "group": "About handover",
+     "items": [
+      {
+       "q": "What is a shift handover in a care home?",
+       "a": "It is the point at which one team passes information about the residents and the day to the next. It may be spoken, written or both."
+      },
+      {
+       "q": "What should a handover sheet cover?",
+       "a": "That is for your policy. Many homes include changes in condition, new residents, appointments, risks and messages for families. Our <a href=\"/care-policies/shift-handover-communication\">handover policy</a> sets out the headings."
+      },
+      {
+       "q": "Is CareStream a handover system?",
+       "a": "No. It does not hold notes from handover, nursing handover records or rota."
+      }
+     ]
+    },
+    {
+     "group": "About the tablet",
+     "items": [
+      {
+       "q": "Why a tablet at handover?",
+       "a": "Because phones are not allowed on the floor, and a shared tablet gives the team one place to check a profile or a policy."
+      },
+      {
+       "q": "Can it show the handover sheet?",
+       "a": "No. It shows Chat and This is me, and a person's own hub after their PIN."
+      },
+      {
+       "q": "Where should it sit?",
+       "a": "In the room where handover happens, which should be a staff area."
+      }
+     ]
+    },
+    {
+     "group": "About records",
+     "items": [
+      {
+       "q": "Does the tablet record what the team asked?",
+       "a": "Chat questions asked on the tablet are recorded against the tablet."
+      },
+      {
+       "q": "Does it record who was at handover?",
+       "a": "No. It records tablet set up, connection and PIN events, and Chat questions, not attendance."
+      },
+      {
+       "q": "What does the law say about records?",
+       "a": "<a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/17\">Regulation 17</a> asks providers to keep accurate, complete and contemporaneous records of each person's care. Your handover notes stay yours. Where a tablet is used, the <a href=\"https://ico.org.uk/for-organisations/uk-gdpr-guidance-and-resources/security/a-guide-to-data-security/\">ICO's data security guidance</a> is a useful check on who can see what."
+      }
+     ]
+    },
+    {
+     "group": "In practice",
+     "items": [
+      {
+       "q": "How long should handover take?",
+       "a": "That is your call. A tablet should save time by settling a question in the room, not add steps. Try it for a fortnight and ask the team whether it did."
+      },
+      {
+       "q": "Can night staff use it?",
+       "a": "Yes, it is there all shift once connected."
+      },
+      {
+       "q": "What if the tablet is not connected?",
+       "a": "An administrator can see each tablet on the Staff page with a green dot when connected and when it was last used. Staff connect it with the poster and their own PIN."
+      },
+      {
+       "q": "Which plans?",
+       "a": "All paid plans: Starter, Professional and Enterprise. Not the Free plan."
+      }
+     ]
+    }
+   ]
+  },
+  "guide": {
+   "heading": "Making handover a little better",
+   "lede": "Small habits that suit a busy shift change, and that a new team leader can pick up in a single shift.",
+   "sections": [
+    {
+     "h3": "Agree what goes on the sheet",
+     "paragraphs": [
+      "A good handover starts with an agreed list of what is covered. Write it into your policy and review it with the team now and then."
+     ],
+     "checklist": [
+      "List the headings",
+      "Agree who reads the sheet",
+      "Review it with the team"
+     ]
+    },
+    {
+     "h3": "Use the tablet for the second check",
+     "paragraphs": [
+      "Pick one thing the team will always check on the tablet, such as a new resident's profile. A single habit is easier to keep than a list. Say it in the handover itself, for example: Before we start, who has read the new resident's profile? Within a week it is part of the routine."
+     ],
+     "checklist": [
+      "Choose one habit",
+      "Name who opens the tablet",
+      "Say it in the induction"
+     ]
+    },
+    {
+     "h3": "Keep decisions with the people who make them",
+     "paragraphs": [
+      "If a policy answer prompts a decision about care, the senior on duty decides, and the sheet records it. The tablet does not make care decisions."
+     ],
+     "checklist": [
+      "Senior decides",
+      "Sheet records",
+      "Ask a manager if unsure"
+     ]
+    },
+    {
+     "h3": "Review once a month",
+     "paragraphs": [
+      "Handover changes over time as the residents change. Ask the team whether the tablet helped at handover, and what questions came up most often. A repeated question may mean a policy needs clearer wording."
+     ],
+     "checklist": [
+      "Note repeat questions",
+      "Raise them with the policy owner",
+      "Update the policy if needed"
+     ]
+    }
+   ],
+   "note": "Illustrative only. The tablet does not hold handover notes. The provider remains responsible for its own handover records and policies."
+  }
+ },
+ {
+  "slug": "audit-log-for-a-shared-tablet-who-asked-what",
+  "status": "draft",
+  "order": 125,
+  "eyebrow": "Scenario",
+  "fine": "14 day free trial · Set up in a day · UK data residency",
+  "title": "An <em>audit log</em> for a shared tablet: knowing who connected it, who used it and what was asked.",
+  "meta_title": "Audit Log for a Shared Tablet: Who Did What | CareStreamAI",
+  "meta_description": "A shared tablet is only trustworthy if it leaves a record. See what CareStream logs: set up, connections, PIN events and chat questions. Paid plans.",
+  "lede": "A manager is asked by the provider's director a simple question: if the tablet on the first floor is used, how would we know by whom? A tablet that anyone can pick up needs an <b>audit log</b> to be a safe tool, not a loose end. CareStream records tablet set up, connection and PIN events, and records chat questions against the tablet or, in a personal session, against the person. See the <a href=\"/features/staff-hub\">staff hub</a> for how a personal session works.",
+  "panel": {
+   "title": "What a shared tablet leaves behind",
+   "pill": "Illustration",
+   "rows": [
+    {
+     "label": "Set up and connection events",
+     "note": "Recorded",
+     "done": true
+    },
+    {
+     "label": "PIN events",
+     "note": "Recorded",
+     "done": true
+    },
+    {
+     "label": "Chat questions on the tablet",
+     "note": "Against the tablet",
+     "done": true
+    },
+    {
+     "label": "Chat questions in a personal session",
+     "note": "Against the person",
+     "done": true
+    }
+   ],
+   "meter": 75
+  },
+  "image": "[to generate: POST /routine/content/image, key audit-log-for-a-shared-tablet-who-asked-what, scene: A registered manager and a director sit at a table in a care home office with a laptop and a folder open between them, a window with a garden behind them]",
+  "image_alt": "A registered manager and a director sit at a desk in a care home office with a laptop and a folder open between them",
+  "card_title": "If a shared tablet is used, how would you know by whom?",
+  "card_snippet": "CareStream records tablet set up, connections and PIN events, and chat questions against the tablet or the person. Paid plans.",
+  "primary_keyword": "audit log",
+  "secondary_keywords": [
+   "audit trail",
+   "access log"
+  ],
+  "feature_links": [
+   {
+    "title": "Training built from your own policies",
+    "body": "Short training from your own policies, checked by questions, for the whole team.",
+    "action": "See the feature",
+    "href": "/training-platform"
+   },
+   {
+    "title": "Staff hub",
+    "body": "The hub staff reach once they sign in with their own PIN.",
+    "action": "See the hub",
+    "href": "/features/staff-hub"
+   },
+   {
+    "title": "Information governance policy",
+    "body": "A policy on who may see what, and how access is controlled.",
+    "action": "See the policy",
+    "href": "/care-policies/information-governance"
+   }
+  ],
+  "intro": {
+   "heading": "A tool without a record is a risk waiting for a question.",
+   "sub": "A scenario we see when a home adds shared equipment for the first time.",
+   "paragraph": "A provider's director visits and sees a tablet on a shelf at the nurses' station. It is a good idea, and a fair question follows. Who set it up? Who connected it? If a carer asks it something, can we tell who she is? The registered manager knows the answer in outline, but not with certainty, and there is nothing in front of her to show. She does not need much. She needs to be able to say what is recorded, what is not, and what she would do if something went wrong. It is not a worry about the tablet. It is a worry about being unable to explain it."
+  },
+  "trail": [
+   {
+    "when": "Setup",
+    "text": "A tablet is added on the Staff page.",
+    "kind": "ok"
+   },
+   {
+    "when": "Week one",
+    "text": "Staff connect it with their name and PIN.",
+    "kind": "ok"
+   },
+   {
+    "when": "Week three",
+    "text": "The director sees it on the shelf.",
+    "kind": "ok"
+   },
+   {
+    "when": "The visit",
+    "text": "\"Who set this up, and who has used it?\"",
+    "kind": "gap"
+   },
+   {
+    "when": "The visit",
+    "text": "The manager knows in outline, not in detail.",
+    "kind": "gap"
+   },
+   {
+    "when": "After",
+    "text": "She is unsure what is recorded.",
+    "kind": "gap"
+   },
+   {
+    "when": "After",
+    "text": "She is unsure what she would do if a tablet went missing.",
+    "kind": "gap"
+   },
+   {
+    "when": "A review",
+    "text": "\"We trusted it. We could not show it.\"",
+    "kind": "end"
+   }
+  ],
+  "trail_close": "<b>The tablet was fine.</b> The explanation was missing. A clear idea of what is logged, and where, turns a worry into a short answer.",
+  "why": {
+   "heading": "Trust in a shared tool comes from being able to explain it.",
+   "sub": "A clear record lets you answer a question without a scramble.",
+   "cards": [
+    {
+     "icon": "tick",
+     "title": "Set up and connection are recorded",
+     "body": "When a tablet is added, and when someone connects it with their name and PIN, the event is recorded."
+    },
+    {
+     "icon": "chat",
+     "title": "Questions are tied to the tablet or the person",
+     "body": "A chat question asked on the tablet is recorded against the tablet. In a personal session it is recorded against the person."
+    },
+    {
+     "icon": "alert",
+     "title": "You can cut a tablet off",
+     "body": "An administrator can disconnect one tablet or all of them from the Staff page, and it stops at once."
+    }
+   ]
+  },
+  "how": {
+   "heading": "What gets logged, and what you can do about it.",
+   "sub": "This is how the record fits with your <a href=\"/care-policies/information-governance\">information governance policy</a> and your <a href=\"/care-policies/data-protection-gdpr\">data protection policy</a>.",
+   "blocks": [
+    {
+     "heading": "Set up is recorded",
+     "bullets": [
+      "An administrator adds a tablet on the Staff page, with a name and an optional location",
+      "The set up is recorded",
+      "A tablet is not counted as a staff member or a seat"
+     ],
+     "tags": [
+      {
+       "label": "Staff hub",
+       "href": "/features/staff-hub"
+      },
+      {
+       "label": "Registered managers",
+       "href": "/who-its-for/registered-managers"
+      }
+     ],
+     "mock": {
+      "type": "audit",
+      "audit": "Set up (example)",
+      "blocks": [
+       [
+        "Log",
+        [
+         [
+          "Tablet added",
+          "Ward 2 tablet"
+         ],
+         [
+          "Location",
+          "First floor"
+         ]
+        ]
+       ]
+      ],
+      "caption": "Example only. Your screen shows your own team."
+     }
+    },
+    {
+     "heading": "Connections and PIN events are recorded",
+     "bullets": [
+      "Connecting a tablet needs the member of staff's name and their own PIN, and the connection is recorded",
+      "PIN events such as Re-send, Regenerate and Show PIN are recorded",
+      "Show PIN is logged so there is a record of who looked"
+     ],
+     "tags": [
+      {
+       "label": "Data protection policy",
+       "href": "/care-policies/data-protection-gdpr"
+      },
+      {
+       "label": "GDPR audit",
+       "href": "/care-audits/gdpr-audit-checklist"
+      }
+     ],
+     "mock": {
+      "type": "audit",
+      "audit": "Connection (example)",
+      "blocks": [
+       [
+        "Log",
+        [
+         [
+          "Connected",
+          "Ward 2 tablet"
+         ],
+         [
+          "PIN event",
+          "Re-send"
+         ]
+        ]
+       ]
+      ],
+      "caption": "Example only. Your screen shows your own team."
+     }
+    },
+    {
+     "heading": "Chat questions are tied to a tablet or a person",
+     "bullets": [
+      "Chat questions on the tablet are recorded against the tablet",
+      "In a personal session they are recorded against the person",
+      "Anyone can use Chat on a connected tablet without identifying themselves, so the record is the tablet, not a name"
+     ],
+     "tags": [
+      {
+       "label": "Policy chat",
+       "href": "/features/web-chat-interface"
+      },
+      {
+       "label": "Information governance policy",
+       "href": "/care-policies/information-governance"
+      }
+     ],
+     "mock": {
+      "type": "audit",
+      "audit": "Questions (example)",
+      "blocks": [
+       [
+        "Recorded against",
+        [
+         [
+          "On the tablet",
+          "The tablet"
+         ],
+         [
+          "In a personal session",
+          "The person"
+         ]
+        ]
+       ]
+      ],
+      "caption": "Example only. Your screen shows your own team."
+     }
+    },
+    {
+     "heading": "See the state of each tablet and cut one off",
+     "bullets": [
+      "The Staff page shows each tablet with a green dot when connected and when it was last used",
+      "Disconnect one tablet or all of them at any time, and it stops at once",
+      "Replace the poster regularly so old posters stop connecting new tablets"
+     ],
+     "tags": [
+      {
+       "label": "Pricing",
+       "href": "/pricing"
+      },
+      {
+       "label": "Care workers",
+       "href": "/who-its-for/care-workers"
+      }
+     ],
+     "mock": {
+      "type": "audit",
+      "audit": "Tablets (example)",
+      "blocks": [
+       [
+        "Staff page",
+        [
+         [
+          "Ward 2 tablet",
+          "Connected, used today"
+         ],
+         [
+          "Ward 3 tablet",
+          "Not connected"
+         ]
+        ]
+       ]
+      ],
+      "caption": "Example only. Your screen shows your own team.",
+      "stats": [
+       [
+        "Tablets",
+        "2"
+       ],
+       [
+        "Connected",
+        "1"
+       ],
+       [
+        "Allowed",
+        "5"
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  "talk": {
+   "heading": "Questions managers ask about the record",
+   "sub": "Read this as a conversation.",
+   "items": [
+    {
+     "q": "What does CareStream record about a shared tablet?",
+     "a": "Set up, connection and PIN events are recorded in an audit log. Chat questions asked on the tablet are recorded against the tablet, and in a personal session against the person."
+    },
+    {
+     "q": "Can I see who asked what?",
+     "a": "Chat questions are recorded against the tablet, or against the person in a personal session. Book a demo to see how that is shown on your plan. This page does not describe the report screens."
+    },
+    {
+     "q": "If someone uses Chat without a PIN, do we know who?",
+     "a": "No. Anyone using a connected tablet can use Chat and This is me without identifying themselves. The record then shows the tablet. If you want to know who, ask staff to use a personal session."
+    },
+    {
+     "q": "Is the audit log the same as a care record?",
+     "a": "No. It is a record of how the tablet was set up and used, not a record of any person's care."
+    },
+    {
+     "q": "How do I know a tablet is still connected?",
+     "a": "The Staff page shows each tablet with a green dot when it is connected and when it was last used."
+    },
+    {
+     "q": "What if a tablet goes missing?",
+     "a": "Disconnect it from the Staff page. It stops at once. Then replace the poster so the old one cannot connect new tablets."
+    },
+    {
+     "q": "Do tablets get emails?",
+     "a": "No. Tablets never receive email or push notifications."
+    },
+    {
+     "q": "Is it on every plan?",
+     "a": "On all paid plans: Starter, Professional and Enterprise. Not the Free plan."
+    }
+   ]
+  },
+  "limits": {
+   "heading": "What this does not do",
+   "cards": [
+    {
+     "title": "It is not a promise about regulation",
+     "body": "CareStream records and controls access. Whether your arrangements meet the regulations is for you, and for the Care Quality Commission to judge."
+    },
+    {
+     "title": "It does not name every reader",
+     "body": "Anyone can use Chat and This is me on a connected tablet without signing in, so those uses show against the tablet."
+    },
+    {
+     "title": "It does not replace your policy",
+     "body": "Your information governance and phone policies should say what the tablet is for, where it lives and who looks at the record."
+    }
+   ]
+  },
+  "read_next": [
+   "gdpr-audit",
+   "gdpr-training-for-care-staff",
+   "care-home-audit-schedule"
+  ],
+  "faqs": {
+   "heading": "Audit log for a shared tablet, answered",
+   "groups": [
+    {
+     "group": "About the audit log",
+     "items": [
+      {
+       "q": "What is an audit log?",
+       "a": "A record of events, kept so that you can later see who did what and when. In CareStream, tablet set up, connection and PIN events are recorded in it."
+      },
+      {
+       "q": "What is an audit trail?",
+       "a": "The same idea in a wider sense: a chain of records that lets you follow an action from start to finish. For a tablet it runs from set up, to connection, to use."
+      },
+      {
+       "q": "What is an access log?",
+       "a": "A list of who or what accessed a system. On a shared tablet, the connections and PIN events are the access record."
+      }
+     ]
+    },
+    {
+     "group": "About what is recorded",
+     "items": [
+      {
+       "q": "Are PINs recorded?",
+       "a": "PIN events are recorded: who asked for a PIN to be sent again, regenerated or shown. The PIN itself is not shown to administrators unless an administrator chooses Show PIN, which is logged."
+      },
+      {
+       "q": "Is every page the person opens recorded?",
+       "a": "This page makes no such claim. What is recorded is set up, connection and PIN events, and Chat questions."
+      },
+      {
+       "q": "Does it record when staff sign out?",
+       "a": "This page does not claim that. A personal session returns to the tablet screen when staff tap Done or after about two minutes untouched."
+      }
+     ]
+    },
+    {
+     "group": "About the rules",
+     "items": [
+      {
+       "q": "Does the law require an audit log?",
+       "a": "<a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/17\">Regulation 17</a> requires providers to keep records securely and to assess and monitor their service. A log helps you show control. It does not on its own show you meet the regulation."
+      },
+      {
+       "q": "What does the ICO say?",
+       "a": "The <a href=\"https://ico.org.uk/for-organisations/uk-gdpr-guidance-and-resources/security/a-guide-to-data-security/\">ICO's guide to data security</a> sets out the idea of appropriate technical and organisational measures. Access control and records of access are part of that."
+      },
+      {
+       "q": "Who is responsible?",
+       "a": "The provider. CareStream records and controls access, and your policies and decisions remain yours."
+      }
+     ]
+    },
+    {
+     "group": "In practice",
+     "items": [
+      {
+       "q": "How often should I look at it?",
+       "a": "A short look each month, and any time a tablet is lost or a member of staff leaves, is a reasonable habit. That is a suggestion, not a rule."
+      },
+      {
+       "q": "What if a staff member leaves?",
+       "a": "Remove them from the Staff page as part of your leaver steps, and check that the tablets still show only what you expect."
+      },
+      {
+       "q": "Can agency workers be traced?",
+       "a": "Agency workers are not listed on tablets. They can use Chat and This is me, and those uses show against the tablet."
+      },
+      {
+       "q": "What should I tell staff?",
+       "a": "That the tablet records its use, and that Chat questions are recorded against the tablet or the person. Put it in your policy and induction."
+      }
+     ]
+    }
+   ]
+  },
+  "guide": {
+   "heading": "Looking after the record",
+   "lede": "A short routine that suits a busy manager.",
+   "sections": [
+    {
+     "h3": "Tell staff what is recorded",
+     "paragraphs": [
+      "Staff should know that set up, connection and PIN events are recorded and that questions asked on the tablet are recorded. Say so in your induction and in your phone and information governance policies. Being open about it is fairer, and it is what the data protection principles ask for."
+     ],
+     "checklist": [
+      "Put it in the induction",
+      "Put it in your policy",
+      "Answer questions honestly"
+     ]
+    },
+    {
+     "h3": "Make a monthly look",
+     "paragraphs": [
+      "Once a month, open the Staff page and check each tablet. Is it still connected where you expect? When was it last used? Does anything look odd? A tablet nobody has used for weeks may not be needed, or may have been moved."
+     ],
+     "checklist": [
+      "Open the Staff page",
+      "Check each green dot",
+      "Note anything odd"
+     ]
+    },
+    {
+     "h3": "Replace the poster on a schedule",
+     "paragraphs": [
+      "In Settings, Shared tablets, choose monthly, quarterly, half yearly or yearly reminders for the poster. Replace it when the reminder arrives. It stops the old poster connecting new tablets, and tablets already connected stay connected."
+     ],
+     "checklist": [
+      "Choose an interval",
+      "Print a new poster",
+      "Put it in staff areas only"
+     ]
+    },
+    {
+     "h3": "Know what you would do if something went wrong",
+     "paragraphs": [
+      "Write down the steps: disconnect the tablet, replace the poster, regenerate PINs if you think one was seen, and tell your data protection lead. Practise once, so it is not the first time under pressure."
+     ],
+     "checklist": [
+      "Disconnect the tablet",
+      "Replace the poster",
+      "Regenerate PINs if needed",
+      "Tell your data protection lead"
+     ]
+    }
+   ],
+   "note": "Illustrative only. CareStream records and controls access. The provider remains responsible for its own policies and data protection decisions."
+  }
+ },
+ {
+  "slug": "connect-a-tablet-poster-and-replacing-it-safely",
+  "status": "draft",
+  "order": 126,
+  "eyebrow": "Scenario",
+  "fine": "14 day free trial · Set up in a day · UK data residency",
+  "title": "<em>QR code sign in</em> for a shared tablet: a poster that signs nobody in, and how to replace it safely.",
+  "meta_title": "QR Code Sign In for a Shared Tablet: Poster and PINs | CareStreamAI",
+  "meta_description": "A Connect a tablet poster with a QR code signs nobody in. Staff need their name and own PIN. See how to print it, connect a tablet and replace the poster.",
+  "lede": "A manager is asked to approve a poster with a QR code in the corridor and is not sure it is wise. Fair. A <b>QR code sign in</b> that worked on its own would be a poor idea. CareStream's Connect a tablet poster does not work that way: the code only opens a connect page, and a member of staff still needs their name and their own four digit PIN. See the <a href=\"/features/staff-hub\">staff hub</a> for what staff reach once they are in.",
+  "panel": {
+   "title": "The poster, the PIN and the tablet",
+   "pill": "Illustration",
+   "rows": [
+    {
+     "label": "Scan the QR on the tablet",
+     "note": "Opens a connect page",
+     "done": true
+    },
+    {
+     "label": "Type the first letters of your name",
+     "note": "No list shown",
+     "done": true
+    },
+    {
+     "label": "Enter your own four digit PIN",
+     "note": "Always needed",
+     "done": true
+    },
+    {
+     "label": "Choose which tablet it is",
+     "note": "Then it connects",
+     "done": true
+    }
+   ],
+   "meter": 80
+  },
+  "image": "[to generate: POST /routine/content/image, key connect-a-tablet-poster-and-replacing-it-safely, scene: A manager pins a printed poster to a notice board in a staff corridor, a carer holds a tablet beside her, a window with a garden behind them]",
+  "image_alt": "A care home manager pins a printed poster to a notice board in a staff corridor while a carer holds a tablet",
+  "card_title": "Is a QR code on the wall a security risk?",
+  "card_snippet": "The poster's QR code signs nobody in. Staff type their name and own PIN to connect a tablet, and the poster is replaced regularly. Paid plans.",
+  "primary_keyword": "qr code sign in",
+  "secondary_keywords": [
+   "shared login",
+   "pin code"
+  ],
+  "feature_links": [
+   {
+    "title": "Training built from your own policies",
+    "body": "Short training from your own policies, checked by questions, for the whole team.",
+    "action": "See the feature",
+    "href": "/training-platform"
+   },
+   {
+    "title": "Staff hub",
+    "body": "The hub staff reach once they sign in with their own PIN.",
+    "action": "See the hub",
+    "href": "/features/staff-hub"
+   },
+   {
+    "title": "Information governance policy",
+    "body": "A policy on who may see what, and how access is controlled.",
+    "action": "See the policy",
+    "href": "/care-policies/information-governance"
+   }
+  ],
+  "intro": {
+   "heading": "A code in a corridor is only a risk if it does too much.",
+   "sub": "A scenario we see when a home first puts a poster up.",
+   "paragraph": "A home has bought two tablets for the floor. The manager adds them on the Staff page and prints the Connect a tablet poster, which shows the organisation logo and the CareStream logo. Before she puts it up, the deputy asks the sensible question. If a visitor scans it, what happens? She does not know for certain. She does not want to find out by trying it with a stranger. So the poster stays in the office drawer for a week, the tablets stay in their boxes, and the team goes on without them. A clear idea of what the code does would have saved the week."
+  },
+  "trail": [
+   {
+    "when": "Day one",
+    "text": "Two tablets are added on the Staff page.",
+    "kind": "ok"
+   },
+   {
+    "when": "Day one",
+    "text": "The poster is printed.",
+    "kind": "ok"
+   },
+   {
+    "when": "Day one",
+    "text": "The deputy asks what a scan does.",
+    "kind": "gap"
+   },
+   {
+    "when": "Day two",
+    "text": "The manager is not sure of the answer.",
+    "kind": "gap"
+   },
+   {
+    "when": "Day three",
+    "text": "The poster stays in a drawer.",
+    "kind": "gap"
+   },
+   {
+    "when": "Week one",
+    "text": "The tablets stay in their boxes.",
+    "kind": "gap"
+   },
+   {
+    "when": "Week two",
+    "text": "Staff ask when they will get them.",
+    "kind": "gap"
+   },
+   {
+    "when": "A review",
+    "text": "\"We lost two weeks over one question.\"",
+    "kind": "end"
+   }
+  ],
+  "trail_close": "<b>The question was a good one.</b> The answer is short: the code signs nobody in. Here is the path from poster to a connected tablet.",
+  "why": {
+   "heading": "Know exactly what the code does, then use it with confidence.",
+   "sub": "The poster is a way to start a connection, not a way in.",
+   "cards": [
+    {
+     "icon": "tick",
+     "title": "The code alone opens nothing",
+     "body": "Scanning the QR on the tablet opens a connect page. It does not sign anybody in. A staff PIN is always needed."
+    },
+    {
+     "icon": "chat",
+     "title": "No list of names is shown",
+     "body": "Staff type the first letters of their name. No full staff list is shown before connecting, so a scan does not show who works there."
+    },
+    {
+     "icon": "alert",
+     "title": "The poster is replaceable",
+     "body": "Replacing the poster stops the old one connecting new tablets. Tablets already connected stay connected."
+    }
+   ]
+  },
+  "how": {
+   "heading": "From poster to connected tablet, step by step.",
+   "sub": "This is how connecting works. Pair it with your <a href=\"/care-policies/information-governance\">information governance policy</a> and the <a href=\"/care-policies/social-media-phones-photography\">social media, phones and photography policy</a>.",
+   "blocks": [
+    {
+     "heading": "Add the tablet and print the poster",
+     "bullets": [
+      "Add the tablet on the Staff page (Shared tablets button, or tick Shared tablet in Add staff member) with a name and an optional location",
+      "Print the Connect a tablet poster, which shows your logo from Settings and the CareStream logo",
+      "Put it in staff areas only"
+     ],
+     "tags": [
+      {
+       "label": "Staff hub",
+       "href": "/features/staff-hub"
+      },
+      {
+       "label": "Registered managers",
+       "href": "/who-its-for/registered-managers"
+      }
+     ],
+     "mock": {
+      "type": "audit",
+      "audit": "The poster (example)",
+      "blocks": [
+       [
+        "Poster",
+        [
+         [
+          "Home logo",
+          "From Settings"
+         ],
+         [
+          "CareStream logo",
+          "Shown"
+         ],
+         [
+          "QR code",
+          "Opens a connect page"
+         ]
+        ]
+       ]
+      ],
+      "caption": "Example only. Your screen shows your own team."
+     }
+    },
+    {
+     "heading": "Connect with a name and your own PIN",
+     "bullets": [
+      "Scan the QR on the tablet",
+      "Type the first letters of your name and choose yourself",
+      "Enter your own four digit PIN and choose which tablet it is"
+     ],
+     "tags": [
+      {
+       "label": "Care workers",
+       "href": "/who-its-for/care-workers"
+      },
+      {
+       "label": "Data protection policy",
+       "href": "/care-policies/data-protection-gdpr"
+      }
+     ],
+     "mock": {
+      "type": "audit",
+      "audit": "Connecting (example)",
+      "blocks": [
+       [
+        "Steps",
+        [
+         [
+          "1",
+          "Scan the QR"
+         ],
+         [
+          "2",
+          "Type your name"
+         ],
+         [
+          "3",
+          "Enter your PIN"
+         ],
+         [
+          "4",
+          "Choose the tablet"
+         ]
+        ]
+       ]
+      ],
+      "caption": "Example only. Your screen shows your own team."
+     }
+    },
+    {
+     "heading": "Know the limits on guessing",
+     "bullets": [
+      "Wrong PIN guesses are limited per person and per poster",
+      "Five wrong tries locks that person for five minutes",
+      "A stranger cannot easily lock a colleague out, and cannot guess without limit"
+     ],
+     "tags": [
+      {
+       "label": "GDPR audit",
+       "href": "/care-audits/gdpr-audit-checklist"
+      },
+      {
+       "label": "Night shift policy access",
+       "href": "/blog/night-shift-policy-access"
+      }
+     ],
+     "mock": {
+      "type": "audit",
+      "audit": "Limits (example)",
+      "blocks": [
+       [
+        "Limits",
+        [
+         [
+          "Per person",
+          "Limited"
+         ],
+         [
+          "Per poster",
+          "Limited"
+         ],
+         [
+          "Lockout",
+          "5 minutes"
+         ]
+        ]
+       ]
+      ],
+      "caption": "Example only. Your screen shows your own team."
+     }
+    },
+    {
+     "heading": "Replace the poster and cut off a tablet",
+     "bullets": [
+      "In Settings, Shared tablets, choose monthly, quarterly, half yearly or yearly reminders",
+      "Replacing the poster stops the old poster connecting new tablets",
+      "Disconnect one tablet or all from the Staff page, and it stops at once"
+     ],
+     "tags": [
+      {
+       "label": "Pricing",
+       "href": "/pricing"
+      },
+      {
+       "label": "Residential care",
+       "href": "/residential-care"
+      }
+     ],
+     "mock": {
+      "type": "audit",
+      "audit": "Replacing (example)",
+      "blocks": [
+       [
+        "Reminder",
+        [
+         [
+          "Interval",
+          "Quarterly"
+         ],
+         [
+          "Old poster",
+          "No longer connects new tablets"
+         ],
+         [
+          "Connected tablets",
+          "Stay connected"
+         ]
+        ]
+       ]
+      ],
+      "caption": "Example only. Your screen shows your own team."
+     }
+    }
+   ]
+  },
+  "talk": {
+   "heading": "Questions managers ask about the poster",
+   "sub": "Read this as a conversation.",
+   "items": [
+    {
+     "q": "What happens if a visitor scans the QR code?",
+     "a": "They reach a connect page. They would need to type the first letters of a staff member's name, enter that person's own four digit PIN and choose a tablet. The QR alone signs nobody in."
+    },
+    {
+     "q": "Is it like a shared login?",
+     "a": "No. A shared login has one password for everyone. Here each person uses their own PIN to connect, and the tablet holds no staff identity of its own."
+    },
+    {
+     "q": "Where should the poster go?",
+     "a": "In staff areas only, such as a staff room or office corridor. Not in a lounge, reception or anywhere visitors gather."
+    },
+    {
+     "q": "How often should I replace it?",
+     "a": "In Settings, Shared tablets, choose monthly, quarterly, half yearly or yearly reminders. Choose the interval that suits your home."
+    },
+    {
+     "q": "What does replacing the poster do?",
+     "a": "It stops the old poster connecting new tablets. Tablets that are already connected stay connected."
+    },
+    {
+     "q": "What if a tablet goes missing?",
+     "a": "Disconnect it from the Staff page. It stops at once. You can disconnect all tablets in the same way."
+    },
+    {
+     "q": "Does the poster show our name?",
+     "a": "It shows the organisation logo from Settings and the CareStream logo."
+    },
+    {
+     "q": "Which plans?",
+     "a": "All paid plans: Starter, Professional and Enterprise. Not the Free plan. You can have up to five tablets per account."
+    }
+   ]
+  },
+  "limits": {
+   "heading": "What this does not do",
+   "cards": [
+    {
+     "title": "It is not a promise of security",
+     "body": "Wrong guesses are limited and a PIN is always needed, but no door is perfect. CareStream records and controls access. The provider remains responsible for its own policies and decisions."
+    },
+    {
+     "title": "It does not make a tablet private",
+     "body": "Anyone using a connected tablet can use Chat and This is me without identifying themselves, so keep the tablet in a staff area."
+    },
+    {
+     "title": "It does not sign anyone in by itself",
+     "body": "The code starts a connection. A name and a personal PIN complete it. Agency workers are not listed on tablets."
+    }
+   ]
+  },
+  "read_next": [
+   "night-shift-policy-access",
+   "gdpr-training-for-care-staff",
+   "staff-supervision-and-training-records"
+  ],
+  "faqs": {
+   "heading": "The poster and the QR code, answered",
+   "groups": [
+    {
+     "group": "About the QR code",
+     "items": [
+      {
+       "q": "What is a QR code sign in?",
+       "a": "A way of starting a sign in by scanning a code. In CareStream the code opens a connect page, and a name and personal PIN are still needed, so it is not a sign in on its own."
+      },
+      {
+       "q": "Can anyone scan it?",
+       "a": "Anyone can scan it. Scanning gets them to the connect page and no further without a staff member's name and their own PIN."
+      },
+      {
+       "q": "Why use a poster at all?",
+       "a": "It makes connecting a tablet quick for staff, without anyone needing to type a long link."
+      }
+     ]
+    },
+    {
+     "group": "About the PIN",
+     "items": [
+      {
+       "q": "What is a PIN code for?",
+       "a": "It proves a member of staff is who they say, both to connect a tablet and for a personal session. Each person has their own."
+      },
+      {
+       "q": "Where do staff get their PIN?",
+       "a": "It is emailed to them, shown as sent by the administrator. New staff get theirs with their welcome once the account has a tablet."
+      },
+      {
+       "q": "What if a PIN is forgotten?",
+       "a": "An administrator can Re-send, Regenerate or Show it from the three dots menu on the Staff page, each limited to three an hour per person."
+      }
+     ]
+    },
+    {
+     "group": "About the rules",
+     "items": [
+      {
+       "q": "Is a poster in a corridor a data protection issue?",
+       "a": "The poster holds no personal data. The risk is access. The <a href=\"https://ico.org.uk/for-organisations/uk-gdpr-guidance-and-resources/security/a-guide-to-data-security/\">ICO's guide to data security</a> sets out the idea of appropriate measures, and limits on guessing and personal PINs are part of that."
+      },
+      {
+       "q": "Does the law require a particular sign in?",
+       "a": "No. <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/17\">Regulation 17</a> asks providers to keep records securely and to monitor their service. How you do that is your decision."
+      },
+      {
+       "q": "Who decides where the tablet lives?",
+       "a": "You do. Write it into your policy."
+      }
+     ]
+    },
+    {
+     "group": "In practice",
+     "items": [
+      {
+       "q": "How many tablets can we have?",
+       "a": "Up to five per account. A tablet is not counted as a staff member or a seat."
+      },
+      {
+       "q": "What do we do on day one?",
+       "a": "Add one tablet, print the poster, ask three staff to connect it, and see how it feels. Our guide on night shift policy access shows how a night team can use it."
+      },
+      {
+       "q": "Is the connection recorded?",
+       "a": "Yes. Set up, connection and PIN events are recorded in an audit log."
+      },
+      {
+       "q": "Can I see whether a tablet is connected?",
+       "a": "The Staff page shows each tablet with a green dot when it is connected and when it was last used."
+      }
+     ]
+    }
+   ]
+  },
+  "guide": {
+   "heading": "Putting the poster up well",
+   "lede": "A routine for the first week and the first year.",
+   "sections": [
+    {
+     "h3": "Choose the place with care",
+     "paragraphs": [
+      "Staff areas only. A corridor staff use, a staff room or the office. Not a lounge, reception, or a window facing the car park. The poster is meant for the people who work there."
+     ],
+     "checklist": [
+      "Pick a staff only wall",
+      "Check it is not visible from outside",
+      "Tell staff where it is"
+     ]
+    },
+    {
+     "h3": "Show three people how it works",
+     "paragraphs": [
+      "Ask a senior, a night carer and a bank worker to connect the tablet while you watch. Notice where they hesitate. It is usually the PIN email, so check that PINs were sent and have arrived."
+     ],
+     "checklist": [
+      "Watch three people connect",
+      "Check PIN emails arrived",
+      "Note where they hesitate"
+     ]
+    },
+    {
+     "h3": "Set the replacement reminder",
+     "paragraphs": [
+      "In Settings, Shared tablets, choose the reminder interval. Monthly suits a home with a lot of changes in staff. Yearly suits a stable team. When the reminder arrives, print a new poster and replace the old one."
+     ],
+     "checklist": [
+      "Choose an interval",
+      "Replace when reminded",
+      "Remove the old poster"
+     ]
+    },
+    {
+     "h3": "Know the cut off",
+     "paragraphs": [
+      "If a tablet is lost, disconnect it. If you suspect the poster has been copied, replace it. If a PIN may have been seen, regenerate it. Write these three lines on a card for the senior on duty."
+     ],
+     "checklist": [
+      "Disconnect the tablet",
+      "Replace the poster",
+      "Regenerate the PIN"
+     ]
+    }
+   ],
+   "note": "Illustrative only. CareStream records and controls access. The provider remains responsible for its own policies and data protection decisions."
+  }
+ },
+ {
+  "slug": "training-for-staff-with-no-personal-phone-on-the-floor",
+  "status": "draft",
+  "order": 127,
+  "eyebrow": "Scenario",
+  "fine": "14 day free trial · Set up in a day · UK data residency",
+  "title": "A <em>mobile phone ban</em> should not mean no training. Staff can do theirs on a shared tablet with their own PIN.",
+  "meta_title": "Mobile Phone Ban and Staff Training on a Tablet | CareStreamAI",
+  "meta_description": "With a mobile phone ban, staff still need to reach their training and actions. A shared tablet and a personal PIN give each person their own hub. Paid plans.",
+  "lede": "A home brings in a <b>mobile phone ban</b> on the floor after a complaint about photographs. It is a sound decision. Three weeks later the training matrix is showing gaps, because half the team used to do their short lessons on their phones in the break room. With a shared tablet, each person taps their picture, enters their own PIN and opens their own hub: their training, actions, supervisions and records. See the <a href=\"/features/training\">training feature</a> for what a lesson looks like.",
+  "panel": {
+   "title": "Their own hub, on a shared tablet",
+   "pill": "Illustration",
+   "rows": [
+    {
+     "label": "Tap your picture, enter your PIN",
+     "note": "Your own hub",
+     "done": true
+    },
+    {
+     "label": "Training and actions",
+     "note": "Your own list",
+     "done": true
+    },
+    {
+     "label": "Supervisions and records",
+     "note": "Your own list",
+     "done": true
+    },
+    {
+     "label": "Returns to the tablet screen",
+     "note": "Done, or about 2 minutes",
+     "done": true
+    }
+   ],
+   "meter": 65
+  },
+  "image": "[to generate: POST /routine/content/image, key training-for-staff-with-no-personal-phone-on-the-floor, scene: A carer sits alone at a table in a quiet staff room, a tablet propped in front of her and a mug beside it, a window with a garden behind her]",
+  "image_alt": "A carer sits alone at a table in a staff room with a tablet propped in front of her and a mug beside it",
+  "card_title": "Phones are banned on the floor. Where do staff do their training?",
+  "card_snippet": "Each person taps their picture, enters their own PIN and gets their own hub on a shared tablet. It returns to the tablet screen when they are done. Paid plans.",
+  "primary_keyword": "mobile phone ban",
+  "secondary_keywords": [
+   "mobile phone use at work",
+   "mobile phones in the workplace"
+  ],
+  "feature_links": [
+   {
+    "title": "Training built from your own policies",
+    "body": "Short training from your own policies, checked by questions, for the whole team.",
+    "action": "See the feature",
+    "href": "/training-platform"
+   },
+   {
+    "title": "Training",
+    "body": "Short lessons and questions, checked for understanding.",
+    "action": "See the feature",
+    "href": "/features/training"
+   },
+   {
+    "title": "Staff hub",
+    "body": "The hub staff reach once they sign in with their own PIN.",
+    "action": "See the hub",
+    "href": "/features/staff-hub"
+   }
+  ],
+  "intro": {
+   "heading": "A ban on phones takes away a route to learning, so give them another.",
+   "sub": "A scenario we see when a home changes its phone rules.",
+   "paragraph": "The change was made for good reasons, and the staff understood. But a number of the team had been using their own phones for short lessons and to read their actions. Nobody noticed at first. Then the training matrix showed three people with lessons overdue, and a night carer said she had nothing to use. The manager had a tablet in the office, and nobody had thought to put it in front of the team. The rule was fair, and the gap was an easy one to miss, because the policy changed the way work was done without changing the way learning was done."
+  },
+  "trail": [
+   {
+    "when": "Before",
+    "text": "Staff do short lessons on their own phones.",
+    "kind": "ok"
+   },
+   {
+    "when": "A complaint",
+    "text": "A photograph is taken on the floor.",
+    "kind": "ok"
+   },
+   {
+    "when": "The change",
+    "text": "A phone ban is brought in.",
+    "kind": "ok"
+   },
+   {
+    "when": "Week one",
+    "text": "Phones go into lockers.",
+    "kind": "ok"
+   },
+   {
+    "when": "Week three",
+    "text": "Lessons are overdue for three people.",
+    "kind": "gap"
+   },
+   {
+    "when": "Week four",
+    "text": "A night carer says she has nothing to use.",
+    "kind": "gap"
+   },
+   {
+    "when": "Month two",
+    "text": "The training matrix still shows gaps.",
+    "kind": "gap"
+   },
+   {
+    "when": "A review",
+    "text": "\"We changed the rule and forgot the learning.\"",
+    "kind": "end"
+   }
+  ],
+  "trail_close": "<b>The ban did its job.</b> The training route needed replacing. A shared tablet gives each person their own hub on the floor, without bringing a personal phone back.",
+  "why": {
+   "heading": "Your phone rule and your training plan should agree.",
+   "sub": "A good policy says what staff may not do, and what they should do instead.",
+   "cards": [
+    {
+     "icon": "tick",
+     "title": "Training gets a home",
+     "body": "Each person signs in with their own PIN and sees their own training. It is the same hub they would see anywhere else, shown on a shared screen."
+    },
+    {
+     "icon": "chat",
+     "title": "Personal means personal",
+     "body": "Staff see only their own training, actions, supervisions and records. Chat and This is me are open to anyone using the tablet, but a personal hub needs a PIN."
+    },
+    {
+     "icon": "alert",
+     "title": "The screen does not linger",
+     "body": "The session returns to the tablet screen when a person taps Done or after about two minutes untouched, so the next person does not see anyone else's hub."
+    }
+   ]
+  },
+  "how": {
+   "heading": "From a phone ban to a training routine.",
+   "sub": "This is how the tablet fits your <a href=\"/care-policies/social-media-phones-photography\">social media, phones and photography policy</a>. See also our <a href=\"/blog/micro-learning-for-care-staff-what-works-on-a-12-hour-shift\">post on micro learning</a>.",
+   "blocks": [
+    {
+     "heading": "Write down what the ban is for",
+     "bullets": [
+      "Say in your policy what phones may not be used for and where they are kept",
+      "Say where staff can go for what a phone used to give them",
+      "Tell staff before the change, not after"
+     ],
+     "tags": [
+      {
+       "label": "Phones and photography policy",
+       "href": "/care-policies/social-media-phones-photography"
+      },
+      {
+       "label": "Registered managers",
+       "href": "/who-its-for/registered-managers"
+      }
+     ],
+     "mock": {
+      "type": "audit",
+      "audit": "The policy (example)",
+      "blocks": [
+       [
+        "Policy",
+        [
+         [
+          "Phones",
+          "Kept in lockers"
+         ],
+         [
+          "Instead",
+          "Shared tablet in a staff area"
+         ]
+        ]
+       ]
+      ],
+      "caption": "Example only. Your screen shows your own team."
+     }
+    },
+    {
+     "heading": "Give each person their own route in",
+     "bullets": [
+      "On the tablet, tap your picture or type your name under Who's using it?",
+      "Enter your own four digit PIN",
+      "Open your own hub with your training, actions, supervisions and records"
+     ],
+     "tags": [
+      {
+       "label": "Staff hub",
+       "href": "/features/staff-hub"
+      },
+      {
+       "label": "Care workers",
+       "href": "/who-its-for/care-workers"
+      }
+     ],
+     "mock": {
+      "type": "audit",
+      "audit": "Who's using it? (example)",
+      "blocks": [
+       [
+        "Steps",
+        [
+         [
+          "1",
+          "Tap your picture"
+         ],
+         [
+          "2",
+          "Enter your PIN"
+         ],
+         [
+          "3",
+          "Open your hub"
+         ]
+        ]
+       ]
+      ],
+      "caption": "Example only. Your screen shows your own team."
+     }
+    },
+    {
+     "heading": "Make time for it in the shift",
+     "bullets": [
+      "Agree when staff can use the tablet, for example in a quiet part of the shift",
+      "Decide whether it counts as paid time, in your own policy",
+      "Keep the lessons short, and keep the tablet in a staff area"
+     ],
+     "tags": [
+      {
+       "label": "Training",
+       "href": "/features/training"
+      },
+      {
+       "label": "Training matrix",
+       "href": "/features/training-compliance-matrix-renewals-gaps"
+      }
+     ],
+     "mock": {
+      "type": "audit",
+      "audit": "Time (example)",
+      "blocks": [
+       [
+        "Plan",
+        [
+         [
+          "When",
+          "Quiet part of the shift"
+         ],
+         [
+          "Where",
+          "Staff room"
+         ]
+        ]
+       ]
+      ],
+      "caption": "Example only. Your screen shows your own team."
+     }
+    },
+    {
+     "heading": "Keep an eye on who has not signed in",
+     "bullets": [
+      "Look at the training matrix as usual, because results show against the person",
+      "Remember that agency workers are not listed on tablets",
+      "Tablets never receive email or push notifications, so use the handover or a notice to remind people"
+     ],
+     "tags": [
+      {
+       "label": "Training matrix",
+       "href": "/features/training-compliance-matrix-renewals-gaps"
+      },
+      {
+       "label": "Pricing",
+       "href": "/pricing"
+      }
+     ],
+     "mock": {
+      "type": "audit",
+      "audit": "Follow up (example)",
+      "blocks": [
+       [
+        "Matrix",
+        [
+         [
+          "Overdue",
+          "3"
+         ],
+         [
+          "Reminder",
+          "At handover"
+         ]
+        ]
+       ]
+      ],
+      "caption": "Example only. Your screen shows your own team.",
+      "stats": [
+       [
+        "Done",
+        "31"
+       ],
+       [
+        "Due",
+        "6"
+       ],
+       [
+        "Overdue",
+        "3"
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  "talk": {
+   "heading": "Questions managers ask about a phone ban and training",
+   "sub": "Read this as a conversation.",
+   "items": [
+    {
+     "q": "Do staff really need a phone to do training?",
+     "a": "No. On a shared tablet, each person signs in with their own PIN and opens their own hub with their training. A personal phone is not needed."
+    },
+    {
+     "q": "Does the hub on the tablet look different?",
+     "a": "It is the person's own hub. What it shows is their training, actions, supervisions and records."
+    },
+    {
+     "q": "What stops one person seeing another's hub?",
+     "a": "Each person needs their own PIN. The session returns to the tablet screen when they tap Done, or after about two minutes of being left alone."
+    },
+    {
+     "q": "What about a long lesson?",
+     "a": "The session ends after about two minutes untouched. Short lessons suit that. Staff can sign in again to carry on."
+    },
+    {
+     "q": "Do we get reminders by phone?",
+     "a": "No. Tablets never receive email or push notifications. Staff emails are sent to the staff member as usual, and you can remind people at handover."
+    },
+    {
+     "q": "Can agency workers use it?",
+     "a": "Agency workers are not listed on tablets, so they have no personal hub there. They can use Chat and This is me on a connected tablet."
+    },
+    {
+     "q": "Does an administrator get admin screens on the tablet?",
+     "a": "No. An administrator who signs in on a tablet gets an ordinary staff session. Admin screens can never be reached from a tablet."
+    },
+    {
+     "q": "Which plans?",
+     "a": "All paid plans: Starter, Professional and Enterprise. Not the Free plan. Up to five tablets per account."
+    }
+   ]
+  },
+  "limits": {
+   "heading": "What this does not do",
+   "cards": [
+    {
+     "title": "It does not write your phone policy",
+     "body": "The provider decides what is allowed on the floor. CareStream gives staff a tablet that fits the rule. Your policy remains yours."
+    },
+    {
+     "title": "It does not decide paid time",
+     "body": "Whether tablet time counts as working time is your decision."
+    },
+    {
+     "title": "It does not replace a quiet space",
+     "body": "A tablet on a busy corridor is a poor place to learn. A calm corner of a staff room is better."
+    }
+   ]
+  },
+  "read_next": [
+   "micro-learning-for-care-staff-what-works-on-a-12-hour-shift",
+   "chasing-staff-training-completions",
+   "night-shift-policy-access"
+  ],
+  "faqs": {
+   "heading": "Phone bans and training on a shared tablet, answered",
+   "groups": [
+    {
+     "group": "About phone rules",
+     "items": [
+      {
+       "q": "Can a care home ban mobile phones?",
+       "a": "A provider can set its own rules for what staff may do at work, and many homes limit personal phones on the floor. Check your contracts and your own policies, and speak to your HR adviser."
+      },
+      {
+       "q": "Why do homes ban phones?",
+       "a": "Common reasons are resident privacy, photographs, distraction and the risk of personal messaging during care. That is a decision for each provider."
+      },
+      {
+       "q": "What should a mobile phone use at work policy cover?",
+       "a": "That is for your policy. Many cover where phones are kept, when staff may use them, photography and what happens if the rule is broken. Our social media, phones and photography policy is a starting point."
+      }
+     ]
+    },
+    {
+     "group": "About the tablet",
+     "items": [
+      {
+       "q": "What can staff do on the tablet without a PIN?",
+       "a": "Use Chat, the policy and guidance assistant, and This is me, which is read only."
+      },
+      {
+       "q": "What needs a PIN?",
+       "a": "A person's own hub: their training, actions, supervisions and records."
+      },
+      {
+       "q": "What if mobile phones in the workplace are allowed in some rooms?",
+       "a": "Your policy can say so. The tablet works the same either way. It does not depend on a ban."
+      }
+     ]
+    },
+    {
+     "group": "About training",
+     "items": [
+      {
+       "q": "Does the law say anything about staff training?",
+       "a": "<a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/18\">Regulation 18</a> asks providers to make sure staff receive the support, training and development they need to do their work. How you deliver it is up to you."
+      },
+      {
+       "q": "Does training on the tablet count?",
+       "a": "It is the person's own hub, so what they complete shows against them. Whether that is enough for your service is for you to judge."
+      },
+      {
+       "q": "Where do results show?",
+       "a": "In the training matrix and the person's record, as for any other route."
+      }
+     ]
+    },
+    {
+     "group": "In practice",
+     "items": [
+      {
+       "q": "What is the quickest way to start?",
+       "a": "Add one tablet, print the poster and ask three staff to connect it. The <a href=\"https://ico.org.uk/for-organisations/uk-gdpr-guidance-and-resources/security/a-guide-to-data-security/\">ICO's data security guidance</a> is worth a read when you decide where it lives."
+      },
+      {
+       "q": "What about night staff?",
+       "a": "The tablet is there all shift once connected. Our guide on night shift policy access has ideas for a night team."
+      },
+      {
+       "q": "Do we need Wi-Fi?",
+       "a": "This page does not describe network needs. Ask us at a demo."
+      },
+      {
+       "q": "How do I stop overdue lessons building up?",
+       "a": "Look at the matrix weekly, remind people at handover, and make a time in the shift. Small regular lessons beat a catch up."
+      }
+     ]
+    }
+   ]
+  },
+  "guide": {
+   "heading": "A routine for training without phones",
+   "lede": "Small steps that suit a home with a phone ban.",
+   "sections": [
+    {
+     "h3": "Tell staff what has changed and why",
+     "paragraphs": [
+      "A phone ban is easier to accept when staff hear the reason and the alternative together. Tell them where the tablet is, how to sign in and when they can use it."
+     ],
+     "checklist": [
+      "Say why the rule exists",
+      "Show how to sign in",
+      "Name the time and place"
+     ]
+    },
+    {
+     "h3": "Look at the matrix after the first fortnight",
+     "paragraphs": [
+      "Open the training matrix and look for new gaps since the ban began. If a few people have fallen behind, they probably have not found the tablet or the time."
+     ],
+     "checklist": [
+      "Compare with before the ban",
+      "Talk to those who fell behind",
+      "Fix the barrier, not the person"
+     ]
+    },
+    {
+     "h3": "Use handover for reminders",
+     "paragraphs": [
+      "Tablets do not send email or push notifications. A line at handover is enough: who has a lesson due, and when the tablet is free."
+     ],
+     "checklist": [
+      "Name who has a lesson due",
+      "Say when the tablet is free",
+      "Keep it short"
+     ]
+    },
+    {
+     "h3": "Review the rule and the route together",
+     "paragraphs": [
+      "When you review your phone policy, review the training route with it. The two belong in the same conversation."
+     ],
+     "checklist": [
+      "Review the phone policy",
+      "Review the training route",
+      "Note what staff say"
+     ]
+    }
+   ],
+   "note": "Illustrative only. The provider remains responsible for its own phone policy and decisions. CareStream records and controls access."
+  }
  }
 ]

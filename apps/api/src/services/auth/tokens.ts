@@ -36,6 +36,12 @@ export function generateViewAsToken(payload: Omit<JwtPayload, 'iat' | 'exp'>): s
   return jwt.sign(payload, process.env.JWT_SECRET!, { expiresIn: `${VIEW_AS_MINUTES}m` })
 }
 
+/** A staff member's short personal session on a shared tablet (after their PIN). No refresh token: it simply ends. */
+export const TABLET_PERSONAL_MINUTES = 30
+export function generateTabletPersonalToken(payload: Omit<JwtPayload, 'iat' | 'exp'>): string {
+  return jwt.sign(payload, process.env.JWT_SECRET!, { expiresIn: `${TABLET_PERSONAL_MINUTES}m` })
+}
+
 export function verifyAccessToken(token: string): JwtPayload {
   return jwt.verify(token, process.env.JWT_SECRET!) as JwtPayload
 }

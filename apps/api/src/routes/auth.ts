@@ -651,7 +651,7 @@ authRouter.post('/refresh', async (req: Request, res: Response) => {
   const user = await (prisma as any).user.findUnique({
     where: { id: rotated.userId },
     select: {
-      id: true, tenant_id: true, role: true, locked_until: true, audit_template_ids: true, is_reviewer: true,
+      id: true, tenant_id: true, role: true, locked_until: true, audit_template_ids: true, is_reviewer: true, is_shared: true,
       tenant: { select: { subscription_status: true, stripe_subscription_id: true, tier: true } },
     },
   })
@@ -661,10 +661,19 @@ authRouter.post('/refresh', async (req: Request, res: Response) => {
     return
   }
 
+  // A shared tablet keeps its restricted claim on every refresh, and a revoked tablet cannot refresh at all.
+  let dev: { t: 'device'; d: string } | undefined
+  if (user.is_shared) {
+    const device = await (prisma as any).sharedDevice.findUnique({ where: { user_id: user.id }, select: { id: true, revoked_at: true } }).catch(() => null)
+    if (!device || device.revoked_at) { err(res, 'INVALID_TOKEN', 'This shared tablet has been disconnected.', 401); return }
+    dev = { t: 'device', d: device.id }
+  }
+
   const accessToken = generateAccessToken({
     sub: user.id,
     tenant_id: user.tenant_id,
-    role: user.role,
+    role: user.is_shared ? 'staff' : user.role,
+    ...(dev ? { dev } : {}),
   })
 
   // Re-evaluate the billing gate on every refresh so it clears once a card is added.

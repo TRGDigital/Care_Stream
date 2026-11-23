@@ -13,6 +13,7 @@ import { writeAuditLog, writeAuditLogStrict } from '../lib/audit'
 import { ok, err } from '../lib/response'
 import { siteUrl } from '../lib/urls'
 import { sendStaffWelcomeEmail, sendStaffLoginLinkEmail } from '../services/email/outbound'
+import { issuePinForNewStaff } from './shared-tablets'
 import { createLoginLink } from '../lib/login-tokens'
 import { checkUserLimit, PlanLimitError } from '../lib/plan-limits'
 import { freeStaffGuard } from '../lib/free-tier'
@@ -53,7 +54,7 @@ usersRouter.get('/', async (req: Request, res: Response) => {
   const tenantId = req.user!.tenant_id
 
   const users = await (prisma as any).user.findMany({
-    where:   { tenant_id: tenantId },
+    where:   { tenant_id: tenantId, is_shared: false },   // a shared tablet's own row is never listed as staff
     select:  {
       id: true, name: true, email: true, role: true, job_role: true, specialisms: true, audit_template_ids: true, phone_number: true,
       shift_type: true, training_hourly_rate: true, first_language: true, second_language: true, comms_always_first_language: true, allow_language_switching: true, can_suggest_translations: true,
@@ -449,6 +450,9 @@ usersRouter.post('/invite', async (req: Request, res: Response) => {
     },
     select: { id: true, is_agency: true, agency_name: true, agency_start: true, agency_end: true, agency_day_rate_pence: true, name: true, email: true, role: true, job_role: true, specialisms: true, audit_template_ids: true, phone_number: true, shift_type: true, training_hourly_rate: true, first_language: true, second_language: true, comms_always_first_language: true, allow_language_switching: true, can_suggest_translations: true, created_at: true },
   })
+
+  // If the account uses shared tablets, the new staff member gets their tablet PIN by email (never blocks the request).
+  if (!is_agency) void issuePinForNewStaff(tenantId, (user as any).id)
 
   // Add the phone number to the tenant's WhatsApp allowlist
   if (phone_number) {

@@ -7,6 +7,8 @@ import { feedbackRouter } from './routes/feedback'
 import { policiesRouter } from './routes/policies'
 import { adminSearchRouter } from './routes/admin-search'
 import { viewAsGuard } from './lib/view-as'
+import { sharedDeviceGuard } from './middleware/sharedDeviceGuard'
+import { tabletPublicRouter, tabletRouter, tabletsAdminRouter } from './routes/shared-tablets'
 import { queryRouter } from './routes/query'
 import { usersRouter } from './routes/users'
 import { meRouter } from './routes/me'
@@ -219,6 +221,7 @@ app.use('/public/family', publicFamilyRouter)
 app.use('/public/resident-photo', residentPhotoFileRouter)
 // Staff profile pictures: signed for about ten minutes, re-checked on every request. BEFORE requireAuth.
 app.use('/public/staff-photo', staffPhotoFileRouter)
+app.use('/public/tablet', tabletPublicRouter)   // connect a shared tablet from the printed QR (needs the key and a staff PIN)
 // The small picture shown in emails to staff: a link that changes when the picture changes, 404 once it is removed. BEFORE requireAuth.
 app.use('/public/email-avatar', emailAvatarRouter)
 // "This is me" video files: signed for about ten minutes, re-checked on every request, HTTP Range supported. BEFORE requireAuth.
@@ -252,6 +255,8 @@ app.use(apiLimiter)
 app.use(requireAuth)
 // A "view hub as" token is re-checked against the account on every request (switched off means it stops at once); acting is logged.
 app.use(viewAsGuard)
+// A shared tablet is re-checked on every request (revoke takes effect at once); its chat questions are tagged with the tablet.
+app.use(sharedDeviceGuard)
 app.use(tenantGuard)
 // Free tenants are default closed on the API (a no op for every other tier).
 app.use(freeTierGuard)
@@ -261,6 +266,8 @@ app.use('/admin-search', adminSearchRouter)
 app.use('/query', queryRouter)
 app.use('/users', usersRouter)
 app.use('/me', meRouter)
+app.use('/tablet', tabletRouter)
+app.use('/tablets', tabletsAdminRouter)
 app.use('/billing', billingRouter)
 app.use('/analytics', analyticsRouter)
 app.use('/suggestions', suggestionsRouter)

@@ -372,6 +372,7 @@ model User {
   // access is time boxed, their DBS and right to work are held by the AGENCY so they must not
   // sit red on the compliance register for ever, they get no supervisions, and they do not
   // count toward the plan's staff limit because they are not the home's staff.
+  is_shared              Boolean        @default(false)   // a shared tablet's own user row (see prisma/sql/2026-11-24_shared_tablets.sql)
   is_agency              Boolean        @default(false)
   agency_name            String?                            // which agency supplied them
   agency_start           DateTime?
@@ -458,6 +459,7 @@ model QueryRecord {
   no_match                 Boolean  @default(false)           // true = no policy found (§10.2 not-found rate)
   language_detected        String   @default("eng")           // ISO 639-3 code (§5.1)
   response_time_ms         Int
+  shared_device_id         String?                            // the shared tablet this question was asked on, if any
   chat_session_id          String?                            // groups multi-turn chat messages into one session
   chat_deleted_at          DateTime?                          // set when staff removes session from chat UI (records preserved)
   feedback                 String?                            // 'positive' | 'negative' — one-click staff rating
@@ -3759,4 +3761,63 @@ model StaffBirthdayLog {
 
   @@unique([user_id, kind, year])
   @@map("staff_birthday_log")
+}
+
+// ─── Shared tablets (all paid plans). See prisma/sql/2026-11-24_shared_tablets.sql. No relations on purpose. ─────────
+model SharedConnectKey {
+  tenant_id         String    @id
+  connect_key       String
+  rotated_at        DateTime  @default(now())
+  reminded_at       DateTime?
+  fail_count        Int       @default(0)
+  fail_window_start DateTime?
+  blocked_until     DateTime?
+
+  @@map("shared_connect_keys")
+}
+
+model SharedDevice {
+  id           String    @id @default(uuid())
+  tenant_id    String
+  user_id      String    @unique
+  name         String
+  location     String?
+  created_by   String?
+  created_at   DateTime  @default(now())
+  paired_at    DateTime?
+  paired_by    String?
+  last_seen_at DateTime?
+  revoked_at   DateTime?
+
+  @@index([tenant_id])
+  @@map("shared_devices")
+}
+
+model StaffPin {
+  user_id             String    @id
+  tenant_id           String
+  pin_enc             String
+  set_at              DateTime  @default(now())
+  sent_at             DateTime?
+  failed_count        Int       @default(0)
+  locked_until        DateTime?
+  last_ok_at          DateTime?
+  resend_window_start DateTime?
+  resend_count        Int       @default(0)
+
+  @@index([tenant_id])
+  @@map("staff_pins")
+}
+
+model SharedSession {
+  id         String    @id @default(uuid())
+  tenant_id  String
+  device_id  String
+  user_id    String
+  started_at DateTime  @default(now())
+  ended_at   DateTime?
+  end_reason String?
+
+  @@index([device_id, started_at])
+  @@map("shared_sessions")
 }

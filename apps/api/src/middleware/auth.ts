@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express'
 import jwt from 'jsonwebtoken'
 import { tenantContext } from '../db/tenant-context'
 import { prisma } from '../db/client'
+import { tabletRefusal } from '../lib/shared-tablets'
 
 // JWT payload shape — tenant_id and role are embedded at login time (§3.1, §11.1)
 export interface JwtPayload {
@@ -10,6 +11,9 @@ export interface JwtPayload {
   role: 'admin' | 'staff'
   // Present only on a "view hub as" token: an admin looking at a staff member's hub. mode 'view' can read but never change anything.
   imp?: { by: string; by_name: string; mode: 'view' | 'act' }
+  // Present on a shared tablet's tokens. 'device' = the tablet itself (chat and This is me only). 'personal' = a staff member who has entered their
+  // PIN on that tablet (short lived, never an admin). d = the shared_devices id.
+  dev?: { t: 'device' | 'personal'; d: string }
   iat: number
   exp: number
 }
@@ -55,6 +59,13 @@ export function requireAuth(req: Request, res: Response, next: NextFunction): vo
   // A "view hub as" token in view-only mode can read but not change anything. The only write it may make is ending the view.
   if (payload.imp?.mode === 'view' && !['GET', 'HEAD', 'OPTIONS'].includes(req.method) && req.originalUrl.split('?')[0] !== '/me/view-as/end') {
     res.status(403).json({ success: false, error: { code: 'VIEW_ONLY', message: 'You are viewing this hub as an admin, so nothing can be changed. Go back to admin to make changes.' } })
+    return
+  }
+
+  // A shared tablet's tokens may only reach the areas a tablet is for (see lib/shared-tablets.ts). Enforced here, not just on screen.
+  const refusal = tabletRefusal(req)
+  if (refusal) {
+    res.status(403).json({ success: false, error: { code: 'TABLET_RESTRICTED', message: refusal } })
     return
   }
 

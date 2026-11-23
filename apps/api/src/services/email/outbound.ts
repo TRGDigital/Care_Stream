@@ -2585,3 +2585,23 @@ export async function sendStaffBirthdayEmail(opts: { to: string; name: string; o
   `)
   await sgMail.send({ to: opts.to, from: { email: from, name: opts.orgName }, subject: `${opts.subjectPrefix ?? ''}Happy birthday from ${opts.orgName}`, html })
 }
+
+// ─── Shared tablet PIN (company branded; the PIN is never in the subject) ─────
+export async function sendStaffPinEmail(opts: { to: string; name: string; orgName: string; pin: string; kind: 'new' | 'resend' | 'regenerated' }): Promise<void> {
+  ensureInitialised()
+  if (!process.env.SENDGRID_API_KEY) return
+  const from = process.env.SENDGRID_FROM_ADDRESS ?? `noreply@${INBOUND_DOMAIN}`
+  const first = escHtml(opts.name.split(' ')[0] ?? opts.name)
+  const lead = opts.kind === 'regenerated'
+    ? 'Your tablet PIN has been changed. Your new PIN is:'
+    : opts.kind === 'resend' ? 'Here is your tablet PIN again:' : `${escHtml(opts.orgName)} uses shared tablets, and you have a personal PIN to use yours on them:`
+  const html = emailWrapper(`
+    <p style="color:${NEUTRAL_DARK};font-size:15px;margin:0 0 16px">Hi ${first},</p>
+    <p style="color:${NEUTRAL_DARK};font-size:15px;line-height:1.6;margin:0 0 16px">${lead}</p>
+    <p style="font-size:34px;font-weight:700;letter-spacing:10px;color:${PURPLE_DARK};margin:0 0 16px">${escHtml(opts.pin)}</p>
+    <p style="color:${NEUTRAL_DARK};font-size:15px;line-height:1.6;margin:0 0 8px">On a shared tablet, tap <strong>Who's using it?</strong>, choose your name and enter this PIN to open your own training, actions and records.</p>
+    <p style="color:#666;font-size:13px;line-height:1.6;margin:0">Keep it to yourself. Anything done after you enter it is recorded as you. If you think someone else knows it, ask your manager for a new one.</p>
+    ${emailFooter(opts.orgName)}
+  `)
+  await sgMail.send({ to: opts.to, from: { email: from, name: opts.orgName }, subject: `Your ${opts.orgName} tablet PIN`, html })
+}

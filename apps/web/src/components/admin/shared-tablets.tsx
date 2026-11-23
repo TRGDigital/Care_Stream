@@ -40,13 +40,21 @@ async function printPoster(token: string) {
     const url = `${window.location.origin}/tablet/connect?k=${encodeURIComponent(k.key)}`
     const qr = await QRCode.toDataURL(url, { width: 640, margin: 2 })
     const esc = (s: string) => s.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c] as string))
+    const csLogo = `${window.location.origin}/logo-color.png`
+    // The organisation's own logo comes first and large. With no logo saved the home's name stands in its place.
+    const top = k.logo_url
+      ? `<img src="${k.logo_url.replace(/"/g, '')}" alt="${esc(k.home_name)}" style="max-width:460px;max-height:190px;object-fit:contain;display:block;margin:0 auto 18px">`
+      : `<div style="font-size:42px;font-weight:700;margin:0 0 18px">${esc(k.home_name)}</div>`
     w.document.open()
-    w.document.write(`<!doctype html><title>Connect a tablet</title><body style="font-family:Arial,sans-serif;text-align:center;padding:48px;color:#1A1530">
-      <h1 style="font-size:44px;margin:0 0 8px">Connect a tablet</h1><p style="font-size:24px;margin:0 0 28px;color:#5E4D70">${esc(k.home_name)}</p>
-      <img src="${qr}" style="width:420px;height:420px">
-      <p style="font-size:26px;margin:28px auto 8px;max-width:640px">Scan this with the tablet&rsquo;s camera, find your name and enter your PIN.</p>
-      <p style="font-size:18px;color:#5E4D70;max-width:640px;margin:0 auto">For staff only. Printed ${new Date(k.rotated_at).toLocaleDateString('en-GB')}. Your manager will replace this poster every three months.</p>
-      <script>window.onload=function(){setTimeout(function(){window.print()},300)}</script></body>`)
+    w.document.write(`<!doctype html><title>Connect a tablet</title><body style="font-family:Arial,sans-serif;text-align:center;padding:40px 48px;color:#1A1530;margin:0">
+      ${top}
+      ${k.logo_url ? `<p style="font-size:22px;margin:0 0 22px;color:#5E4D70">${esc(k.home_name)}</p>` : ''}
+      <h1 style="font-size:46px;margin:0 0 20px">Connect a tablet</h1>
+      <img src="${qr}" style="width:400px;height:400px">
+      <p style="font-size:26px;margin:24px auto 8px;max-width:640px">Scan this with the tablet&rsquo;s camera, find your name and enter your PIN.</p>
+      <p style="font-size:17px;color:#5E4D70;max-width:640px;margin:0 auto 28px">For staff only. Printed ${new Date(k.rotated_at).toLocaleDateString('en-GB')}. Your manager will replace this poster ${({ 1: 'every month', 3: 'every three months', 6: 'every six months', 12: 'once a year' } as Record<number, string>)[k.reminder_months] ?? 'regularly'}.</p>
+      <div style="border-top:1px solid #e5e7eb;padding-top:16px;max-width:640px;margin:0 auto"><img src="${csLogo}" alt="CareStream" style="height:44px"><div style="font-size:13px;color:#9ca3af;margin-top:4px">Powered by CareStream</div></div>
+      <script>window.onload=function(){setTimeout(function(){window.print()},400)}</script></body>`)
     w.document.close()
   } catch { w.document.body.innerHTML = '<p style="font-family:sans-serif;padding:24px">Could not prepare the poster. Please close this window and try again.</p>' }
 }
@@ -86,8 +94,8 @@ export function SharedTabletsPanel({ token, onClose }: { token: string; onClose:
 
             <div className="rounded-lg border border-gray-200 p-4">
               <p className="mb-1 text-sm font-semibold text-neutral-dark">Connect a tablet poster</p>
-              <p className="mb-3 text-sm text-neutral-mid">Print this and put it in staff areas. Scanning it signs nobody in: a staff member still has to find their name and enter their PIN to connect a tablet. {data.poster.rotated_at ? `Current poster made ${when(data.poster.rotated_at)}.` : ''}</p>
-              {data.poster.due && <p className="mb-3 rounded bg-amber-50 px-3 py-2 text-sm text-amber-800">This poster is more than {data.poster.days_old} days old. Print a new one and take the old ones down.</p>}
+              <p className="mb-3 text-sm text-neutral-mid">Print this and put it in staff areas. It shows your organisation logo at the top{!data.poster.has_logo && <strong className="text-amber-700"> (you have not added one yet: add it in Settings, Organisation logo, and the poster will use it)</strong>}. Scanning it signs nobody in: a staff member still has to find their name and enter their PIN to connect a tablet. {data.poster.rotated_at ? `Current poster made ${when(data.poster.rotated_at)}.` : ''}</p>
+              {data.poster.due && <p className="mb-3 rounded bg-amber-50 px-3 py-2 text-sm text-amber-800">This poster is {data.poster.days_old} days old, past the reminder you set in Settings. Print a new one and take the old ones down.</p>}
               <div className="flex flex-wrap gap-2">
                 <button onClick={() => printPoster(token)} className="inline-flex items-center gap-1.5 rounded-lg bg-teal px-3 py-2 text-sm font-medium text-white hover:bg-teal/90"><Printer size={14} /> Print poster</button>
                 <button disabled={!!busy} onClick={() => confirm('Make a new poster? Old posters stop working for connecting new tablets. Tablets that are already connected stay connected.') && run('rot', async () => { await api.tablets.rotatePoster(); await printPoster(token); return 'New poster made. Take the old ones down.' })} className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-2 text-sm font-medium text-neutral-dark hover:border-teal/40 hover:text-teal disabled:opacity-50"><RefreshCw size={14} /> Print a new poster</button>

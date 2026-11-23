@@ -20,7 +20,7 @@ import { sendStaffPinEmail } from '../services/email/outbound'
 import { forgetDevice } from '../middleware/sharedDeviceGuard'
 import {
   checkPin, setPin, readPin, takeResendSlot, getOrCreateConnectKey, rotateConnectKey, tenantForKey, noteKeyFailure,
-  TABLET_STAFF_WHERE, CONNECT_KEY_REMINDER_DAYS,
+  TABLET_STAFF_WHERE, REMINDER_CHOICES, DEFAULT_REMINDER_MONTHS, reminderDays,
 } from '../lib/shared-tablets'
 
 const p = () => prisma as any
@@ -187,11 +187,12 @@ export async function issuePinForNewStaff(tenantId: string, userId: string): Pro
 tabletsAdminRouter.get('/', async (req: Request, res: Response) => {
   const tenantId = req.user!.tenant_id
   try {
-    const [devices, key, staff, pins] = await Promise.all([
+    const [devices, key, staff, pins, org] = await Promise.all([
       p().sharedDevice.findMany({ where: { tenant_id: tenantId }, orderBy: { created_at: 'asc' } }),
       p().sharedConnectKey.findUnique({ where: { tenant_id: tenantId } }),
       p().user.count({ where: TABLET_STAFF_WHERE(tenantId) }),
       p().staffPin.count({ where: { tenant_id: tenantId } }),
+      p().tenant.findUnique({ where: { id: tenantId }, select: { logo_url: true } }),
     ])
     const names = new Map<string, string>()
     const by = devices.map((d: any) => d.paired_by).filter(Boolean)
@@ -199,7 +200,7 @@ tabletsAdminRouter.get('/', async (req: Request, res: Response) => {
     const days = key ? Math.floor((Date.now() - new Date(key.rotated_at).getTime()) / 86_400_000) : null
     ok(res, {
       tablets: devices.map((d: any) => ({ id: d.id, name: d.name, location: d.location, connected: !!d.paired_at && !d.revoked_at, revoked: !!d.revoked_at, paired_at: d.paired_at, paired_by: d.paired_by ? names.get(d.paired_by) ?? null : null, last_seen_at: d.last_seen_at })),
-      poster: { exists: !!key, rotated_at: key?.rotated_at ?? null, days_old: days, due: days !== null && days >= CONNECT_KEY_REMINDER_DAYS },
+      poster: { exists: !!key, rotated_at: key?.rotated_at ?? null, days_old: days, due: days !== null && days >= reminderDays(key?.reminder_months ?? DEFAULT_REMINDER_MONTHS), reminder_months: key?.reminder_months ?? DEFAULT_REMINDER_MONTHS, has_logo: !!org?.logo_url },
       pins: { staff_total: staff, with_pin: pins },
       max_tablets: MAX_TABLETS,
     })
@@ -257,13 +258,26 @@ tabletsAdminRouter.post('/:id/revoke', async (req: Request, res: Response) => {
   ok(res, { revoked: true })
 })
 
+// How often admins are reminded to print a new poster (Settings > Shared tablets).
+tabletsAdminRouter.put('/settings', async (req: Request, res: Response) => {
+  const tenantId = req.user!.tenant_id
+  const months = Number(req.body?.reminder_months)
+  if (!(REMINDER_CHOICES as readonly number[]).includes(months)) { err(res, 'VALIDATION_ERROR', 'Choose monthly, quarterly, half yearly or yearly.'); return }
+  try {
+    await getOrCreateConnectKey(tenantId)
+    await p().sharedConnectKey.update({ where: { tenant_id: tenantId }, data: { reminder_months: months, reminded_at: null } })
+    ok(res, { reminder_months: months })
+  } catch { notSetUp(res) }
+})
+
 // The poster: the connect key as a link the QR encodes.
 tabletsAdminRouter.get('/poster/key', async (req: Request, res: Response) => {
   const tenantId = req.user!.tenant_id
   try {
     const key = await getOrCreateConnectKey(tenantId)
-    const t = await p().tenant.findUnique({ where: { id: tenantId }, select: { name: true } })
-    ok(res, { key: key.connect_key, home_name: t?.name ?? '', rotated_at: key.rotated_at })
+    const t = await p().tenant.findUnique({ where: { id: tenantId }, select: { name: true, logo_url: true } })
+    // logo_url is the Organisation logo from Settings (a stored image), shown large at the top of the printed poster when there is one.
+    ok(res, { key: key.connect_key, home_name: t?.name ?? '', rotated_at: key.rotated_at, logo_url: t?.logo_url ?? null, reminder_months: key.reminder_months ?? DEFAULT_REMINDER_MONTHS })
   } catch { notSetUp(res) }
 })
 tabletsAdminRouter.post('/poster/rotate', async (req: Request, res: Response) => {

@@ -100,7 +100,9 @@ export async function checkPin(userId: string, pin: string): Promise<PinCheck> {
 
 // ── Connect key (the printed QR) ─────────────────────────────────────────────
 const KEY_FAILS = 20, KEY_WINDOW_MS = 10 * 60_000, KEY_BLOCK_MS = 10 * 60_000
-export const CONNECT_KEY_REMINDER_DAYS = 90
+export const REMINDER_CHOICES = [1, 3, 6, 12] as const   // monthly, quarterly, half yearly, yearly
+export const DEFAULT_REMINDER_MONTHS = 3
+export const reminderDays = (months: number) => Math.round((REMINDER_CHOICES as readonly number[]).includes(months) ? months * 30.4 : DEFAULT_REMINDER_MONTHS * 30.4)
 
 export async function getOrCreateConnectKey(tenantId: string) {
   const existing = await p().sharedConnectKey.findUnique({ where: { tenant_id: tenantId } })

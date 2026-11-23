@@ -839,12 +839,13 @@ export function createApiClient(token: string) {
     },
 
     tablets: {
-      list: () => apiFetch<{ tablets: Array<{ id: string; name: string; location: string | null; connected: boolean; revoked: boolean; paired_at: string | null; paired_by: string | null; last_seen_at: string | null }>; poster: { exists: boolean; rotated_at: string | null; days_old: number | null; due: boolean }; pins: { staff_total: number; with_pin: number }; max_tablets: number }>('/tablets', token),
+      list: () => apiFetch<{ tablets: Array<{ id: string; name: string; location: string | null; connected: boolean; revoked: boolean; paired_at: string | null; paired_by: string | null; last_seen_at: string | null }>; poster: { exists: boolean; rotated_at: string | null; days_old: number | null; due: boolean; has_logo: boolean; reminder_months: number }; pins: { staff_total: number; with_pin: number }; max_tablets: number }>('/tablets', token),
       create: (name: string, location?: string) => apiFetch<{ tablet: { id: string; name: string } }>('/tablets', token, { method: 'POST', body: JSON.stringify({ name, location }) }),
       update: (id: string, data: { name?: string; location?: string }) => apiFetch<{ updated: boolean }>(`/tablets/${id}`, token, { method: 'PATCH', body: JSON.stringify(data) }),
       revoke: (id: string) => apiFetch<{ revoked: boolean }>(`/tablets/${id}/revoke`, token, { method: 'POST' }),
       revokeAll: () => apiFetch<{ revoked: number }>('/tablets/revoke-all', token, { method: 'POST' }),
-      posterKey: () => apiFetch<{ key: string; home_name: string; rotated_at: string }>('/tablets/poster/key', token),
+      posterKey: () => apiFetch<{ key: string; home_name: string; rotated_at: string; logo_url: string | null; reminder_months: number }>('/tablets/poster/key', token),
+      saveReminder: (reminder_months: number) => apiFetch<{ reminder_months: number }>('/tablets/settings', token, { method: 'PUT', body: JSON.stringify({ reminder_months }) }),
       rotatePoster: () => apiFetch<{ key: string; rotated_at: string }>('/tablets/poster/rotate', token, { method: 'POST' }),
       pin: (userId: string, action: 'resend' | 'regenerate' | 'show') => apiFetch<{ sent?: boolean; to?: string; name: string; pin?: string }>(`/tablets/staff/${userId}/pin/${action}`, token, { method: 'POST' }),
       sendAllPins: () => apiFetch<{ sent: number; skipped: number }>('/tablets/pins/send-all', token, { method: 'POST', body: JSON.stringify({ confirm: true }) }),

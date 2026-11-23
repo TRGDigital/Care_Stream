@@ -8,9 +8,10 @@ import { usePlanFeatures } from '@/lib/use-plan-features'
 import { UpgradeOverlay } from '@/components/upgrade-overlay'
 import { persistentCache } from '@/lib/page-cache'
 import { Button } from '@/components/ui/button'
+import { TabletReminderSetting } from '@/components/admin/tablet-reminder-setting'
 import {
   AlertTriangle, Bell, BedDouble, BookLock, Building2, Check, ChevronDown, ChevronUp, ClipboardList, Copy, Loader2,
-  Mail, Plus, Search, ShieldCheck, SlidersHorizontal, Trash2, Upload, UserRound, X,
+  Mail, Plus, Search, ShieldCheck, SlidersHorizontal, Tablet, Trash2, Upload, UserRound, X,
   // `Lock` unaliased resolves to the DOM Web Locks API type, not the icon.
   Lock as LockIcon,
 } from 'lucide-react'
@@ -1952,6 +1953,10 @@ export default function SettingsPage() {
         </SettingSection>
 
         {/* ── Email communications ──────────────────────────────────────────── */}
+        <SettingSection icon={Tablet} title="Shared tablets" description="How often you are reminded to print a new Connect a tablet poster for shared tablets.">
+          {session?.accessToken && <TabletReminderSetting token={session.accessToken} />}
+        </SettingSection>
+
         <SettingSection icon={Bell} title="Email communications" description="Choose which service and billing emails you receive.">
           <div className="divide-y divide-gray-50 -mx-6">
             {EMAIL_PREFS.map((pref, i) => {

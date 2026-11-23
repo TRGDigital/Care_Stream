@@ -75,6 +75,26 @@ export function ScenariosPanel({ token }: { token: string }) {
     setBusy(false)
   }
 
+  // Import DRAFT pages from a JSON file (one page or a list). Never publishes; an existing slug is never changed.
+  async function importDrafts(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file) return
+    setBusy(true); setMsg(null)
+    try {
+      const data = JSON.parse(await file.text())
+      const scenarios = Array.isArray(data) ? data : Array.isArray(data?.scenarios) ? data.scenarios : [data]
+      const r = await fetch(`${API_URL}/admin/scenarios/import`, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify({ scenarios }) })
+      const j = await r.json()
+      if (!r.ok) throw new Error(j?.error?.message ?? 'The import failed.')
+      const created = (j.data?.created ?? []) as Array<{ slug: string; notes: string[] }>
+      const skipped = (j.data?.skipped ?? []) as Array<{ slug: string; reason: string[] }>
+      setMsg(`Imported ${created.length} draft${created.length === 1 ? '' : 's'}.${created.map(c => ` ${c.slug}${c.notes.length ? ` (to check: ${c.notes.join('; ')})` : ''}`).join('')}${skipped.length ? ` Skipped: ${skipped.map(s => `${s.slug} (${s.reason.join('; ')})`).join(' | ')}` : ''}`)
+      await loadDb()
+    } catch (err: any) { setMsg(`Import failed: ${err?.message ?? 'unknown error'}`) }
+    setBusy(false)
+  }
+
   async function requestIndexing() {
     if (!published.length) return
     setBusy(true); setMsg(null)
@@ -101,6 +121,10 @@ export function ScenariosPanel({ token }: { token: string }) {
         </p>
         <div className="flex items-center gap-2">
           <a href="/scenarios" target="_blank" rel="noopener noreferrer" className="rounded-md border border-gray-200 px-3 py-1.5 text-xs font-medium text-neutral-dark hover:bg-neutral-light">Open hub</a>
+          <label className={`cursor-pointer rounded-md border border-gray-200 px-3 py-1.5 text-xs font-medium text-neutral-dark hover:bg-neutral-light ${busy ? 'pointer-events-none opacity-50' : ''}`}>
+            Import drafts
+            <input type="file" accept="application/json,.json" className="hidden" onChange={importDrafts} />
+          </label>
           <button type="button" disabled={busy || !published.length} onClick={requestIndexing}
                   className="rounded-md bg-teal px-3 py-1.5 text-xs font-semibold text-white hover:bg-teal/90 disabled:opacity-50">
             {busy ? 'Requesting...' : 'Request indexing for published scenarios'}

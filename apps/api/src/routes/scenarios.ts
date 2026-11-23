@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express'
 import { prisma } from '../db/client'
 import { ok, err } from '../lib/response'
 import { requirePlatformAdmin } from '../middleware/auth'
+import { validateScenario } from '../lib/scenario-validate'
 
 // Scenario pages kept in the database: the ones the nightly routine writes as drafts and the platform publishes.
 // (The older pages live in the repository, apps/web/src/data/scenarios, and are merged with these by the web app.)
@@ -28,6 +29,32 @@ scenariosAdminRouter.get('/:slug', async (req: Request, res: Response) => {
   const r = await (prisma as any).scenarioPage.findUnique({ where: { slug: String(req.params.slug) } })
   if (!r) { err(res, 'NOT_FOUND', 'Scenario not found.', 404); return }
   ok(res, { scenario: { ...r.data, slug: r.slug, status: r.status, order: r.sort_order } })
+})
+
+// POST /admin/scenarios/import  { scenarios: [page] }  (at most 10). Saves pages written outside the nightly queue (for example a batch written in a
+// session) as DRAFTS, like Import drafts on the blog. Never publishes, never overwrites an existing page. Structural problems (missing keys, dashes,
+// forbidden HTML or claims, a bad slug) refuse the page; quality points the owner fixes in review (image, keywords, link domains, word counts,
+// read next targets) are saved WITH the page and returned as notes.
+const SOFT = /^(image must be|keywords not used|primary keyword used|secondary keyword|external link domain|read_next slug|words)/i
+scenariosAdminRouter.post('/import', async (req: Request, res: Response) => {
+  const list = Array.isArray(req.body?.scenarios) ? req.body.scenarios.slice(0, 10) : []
+  if (!list.length) { err(res, 'VALIDATION_ERROR', 'scenarios must be a non empty array.'); return }
+  const posts = await (prisma as any).blogPost.findMany({ select: { slug: true } })   // drafts count too: a read next may point at a post still to be published
+  const blogSlugs = posts.map((p: any) => p.slug)
+  const created: Array<{ slug: string; notes: string[] }> = []
+  const skipped: Array<{ slug: string; reason: string[] }> = []
+  for (const page of list) {
+    const slug = String(page?.slug ?? '')
+    if (await (prisma as any).scenarioPage.findUnique({ where: { slug } }).catch(() => null)) { skipped.push({ slug, reason: ['A page with this slug already exists. Nothing was changed.'] }); continue }
+    const data = { ...page, status: 'draft' }
+    const v = validateScenario(data, { expected: { primary: String(page?.primary_keyword ?? ''), secondary: Array.isArray(page?.secondary_keywords) ? page.secondary_keywords : [] }, blogSlugs })
+    const hard = v.errors.filter(e => !SOFT.test(e))
+    if (hard.length) { skipped.push({ slug, reason: hard.slice(0, 12) }); continue }
+    const order = Number(page?.order) > 0 ? Number(page.order) : 9999
+    await (prisma as any).scenarioPage.create({ data: { slug, status: 'draft', sort_order: order, data: { ...data, order } } })
+    created.push({ slug, notes: [...v.errors.filter(e => SOFT.test(e)), ...v.warnings].slice(0, 12) })
+  }
+  ok(res, { created, skipped })
 })
 
 // PATCH /admin/scenarios/:slug/status  { status: 'published' | 'draft' }

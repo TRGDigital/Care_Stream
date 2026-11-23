@@ -4,12 +4,13 @@
 // DBS, right to work, professional registration and references, each Red/Amber/
 // Green by expiry. Click a staff row to record or update their credentials.
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useSession } from 'next-auth/react'
 import Link from 'next/link'
 import { createApiClient, type StaffDetails } from '@/lib/api-client'
 import { persistentCache } from '@/lib/page-cache'
 import { usePlanFeatures, hasFeature } from '@/lib/use-plan-features'
+import { StaffAvatar } from '@/components/admin/staff-avatar'
 import { SupervisionsView } from '@/components/admin/workforce/supervisions-view'
 import { ShieldCheck, Lock, Loader2, X, AlertTriangle, CheckCircle2, Clock, Trash2, Users, Paperclip, Upload, Mail, Info, ChevronDown, ChevronLeft, ChevronRight, Download, Cake, Eye } from 'lucide-react'
 
@@ -135,6 +136,13 @@ export default function WorkforcePage() {
     catch { /* gated or error */ }
     finally { setLoading(false) }
   }
+  // Picture links are signed and short lived: when one fails to load, reload the register once (not once per row).
+  const photoRefreshAt = useRef(0)
+  function refreshPhotos() {
+    if (Date.now() - photoRefreshAt.current < 15_000) return
+    photoRefreshAt.current = Date.now()
+    load()
+  }
   // Paint instantly from the last-loaded snapshot, then revalidate in the background.
   useEffect(() => {
     const cached = persistentCache.get<Register>(regKey)
@@ -254,7 +262,7 @@ export default function WorkforcePage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-gray-100 text-xs font-medium text-neutral-mid">
-                  <th className="sticky left-0 z-10 bg-white px-5 py-3 text-left min-w-[180px]">Staff member</th>
+                  <th className="sticky left-0 z-10 bg-white px-5 py-3 text-left min-w-[220px]">Staff member</th>
                   {CORE_TYPES.map(t => <th key={t.key} className="px-3 py-3 text-center min-w-[120px]">{t.short}</th>)}
                   <th className="px-3 py-3 text-center min-w-[150px]">Also held</th>
                   <th className="px-3 py-3 text-center min-w-[90px]">Personal</th>
@@ -264,8 +272,13 @@ export default function WorkforcePage() {
                 {staff.map(row => (
                   <tr key={row.id} onClick={() => setEditing(row)} className="cursor-pointer border-b border-gray-50 last:border-0 hover:bg-neutral-light/30">
                     <td className="sticky left-0 z-10 bg-white px-5 py-3">
-                      <p className="font-medium text-neutral-dark">{row.name}</p>
-                      <p className="text-xs text-neutral-mid">{row.job_role ?? '—'}</p>
+                      <div className="flex items-center gap-2.5">
+                        <StaffAvatar name={row.name} photoUrl={row.photo_url} size={32} onRefresh={refreshPhotos} />
+                        <div className="min-w-0">
+                          <p className="truncate font-medium text-neutral-dark">{row.name}</p>
+                          <p className="truncate text-xs text-neutral-mid">{row.job_role ?? '—'}</p>
+                        </div>
+                      </div>
                     </td>
                     {CORE_TYPES.map(t => {
                       const c = row.credentials[t.key]
@@ -376,7 +389,8 @@ function DocumentOverlay({ token, staff, type, onType, onClose, onEdit }: { toke
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 p-3 sm:p-6" onClick={onClose} role="dialog" aria-modal="true" aria-label={`${staff.name}: ${def.label}`}>
       <div className="flex h-full max-h-[90vh] w-full max-w-5xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl" onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between gap-3 border-b border-gray-100 px-5 py-3">
-          <div className="min-w-0">
+          <StaffAvatar name={staff.name} photoUrl={staff.photo_url} size={40} />
+          <div className="min-w-0 flex-1">
             <h2 className="truncate font-semibold text-neutral-dark">{staff.name} <span className="font-normal text-neutral-mid">· {def.label}</span></h2>
             <p className="text-xs text-neutral-mid">{staff.job_role ?? '—'}{held.length > 1 && idx >= 0 ? ` · document ${idx + 1} of ${held.length}` : ''}</p>
           </div>
@@ -576,9 +590,12 @@ function EditStaffModal({ token, staff, onClose, onSaved, onView }: { token: str
     <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/30 px-4 py-8" onClick={onClose}>
       <div className="w-full max-w-2xl rounded-2xl bg-white shadow-2xl" onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4">
-          <div>
-            <h2 className="font-semibold text-neutral-dark">{staff.name}</h2>
-            <p className="text-xs text-neutral-mid">{staff.job_role ?? '—'} · compliance record</p>
+          <div className="flex items-center gap-3">
+            <StaffAvatar name={staff.name} photoUrl={staff.photo_url} size={44} />
+            <div>
+              <h2 className="font-semibold text-neutral-dark">{staff.name}</h2>
+              <p className="text-xs text-neutral-mid">{staff.job_role ?? '—'} · compliance record</p>
+            </div>
           </div>
           <button onClick={onClose} className="text-neutral-mid hover:text-neutral-dark"><X size={18} /></button>
         </div>

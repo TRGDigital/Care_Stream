@@ -858,7 +858,7 @@ export function createApiClient(token: string) {
           core_types?: string[]
           total_staff: number
           summary: { valid: number; expiring: number; expired: number; missing: number; documents: number }
-          staff: Array<{ id: string; name: string; job_role: string | null; credentials: Record<string, Credential>; details?: { dob: boolean; emergency: boolean; next_of_kin: boolean; contract: boolean; holiday: boolean } }>
+          staff: Array<{ id: string; name: string; job_role: string | null; photo_url?: string | null; credentials: Record<string, Credential>; details?: { dob: boolean; emergency: boolean; next_of_kin: boolean; contract: boolean; holiday: boolean } }>
         }>('/workforce/register', token),
       staffDetails: (userId: string) =>
         apiFetch<{ details: StaffDetails; account_year_start: { month: number; day: number }; current_year: { from: string; to: string } }>(`/workforce/staff/${userId}/details`, token),

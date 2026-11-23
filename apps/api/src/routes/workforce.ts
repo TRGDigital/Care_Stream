@@ -23,6 +23,7 @@ import { notifyUsers } from '../lib/notify'
 import { sendTrainingUpdateEmail } from '../services/email/outbound'
 import { updateContent } from '../services/email/person-content'
 import { recordNotices } from '../services/staff-notices'
+import { staffPhotoUrls } from '../lib/staff-photos'
 // Loaded when needed: lib/supervision-training reaches training-matrix, which imports this file, so a top level import would be a cycle.
 const stl = () => import('../lib/supervision-training')
 
@@ -112,6 +113,7 @@ workforceRouter.get('/register', async (_req: Request, res: Response) => {
   // staff_details may not exist yet (SQL not run): the grid still works, the personal flags are simply all empty.
   const detailRows: any[] = await (prisma as any).staffDetail.findMany({ where: { tenant_id: tenantId } }).catch(() => [])
   const detailsByUser = new Map<string, any>(detailRows.map((d: any) => [d.user_id, d]))
+  const photos = await staffPhotoUrls(tenantId, users.map((u: any) => u.id))   // own table: a missing one just means no pictures
 
   const byUser = new Map<string, Record<string, any>>()
   for (const c of creds) {
@@ -135,7 +137,7 @@ workforceRouter.get('/register', async (_req: Request, res: Response) => {
     const d = detailsByUser.get(u.id)
     // Flags only (no date of birth or phone numbers in the grid): which of the personal sections have been filled in.
     const details = { dob: !!d?.date_of_birth, emergency: !!(d?.emergency_name && d?.emergency_phone), next_of_kin: !!d?.nok_name, contract: !!d?.contract_type, holiday: d?.holiday_entitlement != null }
-    return { id: u.id, name: u.name, job_role: u.job_role, credentials, details }
+    return { id: u.id, name: u.name, job_role: u.job_role, photo_url: photos.get(u.id) ?? null, credentials, details }
   })
 
   ok(res, { types: ALL_CREDENTIAL_TYPES, core_types: CREDENTIAL_TYPES, staff, summary, total_staff: users.length })

@@ -97,7 +97,10 @@ export async function runStaffBirthdaysForTenant(tenantId: string, opts: Birthda
   if (today.length && await isEmailEnabled(tenantId, 'staff_birthday_emails')) {
     for (const t of today) {
       if (await already(t.u.id, 'staff_greeting')) continue
-      if (!opts.dryRun) await sendStaffBirthdayEmail({ to: preview ? opts.previewTo! : t.u.email, name: t.u.name, orgName: tenant.name, actorUserId: sender?.id ?? null, subjectPrefix: preview ? '[Preview] ' : '' }).catch(() => {})
+      if (!sender?.id) { console.log(`[birthdays] no administrator to send as for tenant ${tenantId}; greeting skipped`); continue }   // the approved email is always shown as sent by an administrator
+      let sentOk = true
+      if (!opts.dryRun) sentOk = await sendStaffBirthdayEmail({ to: preview ? opts.previewTo! : t.u.email, name: t.u.name, orgName: tenant.name, actorUserId: sender.id, subjectPrefix: preview ? '[Preview] ' : '' }).catch(() => false)
+      if (!sentOk) continue
       await record(t.u.id, 'staff_greeting')
       out.staff_greetings++
     }

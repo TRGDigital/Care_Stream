@@ -165,6 +165,14 @@ const MATRIX: Group[] = [
       { label: 'Multi-site group console and benchmarking', values: [false, false, true] },
       { label: 'Workforce compliance register (DBS, right to work, registration, references)', values: [false, false, true] },
       { label: 'Credential document uploads + expiry alerts', values: [false, false, true] },
+      { label: 'View documents in an overlay beside the record', values: [false, false, true] },
+      { label: 'Professional registration (NMC and others): PIN, certificate and revalidation date', values: [false, false, true] },
+      { label: 'Visa and sponsorship end date, driving licence, business insurance and MOT, with expiry alerts', values: [false, false, true] },
+      { label: 'Contract upload with contract type, hours and probation end', values: [false, false, true] },
+      { label: 'Emergency contact and next of kin', values: [false, false, true] },
+      { label: 'Date of birth, with birthday emails to admins and staff', values: [false, false, true] },
+      { label: 'Holiday entitlement (days or hours) and holiday year start', values: [false, false, true] },
+      { label: 'Staff pictures on the register', values: [false, false, true] },
       // Supervisions and appraisals are on Starter, Professional and Enterprise (plans.has_supervisions). The register above (DBS and so on) is Enterprise.
       { label: 'Supervisions and appraisals tracking', values: [true, true, true] },
       // The label must equal the feature page slug (training-linked-to-supervisions) for the link icon to appear.

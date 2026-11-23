@@ -12,6 +12,7 @@
 // HAND ADDED ROW (17 Nov 2026): "Staff incentives", with the same warning.
 // HAND ADDED ROW (19 Nov 2026): "Training linked to supervisions" (Enterprise) straight after "Supervisions and appraisals tracking", and an Enterprise card line. Same warning.
 // Supervisions and appraisals themselves are on Starter, Professional and Enterprise.
+// HAND ADDED ROWS (24 Nov 2026): "Shared tablets" (Starter, Professional, Enterprise; not on Free) after "Super User", the Workforce register detail rows (Enterprise only) after "Credential uploads and expiry alerts", an Enterprise card line and a Starter card line. Same warning.
 // HAND ADDED ROW (19 Nov 2026): "Super User (one champion per service)" straight after "Staff incentives" (Starter, Professional, Enterprise), linked to its feature page. Same warning.
 
 export interface PricingPlan {
@@ -67,6 +68,10 @@ export const PRICING: {
         },
         {
           "text": "Basic analytics and the regulatory knowledge base",
+          "more": false
+        },
+        {
+          "text": "Shared tablets for homes with a phone ban",
           "more": false
         }
       ],
@@ -149,6 +154,10 @@ export const PRICING: {
         },
         {
           "text": "Training linked to supervisions",
+          "more": false
+        },
+        {
+          "text": "Staff records on the register: registration, visa, contract, holiday entitlement and birthdays",
           "more": false
         },
         {
@@ -300,6 +309,14 @@ export const PRICING: {
         },
         {
           "label": "Super User (one champion per service)",
+          "values": [
+            true,
+            true,
+            true
+          ]
+        },
+        {
+          "label": "Shared tablets (up to 5, not counted as staff seats)",
           "values": [
             true,
             true,
@@ -647,6 +664,70 @@ export const PRICING: {
         },
         {
           "label": "Credential uploads and expiry alerts",
+          "values": [
+            false,
+            false,
+            true
+          ]
+        },
+        {
+          "label": "View documents in an overlay beside the record",
+          "values": [
+            false,
+            false,
+            true
+          ]
+        },
+        {
+          "label": "Professional registration (NMC and others): PIN, certificate and revalidation date",
+          "values": [
+            false,
+            false,
+            true
+          ]
+        },
+        {
+          "label": "Visa and sponsorship end date, driving licence, business insurance and MOT, with expiry alerts",
+          "values": [
+            false,
+            false,
+            true
+          ]
+        },
+        {
+          "label": "Contract upload with contract type, hours and probation end",
+          "values": [
+            false,
+            false,
+            true
+          ]
+        },
+        {
+          "label": "Emergency contact and next of kin",
+          "values": [
+            false,
+            false,
+            true
+          ]
+        },
+        {
+          "label": "Date of birth, with birthday emails to admins and staff",
+          "values": [
+            false,
+            false,
+            true
+          ]
+        },
+        {
+          "label": "Holiday entitlement (days or hours) and holiday year start",
+          "values": [
+            false,
+            false,
+            true
+          ]
+        },
+        {
+          "label": "Staff pictures on the register",
           "values": [
             false,
             false,

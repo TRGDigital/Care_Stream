@@ -41,7 +41,7 @@ function Connect() {
   async function pick(id: string) {
     if (!ticket || busy) return
     setBusy(true); setMsg('')
-    try { await connectTablet(ticket.ticket, id); window.location.href = '/chat' } catch (e: any) { setMsg(e.message); setBusy(false) }
+    try { await connectTablet(ticket.ticket, id, who ? { userId: who.id, pin } : undefined); window.location.href = '/chat' } catch (e: any) { setMsg(e.message); setBusy(false) }
   }
 
   return (

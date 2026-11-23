@@ -30,10 +30,15 @@ async function signInAs(d: { access_token: string; refresh_token: string; tenant
   if (res?.error) throw new Error('Could not sign in on this tablet.')
 }
 
-/** Finish connecting: this browser becomes the tablet. */
-export async function connectTablet(ticket: string, tabletId: string): Promise<void> {
+/** Finish connecting: this browser becomes the tablet. The person who connected it has just proved who they are with their PIN, so (when given
+ *  `who`) they go straight into their own hub rather than being asked for their name and PIN again. Done, or 5 minutes untouched, then returns
+ *  the tablet to the Who's using it screen for the next person. If starting their session fails for any reason, the tablet's own screen is shown. */
+export async function connectTablet(ticket: string, tabletId: string, who?: { userId: string; pin: string }): Promise<void> {
   const d = await connectApi.complete(ticket, tabletId)
   try { localStorage.removeItem(RETURN_KEY) } catch { /* ignore */ }
+  if (who) {
+    try { await startPersonal(d.access_token, d.tenant_name, who.userId, who.pin); return } catch { /* fall back to the tablet's own screen */ }
+  }
   await signInAs(d)
 }
 

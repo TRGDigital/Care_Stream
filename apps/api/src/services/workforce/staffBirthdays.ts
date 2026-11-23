@@ -61,6 +61,8 @@ export async function runStaffBirthdaysForTenant(tenantId: string, opts: Birthda
   const now = opts.now ?? new Date()
   const year = ukToday(now).getUTCFullYear()
   const preview = !!opts.previewTo
+  // The greeting is shown as sent by the account's main administrator (the longest standing active one), so it follows the person-led layout.
+  const sender = await (prisma as any).user.findFirst({ where: { tenant_id: tenantId, role: 'admin', is_active: true, is_shared: false }, orderBy: { created_at: 'asc' }, select: { id: true } }).catch(() => null)
 
   const already = async (userId: string, kind: string) => preview ? false : !!(await (prisma as any).staffBirthdayLog.findUnique({ where: { user_id_kind_year: { user_id: userId, kind, year } } }).catch(() => null))
   const record = (userId: string, kind: string) => preview || opts.dryRun ? Promise.resolve() : (prisma as any).staffBirthdayLog.create({ data: { tenant_id: tenantId, user_id: userId, kind, year } }).catch(() => {})
@@ -95,7 +97,7 @@ export async function runStaffBirthdaysForTenant(tenantId: string, opts: Birthda
   if (today.length && await isEmailEnabled(tenantId, 'staff_birthday_emails')) {
     for (const t of today) {
       if (await already(t.u.id, 'staff_greeting')) continue
-      if (!opts.dryRun) await sendStaffBirthdayEmail({ to: preview ? opts.previewTo! : t.u.email, name: t.u.name, orgName: tenant.name, subjectPrefix: preview ? '[Preview] ' : '' }).catch(() => {})
+      if (!opts.dryRun) await sendStaffBirthdayEmail({ to: preview ? opts.previewTo! : t.u.email, name: t.u.name, orgName: tenant.name, actorUserId: sender?.id ?? null, subjectPrefix: preview ? '[Preview] ' : '' }).catch(() => {})
       await record(t.u.id, 'staff_greeting')
       out.staff_greetings++
     }

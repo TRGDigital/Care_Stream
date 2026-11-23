@@ -2567,24 +2567,45 @@ export async function sendIncentiveEmail(opts: { to: string[]; subject: string; 
 }
 
 // ─── Staff birthdays (workforce compliance) ───────────────────────────────────
-// The greeting comes from the company, not from a person. Like every staff email it ends with the hub button. From address and footer
-// follow the other company-branded staff emails.
-
-export async function sendStaffBirthdayEmail(opts: { to: string; name: string; orgName: string; subjectPrefix?: string }): Promise<void> {
+// Person-led like the other staff emails: shown as sent by the account's main administrator (picture, name, role, home), with a celebration
+// banner and the usual hub button. It never mentions age. With no administrator it falls back to the company branded layout.
+export async function sendStaffBirthdayEmail(opts: { to: string; name: string; orgName: string; actorUserId?: string | null; subjectPrefix?: string }): Promise<void> {
   ensureInitialised()
   if (!process.env.SENDGRID_API_KEY) return
   const from = process.env.SENDGRID_FROM_ADDRESS ?? `noreply@${INBOUND_DOMAIN}`
   const first = escHtml(opts.name.split(' ')[0] ?? opts.name)
   const org = escHtml(opts.orgName)
+  const subject = `${opts.subjectPrefix ?? ''}Happy birthday, ${opts.name.split(' ')[0] ?? opts.name} \u{1F382}`
+  // A celebration banner: table based and inline styled so it holds in Outlook and Gmail. The emoji are decoration only; the words carry it.
+  const banner = `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 20px"><tr>
+      <td align="center" bgcolor="#F6EDFA" style="background:#F6EDFA;border-radius:14px;padding:26px 16px;border:1px solid #E7D3F1">
+        <div style="font-size:30px;line-height:36px;letter-spacing:6px;margin:0 0 6px" aria-hidden="true">&#127880; &#127874; &#127881;</div>
+        <div style="font-family:Inter,Arial,Helvetica,sans-serif;font-size:34px;line-height:40px;font-weight:800;color:${PURPLE_DARK};margin:0">Happy birthday, ${first}!</div>
+        <div style="font-family:Inter,Arial,Helvetica,sans-serif;font-size:15px;line-height:22px;color:${NEUTRAL_MID};margin:8px 0 0">Today is all about you.</div>
+        <div style="font-size:22px;line-height:28px;letter-spacing:8px;margin:10px 0 0" aria-hidden="true">&#127882; &#10024; &#127880; &#10024; &#127882;</div>
+      </td></tr></table>`
+  const message = `<p style="color:#374151;font-size:15px;line-height:1.7;margin:0 0 12px">Everyone at ${org} is wishing you a wonderful birthday. Thank you for everything you do for the people we support. You make a real difference, every single day.</p>` +
+    `<p style="color:#374151;font-size:15px;line-height:1.7;margin:0">We hope you get a little time to celebrate, and a slice of cake.</p>`
+
+  const admin = await resolveActor(opts.actorUserId)
+  if (admin) {
+    const html = personLedEmail({
+      admin, headline: `${admin.name} wishes you a very happy birthday`,
+      bodyHtml: banner + message,
+      button: { label: 'Open my hub', href: hubLink('/chat') },
+      footerNote: personFooterNote(admin, 'sent you birthday wishes'), logoUrl: LOGO_URL,
+    })
+    await sgMail.send({ to: opts.to, from: personSender(admin, from), subject, html })
+    return
+  }
   const html = emailWrapper(`
-    <p style="color:${NEUTRAL_DARK};font-size:22px;font-weight:700;margin:0 0 16px">Happy birthday, ${first}!</p>
-    <p style="color:${NEUTRAL_DARK};font-size:15px;line-height:1.6;margin:0 0 12px">Everyone at ${org} would like to wish you a very happy birthday. Thank you for everything you do for the people we support.</p>
-    <p style="color:${NEUTRAL_DARK};font-size:15px;line-height:1.6;margin:0">We hope you have a lovely day.</p>
+    <p style="color:${NEUTRAL_DARK};font-size:15px;margin:0 0 16px">Hi ${first},</p>
+    ${banner}${message}
     <p style="color:${NEUTRAL_DARK};font-size:15px;margin:20px 0 24px">${org}</p>
     ${hubButton(hubLink('/chat'), 'Open my hub')}
     ${emailFooter(opts.orgName)}
   `)
-  await sgMail.send({ to: opts.to, from: { email: from, name: opts.orgName }, subject: `${opts.subjectPrefix ?? ''}Happy birthday from ${opts.orgName}`, html })
+  await sgMail.send({ to: opts.to, from: { email: from, name: opts.orgName }, subject, html })
 }
 
 // ─── Shared tablet PIN ────────────────────────────────────────────────────────

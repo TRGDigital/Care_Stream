@@ -44,14 +44,22 @@ workforceRouter.use(async (req: Request, res: Response, next) => {
   catch (e: any) { if (e instanceof PlanLimitError) { err(res, e.code, e.message, 402); return } next(e) }
 })
 
+// CORE types are expected for every member of staff: a missing one is red and counts in the register summary and the Training Matrix's
+// "Safe to work" column. EXTRA types only apply to some staff (drivers, sponsored workers, a contract on file), so they are never "missing":
+// they show a dash until recorded, then follow the same valid / expiring / expired rules. CREDENTIAL_TYPES stays the core list on purpose,
+// because the matrix and suggestions import it and must not turn red for a licence a care assistant does not need.
 export const CREDENTIAL_TYPES = ['dbs', 'right_to_work', 'passport', 'professional_registration', 'reference'] as const
-type CredType = typeof CREDENTIAL_TYPES[number]
+export const EXTRA_CREDENTIAL_TYPES = ['visa', 'driving_licence', 'business_insurance', 'mot', 'contract'] as const
+export const ALL_CREDENTIAL_TYPES = [...CREDENTIAL_TYPES, ...EXTRA_CREDENTIAL_TYPES] as const
+type CredType = typeof ALL_CREDENTIAL_TYPES[number]
+const isExtra = (type: string) => (EXTRA_CREDENTIAL_TYPES as readonly string[]).includes(type)
+const REGISTRATION_BODIES = ['NMC', 'GPhC', 'HCPC', 'GMC', 'Social Work England', 'Other']
 
 // Traffic-light status for a credential of a given type.
 //   reference: received (present) | outstanding (missing)
 //   others:    missing | expired | expiring (≤30 days) | valid
 function statusFor(type: string, present: boolean, expiresAt: Date | null): string {
-  if (!present) return type === 'reference' ? 'outstanding' : 'missing'
+  if (!present) return isExtra(type) ? 'none' : type === 'reference' ? 'outstanding' : 'missing'
   if (type === 'reference') return 'received'
   if (!expiresAt) return 'valid'
   const ms = new Date(expiresAt).getTime()
@@ -71,6 +79,8 @@ function shapeCredential(type: string, row: any) {
     issued_at:  row?.issued_at ?? null,
     expires_at: row?.expires_at ?? null,
     notes:      row?.notes ?? null,
+    registration_body:   row?.registration_body ?? null,
+    sponsorship_ends_at: row?.sponsorship_ends_at ?? null,
     status:     statusFor(type, !!row, row?.expires_at ?? null),
     document:   row?.evidence_key
       ? { name: row.evidence_name, type: row.evidence_type, size: row.evidence_size, uploaded_at: row.evidence_uploaded_at }
@@ -99,6 +109,9 @@ workforceRouter.get('/register', async (_req: Request, res: Response) => {
     }),
     (prisma as any).staffCredential.findMany({ where: { tenant_id: tenantId } }),
   ])
+  // staff_details may not exist yet (SQL not run): the grid still works, the personal flags are simply all empty.
+  const detailRows: any[] = await (prisma as any).staffDetail.findMany({ where: { tenant_id: tenantId } }).catch(() => [])
+  const detailsByUser = new Map<string, any>(detailRows.map((d: any) => [d.user_id, d]))
 
   const byUser = new Map<string, Record<string, any>>()
   for (const c of creds) {
@@ -109,19 +122,23 @@ workforceRouter.get('/register', async (_req: Request, res: Response) => {
   const summary = { valid: 0, expiring: 0, expired: 0, missing: 0, documents: 0 }
   const staff = users.map((u: any) => {
     const credentials: Record<string, any> = {}
-    for (const type of CREDENTIAL_TYPES) {
+    for (const type of ALL_CREDENTIAL_TYPES) {
       const shaped = shapeCredential(type, byUser.get(u.id)?.[type] ?? null)
       credentials[type] = shaped
+      if (shaped.status === 'none') continue   // an extra that does not apply to this person
       if      (shaped.status === 'expired')                               summary.expired++
       else if (shaped.status === 'expiring')                              summary.expiring++
       else if (shaped.status === 'valid' || shaped.status === 'received') summary.valid++
       else                                                                summary.missing++  // missing | outstanding
       if (shaped.document) summary.documents++
     }
-    return { id: u.id, name: u.name, job_role: u.job_role, credentials }
+    const d = detailsByUser.get(u.id)
+    // Flags only (no date of birth or phone numbers in the grid): which of the personal sections have been filled in.
+    const details = { dob: !!d?.date_of_birth, emergency: !!(d?.emergency_name && d?.emergency_phone), next_of_kin: !!d?.nok_name, contract: !!d?.contract_type, holiday: d?.holiday_entitlement != null }
+    return { id: u.id, name: u.name, job_role: u.job_role, credentials, details }
   })
 
-  ok(res, { types: CREDENTIAL_TYPES, staff, summary, total_staff: users.length })
+  ok(res, { types: ALL_CREDENTIAL_TYPES, core_types: CREDENTIAL_TYPES, staff, summary, total_staff: users.length })
 })
 
 // GET /workforce/staff/:userId — one staff member's credentials (for the record page).
@@ -133,8 +150,8 @@ workforceRouter.get('/staff/:userId', async (req: Request, res: Response) => {
   const creds = await (prisma as any).staffCredential.findMany({ where: { tenant_id: tenantId, user_id: userId } })
   const byType = new Map<string, any>(creds.map((c: any) => [c.type, c]))
   const credentials: Record<string, any> = {}
-  for (const type of CREDENTIAL_TYPES) credentials[type] = shapeCredential(type, byType.get(type) ?? null)
-  ok(res, { user, types: CREDENTIAL_TYPES, credentials })
+  for (const type of ALL_CREDENTIAL_TYPES) credentials[type] = shapeCredential(type, byType.get(type) ?? null)
+  ok(res, { user, types: ALL_CREDENTIAL_TYPES, credentials })
 })
 
 // PUT /workforce/staff/:userId/credentials/:type — record/update one credential's details.
@@ -142,16 +159,19 @@ workforceRouter.put('/staff/:userId/credentials/:type', async (req: Request, res
   const tenantId = getTenantId()
   const userId = String(req.params.userId)
   const type   = String(req.params.type)
-  if (!CREDENTIAL_TYPES.includes(type as CredType)) { err(res, 'VALIDATION_ERROR', 'Unknown credential type.'); return }
+  if (!ALL_CREDENTIAL_TYPES.includes(type as CredType)) { err(res, 'VALIDATION_ERROR', 'Unknown credential type.'); return }
   if (!(await requireStaff(tenantId, userId))) { err(res, 'NOT_FOUND', 'Staff member not found.', 404); return }
 
-  const { reference, issued_at, expires_at, notes } = req.body ?? {}
-  const data = {
+  const { reference, issued_at, expires_at, notes, registration_body, sponsorship_ends_at } = req.body ?? {}
+  const data: any = {
     reference:  reference?.toString().trim() || null,
     issued_at:  issued_at  ? new Date(issued_at)  : null,
     expires_at: expires_at ? new Date(expires_at) : null,
     notes:      notes?.toString().trim() || null,
   }
+  // Only the types that use them write these, so saving a DBS never touches the columns.
+  if (type === 'professional_registration') data.registration_body = REGISTRATION_BODIES.includes(String(registration_body)) ? String(registration_body) : null
+  if (type === 'visa') data.sponsorship_ends_at = sponsorship_ends_at ? new Date(sponsorship_ends_at) : null
 
   const existing = await findCredential(tenantId, userId, type)
   const cred = existing
@@ -177,7 +197,7 @@ workforceRouter.post('/staff/:userId/credentials/:type/document', evidenceUpload
   const tenantId = getTenantId()
   const userId = String(req.params.userId)
   const type   = String(req.params.type)
-  if (!CREDENTIAL_TYPES.includes(type as CredType)) { err(res, 'VALIDATION_ERROR', 'Unknown credential type.'); return }
+  if (!ALL_CREDENTIAL_TYPES.includes(type as CredType)) { err(res, 'VALIDATION_ERROR', 'Unknown credential type.'); return }
   const file = (req as any).file as Express.Multer.File | undefined
   if (!file) { err(res, 'NO_FILE', 'No file was uploaded.', 400); return }
   if (!(await requireStaff(tenantId, userId))) { err(res, 'NOT_FOUND', 'Staff member not found.', 404); return }
@@ -239,6 +259,113 @@ workforceRouter.delete('/staff/:userId/credentials/:type/document', async (req: 
     })
   }
   ok(res, { deleted: true })
+})
+
+
+// ─── Personal details, contract and holiday entitlement (admins only: this router is requireAdmin) ─────────────────
+// Date of birth, emergency contact and next of kin are personal data. They are only ever returned by the two routes below, never in the
+// register grid, and only to admins of the account (the dashboard area is admin only).
+
+const CONTRACT_TYPES = ['permanent', 'fixed_term', 'bank', 'zero_hours']
+const str = (v: unknown, max = 200) => { const t = (v ?? '').toString().trim(); return t ? t.slice(0, max) : null }
+const dateOrNull = (v: unknown) => { if (!v) return null; const d = new Date(String(v)); return isNaN(d.getTime()) ? null : d }
+const numOrNull = (v: unknown, max: number) => { if (v === '' || v == null) return null; const n = Number(v); return isFinite(n) && n >= 0 && n <= max ? n : null }
+
+function shapeDetails(row: any) {
+  return {
+    date_of_birth: row?.date_of_birth ?? null,
+    emergency: { name: row?.emergency_name ?? null, relationship: row?.emergency_relationship ?? null, phone: row?.emergency_phone ?? null, phone_alt: row?.emergency_phone_alt ?? null },
+    next_of_kin: { name: row?.nok_name ?? null, relationship: row?.nok_relationship ?? null, phone: row?.nok_phone ?? null, address: row?.nok_address ?? null },
+    contract: { type: row?.contract_type ?? null, hours_per_week: row?.contract_hours_per_week != null ? Number(row.contract_hours_per_week) : null, probation_ends_on: row?.probation_ends_on ?? null },
+    holiday: { entitlement: row?.holiday_entitlement != null ? Number(row.holiday_entitlement) : null, unit: row?.holiday_unit ?? 'days', year_start: row?.holiday_year_start ?? null },
+  }
+}
+
+async function getYearStart(tenantId: string) {
+  const s = await (prisma as any).workforceSettings.findUnique({ where: { tenant_id: tenantId } }).catch(() => null)
+  return { month: s?.holiday_year_start_month ?? 4, day: s?.holiday_year_start_day ?? 1 }
+}
+
+// The current holiday year for a start month/day, as ISO dates (the year runs from `from` up to the day before `to`).
+export function holidayYear(now: Date, month: number, day: number) {
+  const y = now.getUTCFullYear()
+  const thisYearStart = new Date(Date.UTC(y, month - 1, day))
+  const from = now.getTime() >= thisYearStart.getTime() ? thisYearStart : new Date(Date.UTC(y - 1, month - 1, day))
+  const to = new Date(Date.UTC(from.getUTCFullYear() + 1, month - 1, day))
+  return { from: from.toISOString().slice(0, 10), to: to.toISOString().slice(0, 10) }
+}
+
+// GET /workforce/staff/:userId/details
+workforceRouter.get('/staff/:userId/details', async (req: Request, res: Response) => {
+  const tenantId = getTenantId()
+  const userId = String(req.params.userId)
+  if (!(await requireStaff(tenantId, userId))) { err(res, 'NOT_FOUND', 'Staff member not found.', 404); return }
+  try {
+    const row = await (prisma as any).staffDetail.findUnique({ where: { user_id: userId } })
+    if (row && row.tenant_id !== tenantId) { err(res, 'NOT_FOUND', 'Staff member not found.', 404); return }
+    const ys = await getYearStart(tenantId)
+    ok(res, { details: shapeDetails(row), account_year_start: ys, current_year: holidayYear(new Date(), row?.holiday_year_start ? new Date(row.holiday_year_start).getUTCMonth() + 1 : ys.month, row?.holiday_year_start ? new Date(row.holiday_year_start).getUTCDate() : ys.day) })
+  } catch (e: any) { err(res, 'NOT_SET_UP', 'Personal details are not set up yet.', 503) }
+})
+
+// PUT /workforce/staff/:userId/details — any subset of sections; a section that is not sent is left alone.
+workforceRouter.put('/staff/:userId/details', async (req: Request, res: Response) => {
+  const tenantId = getTenantId()
+  const userId = String(req.params.userId)
+  if (!(await requireStaff(tenantId, userId))) { err(res, 'NOT_FOUND', 'Staff member not found.', 404); return }
+  const b = req.body ?? {}
+  const data: any = {}
+  if ('date_of_birth' in b) {
+    const d = dateOrNull(b.date_of_birth)
+    if (b.date_of_birth && (!d || d.getTime() > Date.now() || d.getUTCFullYear() < 1920)) { err(res, 'VALIDATION_ERROR', 'That date of birth does not look right.'); return }
+    data.date_of_birth = d
+  }
+  if (b.emergency) Object.assign(data, { emergency_name: str(b.emergency.name), emergency_relationship: str(b.emergency.relationship, 60), emergency_phone: str(b.emergency.phone, 40), emergency_phone_alt: str(b.emergency.phone_alt, 40) })
+  if (b.next_of_kin) Object.assign(data, { nok_name: str(b.next_of_kin.name), nok_relationship: str(b.next_of_kin.relationship, 60), nok_phone: str(b.next_of_kin.phone, 40), nok_address: str(b.next_of_kin.address, 400) })
+  if (b.contract) {
+    const t = str(b.contract.type, 30)
+    if (t && !CONTRACT_TYPES.includes(t)) { err(res, 'VALIDATION_ERROR', 'Unknown contract type.'); return }
+    Object.assign(data, { contract_type: t, contract_hours_per_week: numOrNull(b.contract.hours_per_week, 168), probation_ends_on: dateOrNull(b.contract.probation_ends_on) })
+  }
+  if (b.holiday) {
+    const unit = b.holiday.unit === 'hours' ? 'hours' : 'days'
+    Object.assign(data, { holiday_entitlement: numOrNull(b.holiday.entitlement, unit === 'hours' ? 3000 : 366), holiday_unit: unit, holiday_year_start: dateOrNull(b.holiday.year_start) })
+  }
+  try {
+    const row = await (prisma as any).staffDetail.upsert({ where: { user_id: userId }, create: { id: randomUUID(), tenant_id: tenantId, user_id: userId, ...data }, update: data })
+    ok(res, { details: shapeDetails(row) })
+  } catch (e: any) { console.error('[workforce] details save failed:', e?.message ?? e); err(res, 'NOT_SET_UP', 'Personal details are not set up yet.', 503) }
+})
+
+// GET/PUT /workforce/settings — the account's holiday year start (month and day).
+workforceRouter.get('/settings', async (_req: Request, res: Response) => {
+  ok(res, { holiday_year_start: await getYearStart(getTenantId()) })
+})
+workforceRouter.put('/settings', async (req: Request, res: Response) => {
+  const tenantId = getTenantId()
+  const month = Number(req.body?.holiday_year_start?.month), day = Number(req.body?.holiday_year_start?.day)
+  const dim = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
+  if (!Number.isInteger(month) || !Number.isInteger(day) || month < 1 || month > 12 || day < 1 || day > dim[month - 1]) { err(res, 'VALIDATION_ERROR', 'Choose a real month and day.'); return }
+  try {
+    await (prisma as any).workforceSettings.upsert({ where: { tenant_id: tenantId }, create: { tenant_id: tenantId, holiday_year_start_month: month, holiday_year_start_day: day }, update: { holiday_year_start_month: month, holiday_year_start_day: day } })
+    ok(res, { holiday_year_start: { month, day } })
+  } catch (e: any) { err(res, 'NOT_SET_UP', 'Workforce settings are not set up yet.', 503) }
+})
+
+// GET /workforce/birthdays — upcoming staff birthdays in the next 60 days (admins only; the grid itself never shows dates of birth).
+workforceRouter.get('/birthdays', async (_req: Request, res: Response) => {
+  const tenantId = getTenantId()
+  const rows: any[] = await (prisma as any).staffDetail.findMany({ where: { tenant_id: tenantId, date_of_birth: { not: null } }, select: { user_id: true, date_of_birth: true } }).catch(() => [])
+  if (!rows.length) { ok(res, { birthdays: [] }); return }
+  const users = await (prisma as any).user.findMany({ where: { tenant_id: tenantId, is_active: true, is_agency: false, id: { in: rows.map(r => r.user_id) } }, select: { id: true, name: true } })
+  const name = new Map<string, string>(users.map((u: any) => [u.id, u.name]))
+  const { nextBirthday } = await import('../services/workforce/staffBirthdays')
+  const today = new Date()
+  const list = rows.filter(r => name.has(r.user_id)).map(r => {
+    const next = nextBirthday(new Date(r.date_of_birth), today)
+    return { user_id: r.user_id, name: name.get(r.user_id)!, on: next.date, in_days: next.days, turning: next.turning }
+  }).filter(b => b.in_days <= 60).sort((a, b) => a.in_days - b.in_days)
+  ok(res, { birthdays: list })
 })
 
 // ─── Supervisions & appraisals ─────────────────────────────────────────────────

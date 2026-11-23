@@ -2565,3 +2565,23 @@ export async function sendIncentiveEmail(opts: { to: string[]; subject: string; 
   `)
   await sgMail.send({ to, from, subject: opts.subject, html, trackingSettings: { clickTracking: { enable: false, enableText: false } } })
 }
+
+// ─── Staff birthdays (workforce compliance) ───────────────────────────────────
+// The greeting comes from the company, not from a person, and has no button: it is a greeting, not a task. From address and footer
+// follow the other company-branded staff emails.
+
+export async function sendStaffBirthdayEmail(opts: { to: string; name: string; orgName: string; subjectPrefix?: string }): Promise<void> {
+  ensureInitialised()
+  if (!process.env.SENDGRID_API_KEY) return
+  const from = process.env.SENDGRID_FROM_ADDRESS ?? `noreply@${INBOUND_DOMAIN}`
+  const first = escHtml(opts.name.split(' ')[0] ?? opts.name)
+  const org = escHtml(opts.orgName)
+  const html = emailWrapper(`
+    <p style="color:${NEUTRAL_DARK};font-size:22px;font-weight:700;margin:0 0 16px">Happy birthday, ${first}!</p>
+    <p style="color:${NEUTRAL_DARK};font-size:15px;line-height:1.6;margin:0 0 12px">Everyone at ${org} would like to wish you a very happy birthday. Thank you for everything you do for the people we support.</p>
+    <p style="color:${NEUTRAL_DARK};font-size:15px;line-height:1.6;margin:0">We hope you have a lovely day.</p>
+    <p style="color:${NEUTRAL_DARK};font-size:15px;margin:20px 0 0">${org}</p>
+    ${emailFooter(opts.orgName)}
+  `)
+  await sgMail.send({ to: opts.to, from: { email: from, name: opts.orgName }, subject: `${opts.subjectPrefix ?? ''}Happy birthday from ${opts.orgName}`, html })
+}

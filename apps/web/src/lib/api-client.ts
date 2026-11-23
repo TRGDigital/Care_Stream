@@ -239,8 +239,19 @@ export interface Credential {
   issued_at:  string | null
   expires_at: string | null
   notes:      string | null
+  registration_body?:   string | null
+  sponsorship_ends_at?: string | null
   status:     string
   document:   { name: string; type: string; size: number; uploaded_at: string } | null
+}
+
+// Personal details, contract and holiday entitlement (admins only).
+export interface StaffDetails {
+  date_of_birth: string | null
+  emergency:   { name: string | null; relationship: string | null; phone: string | null; phone_alt: string | null }
+  next_of_kin: { name: string | null; relationship: string | null; phone: string | null; address: string | null }
+  contract:    { type: string | null; hours_per_week: number | null; probation_ends_on: string | null }
+  holiday:     { entitlement: number | null; unit: 'days' | 'hours'; year_start: string | null }
 }
 
 // Supervision / appraisal: the derived latest+next cell, and a full record.
@@ -844,13 +855,24 @@ export function createApiClient(token: string) {
       register: () =>
         apiFetch<{
           types: string[]
+          core_types?: string[]
           total_staff: number
           summary: { valid: number; expiring: number; expired: number; missing: number; documents: number }
-          staff: Array<{ id: string; name: string; job_role: string | null; credentials: Record<string, Credential> }>
+          staff: Array<{ id: string; name: string; job_role: string | null; credentials: Record<string, Credential>; details?: { dob: boolean; emergency: boolean; next_of_kin: boolean; contract: boolean; holiday: boolean } }>
         }>('/workforce/register', token),
+      staffDetails: (userId: string) =>
+        apiFetch<{ details: StaffDetails; account_year_start: { month: number; day: number }; current_year: { from: string; to: string } }>(`/workforce/staff/${userId}/details`, token),
+      saveStaffDetails: (userId: string, data: Partial<StaffDetails>) =>
+        apiFetch<{ details: StaffDetails }>(`/workforce/staff/${userId}/details`, token, { method: 'PUT', body: JSON.stringify(data) }),
+      workforceSettings: () =>
+        apiFetch<{ holiday_year_start: { month: number; day: number } }>('/workforce/settings', token),
+      saveWorkforceSettings: (holiday_year_start: { month: number; day: number }) =>
+        apiFetch<{ holiday_year_start: { month: number; day: number } }>('/workforce/settings', token, { method: 'PUT', body: JSON.stringify({ holiday_year_start }) }),
+      birthdays: () =>
+        apiFetch<{ birthdays: Array<{ user_id: string; name: string; on: string; in_days: number; turning: number }> }>('/workforce/birthdays', token),
       staff: (userId: string) =>
         apiFetch<{ user: { id: string; name: string; job_role: string | null }; types: string[]; credentials: Record<string, Credential> }>(`/workforce/staff/${userId}`, token),
-      saveCredential: (userId: string, type: string, data: { reference?: string; issued_at?: string | null; expires_at?: string | null; notes?: string }) =>
+      saveCredential: (userId: string, type: string, data: { reference?: string; issued_at?: string | null; expires_at?: string | null; notes?: string; registration_body?: string | null; sponsorship_ends_at?: string | null }) =>
         apiFetch<{ credential: Credential }>(`/workforce/staff/${userId}/credentials/${type}`, token, { method: 'PUT', body: JSON.stringify(data) }),
       deleteCredential: (userId: string, type: string) =>
         apiFetch<{ deleted: boolean }>(`/workforce/staff/${userId}/credentials/${type}`, token, { method: 'DELETE' }),

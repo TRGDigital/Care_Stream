@@ -188,6 +188,8 @@ model StaffCredential {
   evidence_type        String?
   evidence_size        Int?
   evidence_uploaded_at DateTime?
+  registration_body    String?     // NMC | GPhC | HCPC | GMC | Social Work England | other (professional_registration only)
+  sponsorship_ends_at  DateTime?   // visa only: end of sponsorship
   created_at DateTime  @default(now())
   updated_at DateTime  @updatedAt
 
@@ -3708,4 +3710,53 @@ model SiteVisit {
   @@index([visitor_id, started_at])
   @@index([path, started_at])
   @@map("site_visits")
+}
+
+// ─── Workforce compliance expansion (Enterprise). See prisma/sql/2026-11-23_workforce_staff_details.sql ─────────────
+// No relations on purpose (same as StaffNotice): the tables can be added before or after the code ships.
+model StaffDetail {
+  id                      String    @id @default(uuid())
+  tenant_id               String
+  user_id                 String    @unique
+  date_of_birth           DateTime? @db.Date
+  emergency_name          String?
+  emergency_relationship  String?
+  emergency_phone         String?
+  emergency_phone_alt     String?
+  nok_name                String?
+  nok_relationship        String?
+  nok_phone               String?
+  nok_address             String?
+  contract_type           String?
+  contract_hours_per_week Decimal?  @db.Decimal(6, 2)
+  probation_ends_on       DateTime? @db.Date
+  holiday_entitlement     Decimal?  @db.Decimal(7, 2)
+  holiday_unit            String    @default("days")
+  holiday_year_start      DateTime? @db.Date
+  created_at              DateTime  @default(now())
+  updated_at              DateTime  @updatedAt
+
+  @@index([tenant_id])
+  @@map("staff_details")
+}
+
+model WorkforceSettings {
+  tenant_id                String   @id
+  holiday_year_start_month Int      @default(4)
+  holiday_year_start_day   Int      @default(1)
+  updated_at               DateTime @updatedAt
+
+  @@map("workforce_settings")
+}
+
+model StaffBirthdayLog {
+  id        String   @id @default(uuid())
+  tenant_id String
+  user_id   String
+  kind      String
+  year      Int
+  sent_at   DateTime @default(now())
+
+  @@unique([user_id, kind, year])
+  @@map("staff_birthday_log")
 }

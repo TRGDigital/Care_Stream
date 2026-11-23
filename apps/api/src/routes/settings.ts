@@ -37,6 +37,8 @@ const EMAIL_PREF_DEFAULTS: Record<string, boolean> = {
   cqc_staff_prep:          true,
   onboarding_updates:      true,
   compliance_expiry_alerts: true,
+  staff_birthday_admin_alerts: true,
+  staff_birthday_emails:   true,
   supervision_updates:     true,
   monthly_invoice:         false,
   trg_product_updates:     false,

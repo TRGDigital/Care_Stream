@@ -41,6 +41,7 @@ import { seedOnboardingEmails } from '../services/onboarding/seed'
 import { checkRegulationSources } from '../services/regulations/source-monitor'
 import { reviewPendingChanges } from '../services/regulations/change-review'
 import { runCredentialExpiryAllTenants } from '../services/workforce/credentialExpiry'
+import { runStaffBirthdaysAllTenants, runStaffBirthdaysForTenant } from '../services/workforce/staffBirthdays'
 import { runSupervisionReminders } from '../services/workforce/supervisionReminders'
 import { runAgencyAccess } from '../services/workforce/agencyAccess'
 import { runPolicyReviewReminders } from '../services/policies/review-reminders'
@@ -173,6 +174,17 @@ cronRouter.get('/training-weekly-reminders', async (req: Request, res: Response)
 // work, registration) that have expired or expire within 30 days.
 cronRouter.get('/credential-expiry', (req, res) =>
   job('credential-expiry', req, res, () => runCredentialExpiryAllTenants()))
+
+// Daily: staff birthdays. Admins are told 7 days ahead; the staff member gets a happy birthday email from the company on the day.
+// Query options (cron secret only): tenant=<id> runs just that account, dry=1 sends nothing, preview_to=<email> sends the emails only
+// there and logs nothing (needs tenant; add on=YYYY-MM-DD to pretend today is that date so a real birthday shows up).
+cronRouter.get('/staff-birthdays', (req, res) =>
+  job('staff-birthdays', req, res, async () => {
+    const tenant = typeof req.query.tenant === 'string' ? req.query.tenant : undefined
+    if (!tenant) return runStaffBirthdaysAllTenants()
+    const on = typeof req.query.on === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(req.query.on) ? new Date(req.query.on + 'T12:00:00Z') : undefined
+    return runStaffBirthdaysForTenant(tenant, { dryRun: req.query.dry === '1', previewTo: typeof req.query.preview_to === 'string' ? req.query.preview_to : undefined, now: on })
+  }))
 
 // Daily: remind staff (and admins) the day before a booked supervision/appraisal.
 cronRouter.get('/supervision-reminders', (req, res) =>

@@ -23,6 +23,12 @@ const TYPE_LABELS: Record<string, string> = {
   passport:                  'Passport',
   professional_registration: 'Professional registration',
   reference:                 'References',
+  visa:                      'Visa',
+  visa_sponsorship:          'Visa sponsorship',
+  driving_licence:           'Driving licence',
+  business_insurance:        'Business insurance',
+  mot:                       'MOT',
+  contract:                  'Contract end date',
 }
 
 type Flag = { user_id: string; name: string; type: string; expires_at: Date; when: 'expired' | 'soon' }
@@ -75,10 +81,16 @@ export async function runCredentialExpiryForTenant(tenantId: string, opts?: { fo
   const now       = new Date()
   const windowEnd = new Date(now.getTime() + WINDOW_DAYS * 86_400_000)
 
-  const creds = await (prisma as any).staffCredential.findMany({
-    where:  { tenant_id: tenantId, expires_at: { not: null, lte: windowEnd } },
-    select: { user_id: true, type: true, expires_at: true },
+  const rawCreds = await (prisma as any).staffCredential.findMany({
+    where:  { tenant_id: tenantId, OR: [{ expires_at: { not: null, lte: windowEnd } }, { sponsorship_ends_at: { not: null, lte: windowEnd } }] },
+    select: { user_id: true, type: true, expires_at: true, sponsorship_ends_at: true },
   })
+  // A visa with a sponsorship end date becomes its own line, so a visa that is in date but whose sponsorship is ending is still flagged.
+  const creds: Array<{ user_id: string; type: string; expires_at: Date }> = []
+  for (const c of rawCreds) {
+    if (c.expires_at && new Date(c.expires_at) <= windowEnd) creds.push({ user_id: c.user_id, type: c.type, expires_at: c.expires_at })
+    if (c.sponsorship_ends_at && new Date(c.sponsorship_ends_at) <= windowEnd) creds.push({ user_id: c.user_id, type: 'visa_sponsorship', expires_at: c.sponsorship_ends_at })
+  }
   if (creds.length === 0) return empty
 
   // Only flag active staff, and never agency workers: their DBS, right to work and

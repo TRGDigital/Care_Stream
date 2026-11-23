@@ -90,6 +90,8 @@ orgLogoFileRouter.get('/:tenantId/:file', async (req: Request, res: Response) =>
       pngCache.set(key, png)
     }
     res.setHeader('Content-Type', 'image/png')
+    // helmet's default (same-origin) stops Outlook on the web, Gmail and others showing the image in an email, so say it may be shown anywhere (as the picture route does)
+    res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin')
     res.setHeader('Cache-Control', 'public, max-age=86400, immutable')
     res.setHeader('X-Content-Type-Options', 'nosniff')
     res.send(png)

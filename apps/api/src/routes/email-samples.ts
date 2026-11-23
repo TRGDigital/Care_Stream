@@ -1,6 +1,6 @@
 // "Send me a sample": an administrator can send themselves any staff email, exactly as the system builds it, to check the design.
 //   GET  /email-samples        the names you can send
-//   POST /email-samples/send   { name }   sends ONE sample to the administrator's own address, nobody else's
+//   POST /email-samples/send   { name, to? }   sends ONE sample to the administrator's own address, or (with `to`) to one of our own team addresses. Never to anyone else.
 // The sample carries the real organisation logo and the real name and picture of the person asking, so it is what staff will see.
 // Sample data is made up (staff name, dates, courses). Sign in links and reset links in samples do not work.
 
@@ -28,9 +28,10 @@ async function me(req: Request) {
   const t = u ? await (prisma as any).tenant.findUnique({ where: { id: u.tenant_id }, select: { name: true } }) : null
   return u ? { ...u, orgName: t?.name ?? 'Your service' } : null
 }
-function cases(u: { id: string; name: string; email: string; orgName: string }) {
+const TEAM_ADDRESS = /@(trgdigital\.co\.uk|orreryintelligence\.com|crosswayscarehome\.co\.uk)$/i   // the owner's own mailboxes only
+function cases(u: { id: string; name: string; email: string; orgName: string }, to?: string) {
   const portal = siteUrl()
-  const base = { to: u.email, name: u.name, orgName: u.orgName }
+  const base = { to: to || u.email, name: u.name, orgName: u.orgName }
   return { ...personEmailCases(out, { ...base, actorUserId: u.id }, portal), ...otherStaffEmailCases(out, base, portal) } as Record<string, () => Promise<void>>
 }
 
@@ -42,9 +43,11 @@ emailSamplesRouter.get('/', async (req: Request, res: Response) => {
 emailSamplesRouter.post('/send', async (req: Request, res: Response) => {
   const u = await me(req); if (!u) { err(res, 'NOT_FOUND', 'User not found.', 404); return }
   const name = String(req.body?.name ?? '')
-  const fn = cases(u)[name]
+  const to = String(req.body?.to ?? '').trim().toLowerCase()
+  if (to && !TEAM_ADDRESS.test(to)) { err(res, 'VALIDATION_ERROR', 'Samples can only be sent to your own address or a TRG Digital, Orrery or Crossways address.'); return }
+  const fn = cases(u, to)[name]
   if (!fn) { err(res, 'VALIDATION_ERROR', 'Unknown sample.'); return }
   if (!allow(u.id)) { err(res, 'TOO_MANY', 'That is 40 samples in the last hour. Please try again later.', 429); return }
   try { await withForcedPerson(u.id, '[Sample] ', fn) } catch (e: any) { err(res, 'EMAIL_FAILED', String(e?.message ?? e).slice(0, 200), 502); return }
-  ok(res, { sent: true, name, to: u.email })
+  ok(res, { sent: true, name, to: to || u.email })
 })

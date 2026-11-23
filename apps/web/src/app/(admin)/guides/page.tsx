@@ -9,7 +9,7 @@ import {
   FileText, Users, MessageSquare, Mail, ClipboardCheck,
   GraduationCap, BarChart2, BookOpen, ShieldAlert, Settings, Zap, ClipboardList,
   LifeBuoy, Upload, CheckCircle, Info, UserPlus, RefreshCw, CalendarDays, Lightbulb, Loader2, Building2, BadgeCheck,
-  UserRound, BriefcaseBusiness, ListChecks, Sparkles, Gift, Award,
+  UserRound, BriefcaseBusiness, ListChecks, Sparkles, Gift, Award, Tablet,
 } from 'lucide-react'
 
 function FeatureRequestModal({ open, onClose, token }: { open: boolean; onClose: () => void; token?: string }) {
@@ -2517,7 +2517,7 @@ const GUIDE_SECTIONS: GuideSection[] = [
     id:      'workforce',
     icon:    BadgeCheck,
     title:   'Workforce compliance register (Enterprise)',
-    summary: 'DBS, right to work, registration, references, document uploads, expiry alerts, supervisions and appraisals',
+    summary: 'DBS, right to work, registration, references, extra documents, personal details, contract and holiday, birthdays, document uploads, expiry alerts, supervisions and appraisals',
     content: (
       <div className="space-y-5">
         <SectionBlock title="What it is">
@@ -2529,7 +2529,7 @@ const GUIDE_SECTIONS: GuideSection[] = [
             <li><strong className="text-neutral-dark">DBS check</strong> (certificate number and renewal date)</li>
             <li><strong className="text-neutral-dark">Right to work</strong> (document type, plus expiry for time-limited visas)</li>
             <li><strong className="text-neutral-dark">Passport</strong> (number and expiry date, important for overseas staff)</li>
-            <li><strong className="text-neutral-dark">Professional registration</strong> (for example NMC, with renewal date)</li>
+            <li><strong className="text-neutral-dark">Professional registration</strong> (the body, your PIN or registration number, and the renewal date)</li>
             <li><strong className="text-neutral-dark">References</strong> (received or outstanding)</li>
           </ul>
         </SectionBlock>
@@ -2552,6 +2552,47 @@ const GUIDE_SECTIONS: GuideSection[] = [
           <p className="mt-2 text-sm text-neutral-mid">
             Once uploaded, a paperclip appears on that credential in the register, and you can <strong>View</strong> or <strong>Replace</strong> the document at any time. Each staff member&rsquo;s record page also has a <strong>Compliance credentials</strong> section showing their status and letting you open the uploaded documents, so everything is together as CQC evidence.
           </p>
+        </SectionBlock>
+        <SectionBlock title="Viewing a document next to its record">
+          <p className="text-sm text-neutral-mid">
+            A <strong>View</strong> button appears next to a credential only when a file has been uploaded. Click it and that one document opens over the register, next to what is recorded: the reference, issue and expiry dates, notes and status. From there you can <strong>Download</strong> the file or click <strong>Edit record</strong>.
+          </p>
+          <div className="mt-2"><Tip>If a credential has typed details but no file, there is no View button. Open the person&rsquo;s row and upload a file.</Tip></div>
+        </SectionBlock>
+        <SectionBlock title="Professional registration">
+          <div className="space-y-3">
+            <Step n={1}>Open the person&rsquo;s row and go to <strong>Professional registration</strong>.</Step>
+            <Step n={2}>Choose the <strong>body</strong>: NMC, GPhC, HCPC, GMC, Social Work England or Other.</Step>
+            <Step n={3}>Enter the <strong>PIN or registration number</strong> and upload the certificate.</Step>
+            <Step n={4}>Set the <strong>renewal or revalidation date</strong> and save.</Step>
+          </div>
+        </SectionBlock>
+        <SectionBlock title="Other documents">
+          <p className="text-sm text-neutral-mid">
+            In the editor, <strong>Other documents</strong> holds extras you want on file: a <strong>visa</strong> (with a sponsorship end date), a <strong>driving licence</strong>, <strong>business use insurance</strong>, an <strong>MOT</strong> and the <strong>contract</strong>. These are never marked missing. They show as chips in the <strong>Also held</strong> column, in the same colours as the rest of the register: valid, expiring within 30 days, or expired. The daily expiry email to admins covers them too, including a visa sponsorship end.
+          </p>
+        </SectionBlock>
+        <SectionBlock title="Personal details">
+          <p className="text-sm text-neutral-mid">
+            The <strong>Personal details</strong> tab holds the person&rsquo;s <strong>date of birth</strong>, <strong>emergency contact</strong> and <strong>next of kin</strong>. Use <strong>same as emergency contact</strong> if they are the same person. The <strong>Personal</strong> column on the register shows how many of 5 sections are filled in: date of birth, emergency contact, next of kin, contract and holiday. These details are for admins only. They are never shown to staff or in the grid.
+          </p>
+        </SectionBlock>
+        <SectionBlock title="Contract and holiday">
+          <p className="text-sm text-neutral-mid">
+            The <strong>Contract and holiday</strong> tab lets you upload the contract and record the <strong>contract type</strong> (permanent, fixed term, bank or zero hours), <strong>contracted hours a week</strong>, the <strong>probation end</strong> and the <strong>holiday entitlement</strong> in days or hours. You can give a person their own year start, or leave it to follow the account holiday year start, which you set (day and month) on the same tab.
+          </p>
+          <div className="mt-2"><Tip>This records entitlement only. Holiday booking is not part of CareStream.</Tip></div>
+        </SectionBlock>
+        <SectionBlock title="Birthdays">
+          <p className="text-sm text-neutral-mid">
+            Admins are emailed <strong>7 days before</strong> a staff birthday. On the day, the staff member gets a happy birthday email from the company, with no age and no button. A panel on the register lists birthdays in the <strong>next 60 days</strong>. Only people whose date of birth an admin has entered are affected.
+          </p>
+          <p className="mt-2 text-sm text-neutral-mid">
+            Turn either email on or off under <strong>Settings &rarr; Notifications</strong>: <strong>Staff birthday heads up</strong> (the admin email) and <strong>Staff birthday greeting</strong> (the email to the staff member).
+          </p>
+        </SectionBlock>
+        <SectionBlock title="Staff pictures">
+          <p className="text-sm text-neutral-mid">Staff pictures show next to names on the register.</p>
         </SectionBlock>
         <SectionBlock title="Expiry alerts">
           <p className="text-sm text-neutral-mid">
@@ -2670,6 +2711,71 @@ const GUIDE_SECTIONS: GuideSection[] = [
             <Step n={7}><strong>A snapshot in the record.</strong> When a supervision is completed, a short summary of their training at that time is saved in the record, so it shows what was true on the day. It cannot be edited afterwards.</Step>
           </div>
           <div className="mt-3"><Tip>The brief, the training detail and the suggestions are for the supervisor and administrators only. Staff do not see them, but they can see the actions that come out of the supervision in their hub. Tell your staff in your policies that their training results may be discussed in supervisions.</Tip></div>
+        </SectionBlock>
+      </div>
+    ),
+  },
+  {
+    id:      'shared-tablets',
+    icon:    Tablet,
+    title:   'Shared tablets',
+    summary: 'For homes with a phone ban or a few shared tablets: connect a tablet, print the poster, manage PINs and see how staff use it',
+    content: (
+      <div className="space-y-5">
+        <SectionBlock title="What it is, on all paid plans">
+          <p className="text-sm text-neutral-mid">
+            Shared tablets are for homes with a phone ban, or a few tablets that staff share. A connected tablet shows only <strong>Chat</strong> and <strong>This is me</strong>. Staff sign in on it with their own picture and 4 digit PIN. You manage tablets from the <strong>Staff</strong> page.
+          </p>
+        </SectionBlock>
+
+        <SectionBlock title="1. Adding a tablet and printing the poster">
+          <div className="space-y-3">
+            <Step n={1}>On the <strong>Staff</strong> page, click <strong>Shared tablets</strong>. You can also tick <strong>Shared tablet</strong> when you add a staff member.</Step>
+            <Step n={2}>Add a tablet with a <strong>name</strong> and an optional <strong>location</strong>. You can add up to 5.</Step>
+            <Step n={3}>Print the <strong>Connect a tablet</strong> poster. It shows your organisation logo at the top (set under <strong>Settings &rarr; Organisation logo</strong>) and the CareStream logo at the foot. Put it in staff areas.</Step>
+            <Step n={4}>Click <strong>Send PINs</strong> to email everyone their PIN once.</Step>
+          </div>
+          <div className="mt-3"><Tip>Click <strong>Print a new poster</strong> to replace it. Old posters stop working for new connections, but tablets already connected stay connected. Use <strong>Disconnect</strong> for one tablet or <strong>Disconnect all</strong> to remove them all.</Tip></div>
+        </SectionBlock>
+
+        <SectionBlock title="2. Connecting a tablet">
+          <div className="space-y-3">
+            <Step n={1}>Scan the poster with the tablet.</Step>
+            <Step n={2}>Type the first letters of your name.</Step>
+            <Step n={3}>Enter your 4 digit PIN.</Step>
+            <Step n={4}>Choose which tablet it is.</Step>
+          </div>
+          <div className="mt-3"><Tip>The QR code on its own signs nobody in. A name and PIN are always needed.</Tip></div>
+        </SectionBlock>
+
+        <SectionBlock title="3. Using the tablet">
+          <p className="text-sm text-neutral-mid">
+            Staff tap <strong>Who&rsquo;s using it?</strong>, pick their picture and enter their PIN. They then get their own hub, with their training, actions and records. They tap <strong>Done</strong> when finished, or leave it for about 2 minutes and it returns to the tablet screen.
+          </p>
+          <p className="mt-2 text-sm text-neutral-mid">
+            Chat questions are logged against the tablet and, in a personal session, against the person. An administrator who signs in on a tablet gets an ordinary staff session. Admin screens are never reachable from a tablet. Tablets are not counted as staff.
+          </p>
+        </SectionBlock>
+
+        <SectionBlock title="4. PINs">
+          <p className="text-sm text-neutral-mid">
+            Each person gets a random 4 digit PIN, emailed to them from the administrator. You never see a PIN unless you choose <strong>Show PIN</strong>, and that is logged. New staff get their PIN with their welcome once your account has a tablet.
+          </p>
+          <p className="mt-2 text-sm text-neutral-mid">From the three dots menu on the Staff page you can:</p>
+          <ul className="mt-1 list-disc space-y-1 pl-5 text-sm text-neutral-mid">
+            <li><strong className="text-neutral-dark">Re-send PIN</strong>: email the same PIN again.</li>
+            <li><strong className="text-neutral-dark">Regenerate PIN</strong>: make a new one. This also ends their tablet sessions and clears any lock.</li>
+            <li><strong className="text-neutral-dark">Show PIN</strong>: display it to you.</li>
+          </ul>
+          <p className="mt-2 text-sm text-neutral-mid">
+            Each of these is limited to 3 an hour per person. Five wrong tries locks that person for 5 minutes.
+          </p>
+        </SectionBlock>
+
+        <SectionBlock title="5. Poster reminders">
+          <p className="text-sm text-neutral-mid">
+            Under <strong>Settings &rarr; Shared tablets</strong>, choose how often admins are reminded to print a new poster: <strong>monthly</strong>, <strong>quarterly</strong> (the default), <strong>half yearly</strong> or <strong>yearly</strong>.
+          </p>
         </SectionBlock>
       </div>
     ),

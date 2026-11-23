@@ -9,6 +9,7 @@ import { adminSearchRouter } from './routes/admin-search'
 import { viewAsGuard } from './lib/view-as'
 import { sharedDeviceGuard } from './middleware/sharedDeviceGuard'
 import { orgLogoFileRouter } from './lib/org-logo'
+import { emailSamplesRouter } from './routes/email-samples'
 import { tabletPublicRouter, tabletRouter, tabletsAdminRouter } from './routes/shared-tablets'
 import { queryRouter } from './routes/query'
 import { usersRouter } from './routes/users'
@@ -270,6 +271,7 @@ app.use('/users', usersRouter)
 app.use('/me', meRouter)
 app.use('/tablet', tabletRouter)
 app.use('/tablets', tabletsAdminRouter)
+app.use('/email-samples', emailSamplesRouter)   // an administrator sends themselves a sample of any staff email
 app.use('/billing', billingRouter)
 app.use('/analytics', analyticsRouter)
 app.use('/suggestions', suggestionsRouter)

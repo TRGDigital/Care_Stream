@@ -64,10 +64,13 @@ async function main() {
   fs.mkdirSync(dir, { recursive: true })
   let current = ''
   sgMail.send = async (msg: any) => {
-    const from = typeof msg.from === 'object' ? msg.from.name : msg.from
+    const fromMsg = await (await import('../lib/staff-email-finalize')).finalizeStaffEmail(msg)
+    const from = typeof fromMsg.from === 'object' ? fromMsg.from.name : fromMsg.from
     const banner = `<!-- From: ${from} | Subject: ${msg.subject} -->\n`
     const { applyOrgLogo } = await import('../lib/org-logo')
-    fs.writeFileSync(path.join(dir, current), banner + applyOrgLogo(msg.html, orgLogo ? { url: orgLogo, alt: 'Ferndale Nursing Home' } : null))
+    const { finalizeStaffEmail } = await import('../lib/staff-email-finalize')
+    const fin = await finalizeStaffEmail(msg)
+    fs.writeFileSync(path.join(dir, current), banner + applyOrgLogo(fin.html, orgLogo ? { url: orgLogo, alt: 'Ferndale Nursing Home' } : null))
     console.log(`${current}  From: ${from}  Subject: ${msg.subject}`)
   }
   for (const [name, fn] of Object.entries(cases)) {

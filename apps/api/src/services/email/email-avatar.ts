@@ -45,6 +45,7 @@ export async function emailAvatarUrlFor(userId: string): Promise<string | null> 
 // Preview and test tooling only: lets a script supply the acting person without a database.
 let actorOverride: ((userId: string) => PersonAdmin | null) | null = null
 export function setActorOverrideForPreview(fn: ((userId: string) => PersonAdmin | null) | null): void { actorOverride = fn }
+export const previewActorActive = (): boolean => actorOverride !== null
 
 /** Who is acting, for the top of a person-led email. Null when there is no such person (so the branded look is used). */
 export async function resolveActor(userId?: string | null): Promise<PersonAdmin | null> {

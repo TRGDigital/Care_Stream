@@ -4,7 +4,7 @@
 import sgMail from '@sendgrid/mail'
 import '../lib/email-guard'   // never email reserved fictional domains (example.com and similar)
 import { prisma } from '../db/client'
-import { emailWrapper, emailFooter } from './email/outbound'
+import { staffWrapper, emailFooter } from './email/outbound'
 import { siteUrl } from '../lib/urls'
 
 const PURPLE = '#9B52B5', DARK = '#1A1530', BODY = '#374151', MUTED = '#6b7280'
@@ -15,7 +15,7 @@ export function renderSuperUserWelcome(o: { firstName: string; orgName: string; 
   const subject = `You are ${o.orgName}'s CareStream Super User`
   const who = o.taggedBy ? esc(o.taggedBy) : 'Your manager'
   const li = (s: string) => `<li style="margin:0 0 8px">${s}</li>`
-  const html = emailWrapper(`
+  const html = staffWrapper(`
     <p style="color:${DARK};font-size:15px;margin:0 0 14px">Hi ${esc(o.firstName)},</p>
     <p style="color:${BODY};font-size:15px;line-height:1.6;margin:0 0 14px">${who} has chosen you as the <strong>Super User</strong> for ${esc(o.orgName)} on CareStream. That means you are the person we hope will lead the way: using CareStream well yourself, and helping your colleagues use it for their training and for getting quick answers at work.</p>
     <p style="color:${DARK};font-size:15px;font-weight:600;margin:0 0 6px">What it involves</p>

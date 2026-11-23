@@ -6,6 +6,7 @@
 // recipients are all unsendable is dropped quietly (logged, not an error): the action that triggered it still succeeds.
 import sgMail from '@sendgrid/mail'
 import { withOrgLogo } from './org-logo'
+import { finalizeStaffEmail } from './staff-email-finalize'
 
 const RESERVED_DOMAIN = /(^|\.)(example\.(com|org|net)|example|test|invalid|localhost)$/i
 
@@ -55,18 +56,18 @@ if (!g.__csEmailGuard) {
   const send = g.send.bind(g)
   g.send = async (data: any, isMultiple?: boolean, cb?: any) => {
     if (Array.isArray(data)) {
-      const kept = await Promise.all(data.map(guardMessage).filter(Boolean).map(withoutClickTracking).map(withOrgLogo))
+      const kept = await Promise.all(data.map(guardMessage).filter(Boolean).map(withoutClickTracking).map(async m => withOrgLogo(await finalizeStaffEmail(m))))
       if (kept.length === 0) { console.log('[email-guard] skipped: no deliverable recipient'); return SKIPPED }
       return send(kept, isMultiple, cb)
     }
     const m = guardMessage(data)
     if (!m) { console.log('[email-guard] skipped: no deliverable recipient'); return SKIPPED }
-    return send(await withOrgLogo(withoutClickTracking(m)), isMultiple, cb)
+    return send(await withOrgLogo(await finalizeStaffEmail(withoutClickTracking(m))), isMultiple, cb)
   }
   const sendMultiple = g.sendMultiple.bind(g)
   g.sendMultiple = async (data: any, cb?: any) => {
     const m = guardMessage(data)
     if (!m) { console.log('[email-guard] skipped: no deliverable recipient'); return SKIPPED }
-    return sendMultiple(await withOrgLogo(withoutClickTracking(m)), cb)
+    return sendMultiple(await withOrgLogo(await finalizeStaffEmail(withoutClickTracking(m))), cb)
   }
 }

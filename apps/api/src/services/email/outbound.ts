@@ -13,7 +13,7 @@ import {
   updateContent, actionPlanContent, type AllocationKind,
 } from './person-content'
 import { resolveActor } from './email-avatar'
-import { LOGO_BLOCK } from './org-logo-markers'
+import { LOGO_BLOCK, LOGO_ROW } from './org-logo-markers'
 
 const INBOUND_DOMAIN = process.env.INBOUND_EMAIL_DOMAIN ?? 'carestreamai.co.uk'
 const WEB_URL        = siteUrl()
@@ -60,10 +60,10 @@ export function emailFooter(orgName?: string): string {
   const text = orgName
     ? `This email was sent on behalf of <strong>${orgName}</strong> via CareStreamAI. If you were not expecting this, please contact your administrator.`
     : `The CareStreamAI Team &mdash; Powered by TRG Digital`
-  return `
+  return `<!--CS_FOOTER-->
   <div style="border-top:1px solid #e5e7eb;padding-top:20px;margin-top:32px">
     <p style="margin:0;font-size:12px;color:#9ca3af">${text}</p>
-  </div>`
+  </div><!--/CS_FOOTER-->`
 }
 
 export function emailWrapper(content: string): string {
@@ -74,6 +74,34 @@ export function emailWrapper(content: string): string {
     ${LOGO_BLOCK}${content}
   </div>
 </div>`.trim()
+}
+
+/** THE STAFF EMAIL LAYOUT (Len, 24 Nov 2026): every email to a member of staff has the same structure as the person-led emails: CareStream header,
+ *  the organisation logo, the headline, the person it is from (picture, name, role, home), the content in a card, and a footer note.
+ *  Builders that have no acting administrator use this; the shared sender (lib/staff-email-finalize.ts) fills the markers, showing the acting
+ *  administrator if the email names one and otherwise the account's main administrator. */
+export const STAFF_MARK = { headline: '<!--CS_HEADLINE-->', person: '<!--CS_PERSON-->', note: '<!--CS_NOTE-->' }
+export function staffWrapper(content: string): string {
+  const font = 'font-family:Inter,Arial,Helvetica,sans-serif'
+  const body = content.replace(/<!--CS_FOOTER-->[\s\S]*?<!--\/CS_FOOTER-->/g, '')
+  return `<!doctype html>
+<html lang="en-GB"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light only"><title>CareStream</title></head>
+<body style="margin:0;padding:0;background:#f4f4f7" bgcolor="#f4f4f7">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#f4f4f7" style="background:#f4f4f7"><tr><td align="center" style="padding:24px 12px">
+  <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" bgcolor="#ffffff" style="width:100%;max-width:600px;background:#ffffff;border:1px solid #e5e7eb;border-radius:12px;border-collapse:separate">
+    <tr><td align="left" style="padding:20px 32px 8px"><img src="${LOGO_URL}" alt="CareStream" height="28" style="display:block;height:28px;width:auto;border:0;${font};font-size:15px;font-weight:700;color:${PURPLE}"></td></tr>
+    ${LOGO_ROW}
+    <tr><td align="center" style="${font};padding:20px 40px 22px;font-size:22px;line-height:30px;font-weight:700;color:${NEUTRAL_DARK}">${STAFF_MARK.headline}</td></tr>
+    ${STAFF_MARK.person}
+    <tr><td style="padding:0 32px 8px">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#faf8fc" style="border:1px solid #e5e7eb;border-radius:12px;border-collapse:separate;background:#faf8fc">
+        <tr><td style="padding:22px 22px 8px;${font};font-size:15px;line-height:1.6;color:#374151">${body}</td></tr>
+      </table>
+    </td></tr>
+    <tr><td align="center" style="${font};padding:26px 40px 24px;font-size:12px;line-height:18px;color:#9ca3af">${STAFF_MARK.note}</td></tr>
+  </table>
+</td></tr></table>
+</body></html>`
 }
 
 // ─── Reply ────────────────────────────────────────────────────────────────────
@@ -484,7 +512,7 @@ export async function sendStaffLoginLinkEmail(opts: { to: string; name: string; 
   const firstName = (opts.name || '').split(' ')[0] || 'there'
   const hrs = opts.expiresMins >= 60 ? `${Math.round(opts.expiresMins / 60)} hours` : `${opts.expiresMins} minutes`
 
-  const html = emailWrapper(`
+  const html = staffWrapper(`
     <p style="color:${NEUTRAL_DARK};font-size:15px;margin:0 0 16px">Hi ${firstName},</p>
 
     <p style="color:#374151;font-size:15px;line-height:1.6;margin:0 0 24px">
@@ -586,7 +614,7 @@ export async function sendTrainingRenewalEmail(opts: {
       <td style="padding:10px 12px;border-bottom:1px solid #eee;color:#6b7280;font-size:14px;text-align:right">${fmt(i.due)}</td>
     </tr>`).join('')
 
-  const html = emailWrapper(`
+  const html = staffWrapper(`
     <p style="color:${NEUTRAL_DARK};font-size:15px;margin:0 0 16px">Hi ${firstName},</p>
     <p style="color:#374151;font-size:15px;line-height:1.6;margin:0 0 20px">
       Some of your CareStream training licences are coming up for renewal. Renew them to keep your team's training and compliance records active and up to date.
@@ -622,7 +650,7 @@ export async function sendPasswordResetEmail(to: string, name: string, resetUrl:
   const from      = process.env.SENDGRID_FROM_ADDRESS ?? process.env.SENDGRID_FROM_EMAIL ?? `noreply@${INBOUND_DOMAIN}`
   const firstName = name.split(' ')[0] ?? name
 
-  const html = emailWrapper(`
+  const html = staffWrapper(`
     <p style="color:${NEUTRAL_DARK};font-size:15px;margin:0 0 16px">Hi ${firstName},</p>
 
     <p style="color:#374151;font-size:15px;line-height:1.6;margin:0 0 24px">
@@ -672,7 +700,7 @@ export async function sendPasswordSetupEmail(to: string, name: string, setupUrl:
   const from      = process.env.SENDGRID_FROM_ADDRESS ?? process.env.SENDGRID_FROM_EMAIL ?? `noreply@${INBOUND_DOMAIN}`
   const firstName = name.split(' ')[0] ?? name
 
-  const html = emailWrapper(`
+  const html = staffWrapper(`
     <p style="color:${NEUTRAL_DARK};font-size:15px;margin:0 0 16px">Hi ${firstName},</p>
 
     <p style="color:#374151;font-size:15px;line-height:1.6;margin:0 0 24px">
@@ -758,7 +786,7 @@ export async function sendTrainingUpdateEmail(opts: SendTrainingUpdateOptions): 
   const from      = process.env.SENDGRID_FROM_ADDRESS ?? `noreply@${INBOUND_DOMAIN}`
   const firstName = opts.name.split(' ')[0] ?? opts.name
 
-  const html = emailWrapper(`
+  const html = staffWrapper(`
     <p style="color:${NEUTRAL_DARK};font-size:15px;margin:0 0 16px">Hi ${firstName},</p>
     ${opts.bodyHtml}
     ${/<a\s/i.test(opts.bodyHtml) && !opts.buttonPath ? '' : hubButton(hubLink(opts.buttonPath ?? '/chat'), opts.buttonLabel ?? 'Open my hub')}
@@ -792,7 +820,7 @@ export async function sendAuditReportEmail(opts: {
   const from      = process.env.SENDGRID_FROM_ADDRESS ?? `noreply@${INBOUND_DOMAIN}`
   const firstName = opts.name.split(' ')[0] ?? opts.name
   const what      = `${opts.auditName}${opts.subject ? ` (${opts.subject})` : ''}`
-  const html = emailWrapper(`
+  const html = staffWrapper(`
     <p style="color:${NEUTRAL_DARK};font-size:15px;margin:0 0 16px">Hi ${firstName},</p>
     <p style="color:#374151;font-size:15px;line-height:1.6;margin:0 0 16px">
       The <strong>${what}</strong> audit for <strong>${opts.period}</strong> has been ${opts.approved ? 'signed off' : 'completed'}. The full report is attached as a PDF and saved with the audit.
@@ -815,7 +843,7 @@ export async function sendAuditUpdateEmail(opts: SendAuditUpdateOptions): Promis
   const from      = process.env.SENDGRID_FROM_ADDRESS ?? `noreply@${INBOUND_DOMAIN}`
   const firstName = opts.name.split(' ')[0] ?? opts.name
 
-  const html = emailWrapper(`
+  const html = staffWrapper(`
     <p style="color:${NEUTRAL_DARK};font-size:15px;margin:0 0 16px">Hi ${firstName},</p>
     ${opts.bodyHtml}
     ${/<a\s/i.test(opts.bodyHtml) && !opts.buttonPath ? '' : hubButton(hubLink(opts.buttonPath ?? '/chat'), opts.buttonLabel ?? 'Open my hub')}
@@ -855,7 +883,7 @@ export async function sendCqcPrepEmail(opts: SendCqcPrepOptions): Promise<void> 
     return
   }
 
-  const html = emailWrapper(`
+  const html = staffWrapper(`
     <p style="color:${NEUTRAL_DARK};font-size:15px;margin:0 0 16px">Hi ${firstName},</p>
     <p style="color:#374151;font-size:15px;line-height:1.6;margin:0 0 24px">
       You have <strong>${opts.questionCount} new CQC preparation ${opts.questionCount === 1 ? 'question' : 'questions'}</strong> assigned to you.
@@ -909,7 +937,7 @@ export async function sendOnboardingUpdateEmail(opts: SendOnboardingUpdateOption
     return
   }
 
-  const html = emailWrapper(`
+  const html = staffWrapper(`
     <p style="color:${NEUTRAL_DARK};font-size:15px;margin:0 0 16px">Hi ${firstName},</p>
     ${opts.bodyHtml}
     <div style="text-align:center;margin:0 0 32px">
@@ -950,7 +978,7 @@ export async function sendStaffAllocationEmail(opts: { to: string; name: string;
     return
   }
 
-  const html = emailWrapper(`
+  const html = staffWrapper(`
     <p style="color:${NEUTRAL_DARK};font-size:15px;margin:0 0 16px">Hi ${firstName},</p>
     <p style="color:#374151;font-size:15px;line-height:1.6;margin:0 0 24px">
       Your manager has assigned you new <strong>${c.noun}</strong> in CareStream. Open the hub to get started, you can do it on your phone or computer.
@@ -1000,7 +1028,7 @@ export async function sendTrainingReminderEmail(opts: {
     ? ` It is due by <strong>${opts.dueDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</strong>.`
     : ''
 
-  const html = emailWrapper(`
+  const html = staffWrapper(`
     <p style="color:${NEUTRAL_DARK};font-size:15px;margin:0 0 16px">Hi ${firstName},</p>
     <p style="color:#374151;font-size:15px;line-height:1.6;margin:0 0 24px">
       This is a reminder from your manager to complete <strong>${course}</strong> in CareStream.${due}
@@ -1103,7 +1131,7 @@ export async function sendTrainingCompletionEmail(opts: {
   const firstName = (opts.adminName || '').split(' ')[0] || 'there'
   const recordUrl = `${WEB_URL}/staff/${opts.staffId}`
 
-  const html = emailWrapper(`
+  const html = staffWrapper(`
     <p style="color:${NEUTRAL_DARK};font-size:15px;margin:0 0 16px">Hi ${firstName},</p>
 
     <p style="color:#374151;font-size:15px;line-height:1.6;margin:0 0 20px">
@@ -1151,7 +1179,7 @@ export async function sendFaceToFaceReminderEmail(opts: { to: string; name: stri
     return
   }
 
-  const html = emailWrapper(`
+  const html = staffWrapper(`
     <p style="color:${NEUTRAL_DARK};font-size:15px;margin:0 0 16px">Hi ${firstName},</p>
     <p style="color:#374151;font-size:15px;line-height:1.6;margin:0 0 20px">
       This is a reminder that you&rsquo;re booked into a <strong>face-to-face training session</strong>:
@@ -1193,7 +1221,7 @@ export async function sendStaffWelcomeEmail(opts: SendWelcomeEmailOptions): Prom
   const from      = process.env.SENDGRID_FROM_ADDRESS ?? process.env.SENDGRID_FROM_EMAIL ?? `noreply@${INBOUND_DOMAIN}`
   const firstName = opts.staffName.split(' ')[0] ?? opts.staffName
 
-  const html = emailWrapper(`
+  const html = staffWrapper(`
     <p style="color:${NEUTRAL_DARK};font-size:15px;margin:0 0 16px">Hi ${firstName},</p>
 
     <p style="color:#374151;font-size:15px;line-height:1.6;margin:0 0 16px">
@@ -1298,7 +1326,7 @@ function buildHtmlEmail(
     </div>`
   })() : ''
 
-  return emailWrapper(`
+  return staffWrapper(`
     <p>Hi ${firstName},</p>
     ${bodyHtml}
     ${citationBlock}
@@ -1495,7 +1523,7 @@ export async function sendActionPlanStaffEmail(opts: { to: string; staffName: st
     return
   }
 
-  const html = emailWrapper(`
+  const html = staffWrapper(`
     <p style="color:${NEUTRAL_DARK};font-size:15px;margin:0 0 16px">Hi ${escHtml(firstName)},</p>
     <p style="color:#374151;font-size:15px;line-height:1.6;margin:0 0 20px">
       ${escHtml(opts.orgName)} has assigned you <strong>${n} action${n === 1 ? '' : 's'}</strong> from an audit action plan. Please complete ${n === 1 ? 'it' : 'them'} and mark ${n === 1 ? 'it' : 'each one'} done in your CareStream hub, under <strong>My actions</strong>.
@@ -1661,7 +1689,7 @@ export async function sendAgencyExpiryEmail(opts: {
   const esc  = (v: any) => String(v ?? '').replace(/[<>&]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' }[c] as string))
   const when = opts.endsOn.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })
 
-  const html = emailWrapper(`
+  const html = staffWrapper(`
     <p style="color:${NEUTRAL_DARK};font-size:16px;font-weight:700;margin:0 0 6px">
       ${esc(opts.workerName)}'s access ends on ${esc(when)}
     </p>
@@ -2556,7 +2584,7 @@ export async function sendIncentiveEmail(opts: { to: string[]; subject: string; 
   const to = Array.from(new Set(opts.to.filter(Boolean)))
   if (!to.length) return
   const from = process.env.SENDGRID_FROM_ADDRESS ?? process.env.SENDGRID_FROM_EMAIL ?? `noreply@${INBOUND_DOMAIN}`
-  const html = emailWrapper(`
+  const html = staffWrapper(`
     <p style="color:${NEUTRAL_DARK};font-size:20px;font-weight:700;margin:0 0 16px">${escResident(opts.heading)}</p>
     ${renderBlocks(opts.body)}
     <div style="text-align:center;margin:26px 0 8px">
@@ -2630,7 +2658,7 @@ export async function sendStaffPinEmail(opts: { to: string; name: string; orgNam
     console.log(`[pin-email] queued ${opts.kind} status=${r?.[0]?.statusCode} id=${r?.[0]?.headers?.['x-message-id'] ?? 'none'} to=${opts.to.replace(/^(.).*(@.*)$/, '$1***$2')}`)
     return
   }
-  const html = emailWrapper(`
+  const html = staffWrapper(`
     <p style="color:${NEUTRAL_DARK};font-size:15px;margin:0 0 16px">Hi ${first},</p>
     <p style="color:${NEUTRAL_DARK};font-size:15px;line-height:1.6;margin:0 0 16px">${lead}</p>
     ${pinBlock}${how}

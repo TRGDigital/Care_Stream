@@ -77,6 +77,14 @@ function avatarHtml(admin: PersonAdmin): string {
   </tr></table>`
 }
 
+/** The three rows that show who an email is from: picture, name, and role at home. Shared by the person-led layout and the staff layout. */
+export function personBlockRows(admin: PersonAdmin): string {
+  const font = 'font-family:Inter,Arial,Helvetica,sans-serif'
+  return `<tr><td align="center" style="padding:0 32px 10px">${avatarHtml(admin)}</td></tr>
+    <tr><td align="center" style="${font};padding:6px 32px 0;font-size:17px;line-height:24px;font-weight:700;color:${INK}">${escapeHtml(admin.name)}</td></tr>
+    <tr><td align="center" style="${font};padding:2px 32px 22px;font-size:14px;line-height:20px;color:${MID}">${escapeHtml(roleLine(admin))}</td></tr>`
+}
+
 /** The full HTML document for a person-led email. */
 export function personLedEmail(o: PersonEmailOptions): string {
   const font = 'font-family:Inter,Arial,Helvetica,sans-serif'

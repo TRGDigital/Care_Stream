@@ -1,6 +1,6 @@
 // The two weekly training emails, as pure renderers: plan in, subject + html + text out. Sending and logging are in weeklyReminders.ts.
 // House style: friendly, short, plain words, no dashes. Buttons go straight into the hub (annual training and ordinary training are different hub sections).
-import { emailWrapper, emailFooter } from '../email/outbound'
+import { staffWrapper, emailFooter } from '../email/outbound'
 import { siteUrl } from '../../lib/urls'
 import type { StaffPlan, DigestPlan, ListedItem } from './weeklyReminderLogic'
 
@@ -45,7 +45,7 @@ export function renderStaffEmail(p: StaffPlan, o: { magicUrl?: string } = {}): R
   } else {
     buttons = hub.map((h) => button(h.url, h.label)).join('')
   }
-  const html = emailWrapper(`
+  const html = staffWrapper(`
     <p style="color:${DARK};font-size:15px;margin:0 0 14px">Hi ${esc(p.first_name)},</p>
     ${well}
     <p style="color:${BODY};font-size:15px;line-height:1.6;margin:0 0 16px">You have <strong>${plural(left, 'course')}</strong> still to complete at ${esc(p.org_name)}${esc(progress)}.${overdue} Here is what to do next:</p>
@@ -78,7 +78,7 @@ export function renderAdminDigest(p: DigestPlan): Rendered {
   const own = p.own ? heading('Your own training') + `<p style="color:${BODY};font-size:14px;line-height:1.6;margin:0 0 8px">You have ${plural(p.own.outstanding, 'course')} still to complete yourself.</p>`
     + [p.own.links.annual && button(p.own.links.annual.url, `Open my annual training (${p.own.links.annual.count})`), p.own.links.training && button(p.own.links.training.url, `Open my training (${p.own.links.training.count})`)].filter(Boolean).join('') : ''
   const progressUrl = `${siteUrl().replace(/\/$/, '')}/training?tab=progress`
-  const html = emailWrapper(`
+  const html = staffWrapper(`
     <p style="color:${DARK};font-size:15px;margin:0 0 12px">Hi ${esc(p.first_name)},</p>
     <p style="color:${BODY};font-size:15px;line-height:1.6;margin:0 0 18px">Here is how training is going at ${esc(p.org_name)} this week.</p>
     ${stats}${never}${stalled}${top}${own}

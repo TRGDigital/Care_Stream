@@ -88,6 +88,18 @@ export const AUDIT_CATALOGUE: CatalogueAudit[] = [
   "wave": 4
  },
  {
+  "name": "Body Map and Injury Recording Audit",
+  "slug": "body-map-and-injury-recording-audit",
+  "description": "Check each month that body maps are used at the start of care and for every new mark, that entries are factual and complete, and that unexplained injuries reach the safeguarding lead, with patterns reviewed. Record actions for any gap.",
+  "frequency": "monthly",
+  "scope": "none",
+  "services": [
+   "home_care",
+   "live_in"
+  ],
+  "wave": 5
+ },
+ {
   "name": "Business Continuity and Emergency Cover Audit",
   "slug": "business-continuity-and-emergency-cover-audit",
   "description": "Check that your business continuity plan is current, that emergency contacts work and that you can cover urgent visits or shifts when staff are short. Record the red, amber and green priority list, the last test and every lesson, with an owner and date for each action.",
@@ -170,6 +182,17 @@ export const AUDIT_CATALOGUE: CatalogueAudit[] = [
   "wave": 0
  },
  {
+  "name": "Care Package Start Up and Initial Assessment Audit",
+  "slug": "care-package-start-up-and-initial-assessment-audit",
+  "description": "Check that every new home care package starts safely: the assessment, the risks, the way in, consent, the first visits and the early review, one person at a time. Each gap becomes an action with an owner and a date.",
+  "frequency": "monthly",
+  "scope": "resident",
+  "services": [
+   "home_care"
+  ],
+  "wave": 5
+ },
+ {
   "name": "Care Plan Review & Update",
   "slug": "care-plan-review-and-update",
   "description": "Monthly audit of care plans and risk assessments for currency, person-centredness, mental capacity and consent, health and wellbeing, and evidence that people and their families are involved and outcomes are recorded.",
@@ -188,6 +211,17 @@ export const AUDIT_CATALOGUE: CatalogueAudit[] = [
    "shared_lives"
   ],
   "wave": 0
+ },
+ {
+  "name": "Care Plan and Risk Assessment Audit (Home Care)",
+  "slug": "care-plan-and-risk-assessment-audit-home-care",
+  "description": "Check that a home care plan and its risk assessments match the visits, reflect what matters to the person, are agreed and are kept current, one person at a time. Each gap becomes an action with an owner and a date.",
+  "frequency": "monthly",
+  "scope": "resident",
+  "services": [
+   "home_care"
+  ],
+  "wave": 5
  },
  {
   "name": "Care Worker Spot Check (Observed Visit)",
@@ -216,6 +250,30 @@ export const AUDIT_CATALOGUE: CatalogueAudit[] = [
    "private_hospitals"
   ],
   "wave": 4
+ },
+ {
+  "name": "Client Money, Shopping and Gifts Audit",
+  "slug": "client-money-shopping-and-gifts-audit",
+  "description": "Check each month, for one person at a time, that help with money, shopping and gifts is agreed, recorded, signed and counted, and that any concern goes to the safeguarding lead. Record actions for any gap.",
+  "frequency": "monthly",
+  "scope": "resident",
+  "services": [
+   "home_care",
+   "live_in"
+  ],
+  "wave": 5
+ },
+ {
+  "name": "Client Review Call and Satisfaction Audit",
+  "slug": "client-review-call-and-satisfaction-audit",
+  "description": "Check each month that review calls are done on time by the right person, ask the right questions, record what people say and lead to action, and that survey results are reviewed and shared. Record actions for any gap.",
+  "frequency": "monthly",
+  "scope": "none",
+  "services": [
+   "home_care",
+   "live_in"
+  ],
+  "wave": 5
  },
  {
   "name": "Clinical Equipment, Servicing and Validation Audit",
@@ -487,6 +545,18 @@ export const AUDIT_CATALOGUE: CatalogueAudit[] = [
   "wave": 3
  },
  {
+  "name": "End of Life Care at Home Audit",
+  "slug": "end-of-life-care-at-home-audit",
+  "description": "Check, for each person nearing the end of life, that their wishes, ReSPECT or DNACPR forms, anticipatory medicines, health professional contacts, extra visits or night cover, family support and after death arrangements are recorded in the home file.",
+  "frequency": "monthly",
+  "scope": "resident",
+  "services": [
+   "home_care",
+   "live_in"
+  ],
+  "wave": 5
+ },
+ {
   "name": "Extra Care Scheme Quality Audit",
   "slug": "extra-care-scheme-quality-audit",
   "description": "Check your extra care scheme once a quarter, from the split between housing and care to the call system, communal areas and fire evacuation plans. Every failed check becomes an action with an owner and a date.",
@@ -511,6 +581,18 @@ export const AUDIT_CATALOGUE: CatalogueAudit[] = [
    "hospices"
   ],
   "wave": 0
+ },
+ {
+  "name": "Falls and Emergency Response in the Home Audit",
+  "slug": "falls-and-emergency-response-in-the-home-audit",
+  "description": "Check that falls risk is assessed in the home, care workers know what to do after a fall, and every fall is recorded, reviewed and learned from, one person at a time. Each gap becomes an action with an owner and a date.",
+  "frequency": "monthly",
+  "scope": "resident",
+  "services": [
+   "home_care",
+   "live_in"
+  ],
+  "wave": 5
  },
  {
   "name": "Finance and Money Handling Audit",
@@ -599,9 +681,7 @@ export const AUDIT_CATALOGUE: CatalogueAudit[] = [
    "nursing",
    "dementia",
    "extra_care",
-   "hospices",
-   "home_care",
-   "live_in"
+   "hospices"
   ],
   "wave": 0
  },
@@ -733,6 +813,28 @@ export const AUDIT_CATALOGUE: CatalogueAudit[] = [
   "wave": 2
  },
  {
+  "name": "Home Care Complaints and Compliments Audit",
+  "slug": "home-care-complaints-and-compliments-audit",
+  "description": "Check your home care complaints log and complaints procedure each quarter: how people are told, how fast you respond, what you learn, how compliments are shared and whether a summary could go to the Care Quality Commission. Record actions.",
+  "frequency": "quarterly",
+  "scope": "none",
+  "services": [
+   "home_care"
+  ],
+  "wave": 5
+ },
+ {
+  "name": "Home Care Infection Prevention and Control Audit",
+  "slug": "home-care-infection-prevention-and-control-audit",
+  "description": "Check, for the whole service, that infection prevention and control policy, a named lead, outbreak plans, sharps handling, staff health and incident learning are in place for care in people's own homes. Record actions and repeat each quarter.",
+  "frequency": "quarterly",
+  "scope": "none",
+  "services": [
+   "home_care"
+  ],
+  "wave": 5
+ },
+ {
   "name": "Home Care Infection Prevention and PPE Audit",
   "slug": "home-care-infection-prevention-and-ppe-audit",
   "description": "Check each care worker once a month on PPE use, hand hygiene, waste, laundry, spillages, uniform and training. Every failed check becomes an action with an owner and a date.",
@@ -743,6 +845,28 @@ export const AUDIT_CATALOGUE: CatalogueAudit[] = [
    "live_in"
   ],
   "wave": 3
+ },
+ {
+  "name": "Home Care Mock Inspection (Office and Client Home)",
+  "slug": "home-care-mock-inspection-office-and-client-home",
+  "description": "Run your own mock inspection for home care: sample care records, visit logs and staff files, phone people and care workers, visit a person's home, and set actions against the five key questions.",
+  "frequency": "quarterly",
+  "scope": "none",
+  "services": [
+   "home_care"
+  ],
+  "wave": 5
+ },
+ {
+  "name": "Home Care Supervision, Appraisal and Competence Audit",
+  "slug": "home-care-supervision-appraisal-and-competence-audit",
+  "description": "Check one care worker's supervision and appraisal records and competence sign offs, including how a worker who is mostly out on visits is supported. Record actions and repeat each quarter.",
+  "frequency": "quarterly",
+  "scope": "staff",
+  "services": [
+   "home_care"
+  ],
+  "wave": 5
  },
  {
   "name": "Home Environment and Client Risk Assessment Audit",
@@ -779,8 +903,6 @@ export const AUDIT_CATALOGUE: CatalogueAudit[] = [
    "care_homes",
    "nursing",
    "dementia",
-   "home_care",
-   "live_in",
    "supported_living",
    "extra_care",
    "ld_autism",
@@ -806,8 +928,6 @@ export const AUDIT_CATALOGUE: CatalogueAudit[] = [
    "care_homes",
    "nursing",
    "dementia",
-   "home_care",
-   "live_in",
    "supported_living",
    "extra_care",
    "ld_autism",
@@ -822,6 +942,17 @@ export const AUDIT_CATALOGUE: CatalogueAudit[] = [
    "shared_lives"
   ],
   "wave": 0
+ },
+ {
+  "name": "Key Safe, Access and No Reply Audit",
+  "slug": "key-safe-access-and-no-reply-audit",
+  "description": "Check each quarter that key safe and key arrangements are agreed with people, codes are held and changed securely, and a no reply procedure is written, known and followed. Record actions for any gap.",
+  "frequency": "quarterly",
+  "scope": "none",
+  "services": [
+   "home_care"
+  ],
+  "wave": 5
  },
  {
   "name": "Kitchen Audit",
@@ -994,6 +1125,18 @@ export const AUDIT_CATALOGUE: CatalogueAudit[] = [
   "wave": 1
  },
  {
+  "name": "Medication Support Level and Administration Audit (Home Care)",
+  "slug": "medication-support-level-and-administration-audit-home-care",
+  "description": "Check that the level of medicines help is assessed, written down and matched to the MAR, the pharmacy supply and the visits, for one person at a time. Each gap becomes an action with an owner and a date.",
+  "frequency": "monthly",
+  "scope": "resident",
+  "services": [
+   "home_care",
+   "live_in"
+  ],
+  "wave": 5
+ },
+ {
   "name": "Medicines Management",
   "slug": "medicines-management",
   "description": "Monthly medicines management audit covering supply, storage, administration, hygiene, recording, controlled drugs, disposal, and homely remedies.",
@@ -1003,8 +1146,6 @@ export const AUDIT_CATALOGUE: CatalogueAudit[] = [
    "care_homes",
    "nursing",
    "dementia",
-   "home_care",
-   "live_in",
    "supported_living",
    "extra_care",
    "ld_autism",
@@ -1033,6 +1174,18 @@ export const AUDIT_CATALOGUE: CatalogueAudit[] = [
    "shared_lives"
   ],
   "wave": 1
+ },
+ {
+  "name": "Mental Capacity and Consent in the Home Audit",
+  "slug": "mental-capacity-and-consent-in-the-home-audit",
+  "description": "Check, for one person at a time, that consent to care in their own home is recorded, capacity assessments are about one decision, best interests and attorney records are on file, and restrictions are reviewed. Record actions for any gap.",
+  "frequency": "quarterly",
+  "scope": "resident",
+  "services": [
+   "home_care",
+   "live_in"
+  ],
+  "wave": 5
  },
  {
   "name": "Mental Health Act Legal Compliance Audit",
@@ -1115,6 +1268,18 @@ export const AUDIT_CATALOGUE: CatalogueAudit[] = [
   "wave": 0
  },
  {
+  "name": "Nutrition, Hydration and Meal Preparation Visit Audit",
+  "slug": "nutrition-hydration-and-meal-preparation-visit-audit",
+  "description": "Check, for one person at a time, that eating and drinking needs are in the care plan, meals are prepared safely in their kitchen, drinks are left in reach, charts are complete and concerns are passed on. Record actions and repeat each quarter.",
+  "frequency": "quarterly",
+  "scope": "resident",
+  "services": [
+   "home_care",
+   "live_in"
+  ],
+  "wave": 5
+ },
+ {
   "name": "Observation and Engagement Audit",
   "slug": "observation-and-engagement-audit",
   "description": "Check that each person's observation level is set, reviewed and signed, that records are complete and that staff spend meaningful time with them. Run it monthly for each person and give every gap an owner and a date.",
@@ -1126,6 +1291,17 @@ export const AUDIT_CATALOGUE: CatalogueAudit[] = [
    "substance_misuse"
   ],
   "wave": 4
+ },
+ {
+  "name": "On Call and Out of Hours Response Audit",
+  "slug": "on-call-and-out-of-hours-response-audit",
+  "description": "Check that your out of hours on call service works: a written procedure, a rota with no gaps, a call log, response times, recorded decisions, handover to the office and learning from the calls. Record actions each month.",
+  "frequency": "monthly",
+  "scope": "none",
+  "services": [
+   "home_care"
+  ],
+  "wave": 5
  },
  {
   "name": "Opioid Substitution, Take-home and Naloxone Audit",
@@ -1230,6 +1406,18 @@ export const AUDIT_CATALOGUE: CatalogueAudit[] = [
   "wave": 0
  },
  {
+  "name": "Pressure Area and Skin Care in the Home Audit",
+  "slug": "pressure-area-and-skin-care-in-the-home-audit",
+  "description": "Check each month, for one person at a time, that skin risk is assessed, skin is looked at on visits, equipment is in the home and working, and skin changes reach the nurse the same day. Record actions for any gap.",
+  "frequency": "monthly",
+  "scope": "resident",
+  "services": [
+   "home_care",
+   "live_in"
+  ],
+  "wave": 5
+ },
+ {
   "name": "Pressure Care & Skin Integrity",
   "slug": "pressure-care-and-skin-integrity",
   "description": "Checks pressure area care for one resident: assessment, equipment, repositioning and wounds.",
@@ -1239,9 +1427,7 @@ export const AUDIT_CATALOGUE: CatalogueAudit[] = [
    "care_homes",
    "nursing",
    "dementia",
-   "hospices",
-   "home_care",
-   "live_in"
+   "hospices"
   ],
   "wave": 0
  },
@@ -1302,6 +1488,17 @@ export const AUDIT_CATALOGUE: CatalogueAudit[] = [
    "substance_misuse"
   ],
   "wave": 2
+ },
+ {
+  "name": "Recruitment, DBS and Induction of New Care Workers Audit",
+  "slug": "recruitment-dbs-and-induction-of-new-care-workers-audit",
+  "description": "Check one new care worker's file from offer to probation: identity, references, DBS, employment history, induction, shadow visits, Care Certificate, first spot check and sign off. Record actions and repeat for each new starter.",
+  "frequency": "quarterly",
+  "scope": "staff",
+  "services": [
+   "home_care"
+  ],
+  "wave": 5
  },
  {
   "name": "Regulation 44 Independent Person Visit (Children's Homes)",
@@ -1439,6 +1636,17 @@ export const AUDIT_CATALOGUE: CatalogueAudit[] = [
    "ld_autism"
   ],
   "wave": 3
+ },
+ {
+  "name": "Rota, Continuity and Travel Time Audit",
+  "slug": "rota-continuity-and-travel-time-audit",
+  "description": "Check that the rota allows travel time, keeps the same care workers with each person, copes with short notice changes and does not cause late or missed visits. Each gap becomes an action with an owner and a date.",
+  "frequency": "monthly",
+  "scope": "none",
+  "services": [
+   "home_care"
+  ],
+  "wave": 5
  },
  {
   "name": "Safeguarding Log Review",

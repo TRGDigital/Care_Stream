@@ -707,5 +707,182 @@ export const AUDIT_PAGE_SOURCES: Array<{ slug: string; name: string; urls: strin
    "https://www.legislation.gov.uk/uksi/2014/2936/regulation/12",
    "https://www.legislation.gov.uk/uksi/2014/2936/regulation/17"
   ]
+ },
+ {
+  "slug": "body-map-injury-recording",
+  "name": "Body Map and Injury Recording Audit",
+  "urls": [
+   "https://www.legislation.gov.uk/uksi/2014/2936/regulation/13",
+   "https://www.legislation.gov.uk/uksi/2014/2936/regulation/17",
+   "https://www.legislation.gov.uk/uksi/2014/2936/regulation/12",
+   "https://www.legislation.gov.uk/ukpga/2014/23/section/42"
+  ]
+ },
+ {
+  "slug": "care-package-start-up-initial-assessment",
+  "name": "Care Package Start Up and Initial Assessment Audit",
+  "urls": [
+   "https://www.legislation.gov.uk/uksi/2014/2936/regulation/9",
+   "https://www.legislation.gov.uk/uksi/2014/2936/regulation/11",
+   "https://www.legislation.gov.uk/uksi/2014/2936/regulation/12"
+  ]
+ },
+ {
+  "slug": "care-plan-risk-assessment",
+  "name": "Care Plan and Risk Assessment Audit (Home Care)",
+  "urls": [
+   "https://www.legislation.gov.uk/uksi/2014/2936/regulation/9",
+   "https://www.legislation.gov.uk/uksi/2014/2936/regulation/12",
+   "https://www.legislation.gov.uk/uksi/2014/2936/regulation/11",
+   "https://www.legislation.gov.uk/uksi/2014/2936/regulation/17"
+  ]
+ },
+ {
+  "slug": "client-money-shopping-gifts",
+  "name": "Client Money, Shopping and Gifts Audit",
+  "urls": [
+   "https://www.legislation.gov.uk/uksi/2014/2936/regulation/13",
+   "https://www.legislation.gov.uk/ukpga/2014/23/section/42",
+   "https://www.legislation.gov.uk/uksi/2014/2936/regulation/17"
+  ]
+ },
+ {
+  "slug": "client-review-call-satisfaction",
+  "name": "Client Review Call and Satisfaction Audit",
+  "urls": [
+   "https://www.legislation.gov.uk/uksi/2014/2936/regulation/17",
+   "https://www.legislation.gov.uk/uksi/2014/2936/regulation/16",
+   "https://www.legislation.gov.uk/uksi/2014/2936/regulation/9"
+  ]
+ },
+ {
+  "slug": "end-of-life-care-at-home",
+  "name": "End of Life Care at Home Audit",
+  "urls": [
+   "https://www.legislation.gov.uk/uksi/2014/2936/regulation/9",
+   "https://www.legislation.gov.uk/uksi/2014/2936/regulation/10",
+   "https://www.legislation.gov.uk/uksi/2014/2936/regulation/11",
+   "https://www.legislation.gov.uk/uksi/2014/2936/regulation/12"
+  ]
+ },
+ {
+  "slug": "falls-emergency-response-in-the-home",
+  "name": "Falls and Emergency Response in the Home Audit",
+  "urls": [
+   "https://www.legislation.gov.uk/uksi/2014/2936/regulation/12",
+   "https://www.legislation.gov.uk/uksi/2014/2936/regulation/17",
+   "https://www.legislation.gov.uk/uksi/2014/2936/regulation/20"
+  ]
+ },
+ {
+  "slug": "home-care-complaints-compliments",
+  "name": "Home Care Complaints and Compliments Audit",
+  "urls": [
+   "https://www.legislation.gov.uk/uksi/2014/2936/regulation/16",
+   "https://www.legislation.gov.uk/uksi/2014/2936/regulation/17"
+  ]
+ },
+ {
+  "slug": "home-care-infection-prevention-and-control",
+  "name": "Home Care Infection Prevention and Control Audit",
+  "urls": [
+   "https://www.legislation.gov.uk/uksi/2014/2936/regulation/12",
+   "https://www.legislation.gov.uk/uksi/2014/2936/regulation/15",
+   "https://www.legislation.gov.uk/uksi/2014/2936/regulation/17"
+  ]
+ },
+ {
+  "slug": "home-care-mock-inspection",
+  "name": "Home Care Mock Inspection (Office and Client Home)",
+  "urls": [
+   "https://www.legislation.gov.uk/uksi/2014/2936/regulation/17",
+   "https://www.legislation.gov.uk/uksi/2014/2936/regulation/12",
+   "https://www.legislation.gov.uk/uksi/2014/2936/regulation/9",
+   "https://www.legislation.gov.uk/uksi/2014/2936/regulation/18"
+  ]
+ },
+ {
+  "slug": "home-care-supervision-appraisal-competence",
+  "name": "Home Care Supervision, Appraisal and Competence Audit",
+  "urls": [
+   "https://www.legislation.gov.uk/uksi/2014/2936/regulation/18",
+   "https://www.legislation.gov.uk/uksi/2014/2936/regulation/12",
+   "https://www.legislation.gov.uk/uksi/2014/2936/regulation/17"
+  ]
+ },
+ {
+  "slug": "key-safe-access-no-reply",
+  "name": "Key Safe, Access and No Reply Audit",
+  "urls": [
+   "https://www.legislation.gov.uk/uksi/2014/2936/regulation/12",
+   "https://www.legislation.gov.uk/uksi/2014/2936/regulation/11",
+   "https://www.legislation.gov.uk/uksi/2014/2936/regulation/17"
+  ]
+ },
+ {
+  "slug": "medication-support-level-administration",
+  "name": "Medication Support Level and Administration Audit (Home Care)",
+  "urls": [
+   "https://www.legislation.gov.uk/uksi/2014/2936/regulation/12",
+   "https://www.legislation.gov.uk/uksi/2014/2936/regulation/17",
+   "https://www.legislation.gov.uk/uksi/2014/2936/regulation/18"
+  ]
+ },
+ {
+  "slug": "mental-capacity-consent-in-the-home",
+  "name": "Mental Capacity and Consent in the Home Audit",
+  "urls": [
+   "https://www.legislation.gov.uk/uksi/2014/2936/regulation/11",
+   "https://www.legislation.gov.uk/ukpga/2005/9/section/1",
+   "https://www.legislation.gov.uk/ukpga/2005/9/section/5",
+   "https://www.legislation.gov.uk/ukpga/2005/9/section/9"
+  ]
+ },
+ {
+  "slug": "nutrition-hydration-meal-preparation-visit",
+  "name": "Nutrition, Hydration and Meal Preparation Visit Audit",
+  "urls": [
+   "https://www.legislation.gov.uk/uksi/2014/2936/regulation/14",
+   "https://www.legislation.gov.uk/uksi/2014/2936/regulation/9",
+   "https://www.legislation.gov.uk/uksi/2014/2936/regulation/12"
+  ]
+ },
+ {
+  "slug": "on-call-out-of-hours-response",
+  "name": "On Call and Out of Hours Response Audit",
+  "urls": [
+   "https://www.legislation.gov.uk/uksi/2014/2936/regulation/17",
+   "https://www.legislation.gov.uk/uksi/2014/2936/regulation/18",
+   "https://www.legislation.gov.uk/uksi/2014/2936/regulation/12"
+  ]
+ },
+ {
+  "slug": "pressure-area-skin-care-in-the-home",
+  "name": "Pressure Area and Skin Care in the Home Audit",
+  "urls": [
+   "https://www.legislation.gov.uk/uksi/2014/2936/regulation/12",
+   "https://www.legislation.gov.uk/uksi/2014/2936/regulation/9",
+   "https://www.legislation.gov.uk/uksi/2014/2936/regulation/17"
+  ]
+ },
+ {
+  "slug": "recruitment-dbs-induction-new-care-workers",
+  "name": "Recruitment, DBS and Induction of New Care Workers Audit",
+  "urls": [
+   "https://www.legislation.gov.uk/uksi/2014/2936/regulation/19",
+   "https://www.legislation.gov.uk/uksi/2014/2936/schedule/3",
+   "https://www.legislation.gov.uk/uksi/2014/2936/regulation/18",
+   "https://www.legislation.gov.uk/uksi/2014/2936/regulation/12"
+  ]
+ },
+ {
+  "slug": "rota-continuity-travel-time",
+  "name": "Rota, Continuity and Travel Time Audit",
+  "urls": [
+   "https://www.legislation.gov.uk/uksi/2014/2936/regulation/18",
+   "https://www.legislation.gov.uk/uksi/2014/2936/regulation/9",
+   "https://www.legislation.gov.uk/uksi/2014/2936/regulation/12",
+   "https://www.legislation.gov.uk/uksi/2014/2936/regulation/17"
+  ]
  }
 ]

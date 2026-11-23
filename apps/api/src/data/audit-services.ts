@@ -32,6 +32,10 @@ export const AUDIT_SERVICES: Record<string, string[]> = {
   "care_homes",
   "dementia"
  ],
+ "Body Map and Injury Recording Audit": [
+  "home_care",
+  "live_in"
+ ],
  "Business Continuity and Emergency Cover Audit": [
   "home_care",
   "live_in",
@@ -82,6 +86,9 @@ export const AUDIT_SERVICES: Record<string, string[]> = {
   "extra_care",
   "hospices"
  ],
+ "Care Package Start Up and Initial Assessment Audit": [
+  "home_care"
+ ],
  "Care Plan Review & Update": [
   "care_homes",
   "nursing",
@@ -94,6 +101,9 @@ export const AUDIT_SERVICES: Record<string, string[]> = {
   "hospices",
   "shared_lives"
  ],
+ "Care Plan and Risk Assessment Audit (Home Care)": [
+  "home_care"
+ ],
  "Care Worker Spot Check (Observed Visit)": [
   "home_care",
   "live_in",
@@ -105,6 +115,14 @@ export const AUDIT_SERVICES: Record<string, string[]> = {
   "clinics",
   "dentistry",
   "private_hospitals"
+ ],
+ "Client Money, Shopping and Gifts Audit": [
+  "home_care",
+  "live_in"
+ ],
+ "Client Review Call and Satisfaction Audit": [
+  "home_care",
+  "live_in"
  ],
  "Clinical Equipment, Servicing and Validation Audit": [
   "dentistry",
@@ -239,6 +257,10 @@ export const AUDIT_SERVICES: Record<string, string[]> = {
   "dementia",
   "home_care"
  ],
+ "End of Life Care at Home Audit": [
+  "home_care",
+  "live_in"
+ ],
  "Extra Care Scheme Quality Audit": [
   "extra_care"
  ],
@@ -248,6 +270,10 @@ export const AUDIT_SERVICES: Record<string, string[]> = {
   "dementia",
   "extra_care",
   "hospices"
+ ],
+ "Falls and Emergency Response in the Home Audit": [
+  "home_care",
+  "live_in"
  ],
  "Finance and Money Handling Audit": [
   "supported_living",
@@ -298,9 +324,7 @@ export const AUDIT_SERVICES: Record<string, string[]> = {
   "nursing",
   "dementia",
   "extra_care",
-  "hospices",
-  "home_care",
-  "live_in"
+  "hospices"
  ],
  "GDPR Audit Checklist": [
   "care_homes",
@@ -381,9 +405,21 @@ export const AUDIT_SERVICES: Record<string, string[]> = {
   "home_care",
   "hospices"
  ],
+ "Home Care Complaints and Compliments Audit": [
+  "home_care"
+ ],
+ "Home Care Infection Prevention and Control Audit": [
+  "home_care"
+ ],
  "Home Care Infection Prevention and PPE Audit": [
   "home_care",
   "live_in"
+ ],
+ "Home Care Mock Inspection (Office and Client Home)": [
+  "home_care"
+ ],
+ "Home Care Supervision, Appraisal and Competence Audit": [
+  "home_care"
  ],
  "Home Environment and Client Risk Assessment Audit": [
   "home_care",
@@ -398,8 +434,6 @@ export const AUDIT_SERVICES: Record<string, string[]> = {
   "care_homes",
   "nursing",
   "dementia",
-  "home_care",
-  "live_in",
   "supported_living",
   "extra_care",
   "ld_autism",
@@ -417,8 +451,6 @@ export const AUDIT_SERVICES: Record<string, string[]> = {
   "care_homes",
   "nursing",
   "dementia",
-  "home_care",
-  "live_in",
   "supported_living",
   "extra_care",
   "ld_autism",
@@ -431,6 +463,9 @@ export const AUDIT_SERVICES: Record<string, string[]> = {
   "hospices",
   "gp_practices",
   "shared_lives"
+ ],
+ "Key Safe, Access and No Reply Audit": [
+  "home_care"
  ],
  "Kitchen Audit": [
   "care_homes",
@@ -514,12 +549,14 @@ export const AUDIT_SERVICES: Record<string, string[]> = {
   "ld_autism",
   "shared_lives"
  ],
+ "Medication Support Level and Administration Audit (Home Care)": [
+  "home_care",
+  "live_in"
+ ],
  "Medicines Management": [
   "care_homes",
   "nursing",
   "dementia",
-  "home_care",
-  "live_in",
   "supported_living",
   "extra_care",
   "ld_autism",
@@ -538,6 +575,10 @@ export const AUDIT_SERVICES: Record<string, string[]> = {
   "ld_autism",
   "mental_health",
   "shared_lives"
+ ],
+ "Mental Capacity and Consent in the Home Audit": [
+  "home_care",
+  "live_in"
  ],
  "Mental Health Act Legal Compliance Audit": [
   "mental_health",
@@ -579,10 +620,17 @@ export const AUDIT_SERVICES: Record<string, string[]> = {
   "hospices",
   "shared_lives"
  ],
+ "Nutrition, Hydration and Meal Preparation Visit Audit": [
+  "home_care",
+  "live_in"
+ ],
  "Observation and Engagement Audit": [
   "mental_health",
   "private_hospitals",
   "substance_misuse"
+ ],
+ "On Call and Out of Hours Response Audit": [
+  "home_care"
  ],
  "Opioid Substitution, Take-home and Naloxone Audit": [
   "substance_misuse",
@@ -630,13 +678,15 @@ export const AUDIT_SERVICES: Record<string, string[]> = {
   "childrens",
   "shared_lives"
  ],
+ "Pressure Area and Skin Care in the Home Audit": [
+  "home_care",
+  "live_in"
+ ],
  "Pressure Care & Skin Integrity": [
   "care_homes",
   "nursing",
   "dementia",
-  "hospices",
-  "home_care",
-  "live_in"
+  "hospices"
  ],
  "Psychotropic Medication Review (STOMP) Audit": [
   "ld_autism",
@@ -671,6 +721,9 @@ export const AUDIT_SERVICES: Record<string, string[]> = {
   "private_hospitals",
   "ld_autism",
   "substance_misuse"
+ ],
+ "Recruitment, DBS and Induction of New Care Workers Audit": [
+  "home_care"
  ],
  "Regulation 44 Independent Person Visit (Children's Homes)": [
   "childrens"
@@ -728,6 +781,9 @@ export const AUDIT_SERVICES: Record<string, string[]> = {
   "substance_misuse",
   "private_hospitals",
   "ld_autism"
+ ],
+ "Rota, Continuity and Travel Time Audit": [
+  "home_care"
  ],
  "Safeguarding Log Review": [
   "care_homes",

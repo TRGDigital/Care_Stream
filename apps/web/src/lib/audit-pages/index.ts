@@ -4,11 +4,16 @@ import { page as p_accident_and_incident_book_audit } from './accident-and-incid
 import { page as p_antimicrobial_prescribing } from './antimicrobial-prescribing'
 import { page as p_bed_rails_mattress_safety } from './bed-rails-mattress-safety'
 import { page as p_bereavement_family_support } from './bereavement-family-support'
+import { page as p_body_map_injury_recording } from './body-map-injury-recording'
 import { page as p_business_continuity_emergency_cover } from './business-continuity-emergency-cover'
 import { page as p_call_bell_response } from './call-bell-response'
+import { page as p_care_package_start_up_initial_assessment } from './care-package-start-up-initial-assessment'
 import { page as p_care_plan_review_and_update } from './care-plan-review-and-update'
+import { page as p_care_plan_risk_assessment } from './care-plan-risk-assessment'
 import { page as p_care_worker_spot_check } from './care-worker-spot-check'
 import { page as p_chaperone_intimate_examination } from './chaperone-intimate-examination'
+import { page as p_client_money_shopping_gifts } from './client-money-shopping-gifts'
+import { page as p_client_review_call_satisfaction } from './client-review-call-satisfaction'
 import { page as p_clinical_equipment_servicing_validation } from './clinical-equipment-servicing-validation'
 import { page as p_clinical_record_keeping } from './clinical-record-keeping'
 import { page as p_complaints_and_concerns } from './complaints-and-concerns'
@@ -27,8 +32,10 @@ import { page as p_dignity_and_respect } from './dignity-and-respect'
 import { page as p_discharge_transition_aftercare } from './discharge-transition-aftercare'
 import { page as p_dnacpr_advance_care_planning } from './dnacpr-advance-care-planning'
 import { page as p_duty_of_candour_notifications } from './duty-of-candour-notifications'
+import { page as p_end_of_life_care_at_home } from './end-of-life-care-at-home'
 import { page as p_end_of_life_care_pathway } from './end-of-life-care-pathway'
 import { page as p_extra_care_scheme_quality } from './extra-care-scheme-quality'
+import { page as p_falls_emergency_response_in_the_home } from './falls-emergency-response-in-the-home'
 import { page as p_falls_prevention_and_post_fall_review } from './falls-prevention-and-post-fall-review'
 import { page as p_finance_money_handling } from './finance-money-handling'
 import { page as p_fire_drill_record_form } from './fire-drill-record-form'
@@ -41,11 +48,16 @@ import { page as p_hand_hygiene_observation } from './hand-hygiene-observation'
 import { page as p_health_action_plan_health_access } from './health-action-plan-health-access'
 import { page as p_health_and_safety } from './health-and-safety'
 import { page as p_hoist_sling_loler } from './hoist-sling-loler'
+import { page as p_home_care_complaints_compliments } from './home-care-complaints-compliments'
 import { page as p_home_care_infection_ppe } from './home-care-infection-ppe'
+import { page as p_home_care_infection_prevention_and_control } from './home-care-infection-prevention-and-control'
+import { page as p_home_care_mock_inspection } from './home-care-mock-inspection'
+import { page as p_home_care_supervision_appraisal_competence } from './home-care-supervision-appraisal-competence'
 import { page as p_home_environment_client_risk } from './home-environment-client-risk'
 import { page as p_hospice_quality_self_assessment } from './hospice-quality-self-assessment'
 import { page as p_hr_staff_files } from './hr-staff-files'
 import { page as p_infection_control } from './infection-control'
+import { page as p_key_safe_access_no_reply } from './key-safe-access-no-reply'
 import { page as p_kitchen_audit } from './kitchen-audit'
 import { page as p_late_missed_visit_review } from './late-missed-visit-review'
 import { page as p_laundry } from './laundry'
@@ -57,14 +69,18 @@ import { page as p_mealtime_experience } from './mealtime-experience'
 import { page as p_medical_emergencies_resuscitation_readiness } from './medical-emergencies-resuscitation-readiness'
 import { page as p_medical_gases_oxygen_safety } from './medical-gases-oxygen-safety'
 import { page as p_medication_competency_assessment } from './medication-competency-assessment'
+import { page as p_medication_support_level_administration } from './medication-support-level-administration'
 import { page as p_medicines_management } from './medicines-management'
 import { page as p_mental_capacity_consent_audit } from './mental-capacity-consent-audit'
+import { page as p_mental_capacity_consent_in_the_home } from './mental-capacity-consent-in-the-home'
 import { page as p_mha_legal_compliance } from './mha-legal-compliance'
 import { page as p_missing_from_care_review } from './missing-from-care-review'
 import { page as p_monthly_governance_review } from './monthly-governance-review'
 import { page as p_moving_handling_in_the_home } from './moving-handling-in-the-home'
 import { page as p_night_shift_walkround } from './night-shift-walkround'
+import { page as p_nutrition_hydration_meal_preparation_visit } from './nutrition-hydration-meal-preparation-visit'
 import { page as p_observation_engagement_audit } from './observation-engagement-audit'
+import { page as p_on_call_out_of_hours_response } from './on-call-out-of-hours-response'
 import { page as p_opioid_substitution_takehome_naloxone } from './opioid-substitution-takehome-naloxone'
 import { page as p_patient_access_disability_access } from './patient-access-disability-access'
 import { page as p_person_centred_outcomes_community } from './person-centred-outcomes-community'
@@ -72,10 +88,12 @@ import { page as p_physical_health_metabolic_monitoring } from './physical-healt
 import { page as p_physical_restraint_sanctions_review } from './physical-restraint-sanctions-review'
 import { page as p_positive_behaviour_support_restrictive_practice } from './positive-behaviour-support-restrictive-practice'
 import { page as p_premises_and_maintenance } from './premises-and-maintenance'
+import { page as p_pressure_area_skin_care_in_the_home } from './pressure-area-skin-care-in-the-home'
 import { page as p_pressure_care_and_skin_integrity } from './pressure-care-and-skin-integrity'
 import { page as p_psychotropic_medication_review } from './psychotropic-medication-review'
 import { page as p_quality_assurance } from './quality-assurance'
 import { page as p_rapid_tranquillisation_monitoring } from './rapid-tranquillisation-monitoring'
+import { page as p_recruitment_dbs_induction_new_care_workers } from './recruitment-dbs-induction-new-care-workers'
 import { page as p_regulation_44_visit } from './regulation-44-visit'
 import { page as p_regulation_45_review } from './regulation-45-review'
 import { page as p_resident_bedroom_audit } from './resident-bedroom-audit'
@@ -84,6 +102,7 @@ import { page as p_resident_feedback_round } from './resident-feedback-round'
 import { page as p_resident_of_the_day } from './resident-of-the-day'
 import { page as p_restraint_seclusion_incident_review } from './restraint-seclusion-incident-review'
 import { page as p_risk_assessment_safety_planning } from './risk-assessment-safety-planning'
+import { page as p_rota_continuity_travel_time } from './rota-continuity-travel-time'
 import { page as p_rsrcrc_self_assessment } from './rsrcrc-self-assessment'
 import { page as p_safeguarding_log_review } from './safeguarding-log-review'
 import { page as p_self_administration_of_medicines } from './self-administration-of-medicines'
@@ -109,11 +128,16 @@ export const AUDIT_PAGES: AuditPageData[] = [
  p_antimicrobial_prescribing,
  p_bed_rails_mattress_safety,
  p_bereavement_family_support,
+ p_body_map_injury_recording,
  p_business_continuity_emergency_cover,
  p_call_bell_response,
+ p_care_package_start_up_initial_assessment,
  p_care_plan_review_and_update,
+ p_care_plan_risk_assessment,
  p_care_worker_spot_check,
  p_chaperone_intimate_examination,
+ p_client_money_shopping_gifts,
+ p_client_review_call_satisfaction,
  p_clinical_equipment_servicing_validation,
  p_clinical_record_keeping,
  p_complaints_and_concerns,
@@ -132,8 +156,10 @@ export const AUDIT_PAGES: AuditPageData[] = [
  p_discharge_transition_aftercare,
  p_dnacpr_advance_care_planning,
  p_duty_of_candour_notifications,
+ p_end_of_life_care_at_home,
  p_end_of_life_care_pathway,
  p_extra_care_scheme_quality,
+ p_falls_emergency_response_in_the_home,
  p_falls_prevention_and_post_fall_review,
  p_finance_money_handling,
  p_fire_drill_record_form,
@@ -146,11 +172,16 @@ export const AUDIT_PAGES: AuditPageData[] = [
  p_health_action_plan_health_access,
  p_health_and_safety,
  p_hoist_sling_loler,
+ p_home_care_complaints_compliments,
  p_home_care_infection_ppe,
+ p_home_care_infection_prevention_and_control,
+ p_home_care_mock_inspection,
+ p_home_care_supervision_appraisal_competence,
  p_home_environment_client_risk,
  p_hospice_quality_self_assessment,
  p_hr_staff_files,
  p_infection_control,
+ p_key_safe_access_no_reply,
  p_kitchen_audit,
  p_late_missed_visit_review,
  p_laundry,
@@ -162,14 +193,18 @@ export const AUDIT_PAGES: AuditPageData[] = [
  p_medical_emergencies_resuscitation_readiness,
  p_medical_gases_oxygen_safety,
  p_medication_competency_assessment,
+ p_medication_support_level_administration,
  p_medicines_management,
  p_mental_capacity_consent_audit,
+ p_mental_capacity_consent_in_the_home,
  p_mha_legal_compliance,
  p_missing_from_care_review,
  p_monthly_governance_review,
  p_moving_handling_in_the_home,
  p_night_shift_walkround,
+ p_nutrition_hydration_meal_preparation_visit,
  p_observation_engagement_audit,
+ p_on_call_out_of_hours_response,
  p_opioid_substitution_takehome_naloxone,
  p_patient_access_disability_access,
  p_person_centred_outcomes_community,
@@ -177,10 +212,12 @@ export const AUDIT_PAGES: AuditPageData[] = [
  p_physical_restraint_sanctions_review,
  p_positive_behaviour_support_restrictive_practice,
  p_premises_and_maintenance,
+ p_pressure_area_skin_care_in_the_home,
  p_pressure_care_and_skin_integrity,
  p_psychotropic_medication_review,
  p_quality_assurance,
  p_rapid_tranquillisation_monitoring,
+ p_recruitment_dbs_induction_new_care_workers,
  p_regulation_44_visit,
  p_regulation_45_review,
  p_resident_bedroom_audit,
@@ -189,6 +226,7 @@ export const AUDIT_PAGES: AuditPageData[] = [
  p_resident_of_the_day,
  p_restraint_seclusion_incident_review,
  p_risk_assessment_safety_planning,
+ p_rota_continuity_travel_time,
  p_rsrcrc_self_assessment,
  p_safeguarding_log_review,
  p_self_administration_of_medicines,

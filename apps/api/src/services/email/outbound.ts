@@ -2612,7 +2612,8 @@ export async function sendStaffPinEmail(opts: { to: string; name: string; orgNam
       button: { label: 'Open my hub', href: hubLink('/chat') },
       footerNote: personFooterNote(admin, action.replace(/^has /, '')), logoUrl: LOGO_URL,
     })
-    await sgMail.send({ to: opts.to, from: personSender(admin, from), subject: `${admin.name} ${action}`, html })
+    const r: any = await sgMail.send({ to: opts.to, from: personSender(admin, from), subject: `${admin.name} ${action}`, html })
+    console.log(`[pin-email] queued ${opts.kind} status=${r?.[0]?.statusCode} id=${r?.[0]?.headers?.['x-message-id'] ?? 'none'} to=${opts.to.replace(/^(.).*(@.*)$/, '$1***$2')}`)
     return
   }
   const html = emailWrapper(`

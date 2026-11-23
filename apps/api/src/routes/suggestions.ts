@@ -290,7 +290,7 @@ suggestionsRouter.get('/', requireAdmin, async (_req: Request, res: Response) =>
       }) : null,
       hasWorkforce ? (prisma as any).staffCredential.findMany({
         where:  { tenant_id: tenantId },
-        select: { user_id: true, type: true, expires_at: true },
+        select: { user_id: true, type: true, expires_at: true, reference: true, issued_at: true, notes: true, evidence_key: true },
       }) : null,
       // Detail rows — same filters as the counts above, capped at 5 each.
       (prisma as any).trainingEnrollment.findMany({
@@ -555,6 +555,7 @@ suggestionsRouter.get('/', requireAdmin, async (_req: Request, res: Response) =>
         if (hasWorkforce) {
         const credByUser = new Map<string, Map<string, any>>()
         for (const c of (credentialRows as any[]) ?? []) {
+          if (!(c.reference || c.issued_at || c.expires_at || c.notes || c.evidence_key)) continue   // an empty record is missing, not valid
           if (!credByUser.has(c.user_id)) credByUser.set(c.user_id, new Map())
           credByUser.get(c.user_id)!.set(c.type, c)
         }

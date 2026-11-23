@@ -24,6 +24,8 @@ import { sendTrainingUpdateEmail } from '../services/email/outbound'
 import { updateContent } from '../services/email/person-content'
 import { recordNotices } from '../services/staff-notices'
 import { staffPhotoUrls } from '../lib/staff-photos'
+import { credentialHasContent } from '../lib/credential-content'
+export { credentialHasContent }
 // Loaded when needed: lib/supervision-training reaches training-matrix, which imports this file, so a top level import would be a cycle.
 const stl = () => import('../lib/supervision-training')
 
@@ -74,6 +76,7 @@ export const credentialStatus = statusFor
 
 // Shape a stored credential row (or null) into the API response for one type.
 function shapeCredential(type: string, row: any) {
+  if (!credentialHasContent(row)) row = null
   return {
     present:    !!row,
     reference:  row?.reference ?? null,

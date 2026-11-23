@@ -10,7 +10,7 @@
 
 import { prisma } from '../db/client'
 import { getPlanFeatures } from './plan-limits'
-import { CREDENTIAL_TYPES, credentialStatus } from '../routes/workforce'
+import { CREDENTIAL_TYPES, credentialStatus, credentialHasContent } from '../routes/workforce'
 
 const DAY = 86_400_000
 const SOON_MS = 60 * DAY
@@ -88,7 +88,7 @@ export async function buildTrainingMatrix(tenantId: string, opts: { userId?: str
         })
       : Promise.resolve([]),
     hasWorkforce && userIds.length
-      ? (prisma as any).staffCredential.findMany({ where: { tenant_id: tenantId, user_id: { in: userIds } }, select: { user_id: true, type: true, expires_at: true } })
+      ? (prisma as any).staffCredential.findMany({ where: { tenant_id: tenantId, user_id: { in: userIds } }, select: { user_id: true, type: true, expires_at: true, reference: true, issued_at: true, notes: true, evidence_key: true } })
       : Promise.resolve([]),
   ])
 
@@ -108,6 +108,7 @@ export async function buildTrainingMatrix(tenantId: string, opts: { userId?: str
 
   const credsByUser = new Map<string, Map<string, any>>()
   for (const c of credentials as any[]) {
+    if (!credentialHasContent(c)) continue   // an empty record is missing, not valid
     let m = credsByUser.get(c.user_id); if (!m) { m = new Map(); credsByUser.set(c.user_id, m) }
     m.set(c.type, c)
   }

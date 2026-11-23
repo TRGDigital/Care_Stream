@@ -10,7 +10,7 @@ import { persistentCache } from '@/lib/page-cache'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Eye, FileSpreadsheet, KeyRound, LineChart, Mail, MoreVertical, Pencil, RefreshCw, Tablet, UserMinus, UserPlus, UserX } from 'lucide-react'
-import { SharedTabletsPanel, staffPinAction } from '@/components/admin/shared-tablets'
+import { SharedTabletsPanel, TabletStrip, staffPinAction } from '@/components/admin/shared-tablets'
 import { StaffAvatar } from '@/components/admin/staff-avatar'
 import { LANGUAGES, CredentialsPanel, fmtDate } from '@/components/admin/staff/staff-shared'
 
@@ -228,6 +228,7 @@ export default function StaffPage() {
   const [loading,      setLoading]     = useState(!snap0)
   const [showInvite,   setShowInvite]  = useState(false)
   const [showTablets,  setShowTablets] = useState(false)
+  const [tabletKey,    setTabletKey]   = useState(0)
   const [showImport,   setShowImport]  = useState(false)
   const [showHubInvite, setShowHubInvite] = useState(false)
   useSearchIntent({ 'add-staff': () => setShowInvite(true), 'import-staff': () => setShowImport(true), 'hub-invites': () => setShowHubInvite(true) })
@@ -325,6 +326,8 @@ export default function StaffPage() {
         </div>
       </div>
 
+      {session?.accessToken && <TabletStrip token={session.accessToken} reloadKey={tabletKey} onOpen={() => setShowTablets(true)} />}
+
       {/* Active / Archived tabs */}
       <div className="mb-5 flex gap-6 border-b border-gray-200">
         {([
@@ -401,7 +404,7 @@ export default function StaffPage() {
         </p>
       )}
 
-      {showTablets && session?.accessToken && <SharedTabletsPanel token={session.accessToken} onClose={() => setShowTablets(false)} />}
+      {showTablets && session?.accessToken && <SharedTabletsPanel token={session.accessToken} onClose={() => { setShowTablets(false); setTabletKey(k => k + 1) }} />}
       {/* Invite modal */}
       {showInvite && (
         <InviteModal

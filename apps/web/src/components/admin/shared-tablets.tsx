@@ -32,6 +32,28 @@ export function NewTabletForm({ token, onDone, onCancel }: { token: string; onDo
   )
 }
 
+/** A small live view of this account's tablets, shown at the top of the Staff page when there are any. Click to manage them. */
+export function TabletStrip({ token, reloadKey, onOpen }: { token: string; reloadKey: number; onOpen: () => void }) {
+  const [data, setData] = useState<List | null>(null)
+  useEffect(() => { createApiClient(token).tablets.list().then(setData).catch(() => setData(null)) }, [token, reloadKey])
+  const tablets = (data?.tablets ?? []).filter(t => !t.revoked)
+  if (tablets.length === 0) return null
+  const ago = (iso: string | null) => { if (!iso) return 'not used yet'; const m = Math.round((Date.now() - new Date(iso).getTime()) / 60000); return m < 2 ? 'in use just now' : m < 60 ? `last used ${m} min ago` : m < 1440 ? `last used ${Math.round(m / 60)} h ago` : `last used ${when(iso)}` }
+  return (
+    <button type="button" onClick={onOpen} className="mb-5 flex w-full flex-wrap items-center gap-x-5 gap-y-2 rounded-card border border-gray-100 bg-white px-5 py-3 text-left shadow-card hover:border-teal/40">
+      <span className="flex items-center gap-2 text-sm font-semibold text-neutral-dark"><Tablet size={15} className="text-teal" /> Shared tablets</span>
+      {tablets.map(t => (
+        <span key={t.id} className="flex items-center gap-1.5 text-sm text-neutral-mid">
+          <span className={`h-2 w-2 rounded-full ${t.connected ? 'bg-green-500' : 'bg-gray-300'}`} />
+          <span className="font-medium text-neutral-dark">{t.name}</span>
+          <span className="text-xs">{t.connected ? ago(t.last_seen_at) : 'not connected'}</span>
+        </span>
+      ))}
+      <span className="ml-auto text-xs font-medium text-teal">Manage</span>
+    </button>
+  )
+}
+
 async function printPoster(token: string) {
   const w = window.open('', '_blank'); if (!w) { alert('Please allow pop ups to print the poster.'); return }
   w.document.write('<p style="font-family:sans-serif;padding:24px">Preparing the poster…</p>')

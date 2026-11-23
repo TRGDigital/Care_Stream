@@ -3,6 +3,8 @@
 // is easy to test and to preview. Table based and inline styled so it holds up in Outlook, Gmail and Apple Mail, with no
 // scripts, and it still reads properly when images are blocked (the person's name and the headline are plain text).
 
+import { LOGO_ROW } from './org-logo-markers'
+
 const PURPLE = '#9B52B5'
 const INK = '#1A1530'
 const MID = '#5E4D70'
@@ -114,6 +116,7 @@ export function personLedEmail(o: PersonEmailOptions): string {
     <tr><td align="left" style="padding:20px 32px 8px">
       <img src="${escapeHtml(o.logoUrl)}" alt="CareStream" height="28" style="display:block;height:28px;width:auto;border:0;${font};font-size:15px;font-weight:700;color:${PURPLE}">
     </td></tr>
+    ${LOGO_ROW}
     <tr><td align="center" style="${font};padding:20px 40px 22px;font-size:22px;line-height:30px;font-weight:700;color:${INK}">${escapeHtml(o.headline)}</td></tr>
     <tr><td align="center" style="padding:0 32px 10px">${avatarHtml(o.admin)}</td></tr>
     <tr><td align="center" style="${font};padding:6px 32px 0;font-size:17px;line-height:24px;font-weight:700;color:${INK}">${escapeHtml(o.admin.name)}</td></tr>

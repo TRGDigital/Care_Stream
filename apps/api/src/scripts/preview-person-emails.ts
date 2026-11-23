@@ -11,6 +11,7 @@
 //   Other staff emails (each ends with a hub button): staff-login-link, password-reset, password-setup, staff-welcome, follow-up, incentive,
 //          supervision-reminder, credential-expiry, audit-reminder, and the no-sender layouts allocation-training-branded, face-to-face-reminder-branded,
 //          cqc-prep-branded, onboarding-update-branded, action-plan-branded, training-reminder-branded
+//   Add --org-logo <public logo address> (https://api.carestreamai.com/public/org-logo/<tenantId>/<hash>.png) to show the organisation logo above the title, as a real send does.
 //   The test subject is prefixed "[Preview]" and the recipient is replaced by --to. Without --with-photo the sender shows initials.
 
 import { personEmailCases, otherStaffEmailCases } from '../services/email/person-email-samples'
@@ -27,7 +28,8 @@ async function main() {
 
   const args = process.argv.slice(2)
   const arg = (k: string) => { const i = args.indexOf(k); return i >= 0 ? args[i + 1] : undefined }
-  const sendName = arg('--send'), to = arg('--to'), photoUrl = arg('--with-photo')
+  const sendName = arg('--send'), to = arg('--to'), photoUrl = arg('--with-photo'), orgLogo = arg('--org-logo')
+  if (orgLogo) { const { setOrgLogoOverrideForPreview } = await import('../lib/org-logo'); setOrgLogoOverrideForPreview(() => ({ url: orgLogo, alt: 'Ferndale Nursing Home' })) }
   if (sendName !== undefined && !to) { console.error('Refusing to send: pass an explicit --to <address>. There is no default recipient.'); process.exit(1) }
   if (to && sendName === undefined) { console.error('--to only works with --send <name>.'); process.exit(1) }
   if (sendName !== undefined && !/^SG\./.test(process.env.SENDGRID_API_KEY || '')) { console.error('SENDGRID_API_KEY is not set to a real key.'); process.exit(1) }
@@ -64,7 +66,8 @@ async function main() {
   sgMail.send = async (msg: any) => {
     const from = typeof msg.from === 'object' ? msg.from.name : msg.from
     const banner = `<!-- From: ${from} | Subject: ${msg.subject} -->\n`
-    fs.writeFileSync(path.join(dir, current), banner + msg.html)
+    const { applyOrgLogo } = await import('../lib/org-logo')
+    fs.writeFileSync(path.join(dir, current), banner + applyOrgLogo(msg.html, orgLogo ? { url: orgLogo, alt: 'Ferndale Nursing Home' } : null))
     console.log(`${current}  From: ${from}  Subject: ${msg.subject}`)
   }
   for (const [name, fn] of Object.entries(cases)) {

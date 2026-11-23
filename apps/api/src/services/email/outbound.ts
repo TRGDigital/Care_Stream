@@ -13,6 +13,7 @@ import {
   updateContent, actionPlanContent, type AllocationKind,
 } from './person-content'
 import { resolveActor } from './email-avatar'
+import { LOGO_BLOCK } from './org-logo-markers'
 
 const INBOUND_DOMAIN = process.env.INBOUND_EMAIL_DOMAIN ?? 'carestreamai.co.uk'
 const WEB_URL        = siteUrl()
@@ -70,7 +71,7 @@ export function emailWrapper(content: string): string {
 <div style="font-family:Inter,Arial,sans-serif;max-width:600px;margin:0 auto;background:#ffffff;border-radius:10px;overflow:hidden;border:1px solid #e5e7eb">
   ${emailHeader()}
   <div style="padding:32px 32px 24px">
-    ${content}
+    ${LOGO_BLOCK}${content}
   </div>
 </div>`.trim()
 }

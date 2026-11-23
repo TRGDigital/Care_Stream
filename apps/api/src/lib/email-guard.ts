@@ -5,6 +5,7 @@
 // Importing this file wraps the one shared SendGrid client, so every email sent anywhere in the API goes through it. A message whose
 // recipients are all unsendable is dropped quietly (logged, not an error): the action that triggered it still succeeds.
 import sgMail from '@sendgrid/mail'
+import { withOrgLogo } from './org-logo'
 
 const RESERVED_DOMAIN = /(^|\.)(example\.(com|org|net)|example|test|invalid|localhost)$/i
 
@@ -54,18 +55,18 @@ if (!g.__csEmailGuard) {
   const send = g.send.bind(g)
   g.send = async (data: any, isMultiple?: boolean, cb?: any) => {
     if (Array.isArray(data)) {
-      const kept = data.map(guardMessage).filter(Boolean).map(withoutClickTracking)
+      const kept = await Promise.all(data.map(guardMessage).filter(Boolean).map(withoutClickTracking).map(withOrgLogo))
       if (kept.length === 0) { console.log('[email-guard] skipped: no deliverable recipient'); return SKIPPED }
       return send(kept, isMultiple, cb)
     }
     const m = guardMessage(data)
     if (!m) { console.log('[email-guard] skipped: no deliverable recipient'); return SKIPPED }
-    return send(withoutClickTracking(m), isMultiple, cb)
+    return send(await withOrgLogo(withoutClickTracking(m)), isMultiple, cb)
   }
   const sendMultiple = g.sendMultiple.bind(g)
   g.sendMultiple = async (data: any, cb?: any) => {
     const m = guardMessage(data)
     if (!m) { console.log('[email-guard] skipped: no deliverable recipient'); return SKIPPED }
-    return sendMultiple(withoutClickTracking(m), cb)
+    return sendMultiple(await withOrgLogo(withoutClickTracking(m)), cb)
   }
 }

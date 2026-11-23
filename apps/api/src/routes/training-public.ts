@@ -10,7 +10,8 @@ import { createLoginLink } from '../lib/login-tokens'
 import { siteUrl } from '../lib/urls'
 import { translateTextsBatch, translateQuestionsBatch } from '../lib/translate'
 import { normaliseActivities, collectActivityTexts, applyActivityTexts, type Activity } from '../lib/training-activities'
-import { sendStaffLoginLinkEmail, sendPasswordSetupEmail, sendTrainingOnboardingGuideEmail, sendTrainingPurchaseNotification } from '../services/email/outbound'
+import { sendStaffLoginLinkEmail, sendPasswordSetupEmail, sendTrainingOnboardingGuideEmail, sendTrainingPurchaseNotification, sendNewTenantNotification } from '../services/email/outbound'
+import { emailDomain, isWebmail } from '../lib/free-tier'
 import { enrolInCampaign } from '../services/onboarding/dispatch'
 import { hashPassword } from '../services/auth/password'
 import crypto from 'crypto'
@@ -822,6 +823,15 @@ publicTrainingRouter.post('/grant', async (req: Request, res: Response) => {
       const tempHash = await hashPassword(crypto.randomBytes(12).toString('base64url'))
       user = await (prisma as any).user.create({ data: { tenant_id: tenant.id, email, name, role: 'staff', email_verified: true, password_hash: tempHash } })
       created = true
+      // Tell the platform owner, as every other new account does (this route is how a Carer Badge sign up becomes a CareStream account).
+      try {
+        const label = source === 'carerbadge' ? 'Carer Badge' : source
+        await sendNewTenantNotification({
+          orgName: name, adminName: name, adminEmail: email, accountNumber: tenant.account_number ?? '', slug: tenant.slug,
+          accountType: `Private account · ${label}`, emailType: isWebmail(emailDomain(email)) ? 'Personal email address (webmail)' : `Company email address (${emailDomain(email)})`,
+          cameFrom: [`Free course grant from ${label}`, ...slugs.slice(0, 5).map(x => `Course: ${x}`)],
+        })
+      } catch (e: any) { console.error('[training-grant] new-account notification failed:', e?.message ?? e) }
     }
 
     const paymentRef = `grant:${source}:${grantId}`

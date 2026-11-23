@@ -6,7 +6,7 @@
 //   2. On the birthday, the staff member gets a happy birthday email from the company. Switch: staff_birthday_emails.
 // Both default on and only ever fire for people whose date of birth an admin has entered. A log table (staff_birthday_log, unique per
 // person, kind and year) means a re-run of the job on the same day sends nothing twice. Agency workers and inactive staff are skipped.
-// Date of birth is personal data: the admin email gives the day and the age they turn, the staff email gives neither.
+// Date of birth is personal data: the admin email gives the day and the age they turn, the staff email gives neither (and ends with the usual hub button).
 
 import { prisma } from '../../db/client'
 import { sweepTenants } from '../../lib/tenant-sweep'

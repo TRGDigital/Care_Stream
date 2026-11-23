@@ -12,7 +12,7 @@ import { persistentCache } from '@/lib/page-cache'
 import { usePlanFeatures, hasFeature } from '@/lib/use-plan-features'
 import { StaffAvatar } from '@/components/admin/staff-avatar'
 import { SupervisionsView } from '@/components/admin/workforce/supervisions-view'
-import { ShieldCheck, Lock, Loader2, X, AlertTriangle, CheckCircle2, Clock, Trash2, Users, Paperclip, Upload, Mail, Info, ChevronDown, ChevronLeft, ChevronRight, Download, Cake, Eye } from 'lucide-react'
+import { ShieldCheck, Lock, Loader2, X, AlertTriangle, CheckCircle2, Clock, Trash2, Users, Paperclip, Upload, Mail, Info, ChevronDown, Download, Cake, Eye } from 'lucide-react'
 
 type Register = Awaited<ReturnType<ReturnType<typeof createApiClient>['workforce']['register']>>
 type StaffRow = Register['staff'][number]
@@ -224,7 +224,7 @@ export default function WorkforcePage() {
       <HelpAccordion title="How to use the Credentials register">
         <p>This register is your single view of the safe-recruitment documents CQC expects for every member of staff: <strong>DBS check</strong>, <strong>right to work</strong>, <strong>passport</strong> (important for overseas staff), <strong>professional registration</strong> (e.g. NMC, with the PIN and certificate) and <strong>references</strong>.</p>
         <p>The <strong>Also held</strong> column shows documents that only apply to some staff: <strong>visa and sponsorship</strong>, <strong>driving licence</strong>, <strong>business use insurance</strong>, <strong>MOT</strong> and the <strong>contract</strong>. These are never marked missing; they simply follow the same colours once recorded. The <strong>Personal</strong> column shows how much of date of birth, emergency contact, next of kin, contract and holiday has been filled in.</p>
-        <p><strong>To read a document</strong>, click <strong>View</strong> next to any status. It opens over the page so you can check it and move to their other documents without leaving the register. Only administrators of your account can see these documents and personal details.</p>
+        <p><strong>To read a document</strong>, click <strong>View</strong> next to any status. It only appears when a document has been uploaded, and opens that one document over the page so you can check it without leaving the register. Anything with no file shows no View button; open the person&rsquo;s row to upload one. Only administrators of your account can see these documents and personal details.</p>
         <p>Each staff member is a row and each credential a column, colour-coded so you can see status at a glance: <span className="font-medium text-green-700">Valid</span> (in date), <span className="font-medium text-amber-700">Expiring</span> (within 30 days), <span className="font-medium text-red-600">Expired / Missing</span> (action needed).</p>
         <p><strong>To record or update a credential</strong>, click a staff member&rsquo;s row. Enter the reference (e.g. DBS certificate number), the issued and expiry dates, any notes, and optionally <strong>upload the document itself</strong> (PDF or photo) so it&rsquo;s stored securely against their record.</p>
         <p><strong>Expiry alerts:</strong> use <strong>Email expiry alerts</strong> (top right) to send your admins a digest of anything expired or expiring within 30 days. Staff with a passport nearing renewal are emailed automatically. These also run on a schedule, so nothing slips through.</p>
@@ -287,8 +287,8 @@ export default function WorkforcePage() {
                         <td key={t.key} className="px-3 py-3 text-center">
                           <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${meta.cls}`}>{meta.label}</span>
                           {t.hasExpiry && c?.expires_at && <p className="mt-0.5 text-[10px] text-neutral-mid">{fmtDate(c.expires_at)}</p>}
-                          {(c?.document || c?.reference || c?.notes) && (
-                            <button type="button" title={c.document ? `View ${c.document.name}` : 'View details'}
+                          {c?.document && (
+                            <button type="button" title={`View ${c.document.name}`}
                               onClick={e => { e.stopPropagation(); setViewing({ staff: row, type: t.key }) }}
                               className="mt-1 inline-flex items-center gap-1 rounded border border-gray-200 px-1.5 py-0.5 text-[10px] font-medium text-teal hover:border-teal/40 hover:bg-teal/5">
                               <Eye size={10} /> View
@@ -302,10 +302,13 @@ export default function WorkforcePage() {
                         {EXTRA_TYPES.filter(t => row.credentials[t.key]?.present).map(t => {
                           const c = row.credentials[t.key]
                           const meta = STATUS[c.status] ?? STATUS.valid
-                          return (
-                            <button key={t.key} type="button" title={`${t.label}: ${meta.label}${c.expires_at ? ' · ' + fmtDate(c.expires_at) : ''}. Click to view.`}
+                          const tip = `${t.label}: ${meta.label}${c.expires_at ? ' · ' + fmtDate(c.expires_at) : ''}`
+                          return c.document ? (
+                            <button key={t.key} type="button" title={`${tip}. Click to view the document.`}
                               onClick={e => { e.stopPropagation(); setViewing({ staff: row, type: t.key }) }}
-                              className={`rounded-full px-2 py-0.5 text-[10px] font-medium hover:ring-1 hover:ring-teal/40 ${meta.cls}`}>{t.short}</button>
+                              className={`inline-flex items-center gap-0.5 rounded-full px-2 py-0.5 text-[10px] font-medium hover:ring-1 hover:ring-teal/40 ${meta.cls}`}><Eye size={9} />{t.short}</button>
+                          ) : (
+                            <span key={t.key} title={`${tip}. No document uploaded.`} className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${meta.cls}`}>{t.short}</span>
                           )
                         })}
                         {!EXTRA_TYPES.some(t => row.credentials[t.key]?.present) && <span className="text-xs text-gray-300">–</span>}
@@ -336,7 +339,7 @@ export default function WorkforcePage() {
         <EditStaffModal token={session.accessToken} staff={editing} onClose={() => setEditing(null)} onSaved={load} onView={type => setViewing({ staff: editing, type })} />
       )}
       {viewing && session?.accessToken && (
-        <DocumentOverlay token={session.accessToken} staff={data?.staff.find(x => x.id === viewing.staff.id) ?? viewing.staff} type={viewing.type} onType={type => setViewing({ staff: viewing.staff, type })} onClose={() => setViewing(null)}
+        <DocumentOverlay token={session.accessToken} staff={data?.staff.find(x => x.id === viewing.staff.id) ?? viewing.staff} type={viewing.type} onClose={() => setViewing(null)}
           onEdit={() => { setEditing(data?.staff.find(x => x.id === viewing.staff.id) ?? viewing.staff); setViewing(null) }} />
       )}
     </div>
@@ -346,17 +349,14 @@ export default function WorkforcePage() {
 // ── Document overlay ───────────────────────────────────────────────────────────
 // Opens over the page: the document on one side (PDF or photo), what is recorded about it on the other, and arrows to move through the
 // person's other documents. Only admins reach this page, and the file is fetched with their sign-in, never from a public address.
-function DocumentOverlay({ token, staff, type, onType, onClose, onEdit }: { token: string; staff: StaffRow; type: string; onType: (t: string) => void; onClose: () => void; onEdit: () => void }) {
+function DocumentOverlay({ token, staff, type, onClose, onEdit }: { token: string; staff: StaffRow; type: string; onClose: () => void; onEdit: () => void }) {
   const api = createApiClient(token)
-  const held = TYPES.filter(t => staff.credentials[t.key]?.present || staff.credentials[t.key]?.document)
   const def = TYPES.find(t => t.key === type) ?? TYPES[0]
   const c = staff.credentials[type]
-  const idx = held.findIndex(t => t.key === type)
   const [src, setSrc] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [fail, setFail] = useState('')
   const mime = c?.document?.type ?? ''
-
   useEffect(() => {
     let url: string | null = null, live = true
     setSrc(null); setFail('')
@@ -369,9 +369,8 @@ function DocumentOverlay({ token, staff, type, onType, onClose, onEdit }: { toke
     return () => { live = false; if (url) URL.revokeObjectURL(url) }
   }, [staff.id, type, c?.document?.name, c?.document?.uploaded_at])
 
-  const go = (d: number) => { if (held.length > 1) onType(held[(Math.max(idx, 0) + d + held.length) % held.length].key) }
   useEffect(() => {
-    const k = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); else if (e.key === 'ArrowRight') go(1); else if (e.key === 'ArrowLeft') go(-1) }
+    const k = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
     window.addEventListener('keydown', k); return () => window.removeEventListener('keydown', k)
   })
 
@@ -392,20 +391,16 @@ function DocumentOverlay({ token, staff, type, onType, onClose, onEdit }: { toke
           <StaffAvatar name={staff.name} photoUrl={staff.photo_url} size={40} />
           <div className="min-w-0 flex-1">
             <h2 className="truncate font-semibold text-neutral-dark">{staff.name} <span className="font-normal text-neutral-mid">· {def.label}</span></h2>
-            <p className="text-xs text-neutral-mid">{staff.job_role ?? '—'}{held.length > 1 && idx >= 0 ? ` · document ${idx + 1} of ${held.length}` : ''}</p>
+            <p className="text-xs text-neutral-mid">{staff.job_role ?? '—'}</p>
           </div>
           <div className="flex shrink-0 items-center gap-1">
-            {held.length > 1 && (<>
-              <button onClick={() => go(-1)} title="Previous (left arrow)" className="rounded p-1.5 text-neutral-mid hover:bg-gray-100 hover:text-neutral-dark"><ChevronLeft size={18} /></button>
-              <button onClick={() => go(1)} title="Next (right arrow)" className="rounded p-1.5 text-neutral-mid hover:bg-gray-100 hover:text-neutral-dark"><ChevronRight size={18} /></button>
-            </>)}
             <button onClick={onClose} title="Close (Esc)" className="ml-1 rounded p-1.5 text-neutral-mid hover:bg-gray-100 hover:text-neutral-dark"><X size={18} /></button>
           </div>
         </div>
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden md:flex-row">
           <div className="flex min-h-[40vh] flex-1 items-center justify-center overflow-auto bg-neutral-light/50 p-2">
             {!c?.document ? (
-              <p className="px-6 text-center text-sm text-neutral-mid">No document has been uploaded for this yet. The details on the right are what has been recorded.</p>
+              <p className="px-6 text-center text-sm text-neutral-mid">This document is no longer on file.</p>
             ) : loading ? <Loader2 className="animate-spin text-teal" />
             : fail ? <p className="text-sm text-red-600">{fail}</p>
             : src && mime.startsWith('image/') ? <img src={src} alt={`${def.label} for ${staff.name}`} className="max-h-full max-w-full object-contain" />
@@ -419,11 +414,6 @@ function DocumentOverlay({ token, staff, type, onType, onClose, onEdit }: { toke
               {rows.every(([, v]) => !v) && <p className="text-sm text-neutral-mid">Nothing recorded yet.</p>}
             </dl>
             {c?.document && <p className="text-xs text-neutral-mid"><Paperclip size={11} className="mr-1 inline" />{c.document.name} · added {fmtDate(c.document.uploaded_at)}</p>}
-            {held.length > 1 && (
-              <div className="flex flex-wrap gap-1 pt-1">
-                {held.map(t => <button key={t.key} onClick={() => onType(t.key)} className={`rounded-full border px-2 py-0.5 text-[11px] ${t.key === type ? 'border-teal bg-teal/10 text-teal' : 'border-gray-200 text-neutral-mid hover:border-teal/40'}`}>{t.short}</button>)}
-              </div>
-            )}
             <div className="flex flex-wrap gap-2 pt-2">
               {src && <a href={src} download={c?.document?.name ?? 'document'} className="inline-flex items-center gap-1 rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-neutral-dark hover:border-teal/40 hover:text-teal"><Download size={12} /> Download</a>}
               <button onClick={onEdit} className="inline-flex items-center gap-1 rounded-lg bg-teal px-3 py-1.5 text-xs font-medium text-white hover:bg-teal/90">Edit record</button>

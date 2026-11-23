@@ -8,7 +8,8 @@ import { createApiClient } from '@/lib/api-client'
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
 const RETURN_KEY = 'cs-tablet-return'
-export const IDLE_MS = 2 * 60_000   // a personal session ends after about 2 minutes untouched
+export const IDLE_MS = 5 * 60_000        // a personal session ends after 5 minutes untouched
+export const IDLE_WARN_MS = 60_000       // ...with a "Still there?" prompt for the last minute
 
 async function pub<T>(path: string, init?: RequestInit): Promise<T> {
   const r = await fetch(`${API}/public/tablet${path}`, { ...init, headers: { 'Content-Type': 'application/json', ...(init?.headers ?? {}) } })

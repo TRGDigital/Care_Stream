@@ -10,7 +10,7 @@ import { NotificationsOptIn } from '@/components/pwa/notifications-optin'
 import { HubPrefsApplier } from '@/components/hub/hub-prefs-applier'
 import { ViewAsBanner } from '@/components/view-as/view-as-banner'
 import { SuperUserNotice } from '@/components/hub/super-user-notice'
-import { TabletBar } from '@/components/hub/tablet-bar'
+import { TabletBar, TabletLock } from '@/components/hub/tablet-bar'
 import type { Metadata } from 'next'
 
 // Logged-in app route: never meant for search results. robots.txt already disallows these paths,
@@ -21,6 +21,9 @@ export const metadata: Metadata = { robots: { index: false, follow: false } }
 export default async function PortalLayout({ children }: { children: React.ReactNode }) {
   const session = await getServerSession(authOptions)
   if (!session) redirect('/login')
+
+  // A connected shared tablet that nobody has entered a PIN on shows nothing but the sign in screen: no chat, no This is me, nothing.
+  if (session.user.device?.mode === 'device') return <AuthSessionProvider session={session}><TabletLock /></AuthSessionProvider>
 
   return (
     <AuthSessionProvider session={session}>
@@ -33,7 +36,7 @@ export default async function PortalLayout({ children }: { children: React.React
       {!session.user.impersonation && !session.user.device && <NotificationsOptIn />}
       {/* The Super User's agree-or-decline notice and minutes heartbeat. For an admin using View hub as: never in view mode, and in act mode (test accounts only) the notice shows but nothing is timed. */}
       {(!session.user.impersonation || session.user.impersonation.mode === 'act') && <SuperUserNotice actingAs={!!session.user.impersonation} />}
-      <div className={`flex h-[100dvh] flex-col bg-neutral-light ${session.user.device?.mode === 'device' ? 'cs-tablet-device' : ''}`}>
+      <div className="flex h-[100dvh] flex-col bg-neutral-light">
         <ViewAsBanner />
         <TabletBar />
         <PortalNav

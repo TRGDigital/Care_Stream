@@ -136,12 +136,10 @@ export const TABLET_STAFF_WHERE = (tenantId: string) => ({ tenant_id: tenantId, 
 // ── The request guard ────────────────────────────────────────────────────────
 // Allow lists are by method and path prefix. A tablet's own account holds no personal records, so reads of /me are harmless; writes and
 // every other area are refused here, on the server, whatever the screen shows.
+// A connected tablet that nobody has signed in on can do ONE thing: let a person identify themselves with their PIN. No chat, no This is me, no
+// policies, nothing else (Len, 24 Nov 2026). /me/profile is only the sign in check the web app makes when it starts the tablet's session.
 const DEVICE_ALLOWED: Array<{ methods: string[]; prefix: string }> = [
-  { methods: ['GET', 'HEAD', 'OPTIONS'], prefix: '/me' },
-  { methods: ['GET', 'HEAD', 'OPTIONS'], prefix: '/residents' },
-  { methods: ['GET', 'HEAD', 'OPTIONS'], prefix: '/policies' },
-  { methods: ['GET', 'POST', 'OPTIONS'], prefix: '/query' },
-  { methods: ['POST'], prefix: '/me/tts' },   // the listen button on an answer
+  { methods: ['GET', 'HEAD', 'OPTIONS'], prefix: '/me/profile' },
   { methods: ['GET', 'POST', 'OPTIONS'], prefix: '/tablet' },
 ]
 const PERSONAL_BLOCKED: Array<{ methods: string[]; prefix: string }> = [
@@ -161,7 +159,7 @@ export function tabletRefusal(req: Request): string | null {
   const path = req.originalUrl.split('?')[0]
   if (dev.t === 'device') {
     const ok = DEVICE_ALLOWED.some(r => r.methods.includes(req.method) && underPrefix(path, r.prefix))
-    return ok ? null : 'This shared tablet can only be used for chat and This is me. Tap "Who\'s using it?" and enter your PIN to use your own hub.'
+    return ok ? null : 'Enter your PIN on the shared tablet to use CareStream.'
   }
   const blocked = PERSONAL_BLOCKED.some(r => r.methods.includes(req.method) && underPrefix(path, r.prefix))
   return blocked ? 'That is not available on a shared tablet.' : null

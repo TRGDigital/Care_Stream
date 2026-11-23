@@ -18,16 +18,14 @@ test('obvious PINs are rejected and generated PINs are always 4 digits and not w
   for (let i = 0; i < 300; i++) { const p = generatePin(); assert.match(p, /^\d{4}$/); assert.ok(!isWeakPin(p)) }
 })
 
-test('a shared tablet itself can chat and read This is me, and nothing else', () => {
+test('a connected tablet that nobody has signed in on can do nothing except let someone enter a PIN', () => {
   const d = { t: 'device' as const, d: 'dev1' }
-  assert.equal(tabletRefusal(req('POST', '/query/stream', d)), null)
-  assert.equal(tabletRefusal(req('POST', '/query', d)), null)
-  assert.equal(tabletRefusal(req('GET', '/residents?status=living', d)), null)
-  assert.equal(tabletRefusal(req('GET', '/me/profile', d)), null)
   assert.equal(tabletRefusal(req('GET', '/tablet/roster', d)), null)
   assert.equal(tabletRefusal(req('POST', '/tablet/personal/start', d)), null)
-  for (const [m, u] of [['GET', '/users'], ['POST', '/me/photo'], ['POST', '/me/push/subscribe'], ['GET', '/admin/anything'], ['POST', '/residents'], ['GET', '/tablets'], ['GET', '/workforce/register'], ['POST', '/auth/switch-site'], ['DELETE', '/me/saved-policies/1']]) {
-    assert.ok(tabletRefusal(req(m, u, d)), `${m} ${u} should be refused`)
+  assert.equal(tabletRefusal(req('GET', '/me/profile', d)), null)   // the sign in check when the tablet's own session starts
+  for (const [m, u] of [['POST', '/query/stream'], ['POST', '/query'], ['GET', '/residents?status=living'], ['GET', '/policies'], ['GET', '/me/annual-training'], ['GET', '/me/counts'], ['POST', '/me/tts'],
+    ['GET', '/training/my-enrollments'], ['GET', '/users'], ['POST', '/me/photo'], ['POST', '/me/push/subscribe'], ['GET', '/admin/anything'], ['POST', '/residents'], ['GET', '/tablets'], ['GET', '/workforce/register'], ['POST', '/auth/switch-site']]) {
+    assert.ok(tabletRefusal(req(m, u, d)), `${m} ${u} should be refused without a PIN`)
   }
 })
 

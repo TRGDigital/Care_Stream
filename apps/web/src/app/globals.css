@@ -347,6 +347,3 @@ html[data-hub-contrast="1"] .opacity-60:not(button):not([disabled]) { opacity: 0
   font-size: .8rem; line-height: 1.6; color: #9333ea; opacity: .75;
 }
 @media print { .cs-editable-policy .policy-content .cs-edit-hover::after { display: none; } }
-
-/* Shared tablet (the tablet itself, not a personal session): the hub shows only Chat and This is me. The server enforces this too. */
-.cs-tablet-device [data-hub-links] > :not([data-keep]) { display: none !important; }

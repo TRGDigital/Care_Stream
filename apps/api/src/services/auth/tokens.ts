@@ -37,7 +37,7 @@ export function generateViewAsToken(payload: Omit<JwtPayload, 'iat' | 'exp'>): s
 }
 
 /** A staff member's short personal session on a shared tablet (after their PIN). No refresh token: it simply ends. */
-export const TABLET_PERSONAL_MINUTES = 30
+export const TABLET_PERSONAL_MINUTES = 45
 export function generateTabletPersonalToken(payload: Omit<JwtPayload, 'iat' | 'exp'>): string {
   return jwt.sign(payload, process.env.JWT_SECRET!, { expiresIn: `${TABLET_PERSONAL_MINUTES}m` })
 }

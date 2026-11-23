@@ -196,7 +196,9 @@ workforceRouter.delete('/staff/:userId/credentials/:type', async (req: Request, 
 
 // POST /workforce/staff/:userId/credentials/:type/document — upload the document (multipart: field "file").
 workforceRouter.post('/staff/:userId/credentials/:type/document', evidenceUploadMiddleware, async (req: Request, res: Response) => {
-  const tenantId = getTenantId()
+  // The account comes from the signed in user, not getTenantId(): the multipart parser runs outside the per request context on this
+  // runtime, so getTenantId() throws here once the file has been read (the same reason face-to-face evidence uploads use req.user).
+  const tenantId = (req as any).user.tenant_id as string
   const userId = String(req.params.userId)
   const type   = String(req.params.type)
   if (!ALL_CREDENTIAL_TYPES.includes(type as CredType)) { err(res, 'VALIDATION_ERROR', 'Unknown credential type.'); return }

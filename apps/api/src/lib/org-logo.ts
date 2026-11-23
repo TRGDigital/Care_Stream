@@ -85,7 +85,7 @@ orgLogoFileRouter.get('/:tenantId/:file', async (req: Request, res: Response) =>
       const parsed = logo ? /^data:(image\/[a-z0-9.+-]+);base64,(.+)$/i.exec(logo) : null
       if (!logo || !parsed || logoHash(logo) !== m[1]) { gone(); return }
       // PNG for every email program (WebP is not shown by Outlook), at twice the display size so it stays sharp on phones.
-      png = await sharp(Buffer.from(parsed[2], 'base64')).resize({ width: 440, height: 144, fit: 'inside', withoutEnlargement: true }).png().toBuffer()
+      png = await sharp(Buffer.from(parsed[2], 'base64')).resize({ width: 440, height: 144, fit: 'inside', withoutEnlargement: true }).png({ palette: true, quality: 90, compressionLevel: 9, effort: 8 }).toBuffer()   // a palette PNG keeps a flat logo small for email
       if (pngCache.size > 100) pngCache.clear()
       pngCache.set(key, png)
     }
@@ -93,5 +93,9 @@ orgLogoFileRouter.get('/:tenantId/:file', async (req: Request, res: Response) =>
     res.setHeader('Cache-Control', 'public, max-age=86400, immutable')
     res.setHeader('X-Content-Type-Options', 'nosniff')
     res.send(png)
-  } catch { gone() }
+  } catch (e: any) {
+    // A busy database is not "no such logo": say try again, so the image is not given up on (and nothing is cached for it).
+    console.error('[org-logo] could not serve', String(e?.message ?? e).slice(0, 120))
+    res.status(503).setHeader('Retry-After', '30'); res.type('text/plain').send('Try again')
+  }
 })

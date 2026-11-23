@@ -45,6 +45,10 @@ export function otherStaffEmailCases(out: any, base: { to: string; name: string;
     'supervision-reminder':  () => out.sendTrainingUpdateEmail({ ...base, subject: 'Reminder: your supervision is tomorrow', bodyHtml: '<p style="font-size:15px;margin:0 0 12px">Your supervision is tomorrow.</p>', buttonLabel: 'View my supervisions', buttonPath: '/chat?view=supervisions' }),
     'credential-expiry':     () => out.sendTrainingUpdateEmail({ ...base, subject: 'Your passport is expiring soon', bodyHtml: '<p style="font-size:15px;margin:0 0 12px">Your passport is expiring soon.</p>', buttonLabel: 'Open my hub', buttonPath: '/chat' }),
     'audit-reminder':        () => out.sendAuditUpdateEmail({ ...base, subject: 'An audit is due', bodyHtml: '<p style="font-size:15px;margin:0 0 12px">Your audit is due tomorrow.</p>' }),
+    // The tablet PIN emails are person-led (shown as sent by an administrator) but have no hub overlay: a PIN must never be shown on screen in a notice.
+    'pin-new':               () => out.sendStaffPinEmail({ ...base, actorUserId: 'preview-admin', pin: '4821', kind: 'new' }),
+    'pin-resend':            () => out.sendStaffPinEmail({ ...base, actorUserId: 'preview-admin', pin: '4821', kind: 'resend' }),
+    'pin-regenerated':       () => out.sendStaffPinEmail({ ...base, actorUserId: 'preview-admin', pin: '7305', kind: 'regenerated' }),
     // The same emails with no acting person (the branded layout):
     'allocation-training-branded':   () => out.sendStaffAllocationEmail({ ...base, kind: 'training', portalUrl }),
     'face-to-face-reminder-branded': () => out.sendFaceToFaceReminderEmail({ ...base, title: 'Fire Safety', dateLabel: 'Tue 3 December 2026', trainerLabel: 'Mark Ellis' }),
@@ -52,6 +56,7 @@ export function otherStaffEmailCases(out: any, base: { to: string; name: string;
     'onboarding-update-branded':     () => out.sendOnboardingUpdateEmail({ ...base, subject: 'Induction', portalUrl, bodyHtml: ONBOARDING_BODY }),
     'action-plan-branded':           () => out.sendActionPlanStaffEmail({ to: base.to, staffName: base.name, orgName: base.orgName, actions: ACTIONS }),
     'training-reminder-branded':     () => out.sendTrainingReminderEmail({ ...base, courseName: 'Moving and Handling', dueDate: dueIn(14), kind: 'training', portalUrl }),
+    'pin-new-branded':               () => out.sendStaffPinEmail({ ...base, pin: '4821', kind: 'new' }),
   }
 }
 

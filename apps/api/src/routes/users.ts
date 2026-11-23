@@ -452,7 +452,7 @@ usersRouter.post('/invite', async (req: Request, res: Response) => {
   })
 
   // If the account uses shared tablets, the new staff member gets their tablet PIN by email (never blocks the request).
-  if (!is_agency) void issuePinForNewStaff(tenantId, (user as any).id)
+  if (!is_agency) void issuePinForNewStaff(tenantId, (user as any).id, req.user!.sub)
 
   // Add the phone number to the tenant's WhatsApp allowlist
   if (phone_number) {

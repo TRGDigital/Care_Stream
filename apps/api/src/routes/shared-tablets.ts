@@ -166,21 +166,21 @@ tabletRouter.post('/personal/end', async (req: Request, res: Response) => {
 export const tabletsAdminRouter = Router()
 tabletsAdminRouter.use(requireAdmin)
 
-async function pinEmailFor(tenantId: string, userId: string, kind: 'new' | 'resend' | 'regenerated', pin: string): Promise<boolean> {
+async function pinEmailFor(tenantId: string, userId: string, kind: 'new' | 'resend' | 'regenerated', pin: string, actorUserId?: string | null): Promise<boolean> {
   const [u, t] = await Promise.all([p().user.findUnique({ where: { id: userId }, select: { name: true, email: true } }), p().tenant.findUnique({ where: { id: tenantId }, select: { name: true } })])
   if (!u?.email) return false
-  await sendStaffPinEmail({ to: u.email, name: u.name, orgName: t?.name ?? 'Your service', pin, kind })
+  await sendStaffPinEmail({ to: u.email, name: u.name, orgName: t?.name ?? 'Your service', pin, kind, actorUserId: actorUserId ?? null })
   await p().staffPin.update({ where: { user_id: userId }, data: { sent_at: new Date() } }).catch(() => {})
   return true
 }
 
 /** For a new staff member: if the account uses shared tablets, create their PIN and email it. Never throws. */
-export async function issuePinForNewStaff(tenantId: string, userId: string): Promise<void> {
+export async function issuePinForNewStaff(tenantId: string, userId: string, actorUserId?: string | null): Promise<void> {
   try {
     const any = await p().sharedDevice.findFirst({ where: { tenant_id: tenantId, revoked_at: null }, select: { id: true } })
     if (!any) return
     const pin = await setPin(tenantId, userId)
-    await pinEmailFor(tenantId, userId, 'new', pin)
+    await pinEmailFor(tenantId, userId, 'new', pin, actorUserId)
   } catch (e) { console.error('[tablets] could not issue a PIN for new staff:', (e as any)?.message ?? e) }
 }
 
@@ -309,7 +309,7 @@ tabletsAdminRouter.post('/staff/:userId/pin/:action', async (req: Request, res: 
     }
     void writeAuditLog({ tenant_id: tenantId, user_id: req.user!.sub, event_type: (`staff_pin_${action}` as 'staff_pin_resend' | 'staff_pin_regenerate' | 'staff_pin_show'), entity_type: 'user', entity_id: u.id, metadata: {} })
     if (action === 'show') { ok(res, { name: u.name, pin }); return }
-    const sent = await pinEmailFor(tenantId, u.id, action === 'regenerate' ? 'regenerated' : created ? 'new' : 'resend', pin)
+    const sent = await pinEmailFor(tenantId, u.id, action === 'regenerate' ? 'regenerated' : created ? 'new' : 'resend', pin, req.user!.sub)
     if (!sent) { err(res, 'NO_EMAIL', 'That staff member has no email address.', 400); return }
     ok(res, { sent: true, name: u.name, to: u.email })
   } catch (e: any) { console.error('[tablets] pin action failed:', e?.message ?? e); notSetUp(res) }
@@ -326,7 +326,7 @@ tabletsAdminRouter.post('/pins/send-all', async (req: Request, res: Response) =>
     let sent = 0
     for (let i = 0; i < todo.length; i += 10) {
       await Promise.all(todo.slice(i, i + 10).map(async (s: any) => {
-        try { const pin = await setPin(tenantId, s.id); if (await pinEmailFor(tenantId, s.id, 'new', pin)) sent++ } catch { /* one failure must not stop the rest */ }
+        try { const pin = await setPin(tenantId, s.id); if (await pinEmailFor(tenantId, s.id, 'new', pin, req.user!.sub)) sent++ } catch { /* one failure must not stop the rest */ }
       }))
     }
     void writeAuditLog({ tenant_id: tenantId, user_id: req.user!.sub, event_type: 'staff_pins_sent_all', entity_type: 'tenant', entity_id: tenantId, metadata: { sent } })

@@ -3616,7 +3616,7 @@
   "intro": {
    "heading": "A PIN is only useful if people can recover it quickly.",
    "sub": "A scenario we see in homes that use one or two tablets for the whole team.",
-   "paragraph": "A home has two shared tablets and a team of forty. Staff were sent their four digit PIN by email when the tablets were set up, and most of them used it once in the first week. A month later a carer who works nights wants to check a policy in her own hub. She cannot remember the number and the email is buried under others. She tries a few guesses, and the tablet locks her out for five minutes. The manager is not on shift. The senior on duty does not know what to do, and the carer gives up and asks a colleague who has a signed in tablet to read the policy out. A small problem, and a familiar one."
+   "paragraph": "A home has two shared tablets and a team of forty. Staff were sent their four digit PIN by email when the tablets were set up, and most of them used it once in the first week. A month later a carer who works nights wants to check a policy in her own hub. She cannot remember the number and the email is buried under others. She tries a few guesses, and the tablet locks her out for five minutes. The manager is not on shift. The senior on duty does not know what to do, and the carer gives up and asks a colleague who is already signed in to read the policy out. A small problem, and a familiar one."
   },
   "trail": [
    {
@@ -3891,8 +3891,8 @@
      "a": "No. CareStream makes a random four digit PIN and emails it. New staff get theirs with their welcome once the account has a tablet."
     },
     {
-     "q": "Does a locked out carer lose access to Chat?",
-     "a": "No. Anyone can use Chat and This is me on a connected tablet without identifying themselves. A PIN is needed for the person's own hub."
+     "q": "Can a locked out carer use the tablet in the meantime?",
+     "a": "No. A connected tablet shows only the Who's using it? screen until someone enters their own PIN, so a locked out carer cannot use Chat or anything else on it until the lock ends or you send her PIN again."
     },
     {
      "q": "Does the PIN go to the tablet?",
@@ -4059,12 +4059,12 @@
   "order": 123,
   "eyebrow": "Scenario",
   "fine": "14 day free trial · Set up in a day · UK data residency",
-  "title": "<em>This is me dementia</em> profiles within reach on the floor, on a shared tablet that anyone on shift can open.",
+  "title": "<em>This is me dementia</em> profiles within reach on the floor, on a shared tablet that a carer opens with their own PIN.",
   "meta_title": "This Is Me Dementia Profiles on a Shared Tablet | CareStreamAI",
-  "meta_description": "Put resident This is me profiles on a shared tablet in a staff area, read only, so carers can check preferences without a phone. Paid plans.",
-  "lede": "A carer is sitting with a new resident who is anxious in the afternoon. Her phone is in her locker, and the paper file is at the other end of the building. In a home with a phone ban, the <b>This is me dementia</b> profile can sit on a shared tablet in a staff area. It is read only and needs no sign in. See the <a href=\"/features/resident-profiles-this-is-me\">resident profiles</a> feature for how a profile is built.",
+  "meta_description": "A carer enters their own PIN on a shared tablet, then opens a resident's This is me profile, so preferences can be checked without a phone. Paid plans.",
+  "lede": "A carer is sitting with a new resident who is anxious in the afternoon. Her phone is in her locker, and the paper file is at the other end of the building. In a home with a phone ban, the <b>This is me dementia</b> profile can be reached on a shared tablet in a staff area. The carer enters her own PIN first, then opens This is me. See the <a href=\"/features/resident-profiles-this-is-me\">resident profiles</a> feature for how a profile is built.",
   "panel": {
-   "title": "A profile at hand, read only",
+   "title": "A profile at hand, after a PIN",
    "pill": "Illustration",
    "rows": [
     {
@@ -4073,8 +4073,8 @@
      "done": true
     },
     {
-     "label": "No sign in needed",
-     "note": "Anyone on the connected tablet",
+     "label": "Own PIN needed first",
+     "note": "Nothing is open without it",
      "done": true
     },
     {
@@ -4093,7 +4093,7 @@
   "image": "[to generate: POST /routine/content/image, key this-is-me-profiles-on-a-shared-tablet-for-the-floor, scene: A carer sits at a small table in a quiet care home lounge, holding a tablet while an older resident chats beside her, a window with a garden behind them]",
   "image_alt": "A carer and an older resident sit at a small table in a care home lounge looking together at a tablet",
   "card_title": "Can a carer see a resident's This is me without a phone?",
-  "card_snippet": "On a shared tablet, This is me is available read only to anyone using the connected tablet. Paid plans.",
+  "card_snippet": "On a shared tablet, a carer enters their own PIN and then opens This is me, just as on their own phone. Paid plans.",
   "primary_keyword": "this is me dementia",
   "secondary_keywords": [
    "this is me form",
@@ -4179,7 +4179,7 @@
     {
      "icon": "tick",
      "title": "Reading should be quick",
-     "body": "Open the tablet, choose This is me, find the resident and read. No sign in is needed, so a new carer or a bank worker can do it in seconds."
+     "body": "Tap your picture, enter your own PIN, choose This is me, find the resident and read. It takes seconds, and the tablet knows who is reading."
     },
     {
      "icon": "alert",
@@ -4238,8 +4238,8 @@
      "heading": "Connect the tablet and keep it in a staff area",
      "bullets": [
       "An administrator adds the tablet on the Staff page and staff connect it with their own PIN",
-      "A connected tablet opens on Chat and This is me",
-      "Keep it where only staff go, because the profiles are open to anyone using the tablet"
+      "Before a PIN is entered a connected tablet shows only the Who's using it? screen",
+      "Keep it where only staff go, because a signed in carer can read the profiles"
      ],
      "tags": [
       {
@@ -4259,12 +4259,12 @@
         "Shows",
         [
          [
-          "Chat",
-          "Policy and guidance assistant"
+          "No PIN",
+          "Who's using it? only"
          ],
          [
-          "This is me",
-          "Read only"
+          "After a PIN",
+          "Your own hub"
          ]
         ]
        ]
@@ -4275,7 +4275,7 @@
     {
      "heading": "Read the profile when it is needed",
      "bullets": [
-      "Choose This is me and find the resident",
+      "Enter your own PIN, choose This is me and find the resident",
       "Read what matters before a visit, an activity or a difficult moment",
       "Use it with a family member or the key worker if you can"
      ],
@@ -4360,7 +4360,7 @@
     },
     {
      "q": "Does a carer need a PIN to read it?",
-     "a": "No. Anyone using the connected tablet can use This is me and Chat without identifying themselves. The PIN is for a person's own hub."
+     "a": "Yes. A connected tablet shows only the Who's using it? screen until a carer enters their own four digit PIN. Then she gets her own hub, including This is me and Chat."
     },
     {
      "q": "Is that safe for resident information?",
@@ -4380,7 +4380,7 @@
     },
     {
      "q": "Do bank and agency staff see it?",
-     "a": "Anyone using the connected tablet can use This is me without signing in, so yes. Agency workers are not listed on tablets for personal sessions."
+     "a": "Staff who are listed on the tablet and have a PIN can. Agency workers are not listed on tablets, so they cannot use a tablet at all."
     },
     {
      "q": "Which plan?",
@@ -4400,8 +4400,8 @@
      "body": "Changes to a profile are made where profiles are maintained, not from the tablet."
     },
     {
-     "title": "It does not hide a profile from the tablet",
-     "body": "Anyone using a connected tablet can read This is me, so the tablet belongs in a staff area and the decision is yours."
+     "title": "It does not open profiles without a PIN",
+     "body": "A carer must enter their own PIN first. Once signed in they can read This is me, so the tablet still belongs in a staff area and the decision is yours."
     }
    ]
   },
@@ -4435,7 +4435,7 @@
      "items": [
       {
        "q": "Who can read the profile on the tablet?",
-       "a": "Anyone using the connected tablet, with no sign in. It is read only."
+       "a": "A member of staff who has entered their own PIN on the connected tablet. Before that, the tablet shows only the Who's using it? screen. This is me is read only."
       },
       {
        "q": "Where should the tablet live?",
@@ -4443,7 +4443,7 @@
       },
       {
        "q": "Can the tablet show other things?",
-       "a": "Chat, the policy and guidance assistant, and This is me. A person's own hub appears only after they enter their own PIN."
+       "a": "Yes. After a carer enters their own PIN they get their own full hub: Chat, This is me, their training, actions, supervisions and records."
       }
      ]
     },
@@ -4481,7 +4481,7 @@
       },
       {
        "q": "Does it record who read a profile?",
-       "a": "This page does not claim that. Chat questions on the tablet are recorded against the tablet, and in a personal session against the person."
+       "a": "This page does not claim that. What is recorded is set up, connection and PIN events, and every Chat question, against the person and the tablet."
       }
      ]
     }
@@ -4536,7 +4536,7 @@
      ]
     }
    ],
-   "note": "Illustrative only. The tablet shows This is me read only. The provider remains responsible for where the tablet is kept and its own policies."
+   "note": "Illustrative only. A carer enters their own PIN before This is me opens, and it is read only. The provider remains responsible for where the tablet is kept and its own policies."
   }
  },
  {
@@ -4547,7 +4547,7 @@
   "fine": "14 day free trial · Set up in a day · UK data residency",
   "title": "A calmer <em>shift handover</em> when one shared tablet sits in the room and phones stay in the lockers.",
   "meta_title": "Shift Handover With a Shared Tablet | CareStreamAI",
-  "meta_description": "Use a shared tablet at shift handover to check a This is me profile or a policy question without personal phones. It holds no handover notes.",
+  "meta_description": "Use a shared tablet at shift handover: a carer enters their PIN, then checks a This is me profile or a policy question without personal phones. No handover notes.",
   "lede": "The early shift is handing over, and the new team asks about a resident who has just moved in and a policy question that came up at breakfast. Phones are in the lockers. At <b>shift handover</b>, a shared tablet in the room can show the resident's profile and answer a policy question in plain words. It does not hold your handover notes, and this page is clear about that. See the <a href=\"/features/web-chat-interface\">chat feature</a> for what it can answer.",
   "panel": {
    "title": "A tablet in the handover room",
@@ -4569,8 +4569,8 @@
      "done": false
     },
     {
-     "label": "Personal sign in not needed",
-     "note": "For Chat and This is me",
+     "label": "Own PIN first",
+     "note": "Then Chat and This is me",
      "done": true
     }
    ],
@@ -4720,9 +4720,9 @@
     {
      "heading": "Check a new resident in This is me",
      "bullets": [
-      "Open This is me on the tablet and find the resident",
+      "Sign in with your own PIN, open This is me and find the resident",
       "Read what matters to them before the first shift",
-      "Anyone on the connected tablet can do this without a PIN"
+      "Each person enters their own PIN, so the tablet knows who is reading"
      ],
      "tags": [
       {
@@ -4760,7 +4760,7 @@
      "bullets": [
       "Type the question in plain words",
       "Read the answer to the whole team",
-      "Chat questions asked on the tablet are recorded against the tablet"
+      "Chat questions asked on the tablet are recorded against the person and the tablet, never anonymously"
      ],
      "tags": [
       {
@@ -4794,10 +4794,10 @@
      }
     },
     {
-     "heading": "Sign in only for your own things",
+     "heading": "Sign out, and let it time out",
      "bullets": [
-      "After handover, staff can tap their picture and enter their own PIN to see their training or actions",
-      "The session returns to the tablet screen after Done or about two minutes untouched",
+      "Once signed in, staff can also open their own training or actions, and a carer with 5 to 10 spare minutes can complete a lesson",
+      "Tap Done when finished. After 4 minutes untouched a Still there? prompt appears, and after 5 minutes the tablet returns to the Who's using it? screen",
       "Nothing personal stays on the screen for the next person"
      ],
      "tags": [
@@ -4812,7 +4812,7 @@
      ],
      "mock": {
       "type": "audit",
-      "audit": "Personal session (example)",
+      "audit": "Session (example)",
       "blocks": [
        [
         "Session",
@@ -4823,7 +4823,7 @@
          ],
          [
           "Ends",
-          "Done or two minutes"
+          "Done, or 5 minutes"
          ]
         ]
        ]
@@ -4839,7 +4839,7 @@
    "items": [
     {
      "q": "Does CareStream hold our notes from handover?",
-     "a": "No. Your sheet or notes stay in whatever system you use. The tablet adds Chat and This is me."
+     "a": "No. Your sheet or notes stay in whatever system you use. The tablet gives each signed in carer their own hub, including Chat and This is me."
     },
     {
      "q": "Is there a handover form we can use?",
@@ -4855,11 +4855,11 @@
     },
     {
      "q": "Who can use it?",
-     "a": "Anyone using the connected tablet can use Chat and This is me without signing in."
+     "a": "A member of staff who is listed on the tablet and enters their own PIN. Before a PIN the tablet shows only the Who's using it? screen."
     },
     {
      "q": "Is the question recorded?",
-     "a": "Chat questions asked on the tablet are recorded against the tablet. In a personal session they are recorded against the person."
+     "a": "Yes. Every Chat question is recorded against the person and the tablet."
     },
     {
      "q": "What about a nursing handover?",
@@ -4926,7 +4926,7 @@
       },
       {
        "q": "Can it show the handover sheet?",
-       "a": "No. It shows Chat and This is me, and a person's own hub after their PIN."
+       "a": "No. A signed in carer sees their own hub, which includes Chat and This is me, and the tablet shows nothing before a PIN."
       },
       {
        "q": "Where should it sit?",
@@ -4939,7 +4939,7 @@
      "items": [
       {
        "q": "Does the tablet record what the team asked?",
-       "a": "Chat questions asked on the tablet are recorded against the tablet."
+       "a": "Chat questions asked on the tablet are recorded against the person and the tablet."
       },
       {
        "q": "Does it record who was at handover?",
@@ -5034,8 +5034,8 @@
   "fine": "14 day free trial · Set up in a day · UK data residency",
   "title": "An <em>audit log</em> for a shared tablet: knowing who connected it, who used it and what was asked.",
   "meta_title": "Audit Log for a Shared Tablet: Who Did What | CareStreamAI",
-  "meta_description": "A shared tablet is only trustworthy if it leaves a record. See what CareStream logs: set up, connections, PIN events and chat questions. Paid plans.",
-  "lede": "A manager is asked by the provider's director a simple question: if the tablet on the first floor is used, how would we know by whom? A tablet that anyone can pick up needs an <b>audit log</b> to be a safe tool, not a loose end. CareStream records tablet set up, connection and PIN events, and records chat questions against the tablet or, in a personal session, against the person. See the <a href=\"/features/staff-hub\">staff hub</a> for how a personal session works.",
+  "meta_description": "A shared tablet is only trustworthy if it leaves a record. See what CareStream logs: set up, connections, PIN events and chat questions against a person. Paid plans.",
+  "lede": "A manager is asked by the provider's director a simple question: if the tablet on the first floor is used, how would we know by whom? A shared tablet needs an <b>audit log</b> to be a safe tool, not a loose end. CareStream records tablet set up, connection and PIN events, and records every chat question against the person and the tablet. Nothing is anonymous. See the <a href=\"/features/staff-hub\">staff hub</a> for what a signed in carer reaches.",
   "panel": {
    "title": "What a shared tablet leaves behind",
    "pill": "Illustration",
@@ -5052,12 +5052,12 @@
     },
     {
      "label": "Chat questions on the tablet",
-     "note": "Against the tablet",
+     "note": "Against the person and the tablet",
      "done": true
     },
     {
-     "label": "Chat questions in a personal session",
-     "note": "Against the person",
+     "label": "Questions with no name",
+     "note": "None, a PIN comes first",
      "done": true
     }
    ],
@@ -5066,7 +5066,7 @@
   "image": "[to generate: POST /routine/content/image, key audit-log-for-a-shared-tablet-who-asked-what, scene: A registered manager and a director sit at a table in a care home office with a laptop and a folder open between them, a window with a garden behind them]",
   "image_alt": "A registered manager and a director sit at a desk in a care home office with a laptop and a folder open between them",
   "card_title": "If a shared tablet is used, how would you know by whom?",
-  "card_snippet": "CareStream records tablet set up, connections and PIN events, and chat questions against the tablet or the person. Paid plans.",
+  "card_snippet": "CareStream records tablet set up, connections and PIN events, and every chat question against the person and the tablet. Paid plans.",
   "primary_keyword": "audit log",
   "secondary_keywords": [
    "audit trail",
@@ -5152,7 +5152,7 @@
     {
      "icon": "chat",
      "title": "Questions are tied to the tablet or the person",
-     "body": "A chat question asked on the tablet is recorded against the tablet. In a personal session it is recorded against the person."
+     "body": "A chat question asked on the tablet is recorded against the person who asked it and the tablet they used. Nobody can ask anonymously, because a PIN comes first."
     },
     {
      "icon": "alert",
@@ -5242,11 +5242,11 @@
      }
     },
     {
-     "heading": "Chat questions are tied to a tablet or a person",
+     "heading": "Chat questions are tied to a person and a tablet",
      "bullets": [
-      "Chat questions on the tablet are recorded against the tablet",
-      "In a personal session they are recorded against the person",
-      "Anyone can use Chat on a connected tablet without identifying themselves, so the record is the tablet, not a name"
+      "Every chat question is recorded against the person and the tablet",
+      "Nothing is open without a PIN, so there is no anonymous use",
+      "The record shows a name, not just a tablet"
      ],
      "tags": [
       {
@@ -5266,12 +5266,12 @@
         "Recorded against",
         [
          [
-          "On the tablet",
-          "The tablet"
+          "Who asked",
+          "The person"
          ],
          [
-          "In a personal session",
-          "The person"
+          "Where",
+          "The tablet"
          ]
         ]
        ]
@@ -5339,15 +5339,15 @@
    "items": [
     {
      "q": "What does CareStream record about a shared tablet?",
-     "a": "Set up, connection and PIN events are recorded in an audit log. Chat questions asked on the tablet are recorded against the tablet, and in a personal session against the person."
+     "a": "Set up, connection and PIN events are recorded in an audit log. Every Chat question asked on the tablet is recorded against the person and the tablet."
     },
     {
      "q": "Can I see who asked what?",
-     "a": "Chat questions are recorded against the tablet, or against the person in a personal session. Book a demo to see how that is shown on your plan. This page does not describe the report screens."
+     "a": "Chat questions are recorded against the person and the tablet. Book a demo to see how that is shown on your plan. This page does not describe the report screens."
     },
     {
-     "q": "If someone uses Chat without a PIN, do we know who?",
-     "a": "No. Anyone using a connected tablet can use Chat and This is me without identifying themselves. The record then shows the tablet. If you want to know who, ask staff to use a personal session."
+     "q": "Can someone use Chat without a PIN?",
+     "a": "No. Before a PIN is entered the tablet shows only the Who's using it? screen. Every question is therefore recorded against a named person and the tablet."
     },
     {
      "q": "Is the audit log the same as a care record?",
@@ -5379,8 +5379,8 @@
      "body": "CareStream records and controls access. Whether your arrangements meet the regulations is for you, and for the Care Quality Commission to judge."
     },
     {
-     "title": "It does not name every reader",
-     "body": "Anyone can use Chat and This is me on a connected tablet without signing in, so those uses show against the tablet."
+     "title": "It does not prove who was holding the tablet",
+     "body": "A record names the person whose PIN was entered. If a PIN is shared, the record cannot tell, so keep PINs private and regenerate one if you suspect it was seen."
     },
     {
      "title": "It does not replace your policy",
@@ -5409,7 +5409,7 @@
       },
       {
        "q": "What is an access log?",
-       "a": "A list of who or what accessed a system. On a shared tablet, the connections and PIN events are the access record."
+       "a": "A list of who or what accessed a system. On a shared tablet, the connections, PIN events and chat questions are the access record."
       }
      ]
     },
@@ -5426,7 +5426,7 @@
       },
       {
        "q": "Does it record when staff sign out?",
-       "a": "This page does not claim that. A personal session returns to the tablet screen when staff tap Done or after about two minutes untouched."
+       "a": "This page does not claim that. A session returns to the Who's using it? screen when staff tap Done or after 5 minutes untouched, with a Still there? prompt at 4 minutes."
       }
      ]
     },
@@ -5460,11 +5460,11 @@
       },
       {
        "q": "Can agency workers be traced?",
-       "a": "Agency workers are not listed on tablets. They can use Chat and This is me, and those uses show against the tablet."
+       "a": "Agency workers are not listed on tablets, so they cannot use a tablet and there is nothing to trace."
       },
       {
        "q": "What should I tell staff?",
-       "a": "That the tablet records its use, and that Chat questions are recorded against the tablet or the person. Put it in your policy and induction."
+       "a": "That the tablet records its use, and that every Chat question is recorded against the person and the tablet. Put it in your policy and induction."
       }
      ]
     }
@@ -5882,8 +5882,8 @@
      "body": "Wrong guesses are limited and a PIN is always needed, but no door is perfect. CareStream records and controls access. The provider remains responsible for its own policies and decisions."
     },
     {
-     "title": "It does not make a tablet private",
-     "body": "Anyone using a connected tablet can use Chat and This is me without identifying themselves, so keep the tablet in a staff area."
+     "title": "It does not make a tablet open to anyone",
+     "body": "A connected tablet shows only the Who's using it? screen until a member of staff enters their own PIN. Keep the tablet in a staff area all the same."
     },
     {
      "title": "It does not sign anyone in by itself",
@@ -5921,7 +5921,7 @@
      "items": [
       {
        "q": "What is a PIN code for?",
-       "a": "It proves a member of staff is who they say, both to connect a tablet and for a personal session. Each person has their own."
+       "a": "It proves a member of staff is who they say, both to connect a tablet and each time they use it. Each person has their own."
       },
       {
        "q": "Where do staff get their PIN?",
@@ -6033,8 +6033,8 @@
   "fine": "14 day free trial · Set up in a day · UK data residency",
   "title": "A <em>mobile phone ban</em> should not mean no training. Staff can do theirs on a shared tablet with their own PIN.",
   "meta_title": "Mobile Phone Ban and Staff Training on a Tablet | CareStreamAI",
-  "meta_description": "With a mobile phone ban, staff still need to reach their training and actions. A shared tablet and a personal PIN give each person their own hub. Paid plans.",
-  "lede": "A home brings in a <b>mobile phone ban</b> on the floor after a complaint about photographs. It is a sound decision. Three weeks later the training matrix is showing gaps, because half the team used to do their short lessons on their phones in the break room. With a shared tablet, each person taps their picture, enters their own PIN and opens their own hub: their training, actions, supervisions and records. See the <a href=\"/features/training\">training feature</a> for what a lesson looks like.",
+  "meta_description": "With a mobile phone ban, staff still need to reach their training and actions. On a shared tablet each person signs in with their own PIN and gets their own hub. Paid plans.",
+  "lede": "A home brings in a <b>mobile phone ban</b> on the floor after a complaint about photographs. It is a sound decision. Three weeks later the training matrix is showing gaps, because half the team used to do their short lessons on their phones in the break room. With a shared tablet, each person taps their picture, enters their own PIN and opens their own full hub: Chat, This is me, their training, actions, supervisions and records. A carer with 5 to 10 spare minutes can complete a lesson. See the <a href=\"/features/training\">training feature</a> for what a lesson looks like.",
   "panel": {
    "title": "Their own hub, on a shared tablet",
    "pill": "Illustration",
@@ -6055,8 +6055,8 @@
      "done": true
     },
     {
-     "label": "Returns to the tablet screen",
-     "note": "Done, or about 2 minutes",
+     "label": "Returns to Who's using it?",
+     "note": "Done, or 5 minutes untouched",
      "done": true
     }
    ],
@@ -6065,7 +6065,7 @@
   "image": "[to generate: POST /routine/content/image, key training-for-staff-with-no-personal-phone-on-the-floor, scene: A carer sits alone at a table in a quiet staff room, a tablet propped in front of her and a mug beside it, a window with a garden behind her]",
   "image_alt": "A carer sits alone at a table in a staff room with a tablet propped in front of her and a mug beside it",
   "card_title": "Phones are banned on the floor. Where do staff do their training?",
-  "card_snippet": "Each person taps their picture, enters their own PIN and gets their own hub on a shared tablet. It returns to the tablet screen when they are done. Paid plans.",
+  "card_snippet": "Each person taps their picture, enters their own PIN and gets their own hub on a shared tablet, so a carer can complete a lesson in spare minutes. Paid plans.",
   "primary_keyword": "mobile phone ban",
   "secondary_keywords": [
    "mobile phone use at work",
@@ -6151,12 +6151,12 @@
     {
      "icon": "chat",
      "title": "Personal means personal",
-     "body": "Staff see only their own training, actions, supervisions and records. Chat and This is me are open to anyone using the tablet, but a personal hub needs a PIN."
+     "body": "Staff see only their own hub: Chat, This is me, training, actions, supervisions and records. Without a PIN the tablet shows nothing at all."
     },
     {
      "icon": "alert",
      "title": "The screen does not linger",
-     "body": "The session returns to the tablet screen when a person taps Done or after about two minutes untouched, so the next person does not see anyone else's hub."
+     "body": "The session returns to the Who's using it? screen when a person taps Done or after 5 minutes untouched, with a Still there? prompt at 4 minutes, so the next person does not see anyone else's hub."
     }
    ]
   },
@@ -6286,7 +6286,7 @@
      "heading": "Keep an eye on who has not signed in",
      "bullets": [
       "Look at the training matrix as usual, because results show against the person",
-      "Remember that agency workers are not listed on tablets",
+      "Remember that agency workers are not listed on tablets, so they cannot use one",
       "Tablets never receive email or push notifications, so use the handover or a notice to remind people"
      ],
      "tags": [
@@ -6350,11 +6350,11 @@
     },
     {
      "q": "What stops one person seeing another's hub?",
-     "a": "Each person needs their own PIN. The session returns to the tablet screen when they tap Done, or after about two minutes of being left alone."
+     "a": "Each person needs their own PIN, and the tablet shows nothing without one. The session returns to the Who's using it? screen when they tap Done, or after 5 minutes of being left alone."
     },
     {
      "q": "What about a long lesson?",
-     "a": "The session ends after about two minutes untouched. Short lessons suit that. Staff can sign in again to carry on."
+     "a": "A session can run for 45 minutes of continuous use at most, and ends after 5 minutes untouched, with a Still there? prompt at 4 minutes. Short lessons suit that. Staff can sign in again to carry on."
     },
     {
      "q": "Do we get reminders by phone?",
@@ -6362,7 +6362,7 @@
     },
     {
      "q": "Can agency workers use it?",
-     "a": "Agency workers are not listed on tablets, so they have no personal hub there. They can use Chat and This is me on a connected tablet."
+     "a": "No. Agency workers are not listed on tablets, so they cannot use a tablet at all."
     },
     {
      "q": "Does an administrator get admin screens on the tablet?",
@@ -6421,11 +6421,11 @@
      "items": [
       {
        "q": "What can staff do on the tablet without a PIN?",
-       "a": "Use Chat, the policy and guidance assistant, and This is me, which is read only."
+       "a": "Nothing. Before a PIN is entered the tablet shows only the Who's using it? screen, with no Chat and no This is me."
       },
       {
        "q": "What needs a PIN?",
-       "a": "A person's own hub: their training, actions, supervisions and records."
+       "a": "Everything else. After their own PIN a person gets their own hub: Chat, This is me, their training and annual training, induction, actions, supervisions, follow ups, CQC questions, progress and records."
       },
       {
        "q": "What if mobile phones in the workplace are allowed in some rooms?",

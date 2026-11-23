@@ -2724,7 +2724,7 @@ const GUIDE_SECTIONS: GuideSection[] = [
       <div className="space-y-5">
         <SectionBlock title="What it is, on all paid plans">
           <p className="text-sm text-neutral-mid">
-            Shared tablets are for homes with a phone ban, or a few tablets that staff share. A connected tablet shows only <strong>Chat</strong> and <strong>This is me</strong>. Staff sign in on it with their own picture and 4 digit PIN. You manage tablets from the <strong>Staff</strong> page.
+            Shared tablets are for homes with a phone ban, or a few tablets that staff share. A connected tablet shows nothing but a <strong>Who&rsquo;s using it?</strong> screen until a member of staff signs in with their own 4 digit PIN. They then get their own full staff hub, exactly as on their own phone. You manage tablets from the <strong>Staff</strong> page.
           </p>
         </SectionBlock>
 
@@ -2750,10 +2750,10 @@ const GUIDE_SECTIONS: GuideSection[] = [
 
         <SectionBlock title="3. Using the tablet">
           <p className="text-sm text-neutral-mid">
-            Staff tap <strong>Who&rsquo;s using it?</strong>, pick their picture and enter their PIN. They then get their own hub, with their training, actions and records. They tap <strong>Done</strong> when finished, or leave it for about 2 minutes and it returns to the tablet screen.
+            Without a PIN the tablet shows only <strong>Who&rsquo;s using it?</strong>. Staff type their name or tap their picture, then enter their own 4 digit PIN. They then get their own full hub: Chat, This is me, their training and annual training, induction, actions, supervisions, follow ups, CQC questions, progress and records. A carer with 5 to 10 spare minutes can complete a lesson on the tablet. They tap <strong>Done</strong> when finished. After 4 minutes untouched a <strong>Still there?</strong> prompt appears, and after 5 minutes untouched the session ends and the tablet returns to the Who&rsquo;s using it screen. A session can run for 45 minutes of continuous use at most.
           </p>
           <p className="mt-2 text-sm text-neutral-mid">
-            Chat questions are logged against the tablet and, in a personal session, against the person. An administrator who signs in on a tablet gets an ordinary staff session. Admin screens are never reachable from a tablet. Tablets are not counted as staff.
+            Every chat question is recorded against the person and the tablet, never anonymously. An administrator who signs in on a tablet gets an ordinary staff session. Admin screens are never reachable from a tablet. Agency workers are not listed on tablets, so they cannot use one. Tablets are not counted as staff, and they never receive email or push notifications.
           </p>
         </SectionBlock>
 

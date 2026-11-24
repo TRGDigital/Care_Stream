@@ -40,6 +40,7 @@ import { trainingRouter } from './routes/training'
 import { faceToFaceRouter } from './routes/face-to-face'
 import { trainingMatrixRouter } from './routes/training-matrix'
 import { workforceRouter } from './routes/workforce'
+import { holidayRouter, holidayAdminRouter } from './routes/holiday'
 import { notificationsAdminRouter, meNotificationsRouter } from './routes/notifications'
 import { cqcQuestionsRouter } from './routes/cqc-staff-questions'
 import { auditsRouter } from './routes/audits'
@@ -299,6 +300,8 @@ app.use('/programmes', programmesRouter)
 app.use('/face-to-face', faceToFaceRouter)
 app.use('/training-matrix', trainingMatrixRouter)
 app.use('/workforce', workforceRouter)
+app.use('/holiday/admin', holidayAdminRouter)   // holiday tracking pilot (CS-1001 only): administrators
+app.use('/holiday', holidayRouter)                // holiday tracking pilot: staff, approvers and /meta
 app.use('/cqc-questions', cqcQuestionsRouter)
 app.use('/audits', auditsRouter)
 app.use('/free-tour', freeTourRouter)

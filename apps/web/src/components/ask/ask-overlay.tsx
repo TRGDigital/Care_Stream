@@ -7,7 +7,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useSession } from 'next-auth/react'
 import type { LucideIcon } from 'lucide-react'
-import { AlertTriangle, ArrowLeft, Award, BarChart3, Bell, BookOpen, CalendarDays, Check, ClipboardCheck, Copy, FileText, GraduationCap, Library, Loader2, Lock, Newspaper, PoundSterling, Send, Shield, Sparkles, Trash2, UserPlus, Users, Wallet, X, Pencil, ShieldCheck, BadgeCheck, FileBarChart, Maximize2, Minimize2 } from 'lucide-react'
+import { AlertTriangle, ArrowLeft, Award, BarChart3, Bell, BookOpen, CalendarDays, Check, ClipboardCheck, Copy, FileText, GraduationCap, Library, Loader2, Lock, Newspaper, PoundSterling, Send, Shield, Sparkles, Trash2, UserPlus, Users, Wallet, X, Pencil, ShieldCheck, BadgeCheck, FileBarChart, Maximize2, Minimize2, Heart } from 'lucide-react'
 import { ask, AskError, parseNotificationDraft, withoutDraftBlock, notificationsLink, type AskAgent, type AskConversation, type AskDocument, type AskMessage, type AskSource } from '@/lib/ask-client'
 import { MarkdownLite } from '@/components/ask/markdown-lite'
 import { type AskPageContext, agentForPage, clampWidth, contextStarters, layoutFor, toWireContext, MAX_W, MIN_W, type PanelLayout } from '@/lib/ask-panel-state'
@@ -18,7 +18,7 @@ import { DocumentPanel } from '@/components/ask/document-panel'
 export const OPEN_ASK_EVENT = 'cs:open-ask'
 const ICONS: Record<string, LucideIcon> = {
   users: Users, calendar: CalendarDays, pound: PoundSterling, file: FileText, newspaper: Newspaper, bell: Bell, award: Award, chart: BarChart3, shield: Shield, graduation: GraduationCap,
-  badge: BadgeCheck, clipboard: ClipboardCheck, check: ShieldCheck, userplus: UserPlus, lock: Lock, report: FileBarChart, alert: AlertTriangle, wallet: Wallet,
+  badge: BadgeCheck, clipboard: ClipboardCheck, check: ShieldCheck, userplus: UserPlus, lock: Lock, report: FileBarChart, alert: AlertTriangle, wallet: Wallet, book: BookOpen, heart: Heart,
 }
 const Icon = ({ name, size = 22, className = '' }: { name: string; size?: number; className?: string }) => { const C = ICONS[name] ?? Sparkles; return <C size={size} className={className} /> }
 

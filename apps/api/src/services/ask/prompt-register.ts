@@ -6,6 +6,7 @@
 import { prisma } from '../../db/client'
 import { AGENTS, HOUSE_RULES, type AgentDef } from './agents'
 import { LOCKED_RULES } from './safety'
+import { KNOWLEDGE_PROMPTS } from './agents-knowledge'
 
 export const ASK_GROUP = 'Ask CareStream'
 export const ASK_PROMPT_MAX = 8000
@@ -43,6 +44,7 @@ export const ASK_PROMPTS: AskPromptMeta[] = [
     note: 'Added to the Staff newsletter agent prompt: British English, short paragraphs, no dashes, no superlatives, no invented figures.' },
   { usage: 'ask_agent_notifications', label: 'Ask CareStream: Notifications agent', default: jobOf('notifications'),
     note: 'Used for the Notifications agent: drafts a short staff message and the fenced block that opens it in Notifications. It never sends.' },
+  ...KNOWLEDGE_PROMPTS,
   { usage: 'ask_page_context', label: 'Ask CareStream: page context line', default: DEFAULT_PAGE_CONTEXT,
     note: 'One line added when the administrator is looking at a page. Placeholders: {{label}} (what they are looking at) and {{who}} (the staff member on screen, if any, already written as a sentence).' },
 ]

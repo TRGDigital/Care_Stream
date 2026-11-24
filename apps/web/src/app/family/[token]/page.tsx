@@ -26,7 +26,7 @@ function Shell({ children }: { children: React.ReactNode }) {
 }
 
 // Jump buttons under the introduction: the page is long, and a family member who only wants to add a photo should not have to scroll past the questions.
-function JumpButtons({ items }: { items: Array<{ id: string; label: string; icon: React.ReactNode }> }) {
+function JumpButtons({ items }: { items: Array<{ id: string; label: string; hint: string; icon: React.ReactNode }> }) {
   function go(id: string) {
     const el = document.getElementById(id)
     if (!el) return
@@ -36,13 +36,20 @@ function JumpButtons({ items }: { items: Array<{ id: string; label: string; icon
   }
   if (items.length < 2) return null
   return (
-    <nav aria-label="Jump to a part of this page" className="flex flex-wrap gap-2">
-      {items.map(i => (
-        <button key={i.id} type="button" onClick={() => go(i.id)}
-          className="inline-flex min-h-[48px] flex-1 items-center justify-center gap-2 rounded-xl border border-teal bg-white px-4 py-2.5 text-base font-semibold text-teal hover:bg-teal/5 focus:outline-none focus:ring-2 focus:ring-teal/30">
-          {i.icon}{i.label}
-        </button>
-      ))}
+    <nav aria-label="Choose how you would like to share" className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
+      <p className="mb-3 px-1 text-sm font-semibold text-neutral-dark">Choose how you would like to share</p>
+      <div className="grid grid-cols-1 gap-3 min-[420px]:grid-cols-2">
+        {items.map(i => (
+          <button key={i.id} type="button" onClick={() => go(i.id)}
+            className="flex min-h-[72px] items-center gap-3 rounded-xl border border-gray-200 bg-neutral-light/60 px-4 py-3 text-left transition hover:border-teal hover:bg-teal/5 focus:outline-none focus:ring-2 focus:ring-teal/30">
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-teal/10 text-teal">{i.icon}</span>
+            <span className="min-w-0">
+              <span className="block text-base font-semibold leading-snug text-neutral-dark">{i.label}</span>
+              <span className="mt-0.5 block text-sm leading-snug text-neutral-mid">{i.hint}</span>
+            </span>
+          </button>
+        ))}
+      </div>
     </nav>
   )
 }
@@ -158,10 +165,10 @@ export default function FamilyFormPage() {
         </div>
 
         <JumpButtons items={[
-          { id: 'fam-written', label: 'Written answers', icon: <PenLine size={18} aria-hidden="true" /> },
-          ...(form.photos_enabled ? [{ id: 'fam-photos', label: 'Upload photos', icon: <Camera size={18} aria-hidden="true" /> }] : []),
-          ...(form.videos_enabled ? [{ id: 'fam-video', label: 'Upload a video', icon: <VideoIcon size={18} aria-hidden="true" /> }] : []),
-          ...(form.voice_enabled ? [{ id: 'fam-voice', label: 'Record a voice note', icon: <Mic size={18} aria-hidden="true" /> }] : []),
+          { id: 'fam-written', label: 'Written answers', hint: 'Type a few answers', icon: <PenLine size={22} aria-hidden="true" /> },
+          ...(form.photos_enabled ? [{ id: 'fam-photos', label: 'Upload photos', hint: 'Share a few pictures', icon: <Camera size={22} aria-hidden="true" /> }] : []),
+          ...(form.videos_enabled ? [{ id: 'fam-video', label: 'Upload a video', hint: 'A short message', icon: <VideoIcon size={22} aria-hidden="true" /> }] : []),
+          ...(form.voice_enabled ? [{ id: 'fam-voice', label: 'Record a voice note', hint: 'Just talk, up to 2 minutes', icon: <Mic size={22} aria-hidden="true" /> }] : []),
         ]} />
 
         <div id="fam-written" className="scroll-mt-4 space-y-5">

@@ -9,8 +9,8 @@ import { AlertTriangle, ChevronLeft, ChevronRight, Download, Info, Loader2, Sear
 import { remainingState, percentState, REMAINING_STYLE, PERCENT_STYLE } from '@/lib/holiday-colours'
 import { holiday, describeRange, fmtNum, unitWord, type Matrix, type MatrixRow, type Request } from '@/lib/holiday-client'
 
-const th = 'whitespace-nowrap border-b border-gray-200 bg-neutral-light px-3 py-2 text-left text-xs font-semibold text-neutral-dark'
-const td = 'whitespace-nowrap border-b border-gray-100 px-3 py-1.5 text-sm'
+const th = 'whitespace-nowrap border-b border-gray-200 bg-neutral-light px-2 py-2 text-left text-xs font-semibold text-neutral-dark'
+const td = 'whitespace-nowrap border-b border-gray-100 px-2 py-1.5 text-sm'
 const cell = (n: number) => (n ? fmtNum(n) : '')
 
 /** The key to the colours, above the matrix. Open or closed is remembered in this browser. */
@@ -104,11 +104,11 @@ export function MatrixTab({ token }: { token: string }) {
       </div>
       <p className="text-xs text-neutral-mid">Only approved holiday is counted. Taken is up to and including today, booked is after today.{m.carry_over ? ' Holiday carried over from last year is included in the entitlement.' : ''}</p>
 
-      <div className="max-h-[70vh] overflow-auto rounded-xl border border-gray-200 bg-white">
+      <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white">   {/* no height limit: the page grows so every person is in view */}
         <table className="min-w-full border-separate border-spacing-0">
-          <thead className="sticky top-0 z-20">
+          <thead>
             <tr>
-              <th className={`${th} sticky left-0 z-30 min-w-[11rem]`}>Staff name</th>
+              <th className={`${th} sticky left-0 z-10 min-w-[10rem]`}>Staff name</th>
               <th className={th}>Start date</th>
               <th className={th}>Entitlement</th>
               <th className={th}>Contracted hrs/wk</th>

@@ -290,8 +290,10 @@ export default function StaffPage() {
     load()
   }
 
-  const activeUsers   = users.filter(u => u.is_active !== false)
-  const inactiveUsers = users.filter(u => u.is_active === false)
+  // Administrators always come first (the sort keeps everyone else in the order they already had).
+  const adminsFirst = (a: { role?: string }, b: { role?: string }) => (b.role === 'admin' ? 1 : 0) - (a.role === 'admin' ? 1 : 0)
+  const activeUsers   = users.filter(u => u.is_active !== false).sort(adminsFirst)
+  const inactiveUsers = users.filter(u => u.is_active === false).sort(adminsFirst)
   const displayUsers  = tab === 'archived' ? inactiveUsers : activeUsers
 
   function handleDeactivate(id: string) {

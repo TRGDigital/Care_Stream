@@ -10,6 +10,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Camera, Loader2, Trash2, X } from 'lucide-react'
 import { StaffAvatar } from './staff-avatar'
+import { PictureCropper } from './picture-cropper'
 
 export const PICTURE_MAX_BYTES = 5 * 1024 * 1024
 const OK_TYPES = ['image/jpeg', 'image/png', 'image/webp']
@@ -35,6 +36,7 @@ export function StaffPictureField({ name, file, onChange, disabled }: { name: st
   const [preview, setPreview] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const input = useRef<HTMLInputElement>(null)
+  const [toCrop, setToCrop] = useState<File | null>(null)
 
   useEffect(() => {
     if (!file) { setPreview(null); return }
@@ -47,7 +49,7 @@ export function StaffPictureField({ name, file, onChange, disabled }: { name: st
     if (!f) return
     const problem = validatePictureFile(f)
     setError(problem)
-    if (!problem) onChange(f)
+    if (!problem) setToCrop(f)   // position it first
     if (input.current) input.current.value = ''
   }
 
@@ -71,7 +73,8 @@ export function StaffPictureField({ name, file, onChange, disabled }: { name: st
           )}
         </div>
       </div>
-      <p className="mt-1 text-[11px] text-neutral-mid">JPEG, PNG or WebP, up to 5 MB. You can skip this and add one later.</p>
+      <p className="mt-1 text-[11px] text-neutral-mid">JPEG, PNG or WebP, up to 5 MB. You can position it before it is saved, and skip this and add one later.</p>
+      {toCrop && <PictureCropper file={toCrop} onCancel={() => setToCrop(null)} onDone={f => { onChange(f); setToCrop(null) }} />}
       {error && <p role="alert" className="mt-1 text-xs text-rose-600">{error}</p>}
     </div>
   )
@@ -94,6 +97,7 @@ export function StaffPictureBlock({ name, photoUrl, onSet, onRemove, onRefresh, 
   const [busy, setBusy] = useState<'upload' | 'remove' | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [confirming, setConfirming] = useState(false)
+  const [toCrop, setToCrop] = useState<File | null>(null)
   const input = useRef<HTMLInputElement>(null)
   const inputId = `${idPrefix}-file`
 
@@ -102,7 +106,10 @@ export function StaffPictureBlock({ name, photoUrl, onSet, onRemove, onRefresh, 
     const problem = validatePictureFile(f)
     if (input.current) input.current.value = ''
     if (problem) { setError(problem); return }
-    setError(null); setBusy('upload')
+    setError(null); setToCrop(f)   // position it first, then it is uploaded
+  }
+  async function upload(f: File) {
+    setToCrop(null); setError(null); setBusy('upload')
     try { await onSet(f) } catch (e) { setError(friendly(e)) } finally { setBusy(null) }
   }
   async function remove() {
@@ -136,8 +143,9 @@ export function StaffPictureBlock({ name, photoUrl, onSet, onRemove, onRefresh, 
           )}
         </div>
       </div>
-      <p className="mt-2 text-[11px] text-neutral-mid">JPEG, PNG or WebP, up to 5 MB. It is cropped to a square. Shown as initials when there is no picture.</p>
+      <p className="mt-2 text-[11px] text-neutral-mid">JPEG, PNG or WebP, up to 5 MB. You choose how it is positioned in the round frame. Shown as initials when there is no picture.</p>
       {isAdmin && <p className="mt-1 text-[11px] text-neutral-mid">Your picture and name appear in emails to your team.</p>}
+      {toCrop && <PictureCropper file={toCrop} onCancel={() => setToCrop(null)} onDone={upload} />}
       {error && <p role="alert" className="mt-1 text-xs text-rose-600">{error}</p>}
     </div>
   )

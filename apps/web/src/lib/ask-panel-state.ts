@@ -1,9 +1,9 @@
 // The pure rules of the Ask CareStream side panel: how wide it may be, what is remembered between visits, which layout a screen gets, and which agent and
 // starter questions suit the page the admin is on. No React and no browser here, so it is easy to test.
 
-export const MIN_W = 360
-export const MAX_W = 640
-export const DEFAULT_W = 440
+export const MIN_W = 420
+export const MAX_W = 960
+export const DEFAULT_W = 720      // the wide view is the default (like the wide Orrery panel); it can still be dragged narrower or wider
 export const WIDE_FROM = 1280      // from this width the panel pushes the page across; below it the panel sits over the page
 export const PHONE_BELOW = 640     // below this width it is a full screen sheet
 
@@ -18,7 +18,7 @@ export function clampWidth(w: number, viewportWidth?: number): number {
 }
 
 export interface PanelPrefs { open: boolean; width: number }
-export const prefsKey = (who: string) => `cs-ask-panel:${String(who || 'guest').toLowerCase()}`
+export const prefsKey = (who: string) => `cs-ask-panel-v2:${String(who || 'guest').toLowerCase()}`
 export function parsePrefs(raw: string | null | undefined): PanelPrefs {
   try {
     const v = JSON.parse(String(raw ?? ''))

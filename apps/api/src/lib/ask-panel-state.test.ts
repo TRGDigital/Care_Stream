@@ -20,12 +20,13 @@ test('layout: phone under 640, narrow under 1280, wide from 1280', async () => {
 })
 
 test('remembered state: round trip, bad data, blocked storage', async () => {
-  const { parsePrefs, serializePrefs, loadPrefs, savePrefs, prefsKey, DEFAULT_W } = await web()
+  const { parsePrefs, serializePrefs, loadPrefs, savePrefs, prefsKey, DEFAULT_W, MIN_W } = await web()
+  assert.ok(DEFAULT_W >= 640, 'the wide view is the default')
   assert.deepEqual(parsePrefs(serializePrefs({ open: true, width: 520 })), { open: true, width: 520 })
   assert.deepEqual(parsePrefs('not json'), { open: false, width: DEFAULT_W })
   assert.deepEqual(parsePrefs(null), { open: false, width: DEFAULT_W })
   assert.equal(parsePrefs(JSON.stringify({ open: 'yes', width: 5 })).open, false)
-  assert.equal(parsePrefs(JSON.stringify({ open: true, width: 5 })).width, 360)
+  assert.equal(parsePrefs(JSON.stringify({ open: true, width: 5 })).width, MIN_W)
   const bad = { getItem: () => { throw new Error('blocked') }, setItem: () => { throw new Error('blocked') } }
   assert.deepEqual(loadPrefs('a@b.co', bad), { open: false, width: DEFAULT_W })
   assert.doesNotThrow(() => savePrefs('a@b.co', { open: true, width: 400 }, bad))

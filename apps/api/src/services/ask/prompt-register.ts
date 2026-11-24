@@ -43,6 +43,16 @@ export const ASK_PROMPTS: AskPromptMeta[] = [
     note: 'Added to the Staff newsletter agent prompt: British English, short paragraphs, no dashes, no superlatives, no invented figures.' },
   { usage: 'ask_agent_notifications', label: 'Ask CareStream: Notifications agent', default: jobOf('notifications'),
     note: 'Used for the Notifications agent: drafts a short staff message and the fenced block that opens it in Notifications. It never sends.' },
+  { usage: 'ask_agent_analytics', label: 'Ask CareStream: Analytics agent', default: jobOf('analytics'),
+    note: 'Used for the Analytics agent: how the team uses CareStream, what staff ask about and where CareStream could not answer.' },
+  { usage: 'ask_agent_cqc_analytics', label: 'Ask CareStream: CQC analytics agent', default: jobOf('cqc-analytics'),
+    note: 'Used for the CQC analytics agent: how records line up with the five CQC key questions. Policy gap detail stays on the Policy Gaps page.' },
+  { usage: 'ask_agent_cqc_prep', label: 'Ask CareStream: CQC prep agent', default: jobOf('cqc-prep'),
+    note: 'Used for the CQC prep agent: how staff are doing with CQC prep questions and where to focus.' },
+  { usage: 'ask_agent_audits', label: 'Ask CareStream: Audits agent', default: jobOf('audits'),
+    note: 'Used for the Audits agent: scores and trends, repeat failures, overdue audits and actions.' },
+  { usage: 'ask_agent_governance', label: 'Ask CareStream: Governance reports agent', default: jobOf('governance'),
+    note: 'Used for the Governance reports agent: builds a monthly governance review from the home\'s own figures and saves it as a draft for approval.' },
   { usage: 'ask_page_context', label: 'Ask CareStream: page context line', default: DEFAULT_PAGE_CONTEXT,
     note: 'One line added when the administrator is looking at a page. Placeholders: {{label}} (what they are looking at) and {{who}} (the staff member on screen, if any, already written as a sentence).' },
 ]
@@ -81,7 +91,7 @@ export async function askPrompt(usage: string): Promise<string> {
 export async function buildSystemPrompt(a: AgentDef, today: string, orgName: string, pageLine: string): Promise<string> {
   const [house, job, drafting] = await Promise.all([
     askPrompt('ask_house_rules'),
-    askPrompt(`ask_agent_${a.id}`),
+    askPrompt(`ask_agent_${a.id.replace(/-/g, '_')}`),
     a.id === 'letters' ? askPrompt('ask_letter_drafting') : a.id === 'newsletter' ? askPrompt('ask_newsletter_drafting') : Promise.resolve(''),
   ])
   const jobText = drafting ? `${job}\n${drafting}` : job

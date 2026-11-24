@@ -5,6 +5,7 @@ export const DOCUMENT_TYPES: DocumentType[] = [
   { id: 'answer', label: 'Saved answer', agent: null, needsApproval: false, templates: [] },
   { id: 'letter', label: 'Letter', agent: 'letters', needsApproval: true, templates: [] },
   { id: 'newsletter', label: 'Staff newsletter', agent: 'newsletter', needsApproval: true, templates: [] },
+  { id: 'report', label: 'Governance report', agent: 'governance', needsApproval: true, templates: [] },
   { id: 'notification', label: 'Notification draft', agent: 'notifications', needsApproval: false, templates: [] },
 ]
 export const documentType = (id: string) => DOCUMENT_TYPES.find(t => t.id === id)

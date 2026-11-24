@@ -2799,7 +2799,8 @@ export async function sendHolidayEmail(opts: { to: string; name: string; orgName
 }
 
 /** A document (for example an approved letter) emailed to one member of staff as a PDF attachment, from the administrator who shared it, in the person led layout with the organisation logo. */
-export async function sendStaffDocumentEmail(opts: { to: string; name: string; orgName: string; actorUserId?: string | null; subject: string; intro: string; attachmentName: string; pdf: Buffer }): Promise<void> {
+export async function sendStaffDocumentEmail(opts: { to: string; name: string; orgName: string; actorUserId?: string | null; subject: string; intro: string; attachmentName: string; pdf: Buffer; noun?: string }): Promise<void> {
+  const noun = opts.noun ?? 'letter'   // 'letter' for staff letters; 'report' when a governance report is emailed to the administrators
   ensureInitialised()
   if (!process.env.SENDGRID_API_KEY) throw new Error('Email is not configured')
   const from = process.env.SENDGRID_FROM_ADDRESS ?? `noreply@${INBOUND_DOMAIN}`
@@ -2808,17 +2809,17 @@ export async function sendStaffDocumentEmail(opts: { to: string; name: string; o
   const admin = await resolveActor(opts.actorUserId)
   if (admin) {
     const html = personLedEmail({
-      admin, headline: `${admin.name} has sent you a letter`, intro: opts.intro,
-      bodyHtml: `<p style="color:#374151;font-size:15px;line-height:1.6;margin:0">The letter is attached to this email as a PDF. Please keep it with your records.</p>`,
+      admin, headline: `${admin.name} has sent you a ${noun}`, intro: opts.intro,
+      bodyHtml: `<p style="color:#374151;font-size:15px;line-height:1.6;margin:0">The ${noun} is attached to this email as a PDF.${noun === 'letter' ? ' Please keep it with your records.' : ''}</p>`,
       button: { label: 'Open my hub', href: hubLink('/chat') },
-      footerNote: personFooterNote(admin, 'sent you a letter'), logoUrl: LOGO_URL,
+      footerNote: personFooterNote(admin, `sent you a ${noun}`), logoUrl: LOGO_URL,
     })
     await sgMail.send({ to: opts.to, from: personSender(admin, from), subject: opts.subject, html, attachments: attachment as any })
     return
   }
   const html = staffWrapper(`
     <p style="color:${NEUTRAL_DARK};font-size:15px;margin:0 0 16px">Hi ${first},</p>
-    <p style="color:${NEUTRAL_DARK};font-size:15px;line-height:1.6;margin:0 0 16px">${escHtml(opts.intro)} The letter is attached as a PDF.</p>
+    <p style="color:${NEUTRAL_DARK};font-size:15px;line-height:1.6;margin:0 0 16px">${escHtml(opts.intro)} The ${noun} is attached as a PDF.</p>
     ${emailFooter(opts.orgName)}
   `)
   await sgMail.send({ to: opts.to, from: { email: from, name: opts.orgName }, subject: opts.subject, html, attachments: attachment as any })

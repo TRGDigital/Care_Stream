@@ -8,6 +8,7 @@ import { fundingAggregate, fundingForNamedPerson } from './funding-bridge'
 import { ENTITLEMENT_TOOLS } from './entitlement-tools'
 import { LETTER_TOOLS } from './letter-tools'
 import { NEWSLETTER_TOOLS } from './newsletter-tools'
+import { QUALITY_TOOLS } from './tools-quality'
 
 export interface ToolContext { tenantId: string; userId: string; today: string }
 export interface ToolResult { data: unknown; method?: string; sources: AskSource[] }
@@ -293,6 +294,7 @@ export const TOOLS: AskTool[] = [
   ...ENTITLEMENT_TOOLS,
   ...LETTER_TOOLS,
   ...NEWSLETTER_TOOLS,
+  ...QUALITY_TOOLS,
   {
     name: 'care_setting',
     description: 'The type of service this account runs (the Facility Type), to word answers correctly.',

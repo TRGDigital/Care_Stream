@@ -28,6 +28,7 @@ export async function pdfFor(tenantId: string, doc: Doc): Promise<{ buffer: Buff
     return { buffer, filename: `${safeName(doc.title)}.pdf` }
   }
   if (doc.type === 'newsletter') return { buffer: await renderNewsletterPdf({ title: doc.title, body: doc.body, head, dateText: ukDate() }), filename: `${safeName(doc.title)}.pdf` }
+  if (doc.type === 'report') return { buffer: await renderNewsletterPdf({ title: doc.title, body: doc.body, head, dateText: ukDate(), label: doc.data?.internal_only === true ? 'Governance report, internal only' : 'Governance report' }), filename: `${safeName(doc.title)}.pdf` }
   throw new Error('That kind of document has no PDF.')
 }
 
@@ -41,8 +42,23 @@ export async function emailLetter(o: { tenantId: string; actorId: string; doc: D
   return { sent: true }
 }
 
+/** Emails an approved governance report, as a PDF, to every active administrator of the account (never to anyone else), from the administrator sharing it. */
+export async function emailReportToAdmins(o: { tenantId: string; actorId: string; doc: Doc }): Promise<{ sent: number; reason?: string }> {
+  const admins: Array<{ name: string; email: string | null }> = await p().user.findMany({ where: { tenant_id: o.tenantId, role: 'admin', is_active: true, is_shared: false }, select: { name: true, email: true } })
+  const to = admins.filter(a => a.email)
+  if (!to.length) return { sent: 0, reason: 'No administrator has an email address on record.' }
+  const [{ buffer, filename }, tenant] = await Promise.all([pdfFor(o.tenantId, o.doc), p().tenant.findUnique({ where: { id: o.tenantId }, select: { name: true } })])
+  let sent = 0
+  for (const a of to) {
+    try { await sendStaffDocumentEmail({ to: a.email as string, name: a.name, orgName: tenant?.name ?? 'Your service', actorUserId: o.actorId, subject: o.doc.title.slice(0, 120) || 'A governance report', intro: o.doc.data?.internal_only === true ? 'A governance report for the administrators is attached. It is marked internal only.' : 'A governance report is attached.', attachmentName: filename, pdf: buffer, noun: 'report' }); sent++ } catch { /* one address failing does not stop the others */ }
+  }
+  return sent ? { sent } : { sent: 0, reason: 'The email could not be sent just now.' }
+}
+
 /** Sends an approved document as a staff notification with its PDF attached. A letter goes to the one person it is for; a newsletter goes to everyone or the chosen staff. */
 export async function shareAsNotification(o: { tenantId: string; actorId: string; doc: Doc; audience?: unknown; userIds?: unknown }) {
+  // An internal only report may name people and can NEVER go to staff, whatever the caller asked for.
+  if (o.doc.type === 'report' && o.doc.data?.internal_only === true) throw new Error('An internal only report cannot be sent to staff.')
   const { buffer, filename } = await pdfFor(o.tenantId, o.doc)
   const found = detectNotificationFile(buffer, filename)
   if (!found.ok) throw new Error(found.reason)
@@ -51,7 +67,7 @@ export async function shareAsNotification(o: { tenantId: string; actorId: string
   const file = await p().staffNotificationFile.create({ data: { id, tenant_id: o.tenantId, name: filename, mime: found.mime, size_bytes: buffer.length, storage_key: key, scan_status: 'skipped', created_by: o.actorId } })
   const isLetter = o.doc.type === 'letter'
   const title = cleanTitle(isLetter ? `A letter for you: ${String(o.doc.data?.template_id ? o.doc.title.replace(/:.*$/, '') : o.doc.title)}` : o.doc.title, 120)
-  const body = cleanBody(isLetter ? 'Your letter is attached. Please open it and keep it with your records.' : (o.doc.body.length <= 1900 ? o.doc.body : 'This month\'s staff newsletter is attached as a PDF.'), 2000)
+  const body = cleanBody(isLetter ? 'Your letter is attached. Please open it and keep it with your records.' : (o.doc.type === 'report' ? 'The report is attached as a PDF.' : o.doc.body.length <= 1900 ? o.doc.body : 'This month\'s staff newsletter is attached as a PDF.'), 2000)
   const userIds = isLetter ? [String(o.doc.data?.staff_user_id ?? '')] : o.userIds
   return createAndSendNotification({ tenantId: o.tenantId, userId: o.actorId, title, body, audience: isLetter ? 'selected' : (o.audience === 'selected' ? 'selected' : 'all'), userIds, files: [file] })
 }

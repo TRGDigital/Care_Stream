@@ -8,6 +8,7 @@
 import { runAgent } from '../services/ask/runner'
 import { agentById } from '../services/ask/agents'
 import { ukToday } from '../lib/holiday-math'
+import { QUALITY_QUESTIONS } from './ask-eval-quality'
 
 const QUESTIONS: Record<string, string[]> = {
   staff: [
@@ -63,6 +64,8 @@ const QUESTIONS: Record<string, string[]> = {
     'Which claims are waiting for a decision?', 'Which events earn the most points?', 'How many rewards are left to give?',
   ],
 }
+
+Object.assign(QUESTIONS, QUALITY_QUESTIONS)   // the quality and compliance agents' questions live in ask-eval-quality.ts
 
 async function main() {
   const tenantId = process.env.TENANT_ID, userId = process.env.USER_ID

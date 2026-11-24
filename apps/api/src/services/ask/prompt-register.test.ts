@@ -7,7 +7,7 @@ import { ASK_PROMPTS, ASK_USAGES, askPrompt, askDefault, buildSystemPrompt, page
 const agent = (id: string) => agentById(id)!
 
 test('every ready agent has an editable prompt registered, plus house rules and the page line', () => {
-  for (const a of AGENTS.filter(x => x.status === 'ready')) assert.ok(ASK_USAGES.includes(`ask_agent_${a.id}`), a.id)
+  for (const a of AGENTS.filter(x => x.status === 'ready')) assert.ok(ASK_USAGES.includes(`ask_agent_${a.id.replace(/-/g, '_')}`), a.id)
   for (const u of ['ask_house_rules', 'ask_page_context', 'ask_letter_drafting', 'ask_newsletter_drafting']) assert.ok(ASK_USAGES.includes(u), u)
   assert.equal(new Set(ASK_USAGES).size, ASK_USAGES.length)
   for (const p of ASK_PROMPTS) { assert.ok(p.default.trim().length > 20, p.usage); assert.ok(p.note.length > 20, p.usage) }

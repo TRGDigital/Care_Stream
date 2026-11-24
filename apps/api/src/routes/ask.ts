@@ -18,7 +18,9 @@ import { ukToday } from '../lib/holiday-math'
 import { writeAuditLog } from '../lib/audit'
 import { render as renderLetter, validate as validateLetter, getTemplate as letterTemplate } from '../services/letters'
 import { needsApproval, canEdit, canSubmit, canApprove, canReturn, canReopen, canShare, sharesFor, SHARE_METHODS, type ShareMethod } from '../services/ask-docs/workflow'
-import { pdfFor, emailLetter, shareAsNotification } from '../services/ask-docs/share'
+import { pdfFor, emailLetter, emailReportToAdmins, shareAsNotification } from '../services/ask-docs/share'
+import { lintReport } from '../services/ask/report-templates'
+import { loadStaff } from '../services/ask/data'
 import { lintNewsletter } from '../services/ask-docs/newsletter-templates'
 
 export const askRouter = Router()
@@ -115,7 +117,7 @@ async function actionsFor(d: NonNullable<Awaited<ReturnType<typeof store.getDocu
     needs_approval: true,
     edit: canEdit(d, actor).ok, submit: canSubmit(d, actor).ok && (d.type !== 'letter' || validateLetter(String(d.data?.template_id ?? ''), d.data?.values ?? {}).ok),
     approve: canApprove(d, actor, admins, true).ok, return: canReturn(d, actor, admins).ok, reopen: canReopen(d).ok,
-    share: canShare(d).ok ? sharesFor(d.type) : ([] as ShareMethod[]),
+    share: canShare(d).ok ? sharesFor(d.type, d.data) : ([] as ShareMethod[]),
   }
 }
 
@@ -123,8 +125,8 @@ askRouter.get('/approvals', wrap(async (req, res) => { ok(res, { approvals: (awa
 
 askRouter.get('/documents/:id', wrap(async (req, res) => {
   const d = await store.getDocumentFor(getTenantId(), req.user!.sub, String(req.params.id)); if (!d) { notFound(res); return }
-  const checklist = d.type === 'letter' ? (d.data?.before_you_send ?? []) : d.type === 'newsletter' ? (d.data?.checklist ?? []) : []
-  ok(res, { document: { ...d, mine: d.created_by === req.user!.sub, checklist, references: d.data?.references ?? [], shared: d.data?.shared ?? [], staff_name: d.data?.staff_name ?? null, values: d.type === 'letter' ? d.data?.values ?? {} : undefined, fields: d.type === 'letter' ? letterTemplate(String(d.data?.template_id ?? ''))?.fields.map(f => ({ key: f.key, label: f.label, type: f.type, required: f.required, choices: f.choices ?? null })) : undefined, actions: await actionsFor(d, req.user!.sub) } })
+  const checklist = d.type === 'letter' ? (d.data?.before_you_send ?? []) : d.type === 'newsletter' || d.type === 'report' ? (d.data?.checklist ?? []) : []
+  ok(res, { document: { ...d, mine: d.created_by === req.user!.sub, checklist, references: d.data?.references ?? [], internal_only: d.type === 'report' ? d.data?.internal_only === true : undefined, shared: d.data?.shared ?? [], staff_name: d.data?.staff_name ?? null, values: d.type === 'letter' ? d.data?.values ?? {} : undefined, fields: d.type === 'letter' ? letterTemplate(String(d.data?.template_id ?? ''))?.fields.map(f => ({ key: f.key, label: f.label, type: f.type, required: f.required, choices: f.choices ?? null })) : undefined, actions: await actionsFor(d, req.user!.sub) } })
 }))
 
 askRouter.patch('/documents/:id', wrap(async (req, res) => {
@@ -148,6 +150,15 @@ askRouter.patch('/documents/:id', wrap(async (req, res) => {
   }
   const body = req.body?.body != null ? String(req.body.body) : undefined
   if (d.type === 'newsletter' && (body || title)) { const problems = lintNewsletter(`${title ?? d.title}\n${body ?? d.body}`); if (problems.length) { err(res, 'RULES', `Not saved. ${problems.join(' ')}`, 400); return } }
+  if (d.type === 'report') {
+    // A governance report is checked again on every save. Shareable means no named people and no pay; internal only may name people but can never be sent to staff.
+    const internal = typeof req.body?.internal_only === 'boolean' ? req.body.internal_only : d.data?.internal_only === true
+    const problems = lintReport(`${title ?? d.title}\n${body ?? d.body}`, { staffNames: (await loadStaff(t)).map(s => s.name), internalOnly: internal })
+    if (problems.length) { err(res, 'RULES', `Not saved. ${problems.join(' ')}`, 400); return }
+    await store.updateDocumentContent(t, id, { title, body, data: { ...d.data, internal_only: internal } })
+    audit(req, 'ask_document_edited', id, { type: d.type, internal_only: internal })
+    ok(res, { saved: true }); return
+  }
   await store.updateDocumentContent(t, id, { title, body })
   audit(req, 'ask_document_edited', id, { type: d.type })
   ok(res, { saved: true })
@@ -206,11 +217,11 @@ askRouter.post('/documents/:id/share', wrap(async (req, res) => {
   const d = await store.getDocumentFor(t, u, id); if (!d) { notFound(res); return }
   const v = canShare(d); if (!v.ok) { err(res, 'NOT_ALLOWED', v.reason, 409); return }
   const method = String(req.body?.method ?? '') as ShareMethod
-  if (!SHARE_METHODS.includes(method) || method === 'pdf' || !sharesFor(d.type).includes(method)) { err(res, 'INVALID', 'Choose email or notification.', 400); return }
+  if (!SHARE_METHODS.includes(method) || method === 'pdf' || !sharesFor(d.type, d.data).includes(method)) { err(res, 'INVALID', 'Choose email or notification.', 400); return }
   try {
     if (method === 'email') {
-      const r = await emailLetter({ tenantId: t, actorId: u, doc: d })
-      if (!r.sent) { err(res, 'NOT_SENT', r.reason ?? 'It could not be emailed.', 409); return }
+      const r = d.type === 'report' ? await emailReportToAdmins({ tenantId: t, actorId: u, doc: d }) : await emailLetter({ tenantId: t, actorId: u, doc: d })
+      if (!(d.type === 'report' ? (r as any).sent > 0 : (r as any).sent)) { err(res, 'NOT_SENT', (r as any).reason ?? 'It could not be emailed.', 409); return }
     } else {
       const r = await shareAsNotification({ tenantId: t, actorId: u, doc: d, audience: req.body?.audience, userIds: req.body?.user_ids })
       if (!r.ok) { err(res, r.code, r.message, r.status); return }

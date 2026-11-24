@@ -20,7 +20,7 @@ export function parseBlocks(body: string): PdfBlock[] {
   return out
 }
 
-export async function renderNewsletterPdf(o: { title: string; body: string; head: Letterhead; dateText: string }): Promise<Buffer> {
+export async function renderNewsletterPdf(o: { title: string; body: string; head: Letterhead; dateText: string; label?: string }): Promise<Buffer> {
   const [{ default: PDFDocument }, { logoForPdf }] = await Promise.all([import('pdfkit'), import('../policy/policy-pdf')])
   const logo = await logoForPdf(o.head.logoDataUrl ?? null)
   const M = 56, W = 595.28, H = 841.89, width = W - M * 2
@@ -33,7 +33,7 @@ export async function renderNewsletterPdf(o: { title: string; body: string; head
   const top = doc.y
   if (logo) { try { doc.image(logo, M, top, { fit: [150, 48] }) } catch { /* no logo */ } }
   doc.fillColor(INK).font('Helvetica-Bold').fontSize(12).text(pdfSafe(o.head.name), M, top + 2, { width, align: 'right' })
-  doc.fillColor(MID).font('Helvetica').fontSize(9).text('Staff newsletter', M, doc.y + 1, { width, align: 'right' })
+  doc.fillColor(MID).font('Helvetica').fontSize(9).text(pdfSafe(o.label ?? 'Staff newsletter'), M, doc.y + 1, { width, align: 'right' })
   doc.y = Math.max(doc.y, top + 54)
   doc.moveTo(M, doc.y).lineTo(W - M, doc.y).lineWidth(0.7).strokeColor(LINE).stroke()
   doc.moveDown(1)

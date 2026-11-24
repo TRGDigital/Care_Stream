@@ -15,9 +15,12 @@ import { ResidentEditor } from './residents/resident-editor'
 import { PhotoManager } from './residents/photos'
 import { VideoManager } from './residents/videos'
 import { StatusDialog } from './residents/status-dialog'
+import { FundingTab } from './residents/funding-tab'
+import { FundingSummaryCard } from './residents/funding-summary'
+import { useFundingMeta } from '@/lib/funding-client'
 import { ErrorBox, btnDangerOutline, btnSecondary, fmtDate, inputCls } from './residents/ui'
 
-type Tab = 'profile' | 'family' | 'approvals' | 'from-family'
+type Tab = 'profile' | 'family' | 'approvals' | 'from-family' | 'funding'
 const displayName = (r: Resident) => `${r.preferred_name || r.first_name} ${r.last_name}`
 const STATUS_LABEL: Record<string, string> = { deceased: 'Passed away', left: 'Moved on', living: 'Living' }
 
@@ -30,6 +33,7 @@ export function ResidentsOverlay({ token, userId, onClose, initialResidentId = n
   const [search, setSearch] = useState('')
   const [statusFor, setStatusFor] = useState<Resident | null>(null)
 
+  const fundingMeta = useFundingMeta()   // pilot, administrators only: null for everyone else, so no Funding tab and no summary appear
   const meta = useCachedQuery(`residents-meta-${userId}`, () => client.meta())
   const enabled = meta.data?.enabled === true
   const canArchive = meta.data?.can_manage_archive === true
@@ -120,6 +124,7 @@ export function ResidentsOverlay({ token, userId, onClose, initialResidentId = n
                   ))}
                 </div>
               )}
+              {scope === 'current' && fundingMeta?.enabled && fundingMeta.ready && <div className="pt-3"><FundingSummaryCard token={token} /></div>}
               <div className="space-y-2 p-3">
                 <div className="relative">
                   <label htmlFor="rs-search" className="sr-only">Search residents</label>
@@ -182,12 +187,12 @@ export function ResidentsOverlay({ token, userId, onClose, initialResidentId = n
 
                   {scope === 'current' && selected !== 'new' && (
                     <div className="flex gap-1 overflow-x-auto border-b border-gray-200 px-3" role="tablist" aria-label="Resident sections">
-                      {([['profile', 'Profile'], ['family', 'Family'], ['approvals', 'Approvals'], ['from-family', 'From family']] as const).map(([k, l]) => {
+                      {([['profile', 'Profile'], ['family', 'Family'], ['approvals', 'Approvals'], ['from-family', 'From family'], ...(fundingMeta?.enabled ? [['funding', 'Funding'] as const] : [])] as ReadonlyArray<readonly [Tab, string]>).map(([k, l]) => {
                         const n = k === 'approvals' ? (detail.data?.pending_count ?? selectedResident?.pending_count ?? 0) : 0
                         return (
                           <button key={k} type="button" role="tab" aria-selected={tab === k} onClick={() => setTab(k)}
                             className={`flex shrink-0 items-center gap-2 border-b-2 px-3 py-2.5 text-sm font-medium ${tab === k ? 'border-teal text-teal' : 'border-transparent text-neutral-mid hover:text-neutral-dark'}`}>
-                            {l}
+                            {k === 'funding' && <Lock size={12} aria-label="Locked, administrators only" className="text-amber-700" />}{l}
                             {n > 0 && <span className="rounded-full bg-amber-500 px-1.5 py-0.5 text-[11px] font-bold leading-none text-white" aria-label={`${n} waiting`}>{n}</span>}
                           </button>
                         )
@@ -230,6 +235,7 @@ export function ResidentsOverlay({ token, userId, onClose, initialResidentId = n
                         )}
                         {tab === 'family' && <FamilyTab client={client} resident={detail.data} onChanged={refreshAll} />}
                         {tab === 'from-family' && <FamilyAnswersTab resident={detail.data} sections={sections} onExpired={refreshAll} />}
+                        {tab === 'funding' && fundingMeta?.enabled && <FundingTab key={detail.data.id} token={token} residentId={detail.data.id} meta={fundingMeta} />}
                         {tab === 'approvals' && <ApprovalsTab client={client} resident={detail.data} sections={sections} onChanged={refreshAll} />}
                       </>
                     ) : null}

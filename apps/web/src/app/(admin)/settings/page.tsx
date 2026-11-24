@@ -11,6 +11,8 @@ import { Button } from '@/components/ui/button'
 import { TabletReminderSetting } from '@/components/admin/tablet-reminder-setting'
 import { HolidaySettingsBody } from '@/components/admin/holiday/holiday-settings'
 import { useHolidayMeta } from '@/lib/holiday-client'
+import { useFundingMeta } from '@/lib/funding-client'
+import { FinanceSettingsBody } from '@/components/admin/residents/finance-settings'
 import {
   AlertTriangle, Bell, BedDouble, BookLock, Building2, Check, ChevronDown, ChevronUp, ClipboardList, Copy, Loader2,
   Mail, Plus, Search, ShieldCheck, SlidersHorizontal, Tablet, Trash2, Upload, UserRound, X,
@@ -199,6 +201,7 @@ function DangerZone({ token }: { token: string }) {
 export default function SettingsPage() {
   const { data: session }           = useSession()
   const holidayMeta                 = useHolidayMeta().meta
+  const fundingMeta                 = useFundingMeta()   // finance pilot (CS-1001, administrators only)
   const policiesOnly                = (session?.user as any)?.tier === 'policies_only'
   const [lockedSetting, setLockedSetting] = useState<string | null>(null)
   const { features: planFeatures }  = usePlanFeatures()
@@ -1437,6 +1440,13 @@ export default function SettingsPage() {
         )}
 
         {/* ── Rooms ─────────────────────────────────────────────────────────── */}
+        {/* Finance (pilot, CS-1001 only): who may see resident funding and fees. */}
+        {fundingMeta?.enabled && fundingMeta.is_admin && session?.accessToken && (
+          <SettingSection icon={LockIcon} title="Finance" description="Resident funding and fees, and staff pay rates. Locked to administrators.">
+            <FinanceSettingsBody token={session.accessToken} />
+          </SettingSection>
+        )}
+
         {/* Holiday tracking (pilot, CS-1001 only): ONE accordion for everything holiday. */}
         {holidayMeta?.enabled && holidayMeta.is_admin && session?.accessToken && (
           <SettingSection icon={CalendarDays} title="Holiday" description="Holiday year, carry over, who approves, and bank holiday pay.">

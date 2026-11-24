@@ -134,3 +134,15 @@ test('the SQL keeps the table apart from the profile: its own table, row securit
   assert.match(sql, /create table if not exists public\.resident_funding\b/); assert.match(sql, /alter table public\.resident_funding enable row level security/)
   assert.ok(!/model\s+ResidentFunding/.test(fs.readFileSync(path.resolve(__dirname, '../../prisma/schema.prisma'), 'utf8')))
 })
+
+test('the staff hub and the family page never import or call the funding code', () => {
+  const web = path.resolve(__dirname, '../../../web/src')
+  const dirs = [path.join(web, 'app/(portal)'), path.join(web, 'app/family'), path.join(web, 'components/hub')]
+  const walkWeb = (d: string, out: string[] = []): string[] => { for (const f of fs.readdirSync(d)) { const p = path.join(d, f); fs.statSync(p).isDirectory() ? walkWeb(p, out) : /\.(ts|tsx)$/.test(f) && out.push(p) } return out }
+  const bad: string[] = []
+  for (const d of dirs) for (const f of walkWeb(d)) {
+    const src = fs.readFileSync(f, 'utf8')
+    if (/funding-client|residents\/funding|FundingTab|FundingSummary|resident_funding|weekly_fee/.test(src)) bad.push(path.relative(web, f))
+  }
+  assert.deepEqual(bad, [])
+})

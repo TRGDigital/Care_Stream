@@ -1,6 +1,7 @@
 // The agents: each one is a focused helper with its own tools and starter questions. Add one by adding an entry here (and its tools in tools.ts).
 // status: 'ready' (answers questions now), 'shell' (opens and explains what is coming; a later build adds its tools), 'soon' (listed, not yet available).
 import { LOCKED_RULES } from './safety'
+import { registerFinanceAgents } from './agents-finance'
 
 export type AgentStatus = 'ready' | 'shell' | 'soon'
 export interface AgentDef {
@@ -63,6 +64,7 @@ ACCURACY AND TONE: British English; short paragraphs; no dashes in sentences; no
   { id: 'incidents', name: 'Complaints and incidents', icon: 'alert', status: 'soon', blurb: 'Trends and summaries of complaints, incidents and safeguarding.', tools: [], starters: [], prompt: '' },
   { id: 'finance', name: 'Finance and pay', icon: 'wallet', status: 'soon', blurb: 'Income, costs and margins across the service.', tools: [], starters: [], prompt: '' },
 ]
+registerFinanceAgents(AGENTS)   // Finance and pay, Complaints and incidents (agents-finance.ts)
 export const agentById = (id: string) => AGENTS.find(a => a.id === id)
 export const publicAgent = (a: AgentDef) => ({ id: a.id, name: a.name, blurb: a.blurb, icon: a.icon, status: a.status, starters: a.starters, shell_message: a.shell_message ?? null })
 

@@ -43,6 +43,10 @@ export const ASK_PROMPTS: AskPromptMeta[] = [
     note: 'Added to the Staff newsletter agent prompt: British English, short paragraphs, no dashes, no superlatives, no invented figures.' },
   { usage: 'ask_agent_notifications', label: 'Ask CareStream: Notifications agent', default: jobOf('notifications'),
     note: 'Used for the Notifications agent: drafts a short staff message and the fenced block that opens it in Notifications. It never sends.' },
+  { usage: 'ask_agent_finance', label: 'Ask CareStream: Finance and pay agent', default: jobOf('finance'),
+    note: 'Used for the Finance and pay agent: fee income, staff cost, break even, fee reviews, premium pay and the value of untaken holiday. All locked data, administrators only. It is told never to call income less staff cost profit.' },
+  { usage: 'ask_agent_complaints', label: 'Ask CareStream: Complaints and incidents agent', default: jobOf('complaints'),
+    note: 'Used for the Complaints and incidents agent: it reads audit results and actions (CareStream holds no complaints register), and themes in text the administrator pastes after removing names.' },
   { usage: 'ask_page_context', label: 'Ask CareStream: page context line', default: DEFAULT_PAGE_CONTEXT,
     note: 'One line added when the administrator is looking at a page. Placeholders: {{label}} (what they are looking at) and {{who}} (the staff member on screen, if any, already written as a sentence).' },
 ]

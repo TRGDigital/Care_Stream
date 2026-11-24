@@ -44,7 +44,7 @@ import { runCredentialExpiryAllTenants } from '../services/workforce/credentialE
 import { runStaffBirthdaysAllTenants, runStaffBirthdaysForTenant } from '../services/workforce/staffBirthdays'
 import { remindPostersAllTenants, remindPosterForTenant } from '../services/workforce/tabletPosterReminder'
 import { importPendingDrafts } from '../services/content/pendingDrafts'
-import { generateAuditImages } from './audit-images'
+import { generateAuditImages, generateBlogHeroes } from './audit-images'
 import { submitUrlsForIndexing, ralfyIndexBalance } from '../services/ralfyindex/indexer'
 import { AUDIT_IMAGE_SCENES } from '../data/audit-image-scenes'
 import { siteUrl } from '../lib/urls'
@@ -188,6 +188,10 @@ cronRouter.get('/credential-expiry', (req, res) =>
 // house style. limit=N (at most 6 a call, each takes about a minute); dry=1 only counts. Safe to run repeatedly: an existing picture is never remade.
 cronRouter.get('/generate-audit-images', (req, res) =>
   job('generate-audit-images', req, res, () => generateAuditImages(Number(req.query.limit) || 3, req.query.dry === '1')))
+
+// Makes the hero pictures for the blog drafts listed in data/blog-hero-scenes.ts that have none (limit=N, at most 4 a call; dry=1 only lists).
+cronRouter.get('/generate-blog-heroes', (req, res) =>
+  job('generate-blog-heroes', req, res, () => generateBlogHeroes(Number(req.query.limit) || 2, req.query.dry === '1')))
 
 // One off: asks RalfyIndex to index the 19 new home care audit pages and the /care-audits listing. dry=1 only shows the URLs and the credit balance.
 // Each URL costs a credit, so it does nothing without confirm=1.

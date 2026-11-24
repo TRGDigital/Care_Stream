@@ -79,7 +79,7 @@ export function CalendarTab({ token }: { token: string }) {
                 <li key={d} className="flex flex-wrap items-baseline gap-x-4 gap-y-1 py-2">
                   <span className={`w-28 text-sm font-medium ${d === today ? 'text-teal' : 'text-neutral-dark'}`}>{niceDate(d)}</span>
                   {b && <span className="rounded bg-amber-50 px-1.5 py-0.5 text-xs text-amber-800">{b.name}, paid at {b.multiplier} times</span>}
-                  <span className={`text-sm ${max && list.length > max ? 'font-semibold text-red-700' : 'text-neutral-dark'}`}>{list.length ? list.map(p => <span key={p.user_id} className="mr-2 inline-flex items-center gap-1 align-middle"><StaffAvatar name={p.name} photoUrl={p.photo_url} size={18} />{p.name}{p.part && p.part !== 'full' && <span className="ml-1 rounded bg-teal/10 px-1 text-[10px] font-bold text-teal">{p.part === 'am' ? 'AM' : p.part === 'pm' ? 'PM' : 'Part'}</span>}</span>) : <span className="text-neutral-mid">Nobody off</span>}</span>
+                  <span className={`text-sm ${max && list.length > max ? 'font-semibold text-red-700' : 'text-neutral-dark'}`}>{list.length ? list.map(p => <span key={p.user_id} className="mb-1 mr-3 inline-flex w-72 max-w-full items-center justify-between gap-3 rounded-md bg-neutral-light/60 px-2 py-1 align-middle"><span className="inline-flex min-w-0 items-center gap-1"><StaffAvatar name={p.name} photoUrl={p.photo_url} size={18} /><span className="truncate">{p.name}</span>{p.part && p.part !== 'full' && <span className="ml-1 rounded bg-teal/10 px-1 text-[10px] font-bold text-teal">{p.part === 'am' ? 'AM' : p.part === 'pm' ? 'PM' : 'Part'}</span>}</span>{p.job_role && <span className="shrink-0 text-xs text-neutral-mid">{p.job_role}</span>}</span>) : <span className="text-neutral-mid">Nobody off</span>}</span>
                 </li>
               )
             })}
@@ -107,7 +107,7 @@ export function CalendarTab({ token }: { token: string }) {
                       </div>
                       {b && <p className="mt-0.5 truncate rounded bg-amber-50 px-1 text-[10px] text-amber-800" title={`${b.name}, paid at ${b.multiplier} times`}>{b.name} {b.multiplier}x</p>}
                       <ul className="mt-0.5 space-y-0.5">
-                        {list.slice(0, 3).map(p => <li key={p.user_id} className="flex items-center gap-1 truncate text-[11px] text-neutral-dark" title={`${p.name}, ${p.hours} hours`}><StaffAvatar name={p.name} photoUrl={p.photo_url} size={14} /><span className="truncate">{p.name}</span>{p.part && p.part !== 'full' && <span className="rounded bg-teal/10 px-1 text-[9px] font-bold text-teal">{p.part === 'am' ? 'AM' : p.part === 'pm' ? 'PM' : 'Part'}</span>}</li>)}
+                        {list.slice(0, 3).map(p => <li key={p.user_id} className="flex items-center gap-1 truncate text-[11px] text-neutral-dark" title={`${p.name}${p.job_role ? `, ${p.job_role}` : ''}, ${p.hours} hours`}><StaffAvatar name={p.name} photoUrl={p.photo_url} size={14} /><span className="truncate">{p.name}</span>{p.job_role && <span className="ml-auto max-w-[45%] truncate text-[10px] text-neutral-mid">{p.job_role}</span>}{p.part && p.part !== 'full' && <span className="rounded bg-teal/10 px-1 text-[9px] font-bold text-teal">{p.part === 'am' ? 'AM' : p.part === 'pm' ? 'PM' : 'Part'}</span>}</li>)}
                         {list.length > 3 && <li className="text-[11px] text-neutral-mid" title={list.slice(3).map(p => p.name).join(', ')}>+{list.length - 3} more</li>}
                       </ul>
                     </div>

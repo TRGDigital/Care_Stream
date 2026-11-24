@@ -46,6 +46,7 @@ export const ASK_PROMPTS: AskPromptMeta[] = [
   { usage: 'ask_page_context', label: 'Ask CareStream: page context line', default: DEFAULT_PAGE_CONTEXT,
     note: 'One line added when the administrator is looking at a page. Placeholders: {{label}} (what they are looking at) and {{who}} (the staff member on screen, if any, already written as a sentence).' },
 ]
+import { peoplePromptMeta } from './agents-people'; ASK_PROMPTS.push(...peoplePromptMeta())   // people development agents (training, CPD, onboarding, compliance, incentives)
 export const ASK_USAGES = ASK_PROMPTS.map(p => p.usage)
 export const isAskUsage = (u: string) => u.startsWith('ask_')
 export const askDefault = (usage: string) => ASK_PROMPTS.find(p => p.usage === usage)?.default ?? ''

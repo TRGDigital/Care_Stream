@@ -303,3 +303,5 @@ export const TOOLS: AskTool[] = [
 
 export const toolByName = (n: string) => TOOLS.find(t => t.name === n)
 export { ukToday }
+
+import { PEOPLE_TOOLS } from './tools-people'; TOOLS.push(...PEOPLE_TOOLS)   // people development tools (training, CPD, onboarding, compliance, incentives)

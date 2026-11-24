@@ -150,7 +150,15 @@ function Row({ token, r, max, onChanged }: { token: string; r: ApprovalItem; max
         <div>
           <p className="flex items-center gap-2 text-base font-bold text-neutral-dark"><Who id={r.user_id} name={r.name} /></p>
           <p className="text-sm text-neutral-dark">{describeRange(r.days)}</p>
-          {partNotes(r.days) && <p className="text-xs font-medium text-teal">{partNotes(r.days)}</p>}
+          {/* Every requested day written out, with its hours (and AM or PM), so the approver sees exactly what is being asked for. */}
+          <ul className="mt-1.5 flex flex-wrap gap-1.5" aria-label={`Days ${r.name.split(' ')[0]} is asking for`}>
+            {r.days.map(d => (
+              <li key={d.day} className="rounded-md border border-teal/40 bg-teal/5 px-2 py-0.5 text-xs font-medium text-neutral-dark">
+                {niceDate(d.day)}
+                <span className="ml-1 text-neutral-mid">{r.unit === 'days' ? (partLabel(d.part) || '1 day') : `${fmtNum(d.hours)} ${unitWord('hours', d.hours)}${partLabel(d.part) ? `, ${partLabel(d.part)}` : ''}`}</span>
+              </li>
+            ))}
+          </ul>
           <p className="text-sm text-neutral-mid">{total(r)}{r.requested_at ? ` · asked ${new Date(r.requested_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}` : ''}</p>
         </div>
         <span className="flex flex-wrap items-center gap-1.5">

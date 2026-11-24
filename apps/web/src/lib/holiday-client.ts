@@ -36,6 +36,12 @@ export interface ApprovalItem extends Request { unit: Unit; clashes: Clash[] }
 export interface MatrixRow { user_id: string; name: string; job_role: string | null; start_date: string | null; unit: Unit; allowance: number | null; carry_in: number; entitlement: number; contracted: number | null; taken_by_month: Record<string, number>; booked_by_month: Record<string, number>; imported_by_month?: Record<string, { taken: number; booked: number }>; photo_url?: string | null; taken: number; booked: number; remaining: number; percent_taken: number }
 export interface Matrix { year: number; label: string; from: string; to: string; months: Array<{ key: string; label: string }>; rows: MatrixRow[]; today: string; carry_over: boolean }
 export interface CalendarData { month: string; max_off: number | null; today: string; days: Array<{ day: string; user_id: string; name: string; job_role: string | null; photo_url?: string | null; hours: number; part?: Part }>; bank_holidays: BankHoliday[] }
+export type SickKind = 'sick' | 'injury' | 'medical appointment'
+export type Certificate = 'none' | 'self' | 'fit note'
+export interface SickSpell { id: string; user_id: string; first_day: string; last_day: string | null; note: string | null; kind: SickKind; certificate: Certificate | null; return_to_work_done: boolean; hours_default: number; days: DayRow[] }
+export interface SickEntry { day: string; user_id: string; name: string; job_role: string | null; photo_url?: string | null; hours: number; part?: Part; spell_id: string; kind: SickKind; open: boolean }
+export interface SickPerson { id: string; name: string; job_role: string | null; photo_url: string | null; usual_hours: number }
+export interface SickReport { from: string; to: string; rows: Array<{ user_id: string; name: string; job_role: string | null; spells: number; days: number; hours: number; first_day: string; last_day: string; certificate: string; return_to_work: string; still_off: boolean; bradford: number }>; totals: { people: number; spells: number; days: number; hours: number } }
 export interface HolidaySettings { year_start: { month: number; day: number }; year_start_source: 'holiday' | 'workforce' | 'default'; carry_over: boolean; manager_approval: boolean; max_off: number | null; bank_default_multiplier: number; bank_overrides: Record<string, number>; blocked_dates?: BlockedDate[] }
 export interface MatrixImportPreview { committed: boolean; matrix: true; figures?: number; problems?: Array<{ line: number; message: string }>; summary: { matrix: true; people_in_file: number; matched: number; unmatched: number; ambiguous: number; months: string[]; taken_total: number; booked_total: number; date_format: 'mdy' | 'dmy' | 'ambiguous'; problems: number; apply_details: boolean }; people: Array<{ line: number; name: string; user_id: string | null; matched_name: string | null; status: 'matched' | 'unmatched' | 'ambiguous'; taken_total: number; booked_total: number; months: number; change: { start_date: [string | null, string] | null; allowance: [number | null, number] | null; contracted: [number | null, number] | null; unit: [string, string] | null } | null }> }
 export interface ImportPreview { committed: boolean; matrix?: false; requests?: number; summary: { rows: number; to_add: number; duplicates: number; errors: number }; rows?: Array<{ line: number; who: string; matched_name: string | null; day: string | null; hours: number | null; error: string | null; duplicate: boolean }> }
@@ -64,6 +70,25 @@ export const holiday = {
     book: (t: string, o: { user_id: string; days: DayRow[]; note?: string }) => call<{ id: string }>('/holiday/admin/book', t, J('POST', o)),
     importCsv: (t: string, csv: string, commit: boolean, applyDetails = false) => call<ImportPreview | MatrixImportPreview>('/holiday/admin/import', t, J('POST', { csv, commit, apply_details: applyDetails })),
     templateUrl: `${API_URL}/holiday/admin/import/template`,
+    // Sickness: administrators only (health information). Never used by the hub.
+    sick: {
+      people: (t: string) => call<{ people: SickPerson[]; today: string }>('/holiday/admin/sick/people', t),
+      list: (t: string, month: string) => call<{ month: string; days: SickEntry[] }>(`/holiday/admin/sick?month=${month}`, t),
+      check: (t: string, user_id: string, days: string[]) => call<{ overlap: Array<{ day: string; request_id: string; hours: number }> }>('/holiday/admin/sick/check', t, J('POST', { user_id, days })),
+      spell: (t: string, id: string) => call<{ spell: SickSpell; name: string; job_role: string | null; effective_days: DayRow[] }>(`/holiday/admin/sick/spells/${encodeURIComponent(id)}`, t),
+      create: (t: string, o: Record<string, unknown>) => call<{ id: string; holiday_requests_changed: number }>('/holiday/admin/sick', t, J('POST', o)),
+      update: (t: string, id: string, o: Record<string, unknown>) => call<{ id: string }>(`/holiday/admin/sick/spells/${encodeURIComponent(id)}`, t, J('PATCH', o)),
+      end: (t: string, id: string, o: { last_day?: string; return_to_work_done?: boolean } = {}) => call<{ id: string; last_day: string }>(`/holiday/admin/sick/spells/${encodeURIComponent(id)}/end`, t, J('POST', o)),
+      remove: (t: string, id: string) => call<{ id: string }>(`/holiday/admin/sick/spells/${encodeURIComponent(id)}`, t, J('DELETE')),
+      report: (t: string, from: string, to: string, userId?: string) => call<SickReport>(`/holiday/admin/sick/report?from=${from}&to=${to}${userId ? `&user_id=${encodeURIComponent(userId)}` : ''}`, t),
+      /** Files: fetched with the sign in token and saved from the browser (a plain link cannot carry it). */
+      download: async (t: string, path: string, fallbackName: string) => {
+        const res = await fetch(`${API_URL}/holiday/admin/sick/${path}`, { headers: { Authorization: `Bearer ${t}` } })
+        if (!res.ok) { let m = 'Could not make the file.'; try { m = (await res.json())?.error?.message ?? m } catch { /* not json */ } throw new HolidayError('ERROR', m, res.status) }
+        const name = /filename="([^"]+)"/.exec(res.headers.get('Content-Disposition') ?? '')?.[1] ?? fallbackName
+        const a = document.createElement('a'); a.href = URL.createObjectURL(await res.blob()); a.download = name; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(a.href)
+      },
+    },
   },
 }
 

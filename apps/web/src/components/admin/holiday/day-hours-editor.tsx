@@ -15,11 +15,11 @@ export const HOURS = Array.from({ length: 13 }, (_, i) => i + 1)
 type Choice = 'full' | 'am' | 'pm' | 'part' | 'last'
 const round2 = (n: number) => Math.round(n * 100) / 100
 
-export function DayHoursEditor({ defaultHours, shiftHours, unit = 'hours', available, min, initial, onChange, bank }: {
+export function DayHoursEditor({ defaultHours, shiftHours, unit = 'hours', available, min, max, initial, onChange, bank }: {
   defaultHours: number; shiftHours?: number; unit?: Unit
   /** What is left to book (hours, or days for people measured in days). Leave out for an approver, who is not capped. */
   available?: number | null
-  min?: string; initial?: DayRow[]; onChange: (days: DayRow[]) => void; bank?: Record<string, string>
+  min?: string; /** The latest date that can be chosen (sickness is recorded up to today). */ max?: string; initial?: DayRow[]; onChange: (days: DayRow[]) => void; bank?: Record<string, string>
 }) {
   const shift = shiftHours ?? defaultHours
   const first = initial?.[0]?.day ?? ''
@@ -65,11 +65,11 @@ export function DayHoursEditor({ defaultHours, shiftHours, unit = 'hours', avail
       <div className="grid gap-3 sm:grid-cols-3">
         <div>
           <label htmlFor="hol-from" className="mb-1 block text-sm font-medium text-neutral-dark">First day</label>
-          <input id="hol-from" type="date" min={min} className={`${inp} w-full`} value={from} onChange={e => { setFrom(e.target.value); if (!to || to < e.target.value) setTo(e.target.value) }} />
+          <input id="hol-from" type="date" min={min} max={max} className={`${inp} w-full`} value={from} onChange={e => { setFrom(e.target.value); if (!to || to < e.target.value) setTo(e.target.value) }} />
         </div>
         <div>
           <label htmlFor="hol-to" className="mb-1 block text-sm font-medium text-neutral-dark">Last day <span className="font-normal text-neutral-mid">(same day for one day)</span></label>
-          <input id="hol-to" type="date" min={from || min} className={`${inp} w-full`} value={to} onChange={e => setTo(e.target.value)} />
+          <input id="hol-to" type="date" min={from || min} max={max} className={`${inp} w-full`} value={to} onChange={e => setTo(e.target.value)} />
         </div>
         {unit !== 'days' && (
           <div>

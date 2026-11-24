@@ -45,6 +45,8 @@ import { runStaffBirthdaysAllTenants, runStaffBirthdaysForTenant } from '../serv
 import { remindPostersAllTenants, remindPosterForTenant } from '../services/workforce/tabletPosterReminder'
 import { importPendingDrafts } from '../services/content/pendingDrafts'
 import { generateAuditImages, generateBlogHeroes } from './audit-images'
+import { checkAll as checkDataSources } from '../lib/data-sources'
+import { dataSourcesDb } from '../lib/data-sources-db'
 import { submitUrlsForIndexing, ralfyIndexBalance } from '../services/ralfyindex/indexer'
 import { AUDIT_IMAGE_SCENES } from '../data/audit-image-scenes'
 import { siteUrl } from '../lib/urls'
@@ -56,7 +58,7 @@ import { sendRenewalReminders } from '../services/training/renewalReminders'
 import { runWeeklyTrainingReminders } from '../services/training/weeklyReminders'
 import { buildCronReport, sendCronReport } from '../services/ops/cron-report'
 import { buildIndexingReport } from '../services/ralfyindex/weekly-report'
-import { sendIndexingReportEmail } from '../services/email/outbound'
+import { sendIndexingReportEmail, sendDataSourcesEmail } from '../services/email/outbound'
 
 export const cronRouter = Router()
 
@@ -188,6 +190,15 @@ cronRouter.get('/credential-expiry', (req, res) =>
 // house style. limit=N (at most 6 a call, each takes about a minute); dry=1 only counts. Safe to run repeatedly: an existing picture is never remade.
 cronRouter.get('/generate-audit-images', (req, res) =>
   job('generate-audit-images', req, res, () => generateAuditImages(Number(req.query.limit) || 3, req.query.dry === '1')))
+
+// Weekly (Monday 07:00 UTC): checks the reference figures (minimum wage, inflation, bank holidays, sick pay, mileage) against the official sources, records changes,
+// and emails the owner ONLY when something changed, failed or needs review. force=1 checks every source now; key=<source> checks one.
+cronRouter.get('/check-data-sources', (req, res) =>
+  job('check-data-sources', req, res, () => checkDataSources({
+    db: dataSourcesDb, now: () => new Date(),
+    get: async (url: string) => { const r = await fetch(url, { headers: { Accept: 'application/json', 'User-Agent': 'CareStream data check (support@carestreamai.com)' } }); if (!r.ok) throw new Error(`HTTP ${r.status} from ${new URL(url).host}`); return r.json() },
+    notify: o => sendDataSourcesEmail(o),
+  }, { force: req.query.force === '1', only: req.query.key ? String(req.query.key) : undefined })))
 
 // Makes the hero pictures for the blog drafts listed in data/blog-hero-scenes.ts that have none (limit=N, at most 4 a call; dry=1 only lists).
 cronRouter.get('/generate-blog-heroes', (req, res) =>

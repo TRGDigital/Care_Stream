@@ -998,7 +998,7 @@ function ChatPageInner() {
       {navOpen && <div className="fixed inset-0 z-40 bg-black/40 md:hidden" onClick={() => setNavOpen(false)} />}
 
       {/* ── Left panel (static ≥ md, drawer on mobile) ─────────────────────── */}
-      <aside className={`w-64 flex-shrink-0 flex-col border-r border-gray-200 bg-white overflow-y-auto [@media(min-width:768px)_and_(min-height:800px)]:overflow-hidden md:static md:z-auto md:flex md:shadow-none ${navOpen ? 'fixed inset-y-0 left-0 z-50 flex shadow-2xl' : 'hidden'}`}>
+      <aside className={`w-64 flex-shrink-0 flex-col border-r border-gray-200 bg-white overflow-hidden md:static md:z-auto md:flex md:shadow-none ${navOpen ? 'fixed inset-y-0 left-0 z-50 flex shadow-2xl' : 'hidden'}`}>
         {/* Close (mobile drawer only) */}
         <button onClick={() => setNavOpen(false)} aria-label="Close menu" className="absolute right-2 top-2 z-10 rounded-md p-1.5 text-neutral-mid hover:bg-neutral-light md:hidden">
           <X size={18} />
@@ -1016,7 +1016,7 @@ function ChatPageInner() {
           </button>
         </div>
         )}
-        <div data-hub-links className="flex-shrink-0 p-3 space-y-0.5">
+        <div data-hub-links className="min-h-0 flex-1 space-y-0.5 overflow-y-auto p-3 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
           <p className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-wider text-neutral-mid/70">Learning</p>
           {!isReviewer && (
           <button
@@ -1215,7 +1215,7 @@ function ChatPageInner() {
         </div>
 
         {/* Saved policies and saved chats live in overlays, so the sidebar stays short */}
-        <div className="space-y-2 border-t border-gray-100 px-3 py-3">
+        <div className="flex-shrink-0 space-y-2 border-t border-gray-100 px-3 py-3">
           {!isReviewer && (
             <button
               onClick={() => setLibrary('policies')}

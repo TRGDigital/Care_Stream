@@ -38,6 +38,8 @@ import { ok, err } from '../lib/response'
 import { queueWebsiteReindex } from '../services/website-chat/indexer'
 import { blogImagePublicUrl, siteUrl } from '../lib/urls'
 import { USE_CASES, USE_CASE_POST_LIMIT, parseUseCaseSlugs, useCaseLabel } from '../lib/use-cases'
+import { ASK_PROMPTS, ASK_USAGES, ASK_GROUP, ASK_PROMPT_MAX, validateAskPrompt, clearAskPromptCache } from '../services/ask/prompt-register'
+import { LOCKED_RULES } from '../services/ask/safety'
 import { submitUrlsForIndexing, countIndexedPages, ralfyIndexBalance } from '../services/ralfyindex/indexer'
 import { authLimiter } from '../middleware/rateLimiter'
 import { sendRenewalReminders } from '../services/training/renewalReminders'
@@ -2884,6 +2886,7 @@ const USAGE_LABELS: Record<string, string> = {
   regulation_change_review:        'Legislation Monitor — Change review',
   website_chat:                    'Website AI Chat — Visitor answers',
   resident_chat:                   'This is me — Hub chat answers',
+  ...Object.fromEntries(ASK_PROMPTS.map(p => [p.usage, p.label])),
 }
 
 // Seed any missing prompts — checks per-usage so new prompts are added even when others already exist.
@@ -2916,6 +2919,7 @@ async function ensurePromptsSeeded() {
     regulation_change_review:   DEFAULT_CHANGE_REVIEW_PROMPT,
     website_chat:               DEFAULT_WEBSITE_CHAT_PROMPT,
     resident_chat:              DEFAULT_RESIDENT_PROMPT,
+    ...Object.fromEntries(ASK_PROMPTS.map(p => [p.usage, p.default])),   // Ask CareStream (group on the Prompts page)
   }
   for (const [usage, content] of Object.entries(inlineDefaults)) {
     const existing = await (prisma as any).aiPrompt.findUnique({ where: { usage } })
@@ -2932,7 +2936,7 @@ adminRouter.get('/prompts', async (_req: Request, res: Response) => {
   try {
     await ensurePromptsSeeded()
     const prompts = await (prisma as any).aiPrompt.findMany({ orderBy: { created_at: 'asc' } })
-    ok(res, { prompts })
+    ok(res, { prompts, ask: { group: ASK_GROUP, usages: ASK_USAGES, notes: Object.fromEntries(ASK_PROMPTS.map(p => [p.usage, p.note])), locked_rules: LOCKED_RULES, max_chars: ASK_PROMPT_MAX } })
   } catch (e) {
     err(res, 'READ_FAILED', `Could not load prompts: ${String(e)}`, 500)
   }
@@ -2943,6 +2947,7 @@ adminRouter.post('/prompts', async (req: Request, res: Response) => {
   if (!usage || !content?.trim()) {
     err(res, 'VALIDATION_ERROR', 'usage and content are required', 400); return
   }
+  { const problem = validateAskPrompt(String(usage), content); if (problem) { err(res, 'VALIDATION_ERROR', problem, 400); return } }
   const existing = await (prisma as any).aiPrompt.findUnique({ where: { usage } })
   if (existing) {
     err(res, 'CONFLICT', `A prompt for usage "${usage}" already exists`, 409); return
@@ -2961,6 +2966,7 @@ adminRouter.patch('/prompts/:id', async (req: Request, res: Response) => {
   const { label, content } = req.body ?? {}
   const existing = await (prisma as any).aiPrompt.findUnique({ where: { id: req.params.id } })
   if (!existing) { err(res, 'NOT_FOUND', 'Prompt not found', 404); return }
+  if (content !== undefined) { const problem = validateAskPrompt(String(existing.usage), content); if (problem) { err(res, 'VALIDATION_ERROR', problem, 400); return } }
   try {
     // Save old version before overwriting (non-fatal if table not yet migrated)
     await (prisma as any).aiPromptVersion.create({
@@ -2986,6 +2992,7 @@ adminRouter.patch('/prompts/:id', async (req: Request, res: Response) => {
     if (filename && content !== undefined) {
       try { fs.writeFileSync(path.join(PROMPTS_DIR, filename), content.trim(), 'utf8') } catch { /* non-fatal */ }
     }
+    clearAskPromptCache()   // an edited Ask CareStream prompt takes effect straight away on this server (others within about a minute)
     ok(res, updated)
   } catch (e: any) {
     err(res, 'UPDATE_FAILED', e.message, 500)

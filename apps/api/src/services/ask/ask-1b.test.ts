@@ -1,3 +1,4 @@
+import { LOCKED_RULES } from './safety'
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import fs from 'fs'
@@ -64,7 +65,9 @@ test('PAY: "what is the average hourly rate we pay" resolves to pay_summary, and
 
 test('PRIVACY WORDING: the agent is told pay and holiday ARE available to this administrator and must be used; sickness and health are not; no dates of birth or contact details', () => {
   assert.match(HOUSE_RULES, /Pay rates, holiday balances and liability, and resident funding totals ARE available/); assert.match(HOUSE_RULES, /Never say you do not have access to pay or holiday information/)
-  assert.match(HOUSE_RULES, /Sickness absence and health notes are NOT available/); assert.match(HOUSE_RULES, /Never show dates of birth or contact details/)
+  // The sickness, health, date of birth and contact rules are LOCKED (safety.ts, added last to every run); they are not part of the editable house rules.
+  assert.match(LOCKED_RULES, /Sickness absence and health notes are NOT available/); assert.match(LOCKED_RULES, /Never show dates of birth or contact details/)
+  assert.ok(!/Sickness absence and health notes/.test(HOUSE_RULES))
   assert.ok(!/administrator-only data is not available|do not have access to pay/i.test(HOUSE_RULES.replace('Never say you do not have access to pay or holiday information', '')))
   const t = src('tools.ts') + src('letter-tools.ts') + src('newsletter-tools.ts') + src('entitlement-tools.ts')
   assert.ok(!/\.email\b|\bphone\b|phone_number|date_of_birth|\bdob\b/i.test(t.replace(/\/\/.*$/gm, '').replace(/no_date_of_birth/g, '')))

@@ -1338,7 +1338,7 @@ export function createPlatformClient(token: string) {
 
     prompts: {
       list: () =>
-        adminFetch<{ prompts: Array<{ id: string; usage: string; label: string; content: string; updated_at: string }> }>('/prompts', token),
+        adminFetch<{ prompts: Array<{ id: string; usage: string; label: string; content: string; updated_at: string }>; ask?: { group: string; usages: string[]; notes: Record<string, string>; locked_rules: string; max_chars: number } }>('/prompts', token),
       create: (data: { usage: string; label?: string; content: string }) =>
         adminFetch<{ id: string; usage: string; label: string; content: string; updated_at: string }>('/prompts', token, { method: 'POST', body: JSON.stringify(data) }),
       update: (id: string, data: { label?: string; content?: string }) =>

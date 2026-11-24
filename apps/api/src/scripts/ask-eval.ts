@@ -2,6 +2,9 @@
 //   cd apps/api && TENANT_ID=<tenant id> USER_ID=<admin user id> npx tsx src/scripts/ask-eval.ts [agent]
 // It prints each question, the answer, the tools used and the sources, so a person can read them and judge: are the numbers from tools, are the as of dates shown,
 // does it refuse sickness, does it name assumptions? Run it after changing a prompt or a tool.
+// The prompts it uses are the ones on the platform Prompts page (group 'Ask CareStream', usage keys ask_house_rules, ask_agent_<id>, ask_letter_drafting, ask_newsletter_drafting,
+// ask_page_context): an edited prompt is read through a 60 second cache (restart this script to be sure) and falls back to the wording in the code. The locked privacy and
+// safety rules (services/ask/safety.ts) are always added last, so a sickness or pay question here should still behave the same after any prompt edit. Run it after every edit.
 import { runAgent } from '../services/ask/runner'
 import { agentById } from '../services/ask/agents'
 import { ukToday } from '../lib/holiday-math'

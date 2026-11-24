@@ -5,11 +5,12 @@ import Anthropic from '@anthropic-ai/sdk'
 import { recordUsage, withAiFeature } from '../../lib/token-usage'
 import { checkAiTokenLimit } from '../../lib/ai-tokens'
 import { writeAuditLog } from '../../lib/audit'
-import { AGENTS, agentById, systemPromptFor, type AgentDef } from './agents'
+import { AGENTS, agentById, type AgentDef } from './agents'
+import { buildSystemPrompt, pageContextLine } from './prompt-register'
 import { TOOLS, toolByName, type ToolContext } from './tools'
 import { wrapToolResult } from './safety'
 import { dedupeSources, type AskSource } from './sources'
-import { contextPromptLine, type ResolvedContext } from './page-context'
+import { type ResolvedContext } from './page-context'
 
 export const MAX_ROUNDS = 6
 export const MAX_TOKENS_PER_CALL = 2200
@@ -39,7 +40,8 @@ export async function runAgent(o: { agentId: string; ctx: ToolContext; orgName: 
   const client = deps.client ?? clientOf(), now = deps.now ?? Date.now
   await (deps.checkLimit ?? checkAiTokenLimit)(o.ctx.tenantId)
   const started = now()
-  const system = systemPromptFor(agent, o.ctx.today, o.orgName) + contextPromptLine(o.pageContext)
+  // The prompts are editable on the Platform Prompts page (cached, with the code wording as the fallback); the locked safety rules are always added last.
+  const system = await buildSystemPrompt(agent, o.ctx.today, o.orgName, await pageContextLine(o.pageContext))
   const tools = toolDefsFor(agent)
   const msgs: Anthropic.Messages.MessageParam[] = [...o.history.slice(-10).map(m => ({ role: m.role, content: m.content })), { role: 'user', content: o.message.slice(0, 4000) }]
   const used: string[] = []; let sources: AskSource[] = []; let answer = ''; let rounds = 0; let stopped = 'done' as RunResult['stopped']

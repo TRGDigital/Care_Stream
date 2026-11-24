@@ -91,7 +91,9 @@ const files = fs.readdirSync(__dirname).filter(f => f.endsWith('.ts') && !f.ends
 test('PRIVACY: nothing under services/ask can reach sickness, health notes, or contact details; only the bridge touches funding; nothing writes except the store', () => {
   for (const f of files) {
     const t = src(f)
-    if (f !== 'agents.ts') assert.ok(!/sick_spells|sick_days|sickSpell|sickDay|sickness/i.test(t.replace(/\/\/.*$/gm, '')), `${f} mentions sickness`)   // agents.ts only has the rule telling the model it cannot discuss it
+    // Only the files holding the rule that tells the model it cannot discuss sickness may use the word (agents.ts, the locked rules in safety.ts, and the edit checks in prompt-register.ts). None may touch the sickness tables.
+    if (!['agents.ts', 'safety.ts', 'prompt-register.ts'].includes(f)) assert.ok(!/sick_spells|sick_days|sickSpell|sickDay|sickness/i.test(t.replace(/\/\/.*$/gm, '')), `${f} mentions sickness`)
+    assert.ok(!/sick_spells|sick_days|sickSpell|sickDay/i.test(t.replace(/\/\/.*$/gm, '')), `${f} reaches the sickness tables`)
     if (f !== 'funding-bridge.ts') assert.ok(!FUNDING_WORDS.test(t), `${f} mentions funding fields`)
     if (f !== 'store.ts') assert.ok(!/\.(create|update|updateMany|upsert|delete|deleteMany)\(|\$executeRaw|\$executeRawUnsafe|\binsert into\b/i.test(t.replace(/\/\/.*$/gm, '').replace(/messages\.create\(/g, '')), `${f} writes`)   // the one allowed 'create' is the model call
   }

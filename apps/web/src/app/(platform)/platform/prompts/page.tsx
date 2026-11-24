@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { usePlatformAuth } from '@/hooks/use-platform-auth'
 import { createPlatformClient, type OutputRecord, type PromptVersion, type FeedbackStat } from '@/lib/platform-api'
 import { PlatformShell } from '@/components/platform-shell'
-import { Check, ChevronDown, ChevronUp, Clock, Loader2, Pencil, Plus, RotateCcw, ThumbsDown, ThumbsUp, X } from 'lucide-react'
+import { Check, ChevronDown, ChevronUp, Clock, Loader2, Lock, Pencil, Plus, RotateCcw, ThumbsDown, ThumbsUp, X } from 'lucide-react'
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -35,6 +35,18 @@ const CATEGORY_DISPLAY: Record<string, string> = {
 
 type Prompt = { id: string; usage: string; label: string; content: string; updated_at: string }
 type ActiveTab = 'prompt' | 'outputs' | 'history'
+type AskInfo = { group: string; usages: string[]; notes: Record<string, string>; locked_rules: string; max_chars: number }
+
+/** The read only panel showing the rules that can never be edited on this page (they are added after every Ask CareStream prompt). */
+function LockedRulesPanel({ text }: { text: string }) {
+  return (
+    <div className="mx-5 mb-5 rounded-lg border border-gray-200 bg-neutral-light/60 p-4">
+      <p className="flex items-center gap-1.5 text-xs font-semibold text-neutral-dark"><Lock size={13} aria-hidden="true" /> Locked safety rules (cannot be edited here)</p>
+      <p className="mt-1 text-xs text-neutral-mid">These are added after your wording on every Ask CareStream answer, so an edit can improve tone and answers but can never remove them.</p>
+      <pre className="mt-2 whitespace-pre-wrap text-xs leading-relaxed text-neutral-dark font-mono">{text}</pre>
+    </div>
+  )
+}
 
 // ─── Feedback Overview ────────────────────────────────────────────────────────
 
@@ -251,6 +263,7 @@ export default function PromptsPage() {
   const [editingId, setEditingId]     = useState<string | null>(null)
   const [showAdd,   setShowAdd]       = useState(false)
   const [activeTab, setActiveTab]     = useState<ActiveTab>('prompt')
+  const [ask,       setAsk]           = useState<AskInfo | null>(null)
   // Content to restore from version history — triggers editor with pre-filled content
   const [restoreContent, setRestoreContent] = useState<string | null>(null)
 
@@ -259,6 +272,7 @@ export default function PromptsPage() {
     createPlatformClient(token).prompts.list()
       .then(data => {
         setPrompts(data.prompts)
+        setAsk(data.ask ?? null)
         if (data.prompts.length > 0 && !active) setActive(data.prompts[0].id)
       })
       .catch(e => setError(e.message))
@@ -343,23 +357,38 @@ export default function PromptsPage() {
           <div className="flex gap-4">
             {/* Prompt selector */}
             <div className="w-60 flex-shrink-0 space-y-1">
-              {prompts.map(p => {
-                const meta = ALL_USAGES.find(u => u.value === p.usage)
-                return (
-                  <button
-                    key={p.id}
-                    onClick={() => { setActive(p.id); setEditingId(null) }}
-                    className={`w-full rounded-lg px-3 py-2.5 text-left transition-colors ${
-                      active === p.id
-                        ? 'border-l-2 border-teal bg-teal-light text-teal'
-                        : 'text-neutral-mid hover:bg-neutral-light hover:text-neutral-dark'
-                    }`}
-                  >
-                    <p className="text-sm font-medium leading-snug">{p.label}</p>
-                    {meta && <p className="mt-0.5 text-[10px] leading-tight opacity-70">{meta.description.slice(0, 50)}…</p>}
-                  </button>
-                )
-              })}
+              {(() => {
+                const isAsk = (u: string) => !!ask?.usages.includes(u)
+                const item = (p: Prompt) => {
+                  const meta = ALL_USAGES.find(u => u.value === p.usage)
+                  const desc = ask?.notes[p.usage] ?? meta?.description
+                  return (
+                    <button
+                      key={p.id}
+                      onClick={() => { setActive(p.id); setEditingId(null) }}
+                      className={`w-full rounded-lg px-3 py-2.5 text-left transition-colors ${
+                        active === p.id
+                          ? 'border-l-2 border-teal bg-teal-light text-teal'
+                          : 'text-neutral-mid hover:bg-neutral-light hover:text-neutral-dark'
+                      }`}
+                    >
+                      <p className="text-sm font-medium leading-snug">{p.label}</p>
+                      {desc && <p className="mt-0.5 text-[10px] leading-tight opacity-70">{desc.slice(0, 50)}…</p>}
+                    </button>
+                  )
+                }
+                const others = prompts.filter(p => !isAsk(p.usage)), askPrompts = prompts.filter(p => isAsk(p.usage))
+                return (<>
+                  {others.map(item)}
+                  {askPrompts.length > 0 && (
+                    <div className="pt-4">
+                      <p className="flex items-center gap-1.5 px-3 pb-1 text-[11px] font-bold uppercase tracking-wide text-teal">{ask?.group ?? 'Ask CareStream'}</p>
+                      <p className="px-3 pb-2 text-[10px] leading-snug text-neutral-mid">How the Ask CareStream agents are told to behave. Edits apply within about a minute.</p>
+                      {askPrompts.map(item)}
+                    </div>
+                  )}
+                </>)
+              })()}
               {prompts.length === 0 && (
                 <p className="px-3 py-4 text-xs text-neutral-mid">No prompts yet.</p>
               )}
@@ -405,6 +434,7 @@ export default function PromptsPage() {
                       key={`${current.id}-${restoreContent ?? ''}`}
                       token={token}
                       prompt={current}
+                      ask={ask?.usages.includes(current.usage) ? ask : null}
                       initialContent={restoreContent ?? current.content}
                       onSaved={handleSaved}
                       onCancel={() => { setEditingId(null); setRestoreContent(null) }}
@@ -414,12 +444,13 @@ export default function PromptsPage() {
                       <div className="border-b border-gray-100 px-5 py-3">
                         <h2 className="text-sm font-semibold text-neutral-dark">{current.label}</h2>
                         <p className="text-xs text-neutral-mid">
-                          {ALL_USAGES.find(u => u.value === current.usage)?.description}
+                          {ask?.notes[current.usage] ?? ALL_USAGES.find(u => u.value === current.usage)?.description}
                         </p>
                       </div>
-                      <pre className="overflow-x-auto p-5 text-xs leading-relaxed text-neutral-dark whitespace-pre-wrap font-mono">
+                      <pre className="p-5 text-xs leading-relaxed text-neutral-dark whitespace-pre-wrap font-mono">
                         {current.content}
                       </pre>
+                      {ask?.usages.includes(current.usage) && <LockedRulesPanel text={ask.locked_rules} />}
                     </div>
                   )
                 )}
@@ -446,9 +477,10 @@ export default function PromptsPage() {
 
 // ─── Prompt editor ────────────────────────────────────────────────────────────
 
-function PromptEditor({ token, prompt, initialContent, onSaved, onCancel }: {
+function PromptEditor({ token, prompt, ask, initialContent, onSaved, onCancel }: {
   token:          string
   prompt:         Prompt
+  ask:            AskInfo | null
   initialContent: string
   onSaved:        (p: Prompt) => void
   onCancel:       () => void
@@ -481,10 +513,10 @@ function PromptEditor({ token, prompt, initialContent, onSaved, onCancel }: {
           onChange={e => setLabel(e.target.value)}
           className="flex-1 rounded-md border border-gray-200 px-3 py-1.5 text-sm font-medium text-neutral-dark focus:border-teal focus:outline-none"
         />
-        <span className="shrink-0 text-xs text-neutral-mid">{content.length.toLocaleString()} chars</span>
+        <span className={`shrink-0 text-xs ${ask && content.length > ask.max_chars ? 'font-semibold text-red-600' : 'text-neutral-mid'}`}>{content.length.toLocaleString()}{ask ? ` / ${ask.max_chars.toLocaleString()}` : ''} chars</span>
         <button
           onClick={save}
-          disabled={saving || !content.trim()}
+          disabled={saving || !content.trim() || (!!ask && content.length > ask.max_chars)}
           className="flex items-center gap-1.5 rounded-lg bg-teal px-3 py-1.5 text-xs font-medium text-white hover:bg-teal/90 disabled:opacity-50"
         >
           {saving ? <Loader2 size={12} className="animate-spin" /> : <Check size={12} />}
@@ -494,7 +526,8 @@ function PromptEditor({ token, prompt, initialContent, onSaved, onCancel }: {
           <X size={12} />
         </button>
       </div>
-      {error && <p className="px-5 pt-3 text-xs text-red-600">{error}</p>}
+      {ask && <p className="flex items-center gap-1.5 border-b border-gray-100 bg-neutral-light/60 px-5 py-2 text-[11px] text-neutral-mid"><Lock size={12} aria-hidden="true" /> The locked safety and privacy rules are added after this text on every answer. They cannot be changed here.</p>}
+      {error && <p className="px-5 pt-3 text-xs text-red-600" role="alert">{error}</p>}
       <textarea
         ref={textareaRef}
         value={content}

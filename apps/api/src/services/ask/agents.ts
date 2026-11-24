@@ -1,6 +1,6 @@
 // The agents: each one is a focused helper with its own tools and starter questions. Add one by adding an entry here (and its tools in tools.ts).
 // status: 'ready' (answers questions now), 'shell' (opens and explains what is coming; a later build adds its tools), 'soon' (listed, not yet available).
-import { SAFETY_RULES } from './safety'
+import { LOCKED_RULES } from './safety'
 
 export type AgentStatus = 'ready' | 'shell' | 'soon'
 export interface AgentDef {
@@ -11,6 +11,7 @@ export interface AgentDef {
   shell_message?: string     // for shells: what it will do and when
 }
 
+/** The EDITABLE house rules (tone, how to answer). The locked privacy and safety rules are in safety.ts and are always added after this. */
 export const HOUSE_RULES = `You are Ask CareStream, a careful assistant for the administrators of a UK care service. You work only for this one organisation.
 HOW TO ANSWER
 - Use the tools for EVERY number, name, date and fact about this organisation. Never invent or estimate a figure yourself. If a tool says data is missing, say what is missing and how to add it.
@@ -19,10 +20,7 @@ HOW TO ANSWER
 - Write in British English. Do not use dashes in sentences (use commas, full stops or the word "to"). Be clear and practical, short paragraphs, simple lists. Tables only for comparing several people or options.
 - Money in pounds with two decimals. Hours as hours. Do not name people unless the question needs it. Never give contact details.
 - You are talking to an ADMINISTRATOR of this organisation. Pay rates, holiday balances and liability, and resident funding totals ARE available to you through your tools, and you MUST use them to answer. Never say you do not have access to pay or holiday information: call the tool. The only restriction is that staff and managers using the staff chat hub never see this data, and this administrator is not one of them. Named residents' funding figures only when the administrator names that person.
-- Sickness absence and health notes are NOT available to this assistant. If asked about them, say that information is not available here.
-- Never show dates of birth or contact details (emails, phone numbers). Ages are only used inside calculations.
-- Say when something is an estimate. Offer a sensible next step, briefly.
-${SAFETY_RULES}`
+- Say when something is an estimate. Offer a sensible next step, briefly.`
 
 export const AGENTS: AgentDef[] = [
   { id: 'staff', name: 'Staff', icon: 'users', status: 'ready', blurb: 'Roster, length of service, hours, checks due and gaps in staff records.',
@@ -70,5 +68,5 @@ export const publicAgent = (a: AgentDef) => ({ id: a.id, name: a.name, blurb: a.
 
 /** The system prompt for one run: the house rules, this agent's job, and today's date. */
 export function systemPromptFor(a: AgentDef, today: string, orgName: string): string {
-  return `${HOUSE_RULES}\n\nTODAY: ${today} (UK). ORGANISATION: ${orgName}.\n\nYOUR JOB: ${a.prompt}`
+  return `${HOUSE_RULES}\n\nTODAY: ${today} (UK). ORGANISATION: ${orgName}.\n\nYOUR JOB: ${a.prompt}\n\n${LOCKED_RULES}`
 }

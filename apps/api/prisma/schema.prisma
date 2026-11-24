@@ -3999,3 +3999,20 @@ model HolidayMonthTotal {
   @@index([tenant_id, year])
   @@map("holiday_month_totals")
 }
+
+// A document attached to an admin notification. See prisma/sql/2026-11-25_notification_files.sql. notification_id is null while it is a draft.
+model StaffNotificationFile {
+  id              String   @id @default(uuid())
+  notification_id String?
+  tenant_id       String
+  name            String
+  mime            String
+  size_bytes      Int      @default(0)
+  storage_key     String
+  scan_status     String   @default("skipped")
+  created_by      String
+  created_at      DateTime @default(now())
+
+  @@index([notification_id])
+  @@map("staff_notification_files")
+}

@@ -191,3 +191,17 @@ export function bulkUploadMiddleware(req: Request, res: Response, next: NextFunc
     handleMulterError(multerErr, res, next)
   })
 }
+
+
+// ─── Notification document upload: one file at a time, field "file", 4 MB (the API request limit on this host is about 4.5 MB) ───
+// The extension and type are only a first filter: the route checks the real bytes (lib/notification-file.ts) and scans the file.
+import { NOTIFICATION_FILE_MAX_BYTES } from '../lib/notification-file'
+const notificationFileMulter = multer({ storage: multer.memoryStorage(), limits: { fileSize: NOTIFICATION_FILE_MAX_BYTES, files: 1, fields: 4, fieldSize: 2000 } })
+
+export function notificationFileUploadMiddleware(req: Request, res: Response, next: NextFunction): void {
+  notificationFileMulter.single('file')(req, res, (multerErr) => {
+    if (!multerErr) { if (req.file) req.file.originalname = fixUtf8Filename(req.file.originalname); next(); return }
+    if ((multerErr as any).code === 'LIMIT_FILE_SIZE') { err(res, 'FILE_TOO_LARGE', 'Each document can be up to 4 MB. Please choose a smaller file, or save it as a PDF.', 413); return }
+    err(res, 'UPLOAD_ERROR', 'The upload failed. Please try again.', 500)
+  })
+}

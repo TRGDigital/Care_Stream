@@ -2799,14 +2799,14 @@ export async function sendHolidayEmail(opts: { to: string; name: string; orgName
 }
 
 export async function sendStaffNotificationEmail(opts: {
-  to: string; name: string; orgName: string; title: string; body: string; notificationId: string; actorUserId?: string | null; kind?: 'new' | 'reminder'
+  to: string; name: string; orgName: string; title: string; body: string; notificationId: string; actorUserId?: string | null; kind?: 'new' | 'reminder'; attachments?: number
 }): Promise<void> {
   ensureInitialised()
   if (!process.env.SENDGRID_API_KEY) throw new Error('Email is not configured')
   const kind = opts.kind ?? 'new'
   const from = process.env.SENDGRID_FROM_ADDRESS ?? `noreply@${INBOUND_DOMAIN}`
   const first = escHtml(opts.name.split(' ')[0] ?? opts.name)
-  const card = notificationCardHtml(opts.title, opts.body)
+  const card = notificationCardHtml(opts.title, opts.body, opts.attachments ?? 0)
   const admin = await resolveActor(opts.actorUserId)
   const link = hubLink(`/my-notifications/${encodeURIComponent(opts.notificationId)}`)
   if (admin) {

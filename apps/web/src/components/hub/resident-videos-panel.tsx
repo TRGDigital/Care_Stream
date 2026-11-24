@@ -9,13 +9,14 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { useSession } from 'next-auth/react'
-import { ArrowLeft, Check, Clapperboard, Loader2, Play, X } from 'lucide-react'
+import { Mic, ArrowLeft, Check, Clapperboard, Loader2, Play, X } from 'lucide-react'
 import { createResidentsClient, photoSrc, type HubVideo } from '@/lib/residents-api'
 import { fmtDuration } from '@/lib/video-upload'
 
 type Client = ReturnType<typeof createResidentsClient>
 
 const date = (d: string | null) => (d ? new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) : '')
+const isVoice = (v: { media_kind?: string }) => v.media_kind === 'audio'
 const from = (v: HubVideo) => `From ${v.uploaded_by_name}${v.relationship ? `, ${v.relationship}` : ''}`
 
 /** Full screen player. Asks for its link on open (which logs the play) and once more, without logging, if the link runs out. */
@@ -48,9 +49,9 @@ function PlayerModal({ client, video, name, onClose }: { client: Client; video: 
   // Just the video: a dimmed backdrop, the player, and a small close button. Click outside or press Escape to close.
   return (
     <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/70 p-3 sm:p-6" role="dialog" aria-modal="true"
-      aria-label={`Video message${video.title ? `: ${video.title}` : ''}`} onMouseDown={e => { if (e.target === e.currentTarget) onClose() }}>
+      aria-label={`${isVoice(video) ? 'Voice note' : 'Video message'}${video.title ? `: ${video.title}` : ''}`} onMouseDown={e => { if (e.target === e.currentTarget) onClose() }}>
       <div className="relative">
-        <button type="button" onClick={onClose} aria-label="Close video"
+        <button type="button" onClick={onClose} aria-label={isVoice(video) ? 'Close voice note' : 'Close video'}
           className="absolute -top-3 -right-3 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-white text-neutral-dark shadow-md hover:bg-neutral-light">
           <X size={20} aria-hidden="true" />
         </button>
@@ -58,7 +59,16 @@ function PlayerModal({ client, video, name, onClose }: { client: Client; video: 
           : !src ? <div className="flex h-48 w-72 items-center justify-center rounded-xl bg-white"><Loader2 size={36} className="animate-spin text-teal" aria-label="Loading" /></div>
           : (
             <div className="flex flex-col items-center gap-2">
-              <video key={src} src={src} controls autoPlay playsInline preload="auto" poster={photoSrc(video.poster_url)} onError={expired} className={`${text ? 'h-[62vh]' : 'h-[88vh]'} w-[94vw] max-w-[1400px] rounded-xl bg-black object-contain`} />
+              {isVoice(video) ? (
+                <div className="flex w-[92vw] max-w-xl flex-col items-center gap-4 rounded-xl bg-white p-6">
+                  <span className="flex h-20 w-20 items-center justify-center rounded-full bg-teal/10 text-teal"><Mic size={36} aria-hidden="true" /></span>
+                  <p className="text-center text-lg font-semibold text-neutral-dark">{video.title || 'Voice note'}</p>
+                  <p className="text-center text-sm text-neutral-mid">{from(video)}</p>
+                  <audio key={src} src={src} controls autoPlay preload="auto" onError={expired} aria-label={video.title || 'Voice note'} className="w-full" />
+                </div>
+              ) : (
+                <video key={src} src={src} controls autoPlay playsInline preload="auto" poster={photoSrc(video.poster_url)} onError={expired} className={`${text ? 'h-[62vh]' : 'h-[88vh]'} w-[94vw] max-w-[1400px] rounded-xl bg-black object-contain`} />
+              )}
               {text && (
                 <div className="max-h-[22vh] w-full max-w-[1400px] overflow-y-auto rounded-xl bg-white px-4 py-3" aria-label="English translation">
                   <p className="text-xs font-medium text-neutral-mid">{text.label}{text.language_name ? `. Spoken in ${text.language_name}.` : ''}</p>
@@ -79,12 +89,13 @@ function Tile({ v, onPlay, watchedAt }: { v: HubVideo; onPlay: () => void; watch
   const approvedDiffers = v.approved_at && v.sent_at && date(v.approved_at) !== date(v.sent_at)
   return (
     <li className="min-w-0">
-      <button type="button" onClick={onPlay} aria-label={`Play ${v.title || 'video message'}, ${from(v)}${isNew ? ', new' : ''}`}
+      <button type="button" onClick={onPlay} aria-label={`Play ${v.title || (isVoice(v) ? 'voice note' : 'video message')}, ${from(v)}${isNew ? ', new' : ''}`}
         className="group relative block aspect-video w-full overflow-hidden rounded-xl border border-gray-200 bg-gray-100 hover:border-teal focus:outline-none focus:ring-2 focus:ring-teal/40">
         {v.poster_url && (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={photoSrc(v.poster_url)} alt="" loading="lazy" className="h-full w-full object-cover" />
         )}
+        {isVoice(v) && <span className="absolute inset-0 flex items-start justify-center bg-teal/5 pt-4 text-teal"><Mic size={30} aria-hidden="true" /></span>}
         <span className="absolute inset-0 flex items-center justify-center">
           <span className="flex h-16 w-16 items-center justify-center rounded-full bg-white/95 text-teal shadow-md group-hover:scale-105"><Play size={30} className="ml-1" aria-hidden="true" /></span>
         </span>
@@ -92,7 +103,7 @@ function Tile({ v, onPlay, watchedAt }: { v: HubVideo; onPlay: () => void; watch
         {v.duration_seconds ? <span className="absolute bottom-1.5 right-1.5 rounded bg-white/90 px-1.5 py-0.5 text-xs font-medium text-neutral-dark">{fmtDuration(v.duration_seconds)}</span> : null}
       </button>
       {(v.resident_name || v.room) && <p className="mt-1.5 text-sm font-semibold text-teal">{[v.resident_name, v.room ? `Room ${v.room}` : ''].filter(Boolean).join(', ')}</p>}
-      <p className="text-base font-medium leading-snug text-neutral-dark">{v.title || 'Video message'}</p>
+      <p className="text-base font-medium leading-snug text-neutral-dark">{v.title || (isVoice(v) ? 'Voice note' : 'Video message')}</p>
       <p className="text-sm text-neutral-mid">{from(v)}</p>
       {(v.sent_at || v.submitted_at) && (
         <p className="text-xs text-neutral-mid">Sent {date(v.sent_at ?? v.submitted_at)}{approvedDiffers ? `, approved ${date(v.approved_at as string)}` : ''}</p>

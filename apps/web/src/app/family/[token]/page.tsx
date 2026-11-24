@@ -5,10 +5,11 @@
 
 import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
-import { Camera, CheckCircle2, Heart, Info, Loader2, LinkIcon, PenLine, Video as VideoIcon } from 'lucide-react'
+import { Camera, CheckCircle2, Heart, Info, Loader2, LinkIcon, Mic, PenLine, Video as VideoIcon } from 'lucide-react'
 import { getFamilyForm, submitFamilyForm, type FamilyForm } from '@/lib/residents-api'
 import { PhotoBox } from './photo-box'
 import { VideoBox } from './video-box'
+import { VoiceBox } from './voice-box'
 
 const FIELD = 'w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-base text-neutral-dark outline-none focus:border-teal focus:ring-2 focus:ring-teal/20'
 
@@ -79,12 +80,14 @@ export default function FamilyFormPage() {
   const [photoCount, setPhotoCount] = useState(0)
   const [videoCount, setVideoCount] = useState(0)
   const [videoBusy, setVideoBusy] = useState(false)
+  const [voiceCount, setVoiceCount] = useState(0)
+  const [voiceBusy, setVoiceBusy] = useState(false)
 
   useEffect(() => {
     let live = true
     setLoading(true)
     getFamilyForm(token)
-      .then(f => { if (!live) return; setForm(f); setName(f.invitee_name ?? ''); setPhotoCount((f.photos ?? []).filter(p => p.status !== 'rejected').length); setVideoCount((f.videos ?? []).filter(v => v.state === 'ready').length) })
+      .then(f => { if (!live) return; setForm(f); setName(f.invitee_name ?? ''); setPhotoCount((f.photos ?? []).filter(p => p.status !== 'rejected').length); setVoiceCount((f.voice_notes ?? []).filter(v => v.state === 'ready' && v.status !== 'rejected').length); setVideoCount((f.videos ?? []).filter(v => v.state === 'ready').length) })
       .catch((e: any) => { if (live) setLoadErr(e?.status === 410 || e?.status === 404 ? 'gone' : 'other') })
       .finally(() => { if (live) setLoading(false) })
     return () => { live = false }
@@ -109,7 +112,7 @@ export default function FamilyFormPage() {
         <Card icon={<CheckCircle2 size={36} className="text-green-500" />} title="Thank you, that is the family's side">
           In a real link, the answers would now go to the manager. They appear under <strong>Approvals</strong> in the Residents screen, the manager reads each one, and can approve it, edit it or reject it. Staff and the hub chat never see an answer until it is approved. Nothing from this demonstration was saved.
         </Card>
-        <p className="mt-5 text-center"><button type="button" onClick={() => { setDone(false); setAnswers({}); setRelationship(''); setPhotoCount(0); setVideoCount(0) }} className="text-base font-semibold text-teal hover:underline">Try it again</button></p>
+        <p className="mt-5 text-center"><button type="button" onClick={() => { setDone(false); setAnswers({}); setRelationship(''); setPhotoCount(0); setVideoCount(0); setVoiceCount(0) }} className="text-base font-semibold text-teal hover:underline">Try it again</button></p>
       </Shell>
     )
   }
@@ -129,8 +132,8 @@ export default function FamilyFormPage() {
     for (const [k, v] of Object.entries(answers)) if (v.trim()) clean[k] = v.trim()
     if (!name.trim()) { setError('Please tell us your name.'); return }
     if (!relationship.trim()) { setError(`Please tell us how you know ${resident}.`); return }
-    if (videoBusy) { setError('Your video is still being added. Please wait for it to finish, then press Send.'); return }
-    if (Object.keys(clean).length === 0 && photoCount === 0 && videoCount === 0) { setError('Please answer at least one question or add a photo or video.'); return }
+    if (videoBusy || voiceBusy) { setError('Your video or voice note is still being added. Please wait for it to finish, then press Send.'); return }
+    if (Object.keys(clean).length === 0 && photoCount === 0 && videoCount === 0 && voiceCount === 0) { setError('Please answer at least one question or add a photo, video or voice note.'); return }
     setBusy(true); setError('')
     try {
       await submitFamilyForm(token, { name: name.trim(), relationship: relationship.trim(), answers: clean })
@@ -158,6 +161,7 @@ export default function FamilyFormPage() {
           { id: 'fam-written', label: 'Written answers', icon: <PenLine size={18} aria-hidden="true" /> },
           ...(form.photos_enabled ? [{ id: 'fam-photos', label: 'Upload photos', icon: <Camera size={18} aria-hidden="true" /> }] : []),
           ...(form.videos_enabled ? [{ id: 'fam-video', label: 'Upload a video', icon: <VideoIcon size={18} aria-hidden="true" /> }] : []),
+          ...(form.voice_enabled ? [{ id: 'fam-voice', label: 'Record a voice note', icon: <Mic size={18} aria-hidden="true" /> }] : []),
         ]} />
 
         <div id="fam-written" className="scroll-mt-4 space-y-5">
@@ -197,9 +201,14 @@ export default function FamilyFormPage() {
             maxMb={form.max_video_mb ?? 150} titleMax={form.video_title_max ?? 60} onCount={setVideoCount} onBusy={setVideoBusy} /></div>
         )}
 
+        {form.voice_enabled && (
+          <div id="fam-voice" className="scroll-mt-4"><VoiceBox token={token} resident={resident} home={home} initial={form.voice_notes ?? []} max={form.max_voice_notes ?? 5} maxSeconds={form.max_voice_seconds ?? 120}
+            maxMb={form.max_voice_mb ?? 30} titleMax={form.video_title_max ?? 60} onCount={setVoiceCount} onBusy={setVoiceBusy} /></div>
+        )}
+
         {error && <p role="alert" className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-base text-red-700">{error}</p>}
 
-        <button type="submit" disabled={busy || videoBusy} className="flex min-h-[52px] w-full items-center justify-center gap-2 rounded-xl bg-teal px-6 py-3 text-lg font-semibold text-white hover:bg-teal-dark disabled:opacity-50">
+        <button type="submit" disabled={busy || videoBusy || voiceBusy} className="flex min-h-[52px] w-full items-center justify-center gap-2 rounded-xl bg-teal px-6 py-3 text-lg font-semibold text-white hover:bg-teal-dark disabled:opacity-50">
           {busy && <Loader2 size={18} className="animate-spin" />} Send what I have shared
         </button>
         <p className="pb-8 text-center text-sm text-neutral-mid">If you would like to add more later, ask {home} for a new link.</p>

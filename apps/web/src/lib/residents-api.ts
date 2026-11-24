@@ -99,8 +99,12 @@ export interface ResidentPhoto {
 export type VideoState = 'uploading' | 'processing' | 'ready' | 'failed'
 
 /** A video message as the manager sees it. The links are private and last about ten minutes. */
+export type MediaKind = 'video' | 'audio'
+
 export interface ResidentVideo {
   id: string
+  /** 'audio' is a voice note: same record, no picture. Missing on older data means a video. */
+  media_kind?: MediaKind
   invite_id: string | null
   uploaded_by_name: string
   relationship: string | null
@@ -158,6 +162,7 @@ export interface ResidentDetail extends Resident {
 
 /** An approved video message in the hub: no video link (the player asks for one when play is pressed, which logs the play). */
 export interface HubVideo {
+  media_kind?: MediaKind
   resident_name?: string | null
   room?: string | null
   sent_at?: string | null
@@ -180,6 +185,7 @@ export interface HubVideo {
 /** A family member's own video message while they are adding it. */
 export interface FamilyVideo {
   id: string
+  media_kind?: MediaKind
   title: string | null
   state: VideoState
   status: PhotoStatus
@@ -254,6 +260,11 @@ export interface FamilyForm {
   max_video_seconds?: number
   max_video_mb?: number
   video_title_max?: number
+  voice_enabled?: boolean
+  voice_notes?: FamilyVideo[]
+  max_voice_notes?: number
+  max_voice_seconds?: number
+  max_voice_mb?: number
   /** True only for the /family/demo link: a sample resident and home, nothing is saved. */
   demo?: boolean
 }
@@ -388,7 +399,7 @@ export const deleteFamilyPhoto = (token: string, photoId: string) =>
 
 // Family video upload (chunked, resumable). The page drives it with lib/video-upload.ts.
 const fam = (token: string) => `/public/family/${encodeURIComponent(token)}/videos`
-export const familyVideoStart = (token: string, data: { size: number }) => call<{ video: FamilyVideo }>(`${fam(token)}/start`, null, { method: 'POST', body: JSON.stringify(data) })
+export const familyVideoStart = (token: string, data: { size: number; kind?: MediaKind }) => call<{ video: FamilyVideo }>(`${fam(token)}/start`, null, { method: 'POST', body: JSON.stringify(data) })
 export const familyVideoStatus = (token: string, id: string) => call<{ video: FamilyVideo; received: number[] }>(`${fam(token)}/${encodeURIComponent(id)}`, null)
 export const familyVideoComplete = (token: string, id: string, data: { title?: string }) => call<{ video: FamilyVideo }>(`${fam(token)}/${encodeURIComponent(id)}/complete`, null, { method: 'POST', body: JSON.stringify(data) })
 export const familyVideoTitle = (token: string, id: string, title: string) => call<{ video: FamilyVideo }>(`${fam(token)}/${encodeURIComponent(id)}`, null, { method: 'PATCH', body: JSON.stringify({ title }) })

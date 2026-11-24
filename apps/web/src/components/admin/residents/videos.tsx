@@ -26,12 +26,23 @@ export function Player({ video, onExpired, className }: { video: ResidentVideo; 
       </div>
     )
   }
+  const failed = () => { if (!retried.current) { retried.current = true; onExpired() } }
+  if (video.media_kind === 'audio') {
+    // A voice note: just a player, no picture.
+    return (
+      <div className="flex w-full items-center rounded-lg border border-gray-200 bg-gray-50 p-2">
+        <audio controls preload="metadata" src={photoSrc(video.video_url)} aria-label={video.title || 'Voice note'} className="h-11 w-full" onError={failed} />
+      </div>
+    )
+  }
   return (
     <video controls playsInline preload="metadata" poster={photoSrc(video.poster_url)} src={photoSrc(video.video_url)} aria-label={video.title || 'Video message'}
-      className={`bg-gray-100 object-contain ${className ?? ''}`} onError={() => { if (!retried.current) { retried.current = true; onExpired() } }} />
+      className={`bg-gray-100 object-contain ${className ?? ''}`} onError={failed} />
   )
 }
 
+/** What to call an item in words: a video message or a voice note. */
+export const kindName = (v: { media_kind?: string }) => (v.media_kind === 'audio' ? 'Voice note' : 'Video message')
 const sender = (v: ResidentVideo) => (v.source === 'manager' ? `Added by ${v.uploaded_by_name}` : `From ${v.uploaded_by_name}${v.relationship ? `, ${v.relationship}` : ''}`)
 
 /**
@@ -70,7 +81,7 @@ export function TranscriptPanel({ client, residentId, video }: { client: Client;
 
   const canRun = !t || t.state === 'failed' || t.state === 'no_speech' || t.state === 'not_available'
   return (
-    <div className="rounded-lg border border-gray-200 bg-white p-3" aria-label="What is said in this video">
+    <div className="rounded-lg border border-gray-200 bg-white p-3" aria-label={`What is said in this ${video.media_kind === 'audio' ? 'voice note' : 'video'}`}>
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h5 className="flex items-center gap-2 text-sm font-semibold text-neutral-dark"><Languages size={14} aria-hidden="true" /> What is said</h5>
         {t?.state === 'ready' && <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-neutral-mid">Machine generated</span>}
@@ -78,7 +89,7 @@ export function TranscriptPanel({ client, residentId, video }: { client: Client;
 
       {t?.state === 'pending' && <p className="mt-2 flex items-center gap-2 text-sm text-neutral-mid" role="status"><Loader2 size={14} className="animate-spin" /> {t.message}</p>}
       {t && t.state !== 'pending' && t.state !== 'ready' && <p className="mt-2 text-sm text-neutral-mid" role="status">{t.message}</p>}
-      {!t && <p className="mt-2 text-sm text-neutral-mid">Turn the speech in this video into text, and into English if it is another language, to help you decide. This is optional.</p>}
+      {!t && <p className="mt-2 text-sm text-neutral-mid">Turn the speech in this {video.media_kind === 'audio' ? 'voice note' : 'video'} into text, and into English if it is another language, to help you decide. This is optional.</p>}
       {canRun && (
         <button type="button" className={`${btnSecondary} mt-2`} disabled={busy} onClick={start}>
           {busy ? <Loader2 size={14} className="animate-spin" /> : <Languages size={14} />} {t ? 'Try again' : 'Transcribe and translate'}
@@ -113,7 +124,7 @@ export function TranscriptPanel({ client, residentId, video }: { client: Client;
           {t.can_share_with_staff && (
             <label className="flex items-start gap-2 text-sm text-neutral-dark">
               <input type="checkbox" className="mt-0.5 h-4 w-4" checked={t.show_to_staff} disabled={busy} onChange={e => share(e.target.checked)} />
-              <span>Show the English text to staff when this video is played<span className="block text-xs text-neutral-mid">Staff see it under the video, labelled as a machine translation checked by a manager. It is only shown once the video is approved. Off by default.</span></span>
+              <span>Show the English text to staff when this {video.media_kind === 'audio' ? 'voice note' : 'video'} is played<span className="block text-xs text-neutral-mid">Staff see it under the video, labelled as a machine translation checked by a manager. It is only shown once the video is approved. Off by default.</span></span>
             </label>
           )}
         </div>
@@ -141,8 +152,8 @@ export function VideoApprovals({ client, resident, onChanged }: { client: Client
   }
 
   return (
-    <section className="rounded-lg border border-amber-200 bg-amber-50/40" aria-label="Videos waiting for approval">
-      <h4 className="flex items-center gap-2 border-b border-amber-200 px-4 py-2 text-sm font-semibold text-neutral-dark"><Clapperboard size={15} aria-hidden="true" /> Videos waiting for approval ({pending.length})</h4>
+    <section className="rounded-lg border border-amber-200 bg-amber-50/40" aria-label="Videos and voice notes waiting for approval">
+      <h4 className="flex items-center gap-2 border-b border-amber-200 px-4 py-2 text-sm font-semibold text-neutral-dark"><Clapperboard size={15} aria-hidden="true" /> Videos and voice notes waiting for approval ({pending.length})</h4>
       {error && <div className="p-3"><ErrorBox>{error}</ErrorBox></div>}
       <ul className="divide-y divide-amber-100">
         {pending.map(v => (
@@ -162,7 +173,7 @@ export function VideoApprovals({ client, resident, onChanged }: { client: Client
                 </button>
                 <button type="button" className={btnDangerOutline} disabled={busyId !== null} onClick={() => decide(v, 'reject')}><X size={14} /> Reject</button>
               </div>
-              <p className="text-xs text-neutral-mid">Rejecting removes the video and any text taken from it from storage straight away.</p>
+              <p className="text-xs text-neutral-mid">Rejecting removes the {v.media_kind === 'audio' ? 'voice note' : 'video'} and any text taken from it from storage straight away.</p>
               <TranscriptPanel client={client} residentId={resident.id} video={v} />
             </div>
           </li>
@@ -218,9 +229,9 @@ export function VideoManager({ client, resident, onChanged }: { client: Client; 
   }
 
   return (
-    <section className="space-y-3 rounded-lg border border-gray-200 p-4" aria-label="Video messages">
+    <section className="space-y-3 rounded-lg border border-gray-200 p-4" aria-label="Video messages and voice notes">
       <div>
-        <h4 className="flex items-center gap-2 text-sm font-semibold text-neutral-dark"><Clapperboard size={15} aria-hidden="true" /> Video messages</h4>
+        <h4 className="flex items-center gap-2 text-sm font-semibold text-neutral-dark"><Clapperboard size={15} aria-hidden="true" /> Video messages and voice notes</h4>
         <p className="mt-1 text-sm text-neutral-mid">Approved videos can be played by staff from the hub, for example on a tablet. They are kept privately, are never watched or described by the assistant, and are deleted with the profile.</p>
       </div>
       {approved.length > 0 ? (
@@ -229,7 +240,7 @@ export function VideoManager({ client, resident, onChanged }: { client: Client; 
             <li key={v.id} className="overflow-hidden rounded-lg border border-gray-200">
               <Player video={v} onExpired={onChanged} className="aspect-video w-full" />
               <div className="space-y-1 p-2 text-xs text-neutral-mid">
-                <p className="text-sm font-medium text-neutral-dark">{v.title || 'Video message'}{v.duration_seconds ? <span className="font-normal text-neutral-mid">, {fmtDuration(v.duration_seconds)}</span> : null}</p>
+                <p className="text-sm font-medium text-neutral-dark">{v.title || kindName(v)}{v.duration_seconds ? <span className="font-normal text-neutral-mid">, {fmtDuration(v.duration_seconds)}</span> : null}</p>
                 {v.note && <p>{v.note}</p>}
                 <p>{sender(v)}, {fmtDate(v.decided_at ?? v.submitted_at)}</p>
                 <TranscriptPanel client={client} residentId={resident.id} video={v} />

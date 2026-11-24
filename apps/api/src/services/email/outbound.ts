@@ -2451,7 +2451,7 @@ export async function sendResidentFamilyInviteEmail(opts: {
   if (!process.env.SENDGRID_API_KEY) { console.warn('[email] SENDGRID_API_KEY not set, skipping resident family invite'); return }
   const first = (opts.inviteeName || '').trim().split(' ')[0] || 'there'
   const para = (t: string, last = false) => `<p style="color:#374151;font-size:15px;line-height:1.6;margin:0 0 ${last ? 0 : 14}px">${t}</p>`
-  const how = `The form takes about five minutes. It asks the kind of things that help the team care for ${escResident(opts.residentName)} as the person they are: favourite things, routines, what helps when they are worried, the people who matter to them. Answer as many or as few as you like, and you can add photos and a short video message too.`
+  const how = `The form takes about five minutes. It asks the kind of things that help the team care for ${escResident(opts.residentName)} as the person they are: favourite things, routines, what helps when they are worried, the people who matter to them. Answer as many or as few as you like, and you can add photos, a short video message or a voice note too.`
   const privacy = `Your answers go to the manager at ${escResident(opts.homeName)}, who reads them first. They are only shared with the care team once the manager has approved them. Please do not include medical details or anything private you would not want the team to know.`
   const person = await residentPersonMessage({
     tenantId: opts.tenantId, actorUserId: opts.senderUserId,

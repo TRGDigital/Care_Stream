@@ -5,7 +5,7 @@ import { ChevronDown, ChevronRight, Pencil } from 'lucide-react'
 import type { ResidentContribution, ResidentDetail, ResidentPhoto, ResidentSectionDef, ResidentVideo } from '@/lib/residents-api'
 import { photoSrc } from '@/lib/residents-api'
 import { Thumb } from './photos'
-import { Player } from './videos'
+import { Player, kindName } from './videos'
 import { fmtDate } from './ui'
 
 // What family and friends have told you, once approved, grouped under the person who gave it, so an admin can check it
@@ -62,7 +62,7 @@ export function FamilyAnswersTab({ resident, sections, onExpired }: { resident: 
                       <span className="block truncate text-xs text-neutral-mid">{g.relationship}</span>
                     </span>
                     <span className="shrink-0 text-right text-xs text-neutral-mid">
-                      {[g.items.length ? plural(g.items.length, 'answer', 'answers') : '', g.photos.length ? plural(g.photos.length, 'photo', 'photos') : '', g.videos.length ? plural(g.videos.length, 'video', 'videos') : ''].filter(Boolean).join(', ')}
+                      {[g.items.length ? plural(g.items.length, 'answer', 'answers') : '', g.photos.length ? plural(g.photos.length, 'photo', 'photos') : '', g.videos.filter(x => x.media_kind !== 'audio').length ? plural(g.videos.filter(x => x.media_kind !== 'audio').length, 'video', 'videos') : '', g.videos.filter(x => x.media_kind === 'audio').length ? plural(g.videos.filter(x => x.media_kind === 'audio').length, 'voice note', 'voice notes') : ''].filter(Boolean).join(', ')}
                       {fmtDate(g.latest) && <span className="block">approved {fmtDate(g.latest)}</span>}
                     </span>
                   </button>
@@ -108,12 +108,12 @@ export function FamilyAnswersTab({ resident, sections, onExpired }: { resident: 
                   )}
                   {g.videos.length > 0 && (
                     <div className="space-y-2 border-t border-gray-100 px-4 py-3">
-                      <p className="text-xs font-semibold uppercase tracking-wide text-teal">Video messages</p>
+                      <p className="text-xs font-semibold uppercase tracking-wide text-teal">Video messages and voice notes</p>
                       <ul className="grid gap-3 sm:grid-cols-2">
                         {g.videos.map(v => (
                           <li key={v.id} className="space-y-1">
                             <Player video={v} onExpired={() => onExpired?.()} className="aspect-video w-full rounded-lg" />
-                            <p className="text-sm font-medium text-neutral-dark">{v.title || 'Video message'}</p>
+                            <p className="text-sm font-medium text-neutral-dark">{v.title || kindName(v)}</p>
                             {v.note && <p className="text-xs text-neutral-mid">{v.note}</p>}
                             {v.decided_at && <p className="text-xs text-neutral-mid">Approved {fmtDate(v.decided_at)}{v.decided_by ? ` by ${v.decided_by}` : ''}</p>}
                           </li>

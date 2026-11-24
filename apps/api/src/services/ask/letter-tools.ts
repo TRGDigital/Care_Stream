@@ -4,7 +4,8 @@
 import type { AskTool } from './tools'
 import { ownSource } from './sources'
 import { loadStaff, ukToday } from './data'
-import { saveDocument } from './store'
+import { saveDocument, setShareIntent } from './store'
+import { readShareIntent, checkShareIntent, describeIntent } from '../ask-docs/share-intent'
 import { listTemplates, getTemplate, validate, render, resolveDefaults, DRAFT_NOTE, type Values } from '../letters'
 import { prismaLetterSource } from '../letters/loader'
 import { withHolidayLeaverDefaults } from '../letters/leaver'
@@ -25,6 +26,7 @@ export async function mergedValues(o: { tenantId: string; userId: string; actorI
   return { values: { ...base.values, ...leaver.values, ...o.given } as Values, notes: { ...base.notes, ...leaver.notes }, working: leaver.working }
 }
 
+const SHARE_INTENT_SCHEMA = { type: 'object', description: 'How the letter is to be shared, exactly as the administrator said: hub (in the staff member\'s hub), email, print_only (stays with the administrator; cannot be combined). Only pass what they told you.', properties: { hub: { type: 'boolean' }, email: { type: 'boolean' }, print_only: { type: 'boolean' } } }
 const staffProp = { staff_id: { type: 'string', description: 'The person\'s id from find_staff.' } }
 export const LETTER_TOOLS: AskTool[] = [
   {
@@ -74,8 +76,8 @@ export const LETTER_TOOLS: AskTool[] = [
   },
   {
     name: 'save_letter_draft',
-    description: 'Save the letter as a DRAFT in the library for approval. Refused while any required field is missing. It is not sent and not final: an administrator reviews, approves and then shares it.',
-    input_schema: { type: 'object', properties: { template_id: { type: 'string' }, ...staffProp, values: { type: 'object' } }, required: ['template_id', 'staff_id'] },
+    description: 'Save the letter as a DRAFT in the library for approval. Refused while any required field is missing, and refused until the administrator has said HOW it is to be shared: ask them first (in their hub, by email, hub and email, or print only) and pass share_intent with ONLY what they said. Never guess a share_intent. It is not sent and not final: an administrator reviews, approves and then shares it.',
+    input_schema: { type: 'object', properties: { template_id: { type: 'string' }, ...staffProp, values: { type: 'object' }, share_intent: SHARE_INTENT_SCHEMA }, required: ['template_id', 'staff_id'] },
     async run(ctx, input) {
       const t = getTemplate(String(input?.template_id ?? ''))
       if (!t) return fail('That letter does not exist.')
@@ -83,9 +85,23 @@ export const LETTER_TOOLS: AskTool[] = [
       if (!staff) return fail('I could not find that person.')
       const m = await mergedValues({ tenantId: ctx.tenantId, userId: staff.id, actorId: ctx.userId, templateId: t.id, today: ctx.today, given: { recipient_name: staff.name, recipient_role: staff.job_role ?? '', ...cleanValues(input?.values) } })
       const r = render(t.id, m.values)
+      // How it is to be shared must come from the administrator: never guessed, never defaulted.
+      const check = checkShareIntent(readShareIntent(input?.share_intent))
+      if (!check.ok) return { data: { saved: false, share_intent_missing: true, message: check.reason, ask: 'Ask the administrator how this letter is to be shared before saving: in the person\'s hub, by email, hub and email together, or print only (print only stays with them and the staff member never sees it).' }, sources: [] }
       if (!r.ok) return { data: { saved: false, missing: r.missing, unreadable: r.invalid.map(i => i.label), message: 'The letter is not finished, so it has not been saved. Ask the administrator for the missing details.' }, sources: [] }
-      const id = await saveDocument(ctx.tenantId, ctx.userId, { type: 'letter', title: `${t.title}: ${staff.name}`, body: r.text, data: { template_id: t.id, staff_user_id: staff.id, staff_name: staff.name, values: m.values, before_you_send: r.beforeYouSend, references: r.references } })
-      return { data: { saved: true, document_id: id, status: 'draft', next: 'Open it in the library to review, tick the checklist and submit it for approval.' }, sources: [] }
+      const id = await saveDocument(ctx.tenantId, ctx.userId, { type: 'letter', title: `${t.title}: ${staff.name}`, body: r.text, data: { template_id: t.id, staff_user_id: staff.id, staff_name: staff.name, values: m.values, before_you_send: r.beforeYouSend, references: r.references, share_intent: check.intent } })
+      return { data: { saved: true, document_id: id, status: 'draft', share: describeIntent(check.intent), next: 'Open it in the library to review, tick the checklist and submit it for approval. Once approved, the chosen way of sharing is ready as a button.' }, sources: [] }
+    },
+  },
+  {
+    name: 'set_share_intent',
+    description: 'Change how an existing DRAFT or approved letter is to be shared (in the hub, by email, hub and email, or print only). Use it when the administrator changes their mind. Pass ONLY what they said. It shares nothing: sharing is a button the administrator presses once the letter is approved.',
+    input_schema: { type: 'object', properties: { document_id: { type: 'string', description: 'The letter\'s id from save_letter_draft.' }, share_intent: SHARE_INTENT_SCHEMA }, required: ['document_id', 'share_intent'] },
+    async run(ctx, input) {
+      const check = checkShareIntent(readShareIntent(input?.share_intent))
+      if (!check.ok) return { data: { saved: false, share_intent_missing: true, message: check.reason }, sources: [] }
+      const done = await setShareIntent(ctx.tenantId, String(input?.document_id ?? ''), check.intent)
+      return { data: done ? { saved: true, share: describeIntent(check.intent) } : { saved: false, message: 'I could not change that. The letter may not exist, or it has already been shared.' }, sources: [] }
     },
   },
 ]

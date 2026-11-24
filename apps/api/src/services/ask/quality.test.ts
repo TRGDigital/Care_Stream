@@ -154,9 +154,9 @@ test('REPORT WORKFLOW: an internal only report can be downloaded or emailed to a
   assert.deepEqual(sharesFor('report', { internal_only: true }), ['pdf', 'email'])
   assert.deepEqual(sharesFor('report', null), ['pdf', 'email', 'notification'])
   await assert.rejects(() => shareAsNotification({ tenantId: 't1', actorId: 'a', doc: { id: 'd', type: 'report', title: 'R', body: GOOD, data: { internal_only: true } } }), /internal only/)
-  assert.deepEqual(sharesFor('letter'), ['pdf', 'email', 'notification']); assert.deepEqual(sharesFor('newsletter'), ['pdf', 'notification'])   // unchanged for the other kinds
+  assert.deepEqual(sharesFor('letter'), ['pdf', 'email', 'notification', 'hub']); assert.deepEqual(sharesFor('newsletter'), ['pdf', 'notification'])   // unchanged for the other kinds
   const routes = src('../../routes/ask.ts')
-  assert.ok(/sharesFor\(d\.type, d\.data\)\.includes\(method\)/.test(routes), 'the share route checks the allowed methods for this very report')
+  assert.ok(/sharesFor\(d\.type, d\.data\)\.includes\(method( as ShareMethod)?\)/.test(routes), 'the share route checks the allowed methods for this very report')
   assert.ok(/lintReport\(/.test(routes), 'every save of a report is checked again')
 })
 

@@ -46,6 +46,7 @@ import { letterheadRouter } from './routes/letterhead'
 import { signaturesRouter } from './routes/signatures'
 import { askDocsRouter } from './routes/ask-docs'
 import { notificationsAdminRouter, meNotificationsRouter } from './routes/notifications'
+import { meLettersRouter } from './routes/staff-letters'
 import { cqcQuestionsRouter } from './routes/cqc-staff-questions'
 import { auditsRouter } from './routes/audits'
 import { freeTourRouter } from './routes/free-tour'
@@ -281,6 +282,7 @@ app.use('/policies', policiesRouter)
 app.use('/admin-search', adminSearchRouter)
 app.use('/query', queryRouter)
 app.use('/users', usersRouter)
+app.use('/me/letters', meLettersRouter)   // letters an administrator shared in my hub (My letters; also for a person signed in by PIN on a shared tablet)
 app.use('/me/notifications', meNotificationsRouter)   // my notifications from an administrator (also for a person signed in by PIN on a shared tablet)
 app.use('/notifications', notificationsAdminRouter)
 app.use('/me', meRouter)

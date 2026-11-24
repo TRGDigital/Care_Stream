@@ -20,7 +20,10 @@ import { ukToday } from '../lib/holiday-math'
 import { writeAuditLog } from '../lib/audit'
 import { render as renderLetter, validate as validateLetter, getTemplate as letterTemplate } from '../services/letters'
 import { needsApproval, canEdit, canSubmit, canApprove, canReturn, canReopen, canShare, sharesFor, SHARE_METHODS, type ShareMethod } from '../services/ask-docs/workflow'
-import { pdfFor, emailLetter, emailReportToAdmins, shareAsNotification } from '../services/ask-docs/share'
+import { pdfFor, emailLetter, emailReportToAdmins, shareAsNotification, shareInHub } from '../services/ask-docs/share'
+import { readShareIntent, checkShareIntent, channelsFor, describeIntent } from '../services/ask-docs/share-intent'
+import { sharesOfDocument, withdraw as withdrawLetter, isMissingTable as lettersMissing } from '../lib/staff-letters'
+import { withdrawNotification } from '../lib/notification-withdraw'
 import { lintReport } from '../services/ask/report-templates'
 import { loadStaff } from '../services/ask/data'
 import { lintNewsletter } from '../services/ask-docs/newsletter-templates'
@@ -150,7 +153,9 @@ askRouter.get('/approvals', wrap(async (req, res) => { ok(res, { approvals: (awa
 askRouter.get('/documents/:id', wrap(async (req, res) => {
   const d = await store.getDocumentFor(getTenantId(), req.user!.sub, String(req.params.id)); if (!d) { notFound(res); return }
   const checklist = d.type === 'letter' ? (d.data?.before_you_send ?? []) : d.type === 'newsletter' || d.type === 'report' ? (d.data?.checklist ?? []) : []
-  ok(res, { document: { ...d, mine: d.created_by === req.user!.sub, checklist, references: d.data?.references ?? [], internal_only: d.type === 'report' ? d.data?.internal_only === true : undefined, shared: d.data?.shared ?? [], staff_name: d.data?.staff_name ?? null, values: d.type === 'letter' ? d.data?.values ?? {} : undefined, fields: d.type === 'letter' ? letterTemplate(String(d.data?.template_id ?? ''))?.fields.map(f => ({ key: f.key, label: f.label, type: f.type, required: f.required, choices: f.choices ?? null })) : undefined, actions: await actionsFor(d, req.user!.sub) } })
+  const hubShares = d.type === 'letter' ? await sharesOfDocument(getTenantId(), d.id).catch(() => []) : []
+  const intent = d.type === 'letter' ? readShareIntent(d.data?.share_intent) : null
+  ok(res, { document: { ...d, share_intent: intent, share_intent_text: d.type === 'letter' ? describeIntent(intent) : undefined, hub_shares: hubShares.map(h => ({ id: h.id, person: h.person_name, shared_at: h.shared_at, read_at: h.read_at, needs_acknowledgement: h.needs_acknowledgement, acknowledged_at: h.acknowledged_at, withdrawn_at: h.withdrawn_at, signed: h.signed })), mine: d.created_by === req.user!.sub, checklist, references: d.data?.references ?? [], internal_only: d.type === 'report' ? d.data?.internal_only === true : undefined, shared: d.data?.shared ?? [], staff_name: d.data?.staff_name ?? null, values: d.type === 'letter' ? d.data?.values ?? {} : undefined, fields: d.type === 'letter' ? letterTemplate(String(d.data?.template_id ?? ''))?.fields.map(f => ({ key: f.key, label: f.label, type: f.type, required: f.required, choices: f.choices ?? null })) : undefined, actions: await actionsFor(d, req.user!.sub) } })
 }))
 
 askRouter.patch('/documents/:id', wrap(async (req, res) => {
@@ -236,23 +241,75 @@ askRouter.get('/documents/:id/pdf', wrap(async (req, res) => {
   } catch (e: any) { err(res, 'PDF_FAILED', 'The PDF could not be made just now. Please try again.', 500) }
 }))
 
+// Saves HOW a letter is to be shared (in their hub, by email, print only, or hub and email). The Letters agent asks the administrator and saves the answer; the document panel shows and edits it.
+// Print only is exclusive: the letter stays with the administrator and the staff member never sees it.
+askRouter.post('/documents/:id/share-intent', wrap(async (req, res) => {
+  const t = getTenantId(), u = req.user!.sub, id = String(req.params.id)
+  const d = await store.getDocumentFor(t, u, id); if (!d) { notFound(res); return }
+  if (d.type !== 'letter') { err(res, 'INVALID', 'Only a letter has a share choice.', 400); return }
+  const c = checkShareIntent(readShareIntent(req.body))
+  if (!c.ok) { err(res, 'INVALID', c.reason, 400); return }
+  if (!(await store.setShareIntent(t, id, c.intent))) { err(res, 'NOT_ALLOWED', 'The choice can only be changed before the letter has been shared.', 409); return }
+  audit(req, 'ask_document_share_intent_set', id, { type: d.type, hub: c.intent.hub, email: c.intent.email, print_only: c.intent.print_only })
+  ok(res, { share_intent: c.intent, share_intent_text: describeIntent(c.intent) })
+}))
+
 askRouter.post('/documents/:id/share', wrap(async (req, res) => {
   const t = getTenantId(), u = req.user!.sub, id = String(req.params.id)
   const d = await store.getDocumentFor(t, u, id); if (!d) { notFound(res); return }
   const v = canShare(d); if (!v.ok) { err(res, 'NOT_ALLOWED', v.reason, 409); return }
-  const method = String(req.body?.method ?? '') as ShareMethod
-  if (!SHARE_METHODS.includes(method) || method === 'pdf' || !sharesFor(d.type, d.data).includes(method)) { err(res, 'INVALID', 'Choose email or notification.', 400); return }
+  const method = String(req.body?.method ?? '') as ShareMethod | 'now'
+  const sign = req.body?.sign === true
+  // 'now' = share by the choice saved on the letter (hub and or email). Print only has nothing to share: it is downloaded and printed from the library.
+  const channels: Array<'email' | 'notification' | 'hub'> = []
+  if (method === 'now') {
+    if (d.type !== 'letter') { err(res, 'INVALID', 'Only a letter has a saved share choice.', 400); return }
+    const c = checkShareIntent(readShareIntent(d.data?.share_intent))
+    if (!c.ok) { err(res, 'INVALID', c.reason, 409); return }
+    const list = channelsFor(c.intent)
+    if (!list.length) { err(res, 'INVALID', 'This letter is print only. Download it from here and print it: nothing is shared with the staff member.', 409); return }
+    channels.push(...list)
+  } else {
+    if (!SHARE_METHODS.includes(method as ShareMethod) || method === 'pdf' || !sharesFor(d.type, d.data).includes(method as ShareMethod)) { err(res, 'INVALID', 'Choose the hub, email or notification.', 400); return }
+    // A letter marked print only is never put in the hub, emailed or sent as a notification.
+    if (d.type === 'letter' && d.data?.share_intent?.print_only === true) { err(res, 'NOT_ALLOWED', 'This letter is marked print only, so it is not shared. Change how it is shared first.', 409); return }
+    channels.push(method as 'email' | 'notification' | 'hub')
+  }
   try {
-    if (method === 'email') {
-      const r = d.type === 'report' ? await emailReportToAdmins({ tenantId: t, actorId: u, doc: d }) : await emailLetter({ tenantId: t, actorId: u, doc: d, signerUserId: req.body?.sign === true ? u : null })
-      if (!(d.type === 'report' ? (r as any).sent > 0 : (r as any).sent)) { err(res, 'NOT_SENT', (r as any).reason ?? 'It could not be emailed.', 409); return }
-    } else {
-      const r = await shareAsNotification({ tenantId: t, actorId: u, doc: d, audience: req.body?.audience, userIds: req.body?.user_ids, signerUserId: req.body?.sign === true ? u : null })
-      if (!r.ok) { err(res, r.code, r.message, r.status); return }
+    const done: string[] = []
+    for (const ch of channels) {
+      if (ch === 'email') {
+        const r = d.type === 'report' ? await emailReportToAdmins({ tenantId: t, actorId: u, doc: d }) : await emailLetter({ tenantId: t, actorId: u, doc: d, signerUserId: sign ? u : null })
+        if (!(d.type === 'report' ? (r as any).sent > 0 : (r as any).sent)) { err(res, 'NOT_SENT', (r as any).reason ?? 'It could not be emailed.', 409); return }
+        audit(req, 'ask_document_shared_email', id, { type: d.type })
+      } else if (ch === 'hub') {
+        const r = await shareInHub({ tenantId: t, actorId: u, doc: d, signerUserId: sign ? u : null, needsAcknowledgement: typeof req.body?.needs_acknowledgement === 'boolean' ? req.body.needs_acknowledgement : undefined })
+        if (!r.ok) { err(res, r.code ?? 'NOT_SHARED', r.reason, r.code === 'NOT_SET_UP' ? 503 : 409); return }
+        void writeAuditLog({ tenant_id: t, user_id: u, event_type: 'staff_letter_shared', entity_type: 'staff_letter', entity_id: r.letter_id, metadata: { document_id: id, needs_acknowledgement: r.needs_acknowledgement, signed: sign } })
+      } else {
+        const r = await shareAsNotification({ tenantId: t, actorId: u, doc: d, audience: req.body?.audience, userIds: req.body?.user_ids, signerUserId: sign ? u : null })
+        if (!r.ok) { err(res, r.code, r.message, r.status); return }
+        audit(req, 'ask_document_shared_notification', id, { type: d.type })
+      }
+      done.push(ch)
+      await store.appendShareRecord(t, id, { method: ch, by: u, at: new Date().toISOString() })
     }
-    await store.appendShareRecord(t, id, { method, by: u, at: new Date().toISOString() }); await store.setDocumentStatus(t, id, ['approved'], 'shared')
-    audit(req, method === 'email' ? 'ask_document_shared_email' : 'ask_document_shared_notification', id, { type: d.type }); ok(res, { shared: true, method })
+    await store.setDocumentStatus(t, id, ['approved'], 'shared')
+    ok(res, { shared: true, method, channels: done })
   } catch (e: any) { console.error('[ask] share failed:', String(e?.message ?? e).slice(0, 160)); err(res, 'SHARE_FAILED', 'It could not be shared just now. Please try again.', 500) }
+}))
+
+// Who has the letter in their hub, and taking one back. Withdrawing removes it (and its hub notification) from the person's hub; the record stays here, with the withdrawal logged.
+askRouter.post('/documents/:id/hub-shares/:letterId/withdraw', wrap(async (req, res) => {
+  const t = getTenantId(), u = req.user!.sub, id = String(req.params.id)
+  const d = await store.getDocumentFor(t, u, id); if (!d || d.type !== 'letter') { notFound(res); return }
+  try {
+    const w = await withdrawLetter(t, String(req.params.letterId), u)
+    if (!w || w.document_id !== id) { err(res, 'NOT_FOUND', 'That shared letter was not found, or it has already been withdrawn.', 404); return }
+    if (w.notification_id) await withdrawNotification(t, u, w.notification_id).catch(() => undefined)
+    void writeAuditLog({ tenant_id: t, user_id: u, event_type: 'staff_letter_withdrawn', entity_type: 'staff_letter', entity_id: w.id, metadata: { document_id: id } })
+    ok(res, { withdrawn: true })
+  } catch (e) { lettersMissing(e) ? err(res, 'NOT_SET_UP', 'Letters in the hub are not switched on yet.', 503) : err(res, 'ERROR', 'Could not withdraw it.', 500) }
 }))
 
 askRouter.delete('/documents/:id', wrap(async (req, res) => {

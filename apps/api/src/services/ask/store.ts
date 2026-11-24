@@ -85,3 +85,8 @@ export async function appendShareRecord(tenantId: string, id: string, entry: { m
 export async function countActiveAdmins(tenantId: string): Promise<number> {
   return await q().user.count({ where: { tenant_id: tenantId, role: 'admin', is_active: true, is_shared: false } })
 }
+
+/** Saves how a letter is to be shared ({ hub, email, print_only }) on the draft. Allowed until it has been shared; it does not change the version or the approval. */
+export async function setShareIntent(tenantId: string, id: string, intent: { hub: boolean; email: boolean; print_only: boolean }) {
+  return Number(await q().$executeRawUnsafe("update public.ask_documents set data = jsonb_set(coalesce(data, '{}'::jsonb), '{share_intent}', $3::jsonb), updated_at = now() where id = $1 and tenant_id = $2 and type = 'letter' and status in ('draft','pending','approved')", id, tenantId, JSON.stringify(intent))) > 0
+}

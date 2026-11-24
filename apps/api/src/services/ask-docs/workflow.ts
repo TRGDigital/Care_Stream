@@ -29,11 +29,11 @@ export function canReturn(d: DocLike, actor: string, activeAdmins: number): Verd
 /** An approved or shared document can be re-opened to a draft by an administrator (it then needs approving again). */
 export const canReopen = (d: DocLike): Verdict => (needsApproval(d.type) && (d.status === 'approved' || d.status === 'shared') ? { ok: true } : { ok: false, reason: 'Only an approved document can be re-opened.' })
 export const canShare = (d: DocLike): Verdict => (!needsApproval(d.type) ? { ok: false, reason: 'This is not shared from here.' } : d.status === 'approved' || d.status === 'shared' ? { ok: true } : { ok: false, reason: 'It has to be approved before it can be shared.' })
-export const SHARE_METHODS = ['pdf', 'email', 'notification'] as const
+export const SHARE_METHODS = ['pdf', 'email', 'notification', 'hub'] as const
 export type ShareMethod = (typeof SHARE_METHODS)[number]
 /** Which ways each kind of document can be shared. A letter is for one person; a newsletter is for staff. */
 export const sharesFor = (type: string, data?: { internal_only?: boolean } | null): ShareMethod[] =>
-  type === 'letter' ? ['pdf', 'email', 'notification']
+  type === 'letter' ? ['pdf', 'email', 'notification', 'hub']
   : type === 'newsletter' ? ['pdf', 'notification']
   // A governance report can be downloaded, emailed to the account's administrators, or sent to staff as a notification, EXCEPT an internal only report (it may name people), which can never go to staff.
   : type === 'report' ? (data?.internal_only === true ? ['pdf', 'email'] : ['pdf', 'email', 'notification'])

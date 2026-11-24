@@ -109,7 +109,7 @@ test('WORKFLOW: the author submits; someone else approves (or the sole administr
   assert.ok(!canApprove(pending, 'b', 2, false).ok); assert.ok(!canApprove(draft, 'b', 2, true).ok)
   assert.ok(canReturn(pending, 'a', 2).ok && !canReturn(draft, 'a', 2).ok)
   assert.ok(!canShare(pending).ok && canShare(approved).ok && canShare({ ...draft, status: 'shared' }).ok); assert.ok(canReopen(approved).ok && !canReopen(draft).ok)
-  assert.deepEqual(sharesFor('letter'), ['pdf', 'email', 'notification']); assert.deepEqual(sharesFor('newsletter'), ['pdf', 'notification']); assert.deepEqual(sharesFor('answer'), [])
+  assert.deepEqual(sharesFor('letter'), ['pdf', 'email', 'notification', 'hub']); assert.deepEqual(sharesFor('newsletter'), ['pdf', 'notification']); assert.deepEqual(sharesFor('answer'), [])
   assert.ok(!canSubmit({ type: 'answer', status: 'draft', created_by: 'a' }, 'a').ok)
 })
 

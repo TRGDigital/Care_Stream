@@ -9,6 +9,8 @@ import { detectNotificationFile } from '../../lib/notification-file'
 import { createAndSendNotification } from '../../routes/notifications'
 import { sendStaffDocumentEmail } from '../email/outbound'
 import { cleanTitle, cleanBody } from '../../lib/staff-notifications'
+import { shareToHub, setNotificationFor, isMissingTable as lettersMissingTable } from '../../lib/staff-letters'
+import { defaultNeedsAcknowledgement } from './share-intent'
 
 const p = () => prisma as any
 export interface Doc { id: string; type: string; title: string; body: string; data: any }
@@ -65,4 +67,34 @@ export async function shareAsNotification(o: { tenantId: string; actorId: string
   const body = cleanBody(isLetter ? 'Your letter is attached. Please open it and keep it with your records.' : (o.doc.type === 'report' ? 'The report is attached as a PDF.' : o.doc.body.length <= 1900 ? o.doc.body : 'This month\'s staff newsletter is attached as a PDF.'), 2000)
   const userIds = isLetter ? [String(o.doc.data?.staff_user_id ?? '')] : o.userIds
   return createAndSendNotification({ tenantId: o.tenantId, userId: o.actorId, title, body, audience: isLetter ? 'selected' : (o.audience === 'selected' ? 'selected' : 'all'), userIds, files: [file] })
+}
+
+/**
+ * Shares an approved letter in the staff member's hub (My letters). The finished, headed PDF is rendered ONCE here and kept as a private snapshot, so editing the draft or the letterhead
+ * later never changes what the person received. The signature is applied only for `signerUserId` (the administrator who ticked "Sign with my signature"). A hub notification
+ * ("You have a new letter from ...") is created too, hub only: the email, if the administrator also chose it, is the separate emailLetter step. Print only letters never come here.
+ */
+export async function shareInHub(o: { tenantId: string; actorId: string; doc: Doc; signerUserId?: string | null; needsAcknowledgement?: boolean }):
+  Promise<{ ok: true; letter_id: string; notified: boolean; needs_acknowledgement: boolean } | { ok: false; reason: string; code?: string }> {
+  if (o.doc.type !== 'letter') return { ok: false, reason: 'Only a letter can be shared in a staff member\'s hub.' }
+  if (o.doc.data?.share_intent?.print_only === true) return { ok: false, reason: 'This letter is marked print only, so it is never shared in the hub. Change how it is shared first.' }
+  const staffId = String(o.doc.data?.staff_user_id ?? '')
+  const person = await p().user.findFirst({ where: { id: staffId, tenant_id: o.tenantId, is_active: true, is_shared: false }, select: { id: true, name: true } })
+  if (!person) return { ok: false, reason: 'That person is not an active member of staff, so the letter cannot be shared in their hub.' }
+  const needsAck = typeof o.needsAcknowledgement === 'boolean' ? o.needsAcknowledgement : defaultNeedsAcknowledgement(String(o.doc.data?.template_id ?? ''), o.doc.data?.values ?? {})
+  const sender = await p().user.findUnique({ where: { id: o.actorId }, select: { name: true } })
+  const senderName = sender?.name ?? 'An administrator'
+  const { buffer, filename } = await pdfFor(o.tenantId, o.doc, o.signerUserId)
+  let letterId: string
+  try {
+    letterId = await shareToHub({ tenantId: o.tenantId, documentId: o.doc.id, userId: person.id, title: o.doc.title.replace(/:.*$/, '').trim() || 'A letter for you', filename, pdf: buffer, signed: !!o.signerUserId, sentBy: o.actorId, sentByName: senderName, needsAcknowledgement: needsAck })
+  } catch (e) { return lettersMissingTable(e) ? { ok: false, reason: 'Letters in the hub are not switched on yet.', code: 'NOT_SET_UP' } : { ok: false, reason: 'The letter could not be shared in the hub just now. Please try again.' } }
+  let notified = false
+  try {
+    const title = cleanTitle(`You have a new letter from ${senderName}`, 120)
+    const body = cleanBody(`${o.doc.title.replace(/:.*$/, '').trim() || 'A letter'} is waiting in My letters in your hub. You can read it, print it or download it there.${needsAck ? ' Please tick that you have read and understood it.' : ''}`, 1900)
+    const n = await createAndSendNotification({ tenantId: o.tenantId, userId: o.actorId, title, body, audience: 'selected', userIds: [person.id], files: [], email: false, skipDailyLimit: true })
+    if (n.ok) { notified = true; await setNotificationFor(o.tenantId, letterId, n.id) }
+  } catch { /* the letter is shared even if the notification could not be made */ }
+  return { ok: true, letter_id: letterId, notified, needs_acknowledgement: needsAck }
 }

@@ -25,7 +25,7 @@ test('only paid plans count for the phone line, and the release dot shows for a 
   assert.equal(hasUnreadRelease('2026-11-24', null), true); assert.equal(hasUnreadRelease('2026-11-24', '2026-11-23'), true)
   assert.equal(hasUnreadRelease('2026-11-24', '2026-11-24'), false); assert.equal(hasUnreadRelease(null, null), false)
   assert.match(mailtoSupport('CS-1001'), /^mailto:support@carestreamai\.com\?subject=Support%20request%3A%20CS-1001$/)
-  assert.equal(SUPPORT_PHONE, null)
+  assert.equal(SUPPORT_PHONE, '020 8064 1596')
 })
 
 test('release notes are newest first, have unique dated ids, no future dates and no dashes', async () => {

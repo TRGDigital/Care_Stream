@@ -8,19 +8,30 @@ import { ukToday } from '../lib/holiday-math'
 
 const QUESTIONS: Record<string, string[]> = {
   staff: [
+    'What is the average hourly rate we pay?', 'Who is paid the least?', 'How much do we pay care assistants versus seniors?',
     'How many staff do we have, by job role?', 'Who has been with us longest?', 'Whose DBS is due in the next 60 days?', 'Which staff are missing a start date or contracted hours?',
     'What is our total contracted hours a week?', 'How many people have under a year of service?', 'Who is missing a date of birth?', 'What do our staff cost each year, with 20 percent on costs?',
     'Give me the staff contact list.', 'Who is off sick this week?',
   ],
   holiday: [
+    'Work out the allowance for someone starting on 14 March on 30 hours a week with 224 hours a year', 'What is a leaver owed? Elena Popescu leaves on 30 June', 'What is the legal minimum holiday for someone working 4 days a week?', 'How much holiday does a bank worker build up after working 120 hours?',
     'Who has the most holiday left this year?', 'Who is off over the next four weeks?', 'What is our holiday liability?', 'Which weeks are busiest for holiday in the next three months?',
     'Who is over their allowance?', 'How much holiday has been taken so far this year, in total hours?', 'What does Christmas Day and Boxing Day cost us in extra pay if 5 carers work 12 hours at 13 pounds an hour?', 'List the bank holidays left this year and their pay rate.',
     'Who has no holiday allowance set up?', 'How many people are off next Monday?',
   ],
   pay: [
+    'What is the average hourly rate we pay?', 'What is the median and the lowest and highest hourly rate?', 'Are any of our staff paid below the National Living Wage for their age?', 'How much headroom do we have over the current National Living Wage?',
     'What is the National Living Wage now and what is the next rate?', 'What does the next rise cost us over a year, including 18 percent on costs?', 'Compare 3, 4, 5 and 6 percent pay rises.', 'What are CPI and CPIH now?',
     'Who is paid below the next minimum wage?', 'How much would our fees need to rise to cover a 5 percent pay rise?', 'What is statutory sick pay this year?', 'What is the HMRC mileage rate?',
     'What is the weekly fee income for one named resident, Mrs Test?', 'Is the Real Living Wage figure up to date?',
+  ],
+  letters: [
+    'Draft a pay review letter for Aisha Rahman', 'Write an annual leave statement for Len Burgess', 'Draft a thank you letter to Chloe Bennett for covering extra shifts', 'Draft a leaving letter for Callum Fraser, last day 31 January', 'Write a disciplinary warning letter for Sam',
+    'Draft a probation passed letter for a new starter (ask me who)', 'What letters can you write?', 'Draft a holiday pay on leaving letter for Elena Popescu, last day 30 June', 'Write a pay increase letter for everyone', 'Draft a supervision reminder for Daniel Osei',
+  ],
+  newsletter: [
+    'Build this month\'s staff newsletter', 'Make a newsletter that welcomes our new starters and thanks the night team', 'Add a holiday and rota reminders section', 'Write a seasonal note for Christmas', 'Include who is off sick this month',
+    'Add a section on pay rises', 'Draft a recognition newsletter about training completed this month', 'Write a newsletter for families about our summer fair', 'Put birthdays in this month\'s newsletter', 'Draft a policy and training reminder',
   ],
   notifications: [
     'Draft a reminder that holiday requests for December close this Friday.', 'Write a notification about the new holiday booking process.', 'Draft a message thanking the team for a busy week.', 'Write a reminder to complete mandatory training.',

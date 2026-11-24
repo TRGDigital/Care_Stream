@@ -1,10 +1,13 @@
 // The tools the Ask CareStream agents can call. EVERY tool is read only and scoped to one account. A tool returns data, a plain "method" line the agent must show
 // when it does a calculation, and the sources it used. Pay rates and funding are administrators only (the whole feature is). Sickness and health notes are not
 // available to any tool: there is no loader for them under services/ask (a test checks).
-import { round2, belowMinimumImpact, percentRiseCost, holidayLiability, feeUplift, bankHolidayExtra, blendedRate, weeklyCost, moneyFromWeekly, nlwFor, bandForAge, BAND_LABEL, type NlwRow, type CostPerson } from './calc'
+import { round2, paySummary, payGaps, compareNlw, belowMinimumImpact, percentRiseCost, holidayLiability, feeUplift, bankHolidayExtra, blendedRate, weeklyCost, moneyFromWeekly, nlwFor, bandForAge, BAND_LABEL, type NlwRow, type CostPerson } from './calc'
 import { loadStaff, loadCredentialsDue, holidayYearRows, whoIsOff, bankHolidaysWithPay, ukToday, addDays, weekOf, facilityOf, type StaffRow } from './data'
 import { figuresFor, ownSource, type AskSource } from './sources'
 import { fundingAggregate, fundingForNamedPerson } from './funding-bridge'
+import { ENTITLEMENT_TOOLS } from './entitlement-tools'
+import { LETTER_TOOLS } from './letter-tools'
+import { NEWSLETTER_TOOLS } from './newsletter-tools'
 
 export interface ToolContext { tenantId: string; userId: string; today: string }
 export interface ToolResult { data: unknown; method?: string; sources: AskSource[] }
@@ -239,6 +242,57 @@ export const TOOLS: AskTool[] = [
       return { data: r, sources: [OWN('Resident funding (locked, administrators only)', ctx)] }
     },
   },
+  // ── Pay analysis (administrators only: they can see pay rates in the staff form, so the agent can too; staff never can) ──────────────────────────────────────
+  {
+    name: 'pay_summary',
+    description: 'THE tool for "what is the average hourly rate we pay", median, lowest, highest, pay bands and pay by job role. Weekday, weekend and a blended rate across active staff, with how many people have no rate recorded. Names are only listed for people without a rate. Use this first for any question about average or typical pay.',
+    input_schema: { type: 'object', properties: { weekend_share_percent: { type: 'number', description: 'Share of hours worked at weekends for the blended rate, 0 to 100 (default 28.6).' }, band_width: { type: 'number', enum: [0.5, 1], description: 'Width of each pay band in pounds (default 1).' } } },
+    async run(ctx, input) {
+      const share = input?.weekend_share_percent != null ? Math.max(0, Math.min(100, pct(input.weekend_share_percent))) / 100 : 2 / 7
+      const people = costPeople(await loadStaff(ctx.tenantId, ctx.today))
+      const r = paySummary(people, share, input?.band_width === 0.5 ? 0.5 : 1)
+      return { data: { ...r, assumptions: { weekend_share_of_hours_for_blended_rate: round2(share * 100) } }, method: `Averages are across active staff who have a pay rate recorded (${r.people_with_rate} of ${r.people_total}). The blended rate is the weekday rate x ${round2((1 - share) * 100)}% plus the weekend rate x ${round2(share * 100)}%. It is a simple average per person, not weighted by hours.`, sources: [OWN('Staff pay rates (locked, administrators only)', ctx)] }
+    },
+  },
+  {
+    name: 'pay_list',
+    description: 'A table of each active person with their job role, weekday and weekend hourly rate, blended rate and contracted hours, sorted. Use for "who is paid the least or most", or the pay of one job role. Administrators only. No dates of birth or contact details.',
+    input_schema: { type: 'object', properties: { job_role: { type: 'string', description: 'Only people whose job role contains this text.' }, sort: { type: 'string', enum: ['lowest_first', 'highest_first', 'name'] }, limit: { type: 'number', description: 'Maximum rows (default 60, maximum 200).' } } },
+    async run(ctx, input) {
+      const staff = (await loadStaff(ctx.tenantId, ctx.today)).filter(s => !input?.job_role || (s.job_role ?? '').toLowerCase().includes(String(input.job_role).toLowerCase()))
+      const rows = staff.map(s => ({ name: s.name, job_role: s.job_role, weekday_rate: s.weekday_rate, weekend_rate: s.weekend_rate, blended_rate: blendedRate(s), contracted_hours_per_week: s.contracted }))
+      const key = (r: { blended_rate: number | null }) => r.blended_rate
+      const sorted = input?.sort === 'name' ? rows.sort((a, b) => a.name.localeCompare(b.name)) : rows.sort((a, b) => ((key(a) ?? Infinity) - (key(b) ?? Infinity)) * (input?.sort === 'highest_first' ? -1 : 1))
+      const limit = Math.max(1, Math.min(200, Math.round(pct(input?.limit, 60))))
+      return { data: { count: rows.length, shown: Math.min(limit, rows.length), people: sorted.slice(0, limit) }, method: 'Blended rate = weekday rate x 5/7 plus weekend rate x 2/7 unless only one rate is recorded. People with no rate are listed last.', sources: [OWN('Staff pay rates (locked, administrators only)', ctx)] }
+    },
+  },
+  {
+    name: 'pay_gaps',
+    description: 'Pay problems and differences: people paid below the current National Living Wage or minimum wage for their age band, people in the same job role on different rates, and people whose pay is far from their role average (by a percentage the administrator can set).',
+    input_schema: { type: 'object', properties: { threshold_percent: { type: 'number', description: 'How far from the role average counts as unusual (default 10).' } } },
+    async run(ctx, input) {
+      const rates = await nlwRows(), people = costPeople(await loadStaff(ctx.tenantId, ctx.today))
+      const usable = !!rates.figure?.usable && !!rates.current
+      const r = payGaps(people, usable ? rates.current : null, Math.max(1, Math.min(100, pct(input?.threshold_percent, 10))))
+      return { data: { ...r, minimum_wage_check: usable ? { rates: { age21: rates.current!.age21, age18to20: rates.current!.age18to20, under18: rates.current!.under18, from: (rates.current as any).from ?? null } } : { error: 'The current National Living Wage figure could not be confirmed, so the minimum wage check was skipped.' } }, method: 'Minimum wage check uses the LOWER of each person\'s weekday and weekend rate against the rate for their age band (age is worked out from the date of birth, which is not shown). Role averages are blended rates and only roles with 3 or more people are checked for unusual pay.', sources: [...rates.sources, OWN('Staff pay rates (locked, administrators only)', ctx)] }
+    },
+  },
+  {
+    name: 'pay_compare_nlw',
+    description: 'How far above or below the National Living Wage or minimum wage each person is paid (headroom), for the current rate or the announced next rate. Smallest headroom first, with totals.',
+    input_schema: { type: 'object', properties: { target: { type: 'string', enum: ['current', 'next'] } } },
+    async run(ctx, input) {
+      const rates = await nlwRows()
+      const row = input?.target === 'next' ? rates.upcoming : rates.current
+      if (!rates.figure?.usable || !row) return { data: { error: input?.target === 'next' ? 'No next National Living Wage rate has been announced in the data, or it could not be confirmed.' : 'The current National Living Wage figure could not be confirmed.' }, sources: rates.sources }
+      const r = compareNlw(costPeople(await loadStaff(ctx.tenantId, ctx.today)), row)
+      return { data: { target: input?.target === 'next' ? 'next' : 'current', rates: { age21: row.age21, age18to20: row.age18to20, under18: row.under18, from: (row as any).from ?? null }, ...r }, method: 'Headroom = the person\'s lower hourly rate minus the minimum for their age band. Negative means below the minimum.', sources: [...rates.sources, OWN('Staff pay rates (locked, administrators only)', ctx)] }
+    },
+  },
+  ...ENTITLEMENT_TOOLS,
+  ...LETTER_TOOLS,
+  ...NEWSLETTER_TOOLS,
   {
     name: 'care_setting',
     description: 'The type of service this account runs (the Facility Type), to word answers correctly.',

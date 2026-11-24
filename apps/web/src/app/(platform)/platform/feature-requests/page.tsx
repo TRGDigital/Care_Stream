@@ -51,7 +51,7 @@ export default function FeatureRequestsPage() {
       <div className="space-y-6">
         <div>
           <h1 className="flex items-center gap-2 text-2xl font-semibold text-neutral-dark"><Lightbulb size={22} className="text-teal" /> Feature Requests</h1>
-          <p className="mt-1 text-sm text-neutral-mid">Ideas submitted by clients from the Help &amp; Guides page. Update a status to track what you are working on.</p>
+          <p className="mt-1 text-sm text-neutral-mid">Ideas and bug reports submitted by clients from the support menu and the Help &amp; Guides page. Update a status to track what you are working on.</p>
         </div>
 
         {/* Status filter */}
@@ -76,7 +76,10 @@ export default function FeatureRequestsPage() {
               <div key={r.id} className="rounded-xl border border-gray-200 bg-white p-5">
                 <div className="mb-2 flex flex-wrap items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <h3 className="font-semibold text-neutral-dark">{r.title}</h3>
+                    <h3 className="flex flex-wrap items-center gap-2 font-semibold text-neutral-dark">
+                      <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${r.kind === 'bug' ? 'bg-red-100 text-red-700' : 'bg-teal/10 text-teal'}`}>{r.kind === 'bug' ? 'Bug' : 'Feature'}</span>
+                      {r.title}
+                    </h3>
                     <p className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-neutral-mid">
                       <span className="inline-flex items-center gap-1"><Building2 size={11} />{r.tenant_name ?? 'Unknown client'}</span>
                       {r.submitter_name && <span>· {r.submitter_name}</span>}
@@ -89,6 +92,7 @@ export default function FeatureRequestsPage() {
                   </select>
                 </div>
                 <p className="whitespace-pre-wrap text-sm leading-relaxed text-neutral-dark">{r.details}</p>
+                {r.page_url && <p className="mt-2 truncate text-xs text-neutral-mid">Page: <a href={r.page_url} target="_blank" rel="noopener noreferrer" className="text-teal hover:underline">{r.page_url}</a></p>}
               </div>
             ))}
           </div>

@@ -24,6 +24,7 @@ import { usePlanFeatures, hasFeature } from '@/lib/use-plan-features'
 import { pageCache, persistentCache } from '@/lib/page-cache'
 import { TRAINING_ONLY_NAV, POLICIES_ONLY_NAV, FREE_NAV, NOT_FOR_SHOP_TIERS } from '@/lib/admin-search/access'
 import { AdminSearch } from '@/components/admin/admin-search'
+import { SupportMenu } from '@/components/admin/support-menu'
 
 const NAV_SECTIONS = [
   {
@@ -314,6 +315,7 @@ export function AdminShell({ userName, tenantName, children }: AdminShellProps) 
           </div>
 
           <div className="flex flex-shrink-0 items-center gap-4 md:gap-5">
+            <SupportMenu />
             <span className="hidden text-sm text-neutral-mid sm:inline">{userName}</span>
             <button
               onClick={() => signOut({ callbackUrl: '/login' })}

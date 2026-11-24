@@ -1172,8 +1172,8 @@ export function createApiClient(token: string) {
     },
 
     featureRequests: {
-      create: (title: string, details: string) =>
-        apiFetch<{ id: string }>('/feature-requests', token, { method: 'POST', body: JSON.stringify({ title, details }) }),
+      create: (title: string, details: string, extra?: { kind?: 'feature' | 'bug'; page_url?: string }) =>
+        apiFetch<{ id: string | null }>('/feature-requests', token, { method: 'POST', body: JSON.stringify({ title, details, ...(extra ?? {}) }) }),
     },
 
     supportRequests: {

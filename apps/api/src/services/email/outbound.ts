@@ -7,6 +7,7 @@ import '../../lib/email-guard'   // never email reserved fictional domains (exam
 import { signFeedbackToken } from '../../lib/feedback-token'
 import { siteUrl } from '../../lib/urls'
 import { reminderCopy } from '../../lib/family-reminders-copy'
+import { emailSubjectFor } from '../../lib/feature-request-kind'
 import { personLedEmail, personFrom, type PersonAdmin } from './person-email'
 import {
   ALLOC_COPY, allocationContent, trainingReminderContent, faceToFaceReminderContent, cqcPrepContent, onboardingContent,
@@ -388,10 +389,11 @@ export async function sendTrainingPurchaseNotification(opts: {
 // ─── Feature-request notification to the platform owner ─────────────────────────
 // Sent whenever a client submits a feature request from Help & Guides.
 export async function sendFeatureRequestNotification(opts: {
-  tenantName: string; submitterName?: string | null; submitterEmail?: string | null; title: string; details: string
+  tenantName: string; submitterName?: string | null; submitterEmail?: string | null; title: string; details: string; kind?: 'feature' | 'bug'; pageUrl?: string | null
 }): Promise<void> {
   ensureInitialised()
   if (!process.env.SENDGRID_API_KEY) { console.warn('[email] SENDGRID_API_KEY not set — skipping feature-request notification'); return }
+  const bug = opts.kind === 'bug'
 
   const to   = process.env.PLATFORM_NOTIFY_EMAIL ?? 'len@carestreamai.com'
   const from = process.env.SENDGRID_FROM_ADDRESS ?? process.env.SENDGRID_FROM_EMAIL ?? `noreply@${INBOUND_DOMAIN}`
@@ -399,21 +401,22 @@ export async function sendFeatureRequestNotification(opts: {
   const row  = (k: string, v: string) => `<tr><td style="padding:5px 16px 5px 0;color:#6b7280;font-size:13px;white-space:nowrap">${k}</td><td style="padding:5px 0;color:${NEUTRAL_DARK};font-size:13px;font-weight:600">${esc(v)}</td></tr>`
 
   const html = emailWrapper(`
-    <p style="color:${NEUTRAL_DARK};font-size:16px;font-weight:700;margin:0 0 6px">💡 New feature request</p>
-    <p style="color:#374151;font-size:14px;line-height:1.6;margin:0 0 18px">A client has submitted a feature request from Help &amp; Guides.</p>
+    <p style="color:${NEUTRAL_DARK};font-size:16px;font-weight:700;margin:0 0 6px">${bug ? '🐞 New bug report' : '💡 New feature request'}</p>
+    <p style="color:#374151;font-size:14px;line-height:1.6;margin:0 0 18px">${bug ? 'A client has reported a bug from the support menu.' : 'A client has submitted a feature request from the support menu or Help &amp; Guides.'}</p>
     <table style="border-collapse:collapse;margin:0 0 16px">
       ${row('Client', opts.tenantName)}
       ${row('From', opts.submitterName ?? '—')}
       ${row('Email', opts.submitterEmail ?? '—')}
       ${row('Title', opts.title)}
+      ${opts.pageUrl ? row('Page', opts.pageUrl) : ''}
     </table>
-    <p style="color:#6b7280;font-size:13px;margin:0 0 4px">Details</p>
+    <p style="color:#6b7280;font-size:13px;margin:0 0 4px">${bug ? 'What happened' : 'Details'}</p>
     <div style="white-space:pre-wrap;color:${NEUTRAL_DARK};font-size:14px;line-height:1.6;background:#f9fafb;border:1px solid #eef0f2;border-radius:8px;padding:12px 14px;margin:0 0 18px">${esc(opts.details)}</div>
     <p style="color:#9ca3af;font-size:12px;margin:0">Open the platform console → Feature Requests to triage it.</p>
     ${emailFooter()}
   `)
 
-  await sgMail.send({ to, from, subject: `Feature request from ${opts.tenantName}: ${opts.title}`, html })
+  await sgMail.send({ to, from, subject: emailSubjectFor(bug ? 'bug' : 'feature', opts.tenantName, opts.title), html })
 }
 
 // ─── Support / service request (raised from the Guides page) ──────────────────

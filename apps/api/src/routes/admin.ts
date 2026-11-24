@@ -4407,7 +4407,11 @@ adminRouter.get('/tenants/:id/onboarding', async (req: Request, res: Response) =
 
 // GET /admin/feature-requests — every tenant-submitted request, newest first.
 adminRouter.get('/feature-requests', async (_req: Request, res: Response) => {
-  const requests = await (prisma as any).featureRequest.findMany({ orderBy: { created_at: 'desc' } })
+  const found = await (prisma as any).featureRequest.findMany({ orderBy: { created_at: 'desc' } })
+  // kind and page_url come from a later column (prisma/sql/2026-11-24_feature_requests_kind.sql): merged in when it exists.
+  let extra = new Map<string, any>()
+  try { extra = new Map(((await (prisma as any).$queryRawUnsafe('select id, kind, page_url from feature_requests')) as any[]).map(r => [r.id, r])) } catch { /* column not added yet */ }
+  const requests = (found as any[]).map(r => ({ ...r, kind: extra.get(r.id)?.kind ?? 'feature', page_url: extra.get(r.id)?.page_url ?? null }))
   const counts: Record<string, number> = {}
   for (const r of requests as any[]) counts[r.status] = (counts[r.status] ?? 0) + 1
   ok(res, { requests, counts, total: (requests as any[]).length })

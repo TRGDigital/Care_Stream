@@ -752,7 +752,7 @@ export function createPlatformClient(token: string) {
     },
     featureRequests: {
       list: () => adminFetch<{
-        requests: Array<{ id: string; tenant_id: string; tenant_name: string | null; submitter_name: string | null; submitter_email: string | null; title: string; details: string; status: string; created_at: string }>
+        requests: Array<{ id: string; tenant_id: string; tenant_name: string | null; submitter_name: string | null; submitter_email: string | null; title: string; details: string; status: string; created_at: string; kind?: 'feature' | 'bug'; page_url?: string | null }>
         counts: Record<string, number>; total: number
       }>('/feature-requests', token),
       updateStatus: (id: string, status: string) =>

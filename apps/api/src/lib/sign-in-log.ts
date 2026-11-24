@@ -5,7 +5,7 @@ import { clientOrigin } from './client-origin'
 
 export type SignInFailure = 'wrong_password' | 'account_locked' | 'email_not_verified' | 'account_deactivated'
 
-export async function recordSignIn(req: Request, user: { id: string; tenant_id: string }, result: { success: true; method: 'password' | 'magic_link' } | { success: false; method: 'password' | 'magic_link'; reason: SignInFailure }): Promise<void> {
+export async function recordSignIn(req: Request, user: { id: string; tenant_id: string }, result: { success: true; method: 'password' | 'magic_link' | 'tablet_pin' } | { success: false; method: 'password' | 'magic_link'; reason: SignInFailure }): Promise<void> {
   try {
     const o = clientOrigin(req)
     await (prisma as any).userSignIn.create({

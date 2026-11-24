@@ -3273,7 +3273,7 @@ model UserSignIn {
   user_id        String   @db.Uuid
   at             DateTime @default(now())
   success        Boolean
-  method         String                       // password | magic_link
+  method         String                       // password | magic_link | tablet_pin
   failure_reason String?                      // wrong_password | account_locked | email_not_verified | account_deactivated
   ip             String?
   country        String?

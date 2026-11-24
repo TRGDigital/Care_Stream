@@ -41,3 +41,10 @@ test('a personal session on a tablet gets the normal staff hub minus account cha
 test('an ordinary session is untouched', () => {
   assert.equal(tabletRefusal(req('POST', '/users')), null)
 })
+
+test('entering a PIN on a tablet counts as that person signing in (first and last login, sign in history)', () => {
+  const src = require('fs').readFileSync(require('path').resolve(__dirname, '../routes/shared-tablets.ts'), 'utf8')
+  const start = src.slice(src.indexOf("'/personal/start'"), src.indexOf("'/personal/end'"))
+  assert.ok(/first_login_at/.test(start) && /last_login_at/.test(start), 'sets first and last login')
+  assert.ok(/recordSignIn\([^)]*tablet_pin/.test(start), 'records a tablet_pin sign in')
+})

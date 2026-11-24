@@ -18,6 +18,8 @@ import { hashPassword } from '../services/auth/password'
 import { staffPhotoUrls } from '../lib/staff-photos'
 import { sendStaffPinEmail } from '../services/email/outbound'
 import { forgetDevice } from '../middleware/sharedDeviceGuard'
+import { recordSignIn } from '../lib/sign-in-log'
+import { requestOrigin } from '../lib/signup-meta'
 import {
   checkPin, setPin, readPin, takeResendSlot, getOrCreateConnectKey, rotateConnectKey, tenantForKey, noteKeyFailure,
   TABLET_STAFF_WHERE, REMINDER_CHOICES, DEFAULT_REMINDER_MONTHS, reminderDays,
@@ -148,6 +150,14 @@ tabletRouter.post('/personal/start', async (req: Request, res: Response) => {
     // Always an ordinary staff session, even for an administrator: admin screens are never reachable from a shared tablet.
     const token = generateTabletPersonalToken({ sub: user.id, tenant_id: tenantId, role: 'staff', dev: { t: 'personal', d: dev.d } })
     await p().sharedSession.create({ data: { tenant_id: tenantId, device_id: dev.d, user_id: user.id } })
+    // Entering a PIN is this person signing in: it counts as a first and last login and appears in their sign in history, so a carer who only ever
+    // uses the tablet is not shown as "Never signed in" or chased by the weekly reminders. Never blocks the session.
+    try {
+      const now = new Date()
+      const cur = await p().user.findUnique({ where: { id: user.id }, select: { first_login_at: true } })
+      await p().user.update({ where: { id: user.id }, data: { last_login_at: now, last_login_meta: requestOrigin(req) as any, ...(cur?.first_login_at ? {} : { first_login_at: now }) } })
+      await recordSignIn(req, { id: user.id, tenant_id: tenantId }, { success: true, method: 'tablet_pin' })
+    } catch (e) { console.error('[tablet] could not record the sign in', e) }
     void writeAuditLog({ tenant_id: tenantId, user_id: user.id, event_type: 'shared_tablet_session_started', entity_type: 'shared_device', entity_id: dev.d, metadata: {} })
     // A one time token that brings this browser back to the tablet itself when the person taps Done (or the tablet times out).
     const returnToken = await mintLoginToken(req.user!.sub, tenantId, (TABLET_PERSONAL_MINUTES + 10) * 60_000, 'tablet-return')

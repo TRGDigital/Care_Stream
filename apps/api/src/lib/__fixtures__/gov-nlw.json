@@ -1,0 +1,8 @@
+{
+ "title": "National Minimum Wage and National Living Wage rates",
+ "base_path": "/national-minimum-wage-rates",
+ "public_updated_at": "2024-10-30T11:07:08+00:00",
+ "details": {
+  "body": "<p>The hourly rate for the minimum wage depends on your age and whether <a href=\"/become-apprentice\">you\u2019re an apprentice</a>.</p>\n\n<div role=\"note\" aria-label=\"Information\" class=\"application-notice info-notice\">\n  <p>This page is also available <a href=\"/cyfraddau-isafswm-cyflog-cenedlaethol\">in Welsh (Cymraeg)</a>.</p>\n</div>\n\n<p>You must be at least:</p>\n\n<ul>\n  <li>\n<a href=\"/know-when-you-can-leave-school\">school leaving age</a> to get the National Minimum Wage</li>\n  <li>aged 21 to get the National Living Wage - the minimum wage will still apply for workers aged 20 and under</li>\n</ul>\n\n<h2 id=\"current-rates\">Current rates</h2>\n\n<p>The rates change on 1 April every year.</p>\n\n<table>\n  <thead>\n    <tr>\n      <td></td>\n      <th scope=\"col\">21 and over</th>\n      <th scope=\"col\">18 to 20</th>\n      <th scope=\"col\">Under 18</th>\n      <th scope=\"col\">Apprentice</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <th scope=\"row\">April 2026</th>\n      <td>\u00a312.71</td>\n      <td>\u00a310.85</td>\n      <td>\u00a38</td>\n      <td>\u00a38</td>\n    </tr>\n    <tr>\n      <th scope=\"row\">April 2027</th>\n      <td>\u00a313.21</td>\n      <td>\u00a311.27</td>\n      <td>\u00a38.31</td>\n      <td>\u00a38.31</td>\n    </tr>\n  </tbody>\n</table>\n\n"
+ }
+}

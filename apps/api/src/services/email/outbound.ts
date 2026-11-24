@@ -2827,3 +2827,21 @@ export async function sendStaffNotificationEmail(opts: {
   `)
   await sgMail.send({ to: opts.to, from: { email: from, name: opts.orgName }, subject: notificationSubject(opts.orgName, opts.title, kind), html })
 }
+
+
+/** To the platform owner: the weekly data sources check found something that changed, failed or needs a person to look. One email per run, never sent when all is quiet. */
+export async function sendDataSourcesEmail(opts: { subject: string; lines: string[] }): Promise<void> {
+  ensureInitialised()
+  if (!process.env.SENDGRID_API_KEY) { console.warn('[email] SENDGRID_API_KEY not set, skipping data sources email'); return }
+  const to   = process.env.DATA_SOURCES_NOTIFY_EMAIL ?? process.env.PLATFORM_NOTIFY_EMAIL ?? 'lenny@trgdigital.co.uk'
+  const from = process.env.SENDGRID_FROM_ADDRESS ?? process.env.SENDGRID_FROM_EMAIL ?? `noreply@${INBOUND_DOMAIN}`
+  const esc  = (x: any) => String(x ?? '').replace(/[<>&]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' }[c] as string))
+  const html = emailWrapper(`
+    <p style="color:${NEUTRAL_DARK};font-size:16px;font-weight:700;margin:0 0 6px">Reference figures to look at</p>
+    <p style="color:#374151;font-size:14px;line-height:1.6;margin:0 0 14px">The weekly check of the figures that Ask CareStream uses found ${opts.lines.length === 1 ? 'one thing' : `${opts.lines.length} things`}. A figure that could not be read, or looked wrong, was not used: the last good figure is still held.</p>
+    <ul style="color:${NEUTRAL_DARK};font-size:14px;line-height:1.6;margin:0 0 18px;padding-left:20px">${opts.lines.map(l => `<li style="margin-bottom:8px">${esc(l)}</li>`).join('')}</ul>
+    <div style="text-align:center;margin:0 0 24px"><a href="${WEB_URL}/platform/data-sources" style="display:inline-block;padding:14px 32px;background:${PURPLE};color:#ffffff;font-size:15px;font-weight:600;border-radius:8px;text-decoration:none">Open the data sources</a></div>
+    ${emailFooter()}
+  `)
+  await sgMail.send({ to, from, subject: opts.subject, html })
+}

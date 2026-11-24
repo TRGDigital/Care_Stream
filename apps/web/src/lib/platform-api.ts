@@ -741,6 +741,12 @@ export interface LiveChatSummary {
   id: string; tenant_id: string; status: 'open' | 'waiting' | 'answered' | 'closed'; mode: 'live' | 'offline'; customer_name: string; customer_email: string; customer_reference: string
   home_name: string; plan: string; created_at: string; last_message_at: string; last_customer_message_at: string | null; closed_at: string | null
 }
+export type DataSourceStatus = 'ok' | 'changed' | 'needs_review' | 'failed' | 'manual'
+export interface DataSourceRow { key: string; name: string; publisher: string; source_url: string; fetch_url: string | null; update_frequency: string; auto: boolean; stale_after_days: number
+  value: any; previous_value: any; effective_from: string | null; fetched_at: string | null; last_checked_at: string | null; last_changed_at: string | null; next_check_due: string | null
+  status: DataSourceStatus; stale: boolean; usable: boolean; last_error: string | null; note: string | null; warning: string | null; as_of_text: string }
+export interface DataSourceHistory { id: string; key: string; fetched_at: string | null; effective_from: string | null; value: any; status: string; note: string | null }
+export interface DataSourceRun { checked: number; changed: number; failed: number; needs_review: number; emailed: boolean; outcomes: Array<{ key: string; name: string; result: string; message: string }> }
 export interface LiveChatList { online: boolean; in_hours: boolean; hours_text: string; chats: Array<LiveChatSummary & { unread: number }> }
 
 export function createPlatformClient(token: string) {
@@ -758,6 +764,14 @@ export function createPlatformClient(token: string) {
       list: (days = 30) => adminFetch<{ days: number; misses: Array<{ query: string; searches: number; accounts: number; last_seen: string; tiers: string[] }> }>(`/search-misses?days=${days}`, token),
     },
     // Live support chat inbox (see apps/api/src/routes/support-chat.ts).
+    dataSources: {
+      list: () => adminFetch<{ today: string; sources: DataSourceRow[] }>('/data-sources', token),
+      history: (key: string) => adminFetch<{ history: DataSourceHistory[] }>(`/data-sources/${encodeURIComponent(key)}/history`, token),
+      checkAll: () => adminFetch<DataSourceRun>('/data-sources/check', token, { method: 'POST' }),
+      checkOne: (key: string) => adminFetch<DataSourceRun>(`/data-sources/${encodeURIComponent(key)}/check`, token, { method: 'POST' }),
+      setManual: (key: string, body: { value: any; effective_from?: string | null; note?: string }) => adminFetch<{ saved: boolean }>(`/data-sources/${encodeURIComponent(key)}/manual`, token, { method: 'POST', body: JSON.stringify(body) }),
+      clearManual: (key: string) => adminFetch<DataSourceRun>(`/data-sources/${encodeURIComponent(key)}/clear-manual`, token, { method: 'POST' }),
+    },
     liveChat: {
       list: (filter?: string) => adminFetch<LiveChatList>(`/support-chat${filter ? `?filter=${encodeURIComponent(filter)}` : ''}`, token),
       unread: () => adminFetch<{ unread: number }>('/support-chat/unread', token),

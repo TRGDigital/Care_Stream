@@ -101,7 +101,7 @@ export const PEOPLE_TOOLS: AskTool[] = [
   // ── Training ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────
   {
     name: 'training_overview',
-    description: 'The headline for digital training across active staff: how many courses are assigned, complete, in progress, not started, overdue and expired, and the overall completion percentage.',
+    description: 'The headline numbers for digital training across active staff: total courses given and finished, and the overall completion percentage, with the status counts.',
     input_schema: { type: 'object', properties: { ...courseProp, ...roleProp } },
     async run(ctx, input) {
       const rows = (await loadEnrolments(ctx.tenantId)).filter(r => has(r.module_name, input?.course_contains) && has(r.job_role, input?.job_role))
@@ -110,7 +110,7 @@ export const PEOPLE_TOOLS: AskTool[] = [
   },
   {
     name: 'training_by_course',
-    description: 'Completion rate for each training course: how many people were assigned it and how many completed it, are in progress, not started, overdue or expired. Lowest completion first. Use for which courses are behind.',
+    description: 'Completion rate for each course: how many people were given it and how many finished it. Lowest completion first. Use for which courses are behind.',
     input_schema: { type: 'object', properties: { ...courseProp, ...roleProp, ...limitProp(25) } },
     async run(ctx, input) {
       const rows = (await loadEnrolments(ctx.tenantId)).filter(r => has(r.module_name, input?.course_contains) && has(r.job_role, input?.job_role))
@@ -120,7 +120,7 @@ export const PEOPLE_TOOLS: AskTool[] = [
   },
   {
     name: 'training_by_person',
-    description: 'Training completion for each person: courses assigned, complete, in progress, not started, overdue and expired, and their completion percentage. Lowest completion first. Use for which staff are behind on training.',
+    description: 'Training progress for each person: the number of courses given to them and the number finished, as a percentage. Lowest percentage first. Use for which staff are behind overall.',
     input_schema: { type: 'object', properties: { ...courseProp, ...roleProp, ...limitProp(40) } },
     async run(ctx, input) {
       const rows = (await loadEnrolments(ctx.tenantId)).filter(r => has(r.module_name, input?.course_contains) && has(r.job_role, input?.job_role))
@@ -130,7 +130,7 @@ export const PEOPLE_TOOLS: AskTool[] = [
   },
   {
     name: 'training_due_overdue',
-    description: 'Who is overdue or due soon on which course, and which completed courses have expired or are about to expire. Names, course and date, soonest first. Days are negative when the date has passed.',
+    description: 'Training that is overdue or due soon: who is overdue on which course, and which finished courses have expired or are about to expire. Names, course and date, soonest first. Days are negative when the date has passed.',
     input_schema: { type: 'object', properties: { within_days: { type: 'number', description: 'Look ahead this many days for due soon and expiring (default 30, maximum 365).' }, kind: { type: 'string', enum: ['overdue', 'due_soon', 'expired', 'expiring'], description: 'Only this kind.' }, ...courseProp, ...roleProp, ...limitProp(80) } },
     async run(ctx, input) {
       const rows = (await loadEnrolments(ctx.tenantId)).filter(r => has(r.module_name, input?.course_contains) && has(r.job_role, input?.job_role))
@@ -333,7 +333,7 @@ export const PEOPLE_TOOLS: AskTool[] = [
   },
   {
     name: 'probation_status',
-    description: 'Who is on probation, whose probation ends in the next 30 days, and who finished probation recently, from the probation end date on their staff record.',
+    description: 'Probation: who is on probation, when it ends, whose probation ends in the next 30 days, and who finished probation recently, from the probation end date on their staff record.',
     input_schema: { type: 'object', properties: { ...roleProp } },
     async run(ctx, input) {
       const people = (await loadPeople(ctx.tenantId)).filter(p => has(p.job_role, input?.job_role))

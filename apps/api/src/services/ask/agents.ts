@@ -70,3 +70,5 @@ export const publicAgent = (a: AgentDef) => ({ id: a.id, name: a.name, blurb: a.
 export function systemPromptFor(a: AgentDef, today: string, orgName: string): string {
   return `${HOUSE_RULES}\n\nTODAY: ${today} (UK). ORGANISATION: ${orgName}.\n\nYOUR JOB: ${a.prompt}\n\n${LOCKED_RULES}`
 }
+
+import { applyPeopleAgents } from './agents-people'; applyPeopleAgents(AGENTS)   // people development agents (training, CPD, onboarding, compliance, incentives)

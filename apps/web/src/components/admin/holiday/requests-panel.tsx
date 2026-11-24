@@ -62,7 +62,7 @@ function WeekView({ r, max }: { r: ApprovalItem; max: number | null }) {
   return (
     <div className="rounded-lg border border-gray-200 bg-white p-3">
       <p className="text-sm font-semibold text-neutral-dark">Who is off that week</p>
-      <p className="mb-2 text-xs text-neutral-mid">Monday to Sunday. The days {r.name.split(' ')[0]} is asking for are outlined in teal. Solid names are approved, dashed names have asked and are waiting.</p>
+      <p className="mb-2 text-xs text-neutral-mid">Monday to Sunday. The days {r.name.split(' ')[0]} is asking for are outlined in teal. A green Approved tag means it is already agreed. Dashed names have asked and are waiting.</p>
       <div className="space-y-3 overflow-x-auto">
         {r.weeks.map(w => (
           <div key={w.start} className="min-w-[640px]">
@@ -79,6 +79,7 @@ function WeekView({ r, max }: { r: ApprovalItem; max: number | null }) {
                       {d.off.map(o => (
                         <li key={o.user_id + o.status} className={o.status === 'pending' ? 'rounded border border-dashed border-amber-400 px-1 text-amber-900' : 'rounded bg-sky-50 px-1 text-sky-900'} title={o.status === 'pending' ? 'Asked, waiting for approval' : 'Approved'}>
                           <Who id={o.user_id} name={o.name} part={o.part} />
+                          <span className={`ml-0.5 rounded-full px-1.5 py-px text-[10px] font-bold ${o.status === 'approved' ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800'}`}>{o.status === 'approved' ? 'Approved' : 'Waiting'}</span>
                         </li>
                       ))}
                     </ul>
@@ -93,24 +94,16 @@ function WeekView({ r, max }: { r: ApprovalItem; max: number | null }) {
   )
 }
 
+/** One line above the week view: how many other people are off or asking on the requested days, and a red note where the limit would be passed. */
 function Clashes({ r, max }: { r: ApprovalItem; max: number | null }) {
   if (!r.clashes.length) return <p className="text-sm text-green-700">Nobody else is off on these days.</p>
+  const people = new Set<string>(r.clashes.flatMap(c => [...c.approved, ...c.pending].map(x => x.user_id))).size
+  const overDays = r.clashes.filter(c => c.over_limit).map(c => niceDate(c.day))
   return (
-    <div className="rounded-lg border border-amber-200 bg-amber-50/60 p-3">
-      <p className="flex items-center gap-1.5 text-sm font-semibold text-amber-900"><AlertTriangle size={14} aria-hidden="true" /> Others off on these days{max ? ` (limit ${max} at once)` : ''}</p>
-      <ul className="mt-2 space-y-1.5">
-        {r.clashes.map(c => (
-          <li key={c.day} className="text-sm text-neutral-dark">
-            <span className="font-medium">{niceDate(c.day)}</span>
-            {c.over_limit && <span className="ml-2 rounded-full bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-700">Over the limit</span>}
-            <span className="block text-neutral-mid">
-              {c.approved.length > 0 && <>Off: {c.approved.map(a => <Who key={a.user_id} id={a.user_id} name={a.name} part={a.part} />)} </>}
-              {c.pending.length > 0 && <>Also asked: {c.pending.map(a => <Who key={a.user_id} id={a.user_id} name={a.name} part={a.part} />)}</>}
-            </span>
-          </li>
-        ))}
-      </ul>
-    </div>
+    <p className="flex flex-wrap items-center gap-x-2 gap-y-1 rounded-lg border border-amber-200 bg-amber-50/60 px-3 py-2 text-sm font-semibold text-amber-900">
+      <AlertTriangle size={14} aria-hidden="true" /> {people} {people === 1 ? 'other person is' : 'other people are'} off or have asked on these days{max ? ` (limit ${max} at once)` : ''}. See the week below.
+      {overDays.length > 0 && <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-700">Over the limit: {overDays.join(', ')}</span>}
+    </p>
   )
 }
 

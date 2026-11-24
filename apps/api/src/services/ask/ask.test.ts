@@ -136,7 +136,7 @@ test('the loop stops after the maximum rounds and says so, and a shell or unknow
   const rec: any[] = []
   const r = await runAgent({ agentId: 'holiday', ctx, orgName: 'T', history: [], message: 'loop' }, { client: s.client, checkLimit: async () => undefined, record: (m, u) => rec.push(u), audit: () => undefined })
   assert.equal(r.rounds, MAX_ROUNDS); assert.equal(r.stopped, 'rounds'); assert.equal(rec.length, MAX_ROUNDS); assert.match(r.answer, /could not finish/)
-  await assert.rejects(runAgent({ agentId: 'letters', ctx, orgName: 'T', history: [], message: 'x' }, { client: s.client, checkLimit: async () => undefined }), /not available/)
+  await assert.rejects(runAgent({ agentId: 'incentives', ctx, orgName: 'T', history: [], message: 'x' }, { client: s.client, checkLimit: async () => undefined }), /not available/)
   await assert.rejects(runAgent({ agentId: 'nope', ctx, orgName: 'T', history: [], message: 'x' }, { client: s.client, checkLimit: async () => undefined }), /not available/)
 })
 

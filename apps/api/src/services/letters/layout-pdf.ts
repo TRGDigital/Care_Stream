@@ -28,7 +28,9 @@ export async function renderLayoutPdf(d: LayoutDoc, opts: { compress?: boolean }
     let y = top
     if (logo) { try { doc.image(logo, (W - 160) / 2, y, { fit: [160, 52], align: 'center' }); y += 58 } catch { /* no logo */ } }
     doc.fillColor(INK).font('Helvetica-Bold').fontSize(12.5).text(printable(d.head.name), M, y, { width, align: 'center' })
-    if (lines.length) doc.fillColor(MID).font('Helvetica').fontSize(8.8).text(lines.join('  |  '), M, doc.y + 1, { width, align: 'center' })
+    const addr = (d.head.addressLines ?? []).map(printable).join(', '), contact = (d.head.contactLines ?? []).map(printable).join('   |   ')
+    if (addr) doc.fillColor(MID).font('Helvetica').fontSize(8.8).text(addr, M, doc.y + 1, { width, align: 'center' })
+    if (contact) doc.fillColor(MID).font('Helvetica').fontSize(8.8).text(contact, M, doc.y + 0.5, { width, align: 'center' })
   } else {
     if (logo) { try { doc.image(logo, M, top, { fit: [150, 52] }) } catch { /* no logo */ } }
     doc.fillColor(INK).font('Helvetica-Bold').fontSize(12).text(printable(d.head.name), M, top + 1, { width, align: 'right' })

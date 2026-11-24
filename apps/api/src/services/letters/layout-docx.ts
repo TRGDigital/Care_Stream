@@ -30,9 +30,10 @@ export async function renderLayoutDocx(d: LayoutDoc): Promise<Buffer> {
   const orgLines: string[] = [...(d.head.addressLines ?? []), ...(d.head.contactLines ?? [])].map(printable)
   const centre = d.head.logoAlign === 'centre'
 
+  const centredLines = [(d.head.addressLines ?? []).map(printable).join(', '), (d.head.contactLines ?? []).map(printable).join('   |   ')].filter(Boolean)
   const nameRuns = (align: any) => [
     new Paragraph({ alignment: align, spacing: { after: 20 }, children: [new TextRun({ text: printable(d.head.name), bold: true, font: FONT, size: PT(12), color: '1A1530' })] }),
-    ...orgLines.map(l => new Paragraph({ alignment: align, spacing: { after: 0 }, children: [new TextRun({ text: l, font: FONT, size: PT(8.8), color: '5E4D70' })] })),
+    ...(align === AlignmentType.CENTER ? centredLines : orgLines).map(l => new Paragraph({ alignment: align, spacing: { after: 0 }, children: [new TextRun({ text: l, font: FONT, size: PT(8.8), color: '5E4D70' })] })),
   ]
   const rule = new Paragraph({ spacing: { before: 80, after: 0 }, border: { bottom: { style: BorderStyle.SINGLE, size: 6, color: 'D9D4E0', space: 4 } }, children: [] })
   const headerChildren: any[] = centre

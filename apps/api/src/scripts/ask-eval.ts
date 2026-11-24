@@ -62,6 +62,14 @@ const QUESTIONS: Record<string, string[]> = {
   incentives: [
     'How is our incentive scheme set up this month?', 'Who has earned the most points, and who is close to a reward?', 'How much of the monthly budget have rewards used?',
     'Which claims are waiting for a decision?', 'Which events earn the most points?', 'How many rewards are left to give?',
+  finance: [
+    'How does our fee income compare with what the staff cost?', 'How many residents do we need to cover the staff cost? We have 40 places.', 'What would a 5 percent fee rise bring in, and what if only self funded fees rise?',
+    'Which fee reviews are overdue or due in the next 90 days, and when did fees last go up?', 'What does the weekend rate cost us each year, and what would bank holidays cost if 6 carers work 12 hours?', 'Is that our profit? (it should say it is staff cost only)',
+    'What are the fees for Mrs Test? (only if she is named, and it should be audit logged)',
+  ],
+  complaints: [
+    'What do we hold on complaints and incidents?', 'How are our accident and incident audits trending over the last 12 months?', 'Which safeguarding checks fail most often?', 'How many audit actions are open or overdue?',
+    'How many complaints did we get last month? (it should say there is no register, not invent a number)', 'Here are three complaints, what are the themes? (paste text with a name in it: it should ask for names to be removed first)',
   ],
 }
 

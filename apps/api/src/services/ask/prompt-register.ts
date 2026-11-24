@@ -53,6 +53,10 @@ export const ASK_PROMPTS: AskPromptMeta[] = [
     note: 'Used for the Audits agent: scores and trends, repeat failures, overdue audits and actions.' },
   { usage: 'ask_agent_governance', label: 'Ask CareStream: Governance reports agent', default: jobOf('governance'),
     note: 'Used for the Governance reports agent: builds a monthly governance review from the home\'s own figures and saves it as a draft for approval.' },
+  { usage: 'ask_agent_finance', label: 'Ask CareStream: Finance and pay agent', default: jobOf('finance'),
+    note: 'Used for the Finance and pay agent: fee income, staff cost, break even, fee reviews, premium pay and the value of untaken holiday. All locked data, administrators only. It is told never to call income less staff cost profit.' },
+  { usage: 'ask_agent_complaints', label: 'Ask CareStream: Complaints and incidents agent', default: jobOf('complaints'),
+    note: 'Used for the Complaints and incidents agent: it reads audit results and actions (CareStream holds no complaints register), and themes in text the administrator pastes after removing names.' },
   { usage: 'ask_page_context', label: 'Ask CareStream: page context line', default: DEFAULT_PAGE_CONTEXT,
     note: 'One line added when the administrator is looking at a page. Placeholders: {{label}} (what they are looking at) and {{who}} (the staff member on screen, if any, already written as a sentence).' },
 ]

@@ -196,3 +196,33 @@ export async function askAggregates(tenantId: string, today: string) {
   const h: any[] = await q().$queryRawUnsafe("select coalesce(sum(planned_hours_per_week),0) as hours from resident_funding where tenant_id = $1 and fee_model = 'hourly'", tenantId)
   return { ...s, hourly_hours_per_week: round2(Number(h[0]?.hours ?? 0)) }
 }
+
+// ── Fee review and uplift figures for Ask CareStream (Finance agent): counts, totals and averages only, never a person's own figures ──────────────────────────────
+export interface ReviewRow { funding_type: FundingType; weekly_value: number | null; last_increase_date: string | null; next_review_date: string | null }
+const daysBetween = (a: string, b: string) => Math.round((Date.parse(b + 'T00:00:00Z') - Date.parse(a + 'T00:00:00Z')) / 86_400_000)
+const plusDays = (d: string, n: number) => new Date(Date.parse(d + 'T00:00:00Z') + n * 86_400_000).toISOString().slice(0, 10)
+
+/** Pure: reviews overdue or due soon, how long since fees last went up, and the weekly income by funding type (the base for "what would X percent bring in"). */
+export function reviewStats(rows: ReviewRow[], today: string) {
+  const with_review = rows.filter(r => r.next_review_date)
+  const overdue = with_review.filter(r => r.next_review_date! < today).length
+  const within = (n: number) => with_review.filter(r => r.next_review_date! >= today && r.next_review_date! <= plusDays(today, n)).length
+  const gaps = rows.filter(r => r.last_increase_date).map(r => daysBetween(r.last_increase_date!, today)).filter(d => d >= 0)
+  const by_type = FUNDING_TYPES.map(t => {
+    const rs = rows.filter(r => r.funding_type === t), priced = rs.filter(r => r.weekly_value != null)
+    return { funding_type: t, label: FUNDING_LABEL[t], count: rs.length, with_fee: priced.length, weekly_total: round2(priced.reduce((s, r) => s + (r.weekly_value as number), 0)) }
+  }).filter(t => t.count > 0)
+  return {
+    people: rows.length,
+    reviews_overdue: overdue, reviews_due_30_days: within(30), reviews_due_60_days: within(60), reviews_due_90_days: within(90), no_review_date: rows.length - with_review.length,
+    no_last_increase_date: rows.length - rows.filter(r => r.last_increase_date).length,
+    average_days_since_last_increase: gaps.length ? Math.round(gaps.reduce((s, d) => s + d, 0) / gaps.length) : null,
+    longest_days_since_last_increase: gaps.length ? Math.max(...gaps) : null,
+    weekly_income_by_type: by_type, weekly_income_total: round2(by_type.reduce((s, t) => s + t.weekly_total, 0)),
+  }
+}
+
+export async function askReviewStats(tenantId: string, today: string) {
+  const rows: any[] = await q().$queryRawUnsafe('select * from resident_funding where tenant_id = $1', tenantId)
+  return reviewStats(rows.map(r => { const d = dtoOf(r); return { funding_type: d.funding_type as FundingType, weekly_value: d.weekly_value as number | null, last_increase_date: d.last_increase_date as string | null, next_review_date: d.next_review_date as string | null } }), today)
+}

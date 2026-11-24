@@ -18,7 +18,7 @@ import { residentPhotoUploadMiddleware } from '../middleware/upload'
 import { downloadFile, deleteFile } from '../services/storage/s3'
 import { sendResidentFamilySubmissionEmail } from '../services/email/outbound'
 import { noteFamilyReply } from '../lib/family-reminders'
-import { videosReady, familyVideoDto, settleInviteVideos, videoLimits } from '../lib/resident-videos'
+import { videosReady, familyVideoDto, settleInviteVideos, videoLimits, voiceLimits } from '../lib/resident-videos'
 
 export const publicFamilyRouter = Router()
 const db = prisma as any
@@ -50,7 +50,7 @@ async function ownPhotos(inviteId: string): Promise<any[]> {
 
 publicFamilyRouter.get('/:token', async (req: Request, res: Response) => {
   if (req.params.token === DEMO_TOKEN) {
-    ok(res, { resident_name: 'Tim', home_name: 'Sample Care Home', invitee_name: 'Sally', expires_at: '2099-12-31T00:00:00.000Z', already_submitted: false, sections: SECTIONS, demo: true, photos: [], photos_enabled: true, ...photoLimits, videos: [], videos_enabled: true, ...videoLimits })
+    ok(res, { resident_name: 'Tim', home_name: 'Sample Care Home', invitee_name: 'Sally', expires_at: '2099-12-31T00:00:00.000Z', already_submitted: false, sections: SECTIONS, demo: true, photos: [], photos_enabled: true, ...photoLimits, videos: [], videos_enabled: true, ...videoLimits, voice_enabled: true, voice_notes: [], ...voiceLimits })
     return
   }
   const live = await liveInvite(String(req.params.token))
@@ -70,8 +70,11 @@ publicFamilyRouter.get('/:token', async (req: Request, res: Response) => {
     photos: photos.map(p => familyPhotoDto(p, live.inv.id)),
     ...photoLimits,
     videos_enabled: videosOn,
-    videos: videos.map(v => familyVideoDto(v, live.inv.id)),
+    videos: videos.filter(v => v.media_kind !== 'audio').map(v => familyVideoDto(v, live.inv.id)),
     ...videoLimits,
+    voice_enabled: videosOn,
+    voice_notes: videos.filter(v => v.media_kind === 'audio').map(v => familyVideoDto(v, live.inv.id)),
+    ...voiceLimits,
   })
 })
 
@@ -134,9 +137,9 @@ publicFamilyRouter.post('/:token', async (req: Request, res: Response) => {
   const photoCount = (await ownPhotos(live.inv.id)).filter(ph => ph.status === 'pending').length
   // Videos too: a clip still being processed holds up Send; half-finished uploads are thrown away.
   const vids = await settleInviteVideos(live.inv.id)
-  if (vids.processing > 0) { err(res, 'PROCESSING', 'Your video is still being processed. Please wait a moment and press Send again.', 409); return }
-  const videoCount = vids.sent
-  if (!rows.length && !photoCount && !videoCount) { err(res, 'VALIDATION_ERROR', 'Please answer at least one question or add a photo or video.', 400); return }
+  if (vids.processing > 0) { err(res, 'PROCESSING', 'Your video or voice note is still being processed. Please wait a moment and press Send again.', 409); return }
+  const videoCount = vids.videos, voiceCount = vids.voiceNotes
+  if (!rows.length && !photoCount && !videoCount && !voiceCount) { err(res, 'VALIDATION_ERROR', 'Please answer at least one question or add a photo, video or voice note.', 400); return }
 
   const name = cleanText(p.data.name, 100), relationship = cleanText(p.data.relationship, 60)
   if (rows.length) await db.residentContribution.createMany({
@@ -153,12 +156,12 @@ publicFamilyRouter.post('/:token', async (req: Request, res: Response) => {
     if (admin) {
       await sendResidentFamilySubmissionEmail({
         to: admin.email, adminName: admin.name, homeName: live.homeName, residentName: live.resident.preferred_name || live.resident.first_name,
-        contributorName: name, relationship, count: rows.length, photoCount, videoCount, link: `${siteUrl()}/knowledge`,
+        contributorName: name, relationship, count: rows.length, photoCount, videoCount, voiceCount, link: `${siteUrl()}/knowledge`,
       })
     }
   } catch (e) { console.error('[residents] submission email failed:', e) }
 
-  ok(res, { submitted: rows.length, photos: photoCount, videos: videoCount }, 201)
+  ok(res, { submitted: rows.length, photos: photoCount, videos: videoCount, voice_notes: voiceCount }, 201)
 })
 
 // ─── The photo file itself ─────────────────────────────────────────────────────

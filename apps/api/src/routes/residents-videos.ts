@@ -87,7 +87,7 @@ publicFamilyVideosRouter.post('/:token/videos/start', async (req: Request, res: 
   if (overLimit(`start:${live.inv.id}`, 12, 3600_000)) { err(res, 'RATE_LIMITED', TOO_MANY, 429); return }
   const r = await startVideoUpload(
     { tenantId: live.inv.tenant_id, residentId: live.resident.id, inviteId: live.inv.id, name: live.inv.name, relationship: live.inv.relationship ?? null, source: 'family' },
-    { size: req.body?.size },
+    { size: req.body?.size, kind: req.body?.kind },
   )
   if (!r.ok) { err(res, r.code, r.message, r.status); return }
   ok(res, { video: familyVideoDto(r.video, live.inv.id) }, 201)
@@ -164,7 +164,7 @@ residentVideosRouter.post('/:id/videos/start', ...admin, async (req: Request, re
   if (!r) { err(res, 'NOT_FOUND', 'Resident not found.', 404); return }
   if (r.status !== 'living') { err(res, 'ARCHIVED', 'You cannot add videos to an archived profile.', 409); return }
   const a = await actor(req)
-  const s = await startVideoUpload({ tenantId, residentId: r.id, inviteId: null, name: a.name, relationship: null, source: 'manager', decidedBy: a.email }, { size: req.body?.size, title: req.body?.title })
+  const s = await startVideoUpload({ tenantId, residentId: r.id, inviteId: null, name: a.name, relationship: null, source: 'manager', decidedBy: a.email }, { size: req.body?.size, title: req.body?.title, kind: req.body?.kind })
   if (!s.ok) { err(res, s.code, s.message, s.status); return }
   if (req.body?.note) await db.residentVideo.update({ where: { id: s.video.id }, data: { note: cleanNote(req.body.note) } })
   ok(res, { video: adminVideoDto(s.video), chunk_bytes: CHUNK_BYTES, total_chunks: s.video.total_chunks }, 201)
@@ -404,7 +404,8 @@ residentVideoFileRouter.get('/:id', async (req: Request, res: Response) => {
     }
     const size = Number(v.size_bytes) || 0
     const range = parseRange(req.headers.range, size)
-    res.setHeader('Content-Type', 'video/mp4'); res.setHeader('Content-Disposition', 'inline; filename="message.mp4"')
+    const isAudio = v.media_kind === 'audio'
+    res.setHeader('Content-Type', isAudio ? 'audio/mp4' : 'video/mp4'); res.setHeader('Content-Disposition', `inline; filename="${isAudio ? 'voice-note.m4a' : 'message.mp4'}"`)
     if (range === 'bad') { res.status(416).setHeader('Content-Range', `bytes */${size}`); res.end(); return }
     if (range) {
       res.status(206); res.setHeader('Content-Range', `bytes ${range.start}-${range.end}/${size}`); res.setHeader('Content-Length', String(range.end - range.start + 1))

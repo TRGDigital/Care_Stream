@@ -11,6 +11,7 @@ import os from 'os'
 import path from 'path'
 
 export const MAX_SECONDS = 60
+export const MAX_AUDIO_SECONDS = 120         // a voice note
 export const SECONDS_TOLERANCE = 2          // a clip a hair over a minute still passes
 export const MAX_EDGE = 1280                // longest side of the stored video, pixels
 export const POSTER_EDGE = 640
@@ -143,4 +144,64 @@ export async function transcodeVideo(input: string, outDir: string): Promise<Pro
   ], 60_000)
   if (p.code !== 0 || !fs.existsSync(poster)) throw new VideoError('PROCESS_FAILED', 'That video could not be processed. Please try again with a shorter video.')
   return { mp4, poster, duration: out.duration, width: out.width, height: out.height, size: fs.statSync(mp4).size }
+}
+
+
+// ─── Voice notes (audio only) ──────────────────────────────────────────────────
+/** What the file is, by its first bytes: m4a or mp4 audio, 3gp (Android recorders), webm (Chrome recordings), ogg, mp3, wav or amr. Anything else is refused. */
+export function detectAudioContainer(b: Buffer): { kind: 'm4a' | '3gp' | 'webm' | 'ogg' | 'mp3' | 'wav' | 'amr'; mime: string } | null {
+  if (b.length >= 12 && b.toString('latin1', 4, 8) === 'ftyp') {
+    const brand = b.toString('latin1', 8, 12)
+    if (['heic', 'heix', 'heif', 'hevc', 'heim', 'heis', 'hevm', 'hevs', 'mif1', 'msf1', 'avif', 'avis', 'crx '].includes(brand)) return null
+    if (brand.startsWith('3g')) return { kind: '3gp', mime: 'audio/3gpp' }
+    if (/^[\x20-\x7e]{4}$/.test(brand)) return { kind: 'm4a', mime: 'audio/mp4' }
+    return null
+  }
+  if (b.length >= 4 && b[0] === 0x1a && b[1] === 0x45 && b[2] === 0xdf && b[3] === 0xa3) return b.toString('latin1', 0, Math.min(b.length, 64)).includes('webm') ? { kind: 'webm', mime: 'audio/webm' } : null
+  if (b.length >= 4 && b.toString('latin1', 0, 4) === 'OggS') return { kind: 'ogg', mime: 'audio/ogg' }
+  if (b.length >= 12 && b.toString('latin1', 0, 4) === 'RIFF' && b.toString('latin1', 8, 12) === 'WAVE') return { kind: 'wav', mime: 'audio/wav' }
+  if (b.length >= 6 && b.toString('latin1', 0, 6) === '#!AMR\n') return { kind: 'amr', mime: 'audio/amr' }
+  if (b.length >= 3 && b.toString('latin1', 0, 3) === 'ID3') return { kind: 'mp3', mime: 'audio/mpeg' }
+  if (b.length >= 2 && b[0] === 0xff && (b[1] & 0xe0) === 0xe0 && (b[1] & 0x06) !== 0) return { kind: 'mp3', mime: 'audio/mpeg' }
+  return null
+}
+
+export interface AudioProbe { duration: number; audioCodec: string | null; hasVideo: boolean }
+
+export async function probeAudio(file: string): Promise<AudioProbe> {
+  const r = await run(binaryPath('ffmpeg'), ['-hide_banner', '-i', file], 30_000)
+  const text = r.err
+  const dm = /Duration:\s*(\d+):(\d+):(\d+(?:\.\d+)?)/.exec(text)
+  const am = /Stream #\d+:\d+[^\n]*?:\s*Audio:\s*([a-z0-9_]+)/i.exec(text)
+  if (!am) throw new VideoError('INVALID_FILE', 'That file does not contain a voice recording we can use. Please record again, or choose a different file.')
+  const duration = dm ? Number(dm[1]) * 3600 + Number(dm[2]) * 60 + Number(dm[3]) : NaN
+  // A recording made in the browser can report no length (a live webm stream): the transcode below measures it.
+  const hasVideo = /Stream #\d+:\d+[^\n]*?:\s*Video:/i.test(text.replace(/Video:[^\n]*attached pic[^\n]*/gi, ''))
+  return { duration: Number.isFinite(duration) && duration > 0 ? duration : NaN, audioCodec: am[1], hasVideo }
+}
+
+export interface ProcessedAudio { m4a: string; duration: number; size: number }
+
+/**
+ * input -> mono AAC in an m4a container (about 64 kbps, faststart, no metadata, any picture or video track dropped) written into outDir.
+ * Rejects a recording over two minutes (plus a small tolerance). The length is measured again on the output, because a browser recording
+ * often has no length in its header.
+ */
+export async function transcodeAudio(input: string, outDir: string): Promise<ProcessedAudio> {
+  const info = await probeAudio(input)
+  if (Number.isFinite(info.duration) && info.duration > MAX_AUDIO_SECONDS + SECONDS_TOLERANCE) throw new VideoError('TOO_LONG', `That recording is longer than ${MAX_AUDIO_SECONDS / 60} minutes. Please send a shorter one.`)
+  const m4a = path.join(outDir, 'out.m4a')
+  const t = await run(binaryPath('ffmpeg'), [
+    '-nostdin', '-y', '-hide_banner', '-loglevel', 'error',
+    '-i', input, '-t', String(MAX_AUDIO_SECONDS + SECONDS_TOLERANCE + 1),
+    '-map', '0:a:0', '-vn', '-sn', '-dn',
+    '-c:a', 'aac', '-b:a', '64k', '-ac', '1', '-ar', '44100',
+    '-map_metadata', '-1', '-map_chapters', '-1', '-fflags', '+bitexact', '-flags:a', '+bitexact',
+    '-movflags', '+faststart', '-f', 'ipod', m4a,
+  ], TRANSCODE_TIMEOUT_MS)
+  if (t.code !== 0 || !fs.existsSync(m4a)) throw new VideoError('PROCESS_FAILED', 'That recording could not be processed. Please try again with a shorter recording.')
+  const out = await probeAudio(m4a)
+  if (!Number.isFinite(out.duration) || out.duration < 0.5) throw new VideoError('INVALID_FILE', 'That recording is empty. Please record again.')
+  if (out.duration > MAX_AUDIO_SECONDS + SECONDS_TOLERANCE) throw new VideoError('TOO_LONG', `That recording is longer than ${MAX_AUDIO_SECONDS / 60} minutes. Please send a shorter one.`)
+  return { m4a, duration: out.duration, size: fs.statSync(m4a).size }
 }

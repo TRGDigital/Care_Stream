@@ -133,6 +133,13 @@ t('email wording: video is mentioned only when switched on', () => {
   const on = reminderCopy({ residentName: 'Tim', homeName: 'Ferndale', days: 14 }, true)
   assert.ok(/short video message/.test(on.intro))
 })
+t('email wording: voice notes are offered with video, and only when switched on', () => {
+  const base = { residentName: 'Tim', homeName: 'Ferndale', days: 14 }
+  assert.ok(/short video message or a voice note/.test(reminderCopy(base).intro))
+  assert.ok(!/voice/i.test(reminderCopy(base, true, false).intro) && /short video message/.test(reminderCopy(base, true, false).intro))
+  assert.ok(/photo or a voice note/.test(reminderCopy(base, false, true).intro) && !/video/i.test(reminderCopy(base, false, true).intro))
+  assert.ok(!/voice|video/i.test(reminderCopy(base, false, false).intro))
+})
 t('email wording: names the home, resident and 14 days; no dashes, no banned words', () => {
   for (const v of [false, true]) {
     const c = reminderCopy({ residentName: 'Tim', homeName: 'Ferndale', days: 14 }, v)

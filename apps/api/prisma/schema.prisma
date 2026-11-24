@@ -3473,10 +3473,12 @@ model ResidentVideo {
   decided_at            DateTime?
   decided_by            String?
   last_played_at        DateTime?
+  media_kind            String    @default("video")     // video | audio (a voice note: same pipeline, no picture)
 
   @@index([resident_id, status])
   @@index([invite_id])
   @@index([tenant_id])
+  @@index([resident_id, media_kind])
   @@map("resident_videos")
 }
 

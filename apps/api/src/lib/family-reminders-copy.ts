@@ -2,9 +2,14 @@
 //
 // Family video is live, so the email offers it. Switch this off if family video is ever turned off.
 export const REMINDER_OFFERS_VIDEO = true
+// Voice notes are live with video (same plan, same family link). Switch this off if voice notes are ever turned off.
+export const REMINDER_OFFERS_VOICE = true
 
-export function reminderCopy(o: { residentName: string; homeName: string; days: number }, offersVideo: boolean = REMINDER_OFFERS_VIDEO) {
-  const what = offersVideo ? 'a few words, a photo or a short video message' : 'a few words or a photo'
+export function reminderCopy(o: { residentName: string; homeName: string; days: number }, offersVideo: boolean = REMINDER_OFFERS_VIDEO, offersVoice: boolean = REMINDER_OFFERS_VOICE) {
+  const what = offersVideo && offersVoice ? 'a few words, a photo, a short video message or a voice note'
+    : offersVideo ? 'a few words, a photo or a short video message'
+    : offersVoice ? 'a few words, a photo or a voice note'
+    : 'a few words or a photo'
   return {
     subject: `Something for ${o.residentName}?`,
     intro: `It is ${o.homeName} here. If you have a few minutes, would you like to share ${what} for ${o.residentName}? Little things from the people who know them best make a real difference to their day.`,

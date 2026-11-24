@@ -15,6 +15,7 @@ process.env.LOCAL_STORAGE_DIR = fs.mkdtempSync(path.join(os.tmpdir(), 'rv-store-
 const rows: any[] = []
 // Loaded after the environment is set (the storage folder is read when the storage module loads).
 let startVideoUpload: any, saveChunk: any, receivedChunks: any, completeVideo: any, CHUNK_BYTES: number, totalChunksFor: any, expectedChunkSize: any, signedVideoPath: any, verifyVideoSignature: any
+let VOICE_NOTES_PER_INVITE: number, MAX_AUDIO_UPLOAD_BYTES: number, voiceLimits: any, settleInviteVideos: any
 let parseRange: any, retireResidentVideos: any, deleteResidentVideos: any, adminVideoDto: any, hubVideoDto: any, familyVideoDto: any, VIDEOS_PER_INVITE: number
 let binaryPath: any, listObjects: any
 
@@ -47,6 +48,7 @@ async function setup() {
 
   const lib = await import('./resident-videos')
   ;({ startVideoUpload, saveChunk, receivedChunks, completeVideo, CHUNK_BYTES, totalChunksFor, expectedChunkSize, signedVideoPath, verifyVideoSignature, parseRange, retireResidentVideos, deleteResidentVideos, adminVideoDto, hubVideoDto, familyVideoDto, VIDEOS_PER_INVITE } = lib as any)
+  ;({ VOICE_NOTES_PER_INVITE, MAX_AUDIO_UPLOAD_BYTES, voiceLimits, settleInviteVideos } = lib as any)
   ;({ binaryPath } = await import('./resident-video-media'))
   ;({ listObjects } = await import('../services/storage/s3'))
 }
@@ -177,6 +179,83 @@ async function main() {
     assert.ok(!fs.existsSync(path.join(process.env.LOCAL_STORAGE_DIR!, a.s3_key)))
     assert.equal(rows.filter(x => x.resident_id === 'R3').length, 0)
     void ra
+  })
+
+
+  // ── Voice notes ──
+  const voiceFile = path.join(process.env.LOCAL_STORAGE_DIR!, 'note.webm')
+  const vgen = spawnSync(binaryPath('ffmpeg'), ['-y', '-hide_banner', '-loglevel', 'error', '-f', 'lavfi', '-i', 'sine=frequency=400:duration=5', '-c:a', 'libopus', voiceFile])
+  assert.equal(vgen.status, 0, String(vgen.stderr))
+  const voice = fs.readFileSync(voiceFile)
+  const voiceSender = { ...sender, residentId: 'RV', inviteId: 'IV' }
+  async function uploadVoice(file: Buffer, s = voiceSender) {
+    const start: any = await startVideoUpload(s, { size: file.length, title: 'Hello Mum', kind: 'audio' })
+    assert.ok(start.ok, JSON.stringify(start))
+    for (let i = 0; i < start.video.total_chunks; i++) assert.ok((await saveChunk(start.video, i, file.subarray(i * CHUNK_BYTES, Math.min(file.length, (i + 1) * CHUNK_BYTES)))).ok)
+    return start.video
+  }
+
+  await t('a voice note goes through the same pipeline: stored privately as m4a, no poster, pending, kind audio', async () => {
+    const v = await uploadVoice(voice)
+    assert.equal(v.media_kind, 'audio')
+    const r: any = await completeVideo(v, {})
+    assert.ok(r.ok, JSON.stringify(r))
+    const done = r.video
+    assert.equal(done.state, 'ready'); assert.equal(done.status, 'pending'); assert.equal(done.mime, 'audio/mp4')
+    assert.ok(done.s3_key.startsWith('tenants/T1/residents/RV/videos/') && done.s3_key.endsWith('.m4a'))
+    assert.equal(done.poster_key, ''); assert.equal(done.width, null)
+    assert.ok(done.duration_seconds > 4 && done.duration_seconds < 6)
+    assert.deepEqual(await listObjects(`tenants/T1/residents/RV/videos/tmp/${v.id}/`), [])
+    const dtos = [adminVideoDto(done), hubVideoDto(done), familyVideoDto(done, 'IV')] as any[]
+    for (const d of dtos) assert.equal(d.media_kind, 'audio')
+    assert.equal(dtos[0].poster_url, null); assert.equal(dtos[1].poster_url, null); assert.equal(dtos[2].poster_url, null)
+    assert.ok(dtos[0].video_url && dtos[2].video_url)
+    assert.ok(!JSON.stringify(dtos).includes('tenants/'))
+  })
+
+  await t('a text file sent as a voice note is refused with a voice note message and leaves nothing behind', async () => {
+    const bad = await uploadVoice(Buffer.from('This is a note, not a recording. '.repeat(100)))
+    const r: any = await completeVideo(bad, {})
+    assert.equal(r.ok, false); assert.equal(r.code, 'INVALID_FILE')
+    assert.match(r.message, /voice recording/)
+    assert.deepEqual(await listObjects(`tenants/T1/residents/RV/videos/tmp/${bad.id}/`), [])
+  })
+
+  await t('voice notes and videos are counted separately: five of each per link, 30 MB for a voice note', async () => {
+    assert.equal(VOICE_NOTES_PER_INVITE, 5); assert.equal(MAX_AUDIO_UPLOAD_BYTES, 30 * 1024 * 1024)
+    assert.deepEqual(voiceLimits, { max_voice_notes: 5, max_voice_seconds: 120, max_voice_mb: 30 })
+    assert.equal((await startVideoUpload(voiceSender, { size: 31 * 1024 * 1024, kind: 'audio' }) as any).status, 413)
+    assert.equal((await startVideoUpload(voiceSender, { size: 100, kind: 'audio' }) as any).ok, false)
+    const other = { ...sender, inviteId: 'IV2', residentId: 'RV2' }
+    const got = []
+    for (let i = 0; i < VOICE_NOTES_PER_INVITE + 1; i++) { const r: any = await startVideoUpload(other, { size: 5000, kind: 'audio' }); got.push(r); if (r.ok) r.video.state = 'ready' }
+    assert.equal(got.filter(r => r.ok).length, VOICE_NOTES_PER_INVITE)
+    assert.match(got[got.length - 1].message, /voice notes/)
+    // five voice notes do not use up the videos
+    const vid: any = await startVideoUpload(other, { size: 5000 })
+    assert.ok(vid.ok, JSON.stringify(vid)); assert.equal(vid.video.media_kind, 'video')
+  })
+
+  await t('sending counts voice notes and videos separately', async () => {
+    const A = { ...sender, residentId: 'RV3', inviteId: 'IV3' }
+    const a: any = await uploadVoice(voice, A); await completeVideo(a, {})
+    const b: any = await upload(file.subarray(0, CHUNK_BYTES * 3 - 10), A).catch(() => null)
+    void b
+    const res = await settleInviteVideos('IV3')
+    assert.equal(res.voiceNotes, 1); assert.ok(res.sent >= 1)
+  })
+
+  await t('moving on treats a voice note like a video: approved stays, pending is deleted', async () => {
+    const A = { ...sender, residentId: 'RV4', inviteId: 'IV4' }
+    const ap: any = await uploadVoice(voice, A); await completeVideo(ap, {}); rows.find(x => x.id === ap.id).status = 'approved'
+    const pe: any = await uploadVoice(voice, A); const rp: any = await completeVideo(pe, {}); const pendingKey = rp.video.s3_key
+    assert.ok(pendingKey && fs.existsSync(path.join(process.env.LOCAL_STORAGE_DIR!, pendingKey)))
+    await retireResidentVideos('T1', 'RV4')
+    assert.ok(fs.existsSync(path.join(process.env.LOCAL_STORAGE_DIR!, rows.find(x => x.id === ap.id).s3_key)))
+    assert.equal(rows.find(x => x.id === pe.id).status, 'rejected'); assert.equal(rows.find(x => x.id === pe.id).s3_key, '')
+    assert.ok(!fs.existsSync(path.join(process.env.LOCAL_STORAGE_DIR!, pendingKey)))
+    await deleteResidentVideos('T1', 'RV4')
+    assert.equal(rows.filter(x => x.resident_id === 'RV4').length, 0)
   })
 
   fs.rmSync(process.env.LOCAL_STORAGE_DIR!, { recursive: true, force: true })

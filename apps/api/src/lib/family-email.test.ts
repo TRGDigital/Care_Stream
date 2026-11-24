@@ -39,3 +39,13 @@ test('with no sender the plain layout is kept (from "CareStream")', async () => 
   assert.equal(sent[0].from.name, 'CareStream')
   assert.match(sent[0].subject, /Help us get to know Tim/)
 })
+
+test('the "someone has replied" button says voice notes only when there are voice notes', () => {
+  const l = out.submissionButtonLabel
+  assert.equal(l({ answers: 0, photos: 0, videos: 0, voices: 0 }), 'Review the answers')
+  assert.equal(l({ answers: 2, photos: 1, videos: 0, voices: 0 }), 'Review the answers and files')
+  assert.equal(l({ answers: 0, photos: 0, videos: 2, voices: 0 }), 'Review the video messages')
+  assert.equal(l({ answers: 0, photos: 1, videos: 1, voices: 0 }), 'Review the photos and videos')
+  assert.equal(l({ answers: 0, photos: 0, videos: 0, voices: 1 }), 'Review the voice notes')
+  assert.equal(l({ answers: 0, photos: 1, videos: 0, voices: 1 }), 'Review the photos, videos and voice notes')
+})

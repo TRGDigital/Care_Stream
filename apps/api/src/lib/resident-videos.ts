@@ -31,7 +31,7 @@ import os from 'os'
 import path from 'path'
 import { prisma } from '../db/client'
 import { cleanText, residentsEnabled } from './residents'
-import { detectVideoContainer, transcodeVideo, VideoError, MAX_SECONDS } from './resident-video-media'
+import { detectVideoContainer, detectAudioContainer, transcodeVideo, transcodeAudio, VideoError, MAX_SECONDS, MAX_AUDIO_SECONDS } from './resident-video-media'
 import { keyOf, words, esc, STOP } from './resident-photos'
 import { startTranscript, removeTranscriptFor, removeTranscriptsForResident, transcriptsFor, adminTranscriptDto } from './resident-video-transcripts'
 import { scanBuffer, scannerConfigured } from '../services/security/malware-scan'
@@ -48,13 +48,23 @@ export const TITLE_MAX = 60
 export const NOTE_MAX = 280
 export const URL_SECONDS = 10 * 60
 export const SCAN_MAX_BYTES = 25 * 1024 * 1024  // above this the scanner is skipped; the transcode below re-creates the file anyway
+// VOICE NOTES are the same thing without a picture (media_kind 'audio'): same upload, storage, approval, play log and speech to text.
+// Up to two minutes, 30 MB before processing, 5 per family link, 40 stored per resident (counted separately from videos).
+export const VOICE_NOTES_PER_INVITE = 5
+export const VOICE_NOTES_PER_RESIDENT = 40
+export const MAX_AUDIO_UPLOAD_BYTES = 30 * 1024 * 1024
+export type MediaKind = 'video' | 'audio'
+export const mediaKindOf = (v: unknown): MediaKind => (v === 'audio' ? 'audio' : 'video')
+/** What the family page needs to know about the voice note limits. */
+export const voiceLimits = { max_voice_notes: VOICE_NOTES_PER_INVITE, max_voice_seconds: MAX_AUDIO_SECONDS, max_voice_mb: MAX_AUDIO_UPLOAD_BYTES / 1024 / 1024 }
 /** What the family page needs to know about the limits. */
 export const videoLimits = { max_videos: VIDEOS_PER_INVITE, max_video_seconds: MAX_SECONDS, max_video_mb: MAX_UPLOAD_BYTES / 1024 / 1024, video_title_max: TITLE_MAX }
 const STUCK_MS = 6 * 60 * 1000
 
 /** True when the videos tables exist (the SQL may not have been run yet). */
 export async function videosReady(): Promise<boolean> {
-  try { await db.residentVideo.findFirst({ select: { id: true } }); await db.residentVideoPlay.findFirst({ select: { id: true } }); return true } catch { return false }
+  // media_kind is read here on purpose: until the voice notes SQL has been run, videos stay switched off rather than fail halfway.
+  try { await db.residentVideo.findFirst({ select: { id: true, media_kind: true } }); await db.residentVideoPlay.findFirst({ select: { id: true } }); return true } catch { return false }
 }
 
 export type Fail = { ok: false; status: number; code: string; message: string }
@@ -97,7 +107,7 @@ const live = (v: any) => v.state === 'ready' && !!v.s3_key
 
 /** Manager view: everything about the clip, including who sent it. Links are for previewing (not logged as plays). */
 export const adminVideoDto = (v: any) => ({
-  id: v.id, invite_id: v.invite_id ?? null, uploaded_by_name: v.uploaded_by_name, relationship: v.relationship ?? null, source: v.source,
+  id: v.id, media_kind: mediaKindOf(v.media_kind), invite_id: v.invite_id ?? null, uploaded_by_name: v.uploaded_by_name, relationship: v.relationship ?? null, source: v.source,
   title: v.title ?? null, note: v.note ?? null, state: v.state, status: v.status, error: v.error ?? null,
   duration_seconds: v.duration_seconds ?? null, width: v.width ?? null, height: v.height ?? null, size_bytes: v.size_bytes ?? 0,
   submitted_at: iso(v.submitted_at), decided_at: iso(v.decided_at), decided_by: v.decided_by ?? null, last_played_at: iso(v.last_played_at),
@@ -107,7 +117,7 @@ export const adminVideoDto = (v: any) => ({
 /** Staff and hub list view: approved clips only, no video link (the player asks for one when play is pressed, which logs the play). */
 export const hubVideoDto = (v: any, r?: { first_name?: string; preferred_name?: string | null; room?: string | null }) => ({
   resident_name: r ? (r.preferred_name || r.first_name || null) : null, room: r?.room ?? null,   // shown beside the video so staff know whose it is and where to find them
-  id: v.id, title: v.title ?? null, note: v.note ?? null, uploaded_by_name: v.uploaded_by_name, relationship: v.relationship ?? null,
+  id: v.id, media_kind: mediaKindOf(v.media_kind), title: v.title ?? null, note: v.note ?? null, uploaded_by_name: v.uploaded_by_name, relationship: v.relationship ?? null,
   submitted_at: iso(v.decided_at ?? v.submitted_at), duration_seconds: v.duration_seconds ?? null, width: v.width ?? null, height: v.height ?? null,
   // When it was sent and when a manager approved it, and whether anyone has played it yet. "New" means nobody has played it.
   sent_at: iso(v.submitted_at), approved_at: iso(v.decided_at), watched: !!v.last_played_at, last_played_at: iso(v.last_played_at), is_new: !v.last_played_at,
@@ -116,7 +126,8 @@ export const hubVideoDto = (v: any, r?: { first_name?: string; preferred_name?: 
 
 /** What the family member sees of their own clips. */
 export const familyVideoDto = (v: any, inviteId: string) => ({
-  id: v.id, title: v.title ?? null, state: v.state, status: v.status, error: v.state === 'failed' ? (v.error ?? 'That video could not be processed. Please try again with a shorter video.') : null,
+  id: v.id, media_kind: mediaKindOf(v.media_kind), title: v.title ?? null, state: v.state, status: v.status,
+  error: v.state === 'failed' ? (v.error ?? (v.media_kind === 'audio' ? 'That voice note could not be processed. Please try again with a shorter recording.' : 'That video could not be processed. Please try again with a shorter video.')) : null,
   duration_seconds: v.duration_seconds ?? null, total_chunks: v.total_chunks ?? 0, chunk_bytes: CHUNK_BYTES,
   video_url: live(v) && v.status !== 'rejected' ? signedVideoPath(v.id, `family:${inviteId}`) : null,
   poster_url: live(v) && v.poster_key && v.status !== 'rejected' ? signedVideoPath(v.id, `family:${inviteId}`, 'poster') : null,
@@ -125,23 +136,33 @@ export const familyVideoDto = (v: any, inviteId: string) => ({
 // ─── Upload: start, chunk, status ──────────────────────────────────────────────
 export interface Sender { tenantId: string; residentId: string; inviteId: string | null; name: string; relationship: string | null; source: 'family' | 'manager'; decidedBy?: string }
 
-export async function startVideoUpload(s: Sender, opts: { size: unknown; title?: unknown }): Promise<{ ok: true; video: any } | Fail> {
+export async function startVideoUpload(s: Sender, opts: { size: unknown; title?: unknown; kind?: unknown }): Promise<{ ok: true; video: any } | Fail> {
+  const kind = mediaKindOf(opts.kind)
+  const audio = kind === 'audio'
+  const noun = audio ? 'voice note' : 'video'
   const size = Number(opts.size)
-  if (!Number.isInteger(size) || size < 1024) return fail(400, 'INVALID_FILE', 'That video looks empty. Please choose a different one.')
-  if (size > MAX_UPLOAD_BYTES) return fail(413, 'FILE_TOO_LARGE', `That video is too big. Videos must be under ${MAX_UPLOAD_BYTES / 1024 / 1024} MB, which is about a minute from a phone.`)
+  const maxBytes = audio ? MAX_AUDIO_UPLOAD_BYTES : MAX_UPLOAD_BYTES
+  const perInvite = audio ? VOICE_NOTES_PER_INVITE : VIDEOS_PER_INVITE
+  const perResident = audio ? VOICE_NOTES_PER_RESIDENT : VIDEOS_PER_RESIDENT
+  // Videos have always been counted among the rows that are not voice notes, so an existing row (no media_kind yet) is a video.
+  const ofKind = audio ? { media_kind: 'audio' } : { media_kind: { not: 'audio' } }
+  if (!Number.isInteger(size) || size < (audio ? 512 : 1024)) return fail(400, 'INVALID_FILE', `That ${noun} looks empty. Please ${audio ? 'record again' : 'choose a different one'}.`)
+  if (size > maxBytes) return fail(413, 'FILE_TOO_LARGE', audio
+    ? `That recording is too big. Voice notes must be under ${MAX_AUDIO_UPLOAD_BYTES / 1024 / 1024} MB, which is well over two minutes.`
+    : `That video is too big. Videos must be under ${MAX_UPLOAD_BYTES / 1024 / 1024} MB, which is about a minute from a phone.`)
   await sweepStale(s.residentId)
   if (s.inviteId) {
-    const mine = await db.residentVideo.count({ where: { invite_id: s.inviteId, status: { not: 'rejected' }, state: { not: 'failed' } } })
-    if (mine >= VIDEOS_PER_INVITE) return fail(403, 'LIMIT', `You can share up to ${VIDEOS_PER_INVITE} videos.`)
+    const mine = await db.residentVideo.count({ where: { invite_id: s.inviteId, ...ofKind, status: { not: 'rejected' }, state: { not: 'failed' } } })
+    if (mine >= perInvite) return fail(403, 'LIMIT', `You can share up to ${perInvite} ${noun}s.`)
     const busy = await db.residentVideo.count({ where: { invite_id: s.inviteId, state: { in: ['uploading', 'processing'] } } })
-    if (busy >= 2) return fail(429, 'BUSY', 'Please wait for your other video to finish first.')
+    if (busy >= 2) return fail(429, 'BUSY', 'Please wait for your other upload to finish first.')
   }
-  const stored = await db.residentVideo.count({ where: { tenant_id: s.tenantId, resident_id: s.residentId, status: { not: 'rejected' }, state: { not: 'failed' } } })
-  if (stored >= VIDEOS_PER_RESIDENT) return fail(403, 'LIMIT', `A profile can hold up to ${VIDEOS_PER_RESIDENT} videos. ${s.source === 'manager' ? 'Delete some first.' : 'Please ask the home.'}`)
+  const stored = await db.residentVideo.count({ where: { tenant_id: s.tenantId, resident_id: s.residentId, ...ofKind, status: { not: 'rejected' }, state: { not: 'failed' } } })
+  if (stored >= perResident) return fail(403, 'LIMIT', `A profile can hold up to ${perResident} ${noun}s. ${s.source === 'manager' ? 'Delete some first.' : 'Please ask the home.'}`)
   const video = await db.residentVideo.create({
     data: {
       tenant_id: s.tenantId, resident_id: s.residentId, invite_id: s.inviteId, uploaded_by_name: cleanText(s.name, 100) || 'Family', relationship: s.relationship ? cleanText(s.relationship, 60) : null,
-      source: s.source, title: cleanTitle(opts.title), state: 'uploading', status: s.source === 'manager' ? 'approved' : 'pending', size_bytes: size, total_chunks: totalChunksFor(size),
+      source: s.source, media_kind: kind, title: cleanTitle(opts.title), state: 'uploading', status: s.source === 'manager' ? 'approved' : 'pending', size_bytes: size, total_chunks: totalChunksFor(size),
       ...(s.source === 'manager' ? { decided_at: new Date(), decided_by: s.decidedBy ?? s.name } : {}),
     },
   })
@@ -177,7 +198,7 @@ async function dropParts(v: any): Promise<void> {
 export async function settleStuck(v: any): Promise<any> {
   if (v.state === 'processing' && v.processing_started_at && Date.now() - new Date(v.processing_started_at).getTime() > STUCK_MS) {
     await dropParts(v)
-    return db.residentVideo.update({ where: { id: v.id }, data: { state: 'failed', error: 'That video took too long to process. Please try again with a shorter video.' } })
+    return db.residentVideo.update({ where: { id: v.id }, data: { state: 'failed', error: v.media_kind === 'audio' ? 'That voice note took too long to process. Please try again with a shorter recording.' : 'That video took too long to process. Please try again with a shorter video.' } })
   }
   return v
 }
@@ -201,9 +222,12 @@ export async function completeVideo(v: any, edits: { title?: unknown }): Promise
     const have = await receivedChunks(v)
     if (have.length !== v.total_chunks) throw new VideoError('INVALID_FILE', 'Part of the video did not arrive. Please try the upload again.')
     // Check the first bytes before downloading the rest.
+    const audio = v.media_kind === 'audio'
     const first = await downloadFile(partKey(v, 0))
-    const kind = detectVideoContainer(first)
-    if (!kind) throw new VideoError('INVALID_FILE', 'That file is not a video we can use. Please choose a video from your phone (MP4, MOV, WebM or 3GP).')
+    const kind = audio ? detectAudioContainer(first) : detectVideoContainer(first)
+    if (!kind) throw new VideoError('INVALID_FILE', audio
+      ? 'That file is not a voice recording we can use. Please record again, or choose a recording from your phone (M4A, MP3, WAV, OGG or WebM).'
+      : 'That file is not a video we can use. Please choose a video from your phone (MP4, MOV, WebM or 3GP).')
     const raw = path.join(work, 'raw')
     fs.writeFileSync(raw, first)
     for (let n = 1; n < v.total_chunks; n++) fs.appendFileSync(raw, await downloadFile(partKey(v, n)))
@@ -212,28 +236,39 @@ export async function completeVideo(v: any, edits: { title?: unknown }): Promise
     // Malware scan (fail closed when a scanner is configured and errors). Big files skip it: the transcode re-creates every byte of the output.
     let scan: 'clean' | 'skipped' = 'skipped'
     if (v.size_bytes <= SCAN_MAX_BYTES) {
-      const r = await scanBuffer(fs.readFileSync(raw), 'video')
+      const r = await scanBuffer(fs.readFileSync(raw), v.media_kind === 'audio' ? 'voice-note' : 'video')
       if (r.status === 'infected') throw new VideoError('INVALID_FILE', 'That file was flagged by the security scan and was not used.')
       if (r.status === 'error' && scannerConfigured()) throw new VideoError('PROCESS_FAILED', 'The video could not be checked just now. Please try again.')
       if (r.status === 'clean') scan = 'clean'
     }
 
-    const out = await transcodeVideo(raw, work)
     const id = randomUUID()
-    const mp4Key = `${baseKey(v.tenant_id, v.resident_id)}${id}.mp4`, posterKey = `${baseKey(v.tenant_id, v.resident_id)}${id}.jpg`
-    await putPrivateObject(mp4Key, fs.readFileSync(out.mp4), 'video/mp4')
-    await putPrivateObject(posterKey, fs.readFileSync(out.poster), 'image/jpeg')
-    const done = await db.residentVideo.update({
-      where: { id: v.id },
-      data: { state: 'ready', s3_key: mp4Key, poster_key: posterKey, mime: 'video/mp4', duration_seconds: out.duration, size_bytes: out.size, width: out.width, height: out.height, scan_status: scan, error: null },
-    })
+    let done: any
+    if (audio) {
+      const a = await transcodeAudio(raw, work)
+      const m4aKey = `${baseKey(v.tenant_id, v.resident_id)}${id}.m4a`
+      await putPrivateObject(m4aKey, fs.readFileSync(a.m4a), 'audio/mp4')
+      done = await db.residentVideo.update({
+        where: { id: v.id },
+        data: { state: 'ready', s3_key: m4aKey, poster_key: '', mime: 'audio/mp4', duration_seconds: a.duration, size_bytes: a.size, width: null, height: null, scan_status: scan, error: null },
+      })
+    } else {
+      const out = await transcodeVideo(raw, work)
+      const mp4Key = `${baseKey(v.tenant_id, v.resident_id)}${id}.mp4`, posterKey = `${baseKey(v.tenant_id, v.resident_id)}${id}.jpg`
+      await putPrivateObject(mp4Key, fs.readFileSync(out.mp4), 'video/mp4')
+      await putPrivateObject(posterKey, fs.readFileSync(out.poster), 'image/jpeg')
+      done = await db.residentVideo.update({
+        where: { id: v.id },
+        data: { state: 'ready', s3_key: mp4Key, poster_key: posterKey, mime: 'video/mp4', duration_seconds: out.duration, size_bytes: out.size, width: out.width, height: out.height, scan_status: scan, error: null },
+      })
+    }
     await dropParts(v)   // the raw upload is not kept
     // A family clip waits for a manager, who may not speak its language: start the speech job now (quick, it does not wait for the result).
     // Manager uploads start no job on their own. Never allowed to fail the upload.
     if (done.source === 'family' && done.status === 'pending') { try { await startTranscript(done) } catch { /* the manager can press the button later */ } }
     return { ok: true, video: done }
   } catch (e: any) {
-    const message = e instanceof VideoError ? e.message : 'That video could not be processed. Please try again with a shorter video.'
+    const message = e instanceof VideoError ? e.message : (v.media_kind === 'audio' ? 'That voice note could not be processed. Please try again with a shorter recording.' : 'That video could not be processed. Please try again with a shorter video.')
     if (!(e instanceof VideoError)) console.error('[resident-video] processing failed:', e?.message ?? e)
     await dropParts(v)
     await db.residentVideo.update({ where: { id: v.id }, data: { state: 'failed', error: message } }).catch(() => null)
@@ -305,18 +340,18 @@ export async function deleteResidentVideos(tenantId: string, residentId: string)
 }
 
 /** When the family member presses Send: ready clips count as sent, half-finished ones are thrown away. Returns how many were sent. */
-export async function settleInviteVideos(inviteId: string): Promise<{ sent: number; processing: number }> {
+export async function settleInviteVideos(inviteId: string): Promise<{ sent: number; processing: number; videos: number; voiceNotes: number }> {
   try {
     const rows: any[] = await db.residentVideo.findMany({ where: { invite_id: inviteId } })
-    let sent = 0, processing = 0
+    let sent = 0, processing = 0, voiceNotes = 0
     for (const v0 of rows) {
       const v = await settleStuck(v0)
       if (v.state === 'processing') { processing++; continue }
-      if (v.state === 'ready' && v.status === 'pending') sent++
+      if (v.state === 'ready' && v.status === 'pending') { sent++; if (v.media_kind === 'audio') voiceNotes++ }
       else if (v.state === 'uploading' || v.state === 'failed') { await removeVideoFiles(v); await db.residentVideo.delete({ where: { id: v.id } }) }
     }
-    return { sent, processing }
-  } catch { return { sent: 0, processing: 0 } }
+    return { sent, processing, videos: sent - voiceNotes, voiceNotes }
+  } catch { return { sent: 0, processing: 0, videos: 0, voiceNotes: 0 } }
 }
 
 // ─── Manager record ────────────────────────────────────────────────────────────
@@ -359,7 +394,7 @@ export async function videoAnswer(tenantId: string, queryText: string, history: 
     if (!(await residentsEnabled(tenantId)) || !(await videosReady())) return null
     const residents: any[] = await db.resident.findMany({ where: { tenant_id: tenantId, status: 'living' }, select: { id: true, first_name: true, last_name: true, preferred_name: true, room: true }, take: 500 })
     if (!residents.length) return null
-    const vids: any[] = await db.residentVideo.findMany({ where: { tenant_id: tenantId, status: 'approved', state: 'ready', s3_key: { not: '' } }, orderBy: { decided_at: 'desc' }, take: 1000 })
+    const vids: any[] = await db.residentVideo.findMany({ where: { tenant_id: tenantId, status: 'approved', state: 'ready', s3_key: { not: '' }, media_kind: { not: 'audio' } }, orderBy: { decided_at: 'desc' }, take: 1000 })
     const texts = [queryText, ...history.slice(-6).reverse().map(m => m.content.replace(/<[^>]+>/g, ' '))]
     let target: any = null
     for (const t of texts) {

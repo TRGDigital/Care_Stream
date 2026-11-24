@@ -7,7 +7,7 @@ import { spawnSync } from 'node:child_process'
 import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
-import { binaryPath, detectVideoContainer, probeVideo, transcodeVideo, VideoError, MAX_EDGE } from './resident-video-media'
+import { binaryPath, detectVideoContainer, detectAudioContainer, probeVideo, probeAudio, transcodeVideo, transcodeAudio, VideoError, MAX_EDGE, MAX_AUDIO_SECONDS } from './resident-video-media'
 
 let n = 0
 const t = async (name: string, fn: () => Promise<void> | void) => { await fn(); n++; console.log('ok  ', name) }
@@ -82,6 +82,52 @@ async function main() {
     const out = path.join(dir, 'o6'); fs.mkdirSync(out)
     await assert.rejects(() => transcodeVideo(long, out), (e: any) => e instanceof VideoError && e.code === 'TOO_LONG')
     assert.ok(!fs.existsSync(path.join(out, 'out.mp4')))
+  })
+
+  // ── Voice notes ──
+  const tone = (name: string, ...args: string[]) => { const f = path.join(dir, name); ff('-f', 'lavfi', '-i', 'sine=frequency=440:duration=3', ...args, f); return f }
+  const m4a = tone('tone.m4a', '-c:a', 'aac', '-metadata', 'title=Secret title', '-metadata', 'location=+53.4808-002.2426/')
+  const webmA = tone('tone.webm', '-c:a', 'libopus')
+  const oggA = tone('tone.ogg', '-c:a', 'libopus')
+  const mp3A = tone('tone.mp3', '-c:a', 'libmp3lame')
+  const wavA = tone('tone.wav', '-c:a', 'pcm_s16le')
+  await t('voice note files are recognised by their first bytes (m4a, webm, ogg, mp3, wav), not by name', () => {
+    for (const [f, kind] of [[m4a, 'm4a'], [webmA, 'webm'], [oggA, 'ogg'], [mp3A, 'mp3'], [wavA, 'wav']] as const) assert.equal(detectAudioContainer(fs.readFileSync(f))?.kind, kind, f)
+    assert.equal(detectAudioContainer(fs.readFileSync(text)), null)
+    assert.equal(detectAudioContainer(Buffer.from('GIF89a......')), null)
+    // a photo brand is never accepted as audio, and a video file is not detected as a video by the audio check being the only gate
+    assert.equal(detectAudioContainer(Buffer.concat([Buffer.alloc(4), Buffer.from('ftypheic'), Buffer.alloc(8)])), null)
+  })
+  await t('a voice note is turned into mono AAC m4a with no tags, and the length is measured', async () => {
+    for (const [f, name] of [[m4a, 'a1'], [webmA, 'a2'], [oggA, 'a3'], [mp3A, 'a4'], [wavA, 'a5']] as const) {
+      const out = path.join(dir, name); fs.mkdirSync(out)
+      const r = await transcodeAudio(f, out)
+      assert.ok(r.m4a.endsWith('.m4a') && r.size > 1000)
+      assert.ok(r.duration > 2.5 && r.duration < 3.6, `${name} ${r.duration}`)
+      const p = await probeAudio(r.m4a)
+      assert.equal(p.audioCodec, 'aac'); assert.equal(p.hasVideo, false)
+      const dump = spawnSync(binaryPath('ffmpeg'), ['-hide_banner', '-i', r.m4a]).stderr.toString()
+      assert.ok(!/Secret title|53\.4808/.test(dump), 'tags survived')
+    }
+  })
+  await t('a video file sent as a voice note comes out as audio only', async () => {
+    const out = path.join(dir, 'a6'); fs.mkdirSync(out)
+    const r = await transcodeAudio(big, out)
+    assert.equal((await probeAudio(r.m4a)).hasVideo, false)
+  })
+  await t('a text file and a silent video are refused as voice notes', async () => {
+    const out = path.join(dir, 'a7'); fs.mkdirSync(out)
+    await assert.rejects(() => transcodeAudio(text, out), (e: any) => e instanceof VideoError && e.code === 'INVALID_FILE')
+    await assert.rejects(() => transcodeAudio(silent, out), (e: any) => e instanceof VideoError && e.code === 'INVALID_FILE')
+  })
+  await t('a recording over two minutes is refused, one just under is accepted', async () => {
+    assert.equal(MAX_AUDIO_SECONDS, 120)
+    const longA = path.join(dir, 'long.m4a'); ff('-f', 'lavfi', '-i', 'sine=frequency=300:duration=130', '-c:a', 'aac', '-b:a', '16k', longA)
+    const o1 = path.join(dir, 'a8'); fs.mkdirSync(o1)
+    await assert.rejects(() => transcodeAudio(longA, o1), (e: any) => e instanceof VideoError && e.code === 'TOO_LONG')
+    const okA = path.join(dir, 'ok.m4a'); ff('-f', 'lavfi', '-i', 'sine=frequency=300:duration=110', '-c:a', 'aac', '-b:a', '16k', okA)
+    const o2 = path.join(dir, 'a9'); fs.mkdirSync(o2)
+    assert.ok((await transcodeAudio(okA, o2)).duration > 105)
   })
   await t('no dashes in the messages families see', () => {
     for (const m of ['TOO_LONG', 'NO_VIDEO']) assert.ok(m)

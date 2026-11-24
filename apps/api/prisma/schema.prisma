@@ -3915,3 +3915,67 @@ model StaffNotificationRecipient {
   @@index([tenant_id, created_at(sort: Desc)])
   @@map("staff_notification_recipients")
 }
+
+// Holiday tracking and booking (pilot). See prisma/sql/2026-11-25_holiday_tracking.sql and lib/holiday-*.ts.
+model HolidaySettings {
+  tenant_id               String   @id
+  year_start_month        Int      @default(1)
+  year_start_day          Int      @default(1)
+  carry_over              Boolean  @default(false)
+  manager_approval        Boolean  @default(false)
+  max_off                 Int?
+  bank_default_multiplier Decimal  @default(1.5) @db.Decimal(4, 2)
+  bank_overrides          Json     @default("{}")
+  updated_at              DateTime @default(now()) @updatedAt
+
+  @@map("holiday_settings")
+}
+
+model HolidayStaff {
+  user_id      String   @id
+  tenant_id    String
+  start_date   DateTime? @db.Date
+  weekday_rate Decimal? @db.Decimal(8, 2)
+  weekend_rate Decimal? @db.Decimal(8, 2)
+  updated_at   DateTime @default(now()) @updatedAt
+
+  @@index([tenant_id])
+  @@map("holiday_staff")
+}
+
+model HolidayRequest {
+  id              String    @id @default(uuid())
+  tenant_id       String
+  user_id         String
+  status          String    @default("pending")
+  total_hours     Decimal   @default(0) @db.Decimal(8, 2)
+  total_days      Int       @default(0)
+  note            String?
+  decision_note   String?
+  source          String    @default("hub")
+  requested_at    DateTime  @default(now())
+  decided_by      String?
+  decided_by_name String?
+  decided_at      DateTime?
+  created_by      String?
+  updated_at      DateTime  @default(now()) @updatedAt
+
+  @@index([tenant_id, status, requested_at])
+  @@index([user_id, status])
+  @@map("holiday_requests")
+}
+
+model HolidayDay {
+  id         String   @id @default(uuid())
+  request_id String
+  tenant_id  String
+  user_id    String
+  day        DateTime @db.Date
+  hours      Decimal  @default(8) @db.Decimal(5, 2)
+  status     String   @default("pending")
+
+  @@unique([request_id, day])
+  @@index([tenant_id, day])
+  @@index([user_id, day])
+  @@map("holiday_days")
+}

@@ -9,6 +9,7 @@ import { prisma } from '../db/client'
 import { ok, err } from '../lib/response'
 import { requireAdmin } from '../middleware/auth'
 import { writeAuditLog } from '../lib/audit'
+import { withdrawNotification, withdrawnSet } from '../lib/notification-withdraw'
 import { staffPhotoUrls } from '../lib/staff-photos'
 import { sendStaffNotificationEmail } from '../services/email/outbound'
 import { NOTIFICATION_TITLE_MAX, NOTIFICATION_BODY_MAX } from '../services/email/notification-content'
@@ -167,7 +168,8 @@ notificationsAdminRouter.get('/', async (req: Request, res: Response) => {
     const tally = new Map<string, { total: number; read: number }>()
     for (const r of recips) { const t = tally.get(r.notification_id) ?? { total: 0, read: 0 }; t.total++; if (r.read_at) t.read++; tally.set(r.notification_id, t) }
     const fileMap = await filesFor(tenantOf(req), ids)
-    ok(res, { notifications: rows.map((n: any) => ({ file_count: fileMap.get(n.id)?.length ?? 0, id: n.id, title: n.title, created_at: iso(n.created_at), created_by_name: n.created_by_name, audience: n.audience, ...progress(tally.get(n.id)?.total ?? 0, tally.get(n.id)?.read ?? 0) })) })
+    const gone = await withdrawnSet(tenantOf(req), ids)
+    ok(res, { notifications: rows.map((n: any) => ({ withdrawn: gone.has(n.id), file_count: fileMap.get(n.id)?.length ?? 0, id: n.id, title: n.title, created_at: iso(n.created_at), created_by_name: n.created_by_name, audience: n.audience, ...progress(tally.get(n.id)?.total ?? 0, tally.get(n.id)?.read ?? 0) })) })
   } catch (e) { isMissingTable(e) ? notReady(res) : err(res, 'ERROR', 'Could not load notifications.', 500) }
 })
 
@@ -182,7 +184,8 @@ notificationsAdminRouter.get('/:id', async (req: Request, res: Response) => {
       .sort((a: any, b: any) => (a.read_at ? 1 : 0) - (b.read_at ? 1 : 0) || a.name.localeCompare(b.name))
     const wait = remindWaitMs(n.last_reminded_at)
     const files = (await filesFor(tenantOf(req), [n.id])).get(n.id) ?? []
-    ok(res, { notification: { files: files.map(fileDto), id: n.id, title: n.title, body: n.body, created_at: iso(n.created_at), created_by_name: n.created_by_name, audience: n.audience, last_reminded_at: iso(n.last_reminded_at), can_remind_in_minutes: Math.ceil(wait / 60000), ...progress(people.length, people.filter((x: any) => x.read_at).length) }, people })
+    const gone = await withdrawnSet(tenantOf(req), [n.id])
+    ok(res, { notification: { withdrawn: gone.has(n.id), files: files.map(fileDto), id: n.id, title: n.title, body: n.body, created_at: iso(n.created_at), created_by_name: n.created_by_name, audience: n.audience, last_reminded_at: iso(n.last_reminded_at), can_remind_in_minutes: Math.ceil(wait / 60000), ...progress(people.length, people.filter((x: any) => x.read_at).length) }, people })
   } catch (e) { isMissingTable(e) ? notReady(res) : err(res, 'ERROR', 'Could not load that notification.', 500) }
 })
 
@@ -234,6 +237,16 @@ notificationsAdminRouter.post('/:id/remind', async (req: Request, res: Response)
     if (!r.ok) { err(res, r.code, r.message, r.status); return }
     ok(res, { reminded: r.reminded, emailed: r.emailed, email_failed: r.email_failed })
   } catch (e) { isMissingTable(e) ? notReady(res) : err(res, 'ERROR', 'Could not send the reminder.', 500) }
+})
+
+// Withdraw a sent notification: it disappears from every recipient's hub and unread list. The email cannot be recalled.
+notificationsAdminRouter.post('/:id/withdraw', async (req: Request, res: Response) => {
+  try {
+    const r = await withdrawNotification(tenantOf(req), userOf(req), String(req.params.id))
+    if (!r.ok) { err(res, r.code, r.message, r.status); return }
+    void writeAuditLog({ tenant_id: tenantOf(req), user_id: userOf(req), event_type: 'staff_notification_withdrawn', entity_type: 'staff_notification', entity_id: String(req.params.id), metadata: { recipients: r.recipients, read: r.read } })
+    ok(res, { withdrawn: true, recipients: r.recipients, read: r.read, email_note: 'The emails that were already sent cannot be recalled.' })
+  } catch (e) { isMissingTable(e) ? notReady(res) : err(res, 'ERROR', 'Could not withdraw it.', 500) }
 })
 
 // ── Staff: my notifications ──────────────────────────────────────────────────

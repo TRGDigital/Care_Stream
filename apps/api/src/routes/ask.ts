@@ -20,6 +20,10 @@ import { render as renderLetter, validate as validateLetter, getTemplate as lett
 import { needsApproval, canEdit, canSubmit, canApprove, canReturn, canReopen, canShare, sharesFor, SHARE_METHODS, type ShareMethod } from '../services/ask-docs/workflow'
 import { pdfFor, emailLetter, shareAsNotification } from '../services/ask-docs/share'
 import { lintNewsletter } from '../services/ask-docs/newsletter-templates'
+import { askActionsRouter } from './ask-actions'
+import * as actionStore from '../services/ask/actions/store'
+import { buildCard } from '../services/ask/actions/card'
+import { loadAskSettings } from '../services/ask/actions/settings'
 
 export const askRouter = Router()
 const notFound = (res: Response) => err(res, 'NOT_FOUND', 'Not found.', 404)
@@ -33,6 +37,7 @@ async function guard(req: Request, res: Response, next: NextFunction) {
   } catch { notFound(res) }
 }
 askRouter.use(guard)
+askRouter.use('/actions', askActionsRouter)
 
 // A simple per person limit (per server instance, so soft): 12 questions a minute and 150 an hour.
 const hits = new Map<string, number[]>()
@@ -70,9 +75,16 @@ askRouter.post('/chat', async (req: Request, res: Response) => {
     const tenant = await (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { name: true } })
     await store.addMessage(tenantId, convId, 'user', message)
     const pageContext = await resolveContext(tenantId, req.body?.context, contextLookups)   // a pointer only: account checked, labels built here, never the browser's words
-    const r = await runAgent({ agentId: agent.id, ctx: { tenantId, userId, today: ukToday() }, orgName: tenant?.name ?? 'this organisation', history, message, pageContext })
+    const r = await runAgent({ agentId: agent.id, ctx: { tenantId, userId, today: ukToday() }, orgName: tenant?.name ?? 'this organisation', history, message, pageContext, conversationId: convId })
     const saved = await store.addMessage(tenantId, convId, 'assistant', r.answer, r.sources)
-    ok(res, { conversation_id: convId, message: { id: saved.id, role: 'assistant', content: r.answer, sources: r.sources, created_at: saved.created_at }, tools_used: r.tools_used })
+    // Any proposals the agent made are tied to this answer and returned as cards (nothing has been done: the administrator confirms on the card).
+    let actions: any[] = []
+    if (r.proposals.length) {
+      await actionStore.linkToMessage(tenantId, r.proposals, saved.id, convId).catch(() => undefined)
+      const settings = await loadAskSettings(tenantId)
+      for (const id of r.proposals) { const a = await actionStore.getProposal(tenantId, id); if (a) actions.push(await buildCard(tenantId, a, settings)) }
+    }
+    ok(res, { conversation_id: convId, message: { id: saved.id, role: 'assistant', content: r.answer, sources: r.sources, created_at: saved.created_at }, actions, tools_used: r.tools_used })
   } catch (e: any) {
     if (e instanceof PlanLimitError) { err(res, e.code, e.message, 402); return }
     if (store.notReady(e)) { notReady(res); return }
@@ -88,7 +100,10 @@ askRouter.get('/conversations', wrap(async (req, res) => { ok(res, { conversatio
 askRouter.get('/conversations/:id', wrap(async (req, res) => {
   const t = getTenantId(), u = req.user!.sub, c = await store.getConversation(t, u, String(req.params.id))
   if (!c) { notFound(res); return }
-  ok(res, { conversation: c, messages: await store.messagesOf(t, c.id) })
+  const settings = await loadAskSettings(t)
+  const actions: any[] = []
+  try { for (const a of await actionStore.forConversation(t, u, c.id)) actions.push({ message_id: a.message_id, card: await buildCard(t, a, settings) }) } catch { /* the actions table is not there yet */ }
+  ok(res, { conversation: c, messages: await store.messagesOf(t, c.id), actions })
 }))
 askRouter.patch('/conversations/:id', wrap(async (req, res) => {
   const title = String(req.body?.title ?? '').trim()

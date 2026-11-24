@@ -6,6 +6,7 @@
 import { prisma } from '../../db/client'
 import { AGENTS, HOUSE_RULES, type AgentDef } from './agents'
 import { LOCKED_RULES } from './safety'
+import { DEFAULT_ACTIONS_RULES, ACTION_TOOL_NAMES } from './actions/prompts'
 
 export const ASK_GROUP = 'Ask CareStream'
 export const ASK_PROMPT_MAX = 8000
@@ -43,6 +44,8 @@ export const ASK_PROMPTS: AskPromptMeta[] = [
     note: 'Added to the Staff newsletter agent prompt: British English, short paragraphs, no dashes, no superlatives, no invented figures.' },
   { usage: 'ask_agent_notifications', label: 'Ask CareStream: Notifications agent', default: jobOf('notifications'),
     note: 'Used for the Notifications agent: drafts a short staff message and the fenced block that opens it in Notifications. It never sends.' },
+  { usage: 'ask_actions_rules', label: 'Ask CareStream: how agents use actions', default: DEFAULT_ACTIONS_RULES,
+    note: 'Added for any agent that can propose actions (notifications, reminders, training): how to propose, the personalised placeholders, and what to do when asked for something it cannot do. Nothing it proposes happens until the administrator presses Confirm; that and the privacy rules are locked in code.' },
   { usage: 'ask_page_context', label: 'Ask CareStream: page context line', default: DEFAULT_PAGE_CONTEXT,
     note: 'One line added when the administrator is looking at a page. Placeholders: {{label}} (what they are looking at) and {{who}} (the staff member on screen, if any, already written as a sentence).' },
 ]
@@ -78,12 +81,13 @@ export async function askPrompt(usage: string): Promise<string> {
 // ── Putting it together ───────────────────────────────────────────────────────────
 /** The system prompt for one run: house rules, today, this agent's job (and its drafting rules), the page line, then the LOCKED rules last. */
 export async function buildSystemPrompt(a: AgentDef, today: string, orgName: string, pageLine: string): Promise<string> {
+  const actions = a.tools.some(t => (ACTION_TOOL_NAMES as readonly string[]).includes(t)) ? await askPrompt('ask_actions_rules') : ''
   const [house, job, drafting] = await Promise.all([
     askPrompt('ask_house_rules'),
     askPrompt(`ask_agent_${a.id}`),
     a.id === 'letters' ? askPrompt('ask_letter_drafting') : a.id === 'newsletter' ? askPrompt('ask_newsletter_drafting') : Promise.resolve(''),
   ])
-  const jobText = drafting ? `${job}\n${drafting}` : job
+  const jobText = [job, drafting, actions].filter(Boolean).join('\n')
   return `${house}\n\nTODAY: ${today} (UK). ORGANISATION: ${orgName}.\n\nYOUR JOB: ${jobText}${pageLine}\n\n${LOCKED_RULES}`
 }
 

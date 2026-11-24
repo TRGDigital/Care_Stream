@@ -19,3 +19,18 @@ export async function askPilotEnabled(tenantId: string): Promise<boolean> {
   memo.set(tenantId, { at: Date.now(), v })
   return v
 }
+
+/** Who may use Ask CareStream in this account: administrators, and deciding managers only when the account has switched on "Let managers use Ask CareStream". Never a shared tablet. */
+export async function askRoleFor(tenantId: string, user: { sub: string; role?: string; dev?: unknown }): Promise<'admin' | 'manager' | null> {
+  if (user.dev) return null
+  if (!(await askPilotEnabled(tenantId))) return null
+  if (user.role === 'admin') return 'admin'
+  if (user.role !== 'staff') return null
+  try {
+    const { loadAskSettings } = await import('../services/ask/actions/settings')
+    if (!(await loadAskSettings(tenantId)).managers_can_use) return null
+    const u = await (prisma as any).user.findFirst({ where: { id: user.sub, tenant_id: tenantId, is_active: true, is_shared: false }, select: { job_role: true } })
+    const { isManagerJobRole } = await import('./care-manager')
+    return isManagerJobRole(u?.job_role) ? 'manager' : null
+  } catch { return null }
+}

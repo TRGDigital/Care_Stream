@@ -119,7 +119,7 @@ test('SHARE PATHS: every transition and share is audit logged, and the PDF is ma
   const pdf = src('../ask-docs/pdf.ts'), letters = fs.readFileSync(path.resolve(__dirname, '../letters/render.ts'), 'utf8')
   for (const t of [pdf, letters]) { assert.match(t, /import\('pdfkit'\)/); assert.match(t, /import\('\.\.\/policy\/policy-pdf'\)/) }
   assert.ok(!/^import .*pdfkit/m.test(pdf), 'pdfkit is not imported at the top of the file')
-  assert.match(routes, /canShare\(d\)/); assert.match(routes, /adminOnly|req\.user\?\.role !== 'admin'/)
+  assert.match(routes, /canShare\(d\)/); assert.match(routes, /adminOnly|req\.user\?\.role !== 'admin'|askRoleFor/)
 })
 
 // ── C. The leaver sums ──────────────────────────────────────────────────────────────────────────────

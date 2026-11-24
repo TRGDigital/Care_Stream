@@ -5,15 +5,16 @@ import { prisma } from '../../../db/client'
 import { writeAuditLog } from '../../../lib/audit'
 import { cleanTitle, cleanBody } from '../../../lib/staff-notifications'
 import { isManagerJobRole } from '../../../lib/care-manager'
-import { createAndSendNotification, remindUnread } from '../../../routes/notifications'
-import { enrollStaff, remindEnrollment } from '../../../routes/training'
+// The route modules are loaded when an action runs (not when this file loads), so the Ask routes stay light and testable.
+const notifications = () => import('../../../routes/notifications')
+const training = () => import('../../../routes/training')
 import * as store from './store'
 import { loadAskSettings, actionAllowed } from './settings'
 import { eligibleStaff, revalidate } from './recipients'
 import { hasPersonal, renderPersonal } from './fields'
 import { loadPersonalValues } from './personal'
 import { enrollmentsByIds } from './training-data'
-import type { ActionRow } from './types'
+import type { ActionRow, ActionType, AskSettings } from './types'
 const p = () => prisma as any
 const VIA = 'ask_carestream'
 
@@ -32,10 +33,22 @@ export async function mayConfirm(actor: Actor, a: ActionRow): Promise<boolean> {
 
 const fail = (code: string, message: string, status: number): ConfirmResult => ({ ok: false, code, message, status })
 
-export async function confirmAction(actor: Actor, actionId: string, now = new Date()): Promise<ConfirmResult> {
+export interface ConfirmDeps {
+  store: Pick<typeof store, 'getProposal' | 'effectiveStatus' | 'lastConfirmedAt' | 'claim' | 'finish'>
+  settings: (tenantId: string) => Promise<AskSettings>
+  people: (tenantId: string) => Promise<Awaited<ReturnType<typeof eligibleStaff>>>
+  may: (actor: Actor, a: ActionRow) => Promise<boolean>
+  audit: (o: Parameters<typeof writeAuditLog>[0]) => unknown
+  runners?: Partial<Record<ActionType, (actor: Actor, a: ActionRow, ids: string[], people: Awaited<ReturnType<typeof eligibleStaff>>, s: AskSettings) => Promise<any>>>
+}
+const realDeps = (): ConfirmDeps => ({ store, settings: loadAskSettings, people: eligibleStaff, may: mayConfirm, audit: o => void writeAuditLog(o) })
+
+export async function confirmAction(actor: Actor, actionId: string, now = new Date(), deps: ConfirmDeps = realDeps()): Promise<ConfirmResult> {
+  const store = deps.store, loadAskSettings = deps.settings, eligibleStaff = deps.people
+  const writeAuditLog = deps.audit as typeof import('../../../lib/audit').writeAuditLog
   const a = await store.getProposal(actor.tenantId, actionId)
   if (!a) return fail('NOT_FOUND', 'That proposal was not found.', 404)
-  if (!(await mayConfirm(actor, a))) return fail('NOT_ALLOWED', 'Only the person who asked for this can confirm it.', 403)
+  if (!(await deps.may(actor, a))) return fail('NOT_ALLOWED', 'Only the person who asked for this can confirm it.', 403)
   const st = store.effectiveStatus(a, now.getTime())
   if (st === 'expired') return fail('EXPIRED', 'This proposal has expired (they last 30 minutes). Ask again to get a fresh one.', 410)
   if (st !== 'proposed') return fail('ALREADY', st === 'done' ? 'This has already been done.' : `This proposal is ${st}.`, 409)
@@ -54,22 +67,24 @@ export async function confirmAction(actor: Actor, actionId: string, now = new Da
   const people = await eligibleStaff(actor.tenantId)
   let result: any
   try {
-    if (a.type === 'send_staff_notification') result = await runNotification(actor, a, ids, people, s.emails_enabled)
+    const custom = deps.runners?.[a.type]
+    if (custom) result = await custom(actor, a, ids, people, s)
+    else if (a.type === 'send_staff_notification') result = await runNotification(actor, a, ids, people, s.emails_enabled)
     else if (a.type === 'remind_unread_notification') result = await runUnreadReminder(actor, a, ids, people)
     else if (a.type === 'allocate_training') result = await runAllocation(actor, a, ids, people)
     else result = await runTrainingReminders(actor, a, ids, people)
   } catch (e: any) {
     await store.finish(actor.tenantId, actionId, 'failed', { error: 'It could not be completed. Nothing further was sent.' })
-    void writeAuditLog({ tenant_id: actor.tenantId, user_id: actor.userId, event_type: 'ask_action_failed', entity_type: 'ask_action', entity_id: actionId, metadata: { type: a.type, via: VIA } })
+    writeAuditLog({ tenant_id: actor.tenantId, user_id: actor.userId, event_type: 'ask_action_failed', entity_type: 'ask_action', entity_id: actionId, metadata: { type: a.type, via: VIA } })
     return fail('FAILED', 'It could not be completed just now. Please check the Notifications or Training screen before trying again.', 500)
   }
   if (result?.error) {
     await store.finish(actor.tenantId, actionId, 'failed', result)
-    void writeAuditLog({ tenant_id: actor.tenantId, user_id: actor.userId, event_type: 'ask_action_failed', entity_type: 'ask_action', entity_id: actionId, metadata: { type: a.type, via: VIA } })
+    writeAuditLog({ tenant_id: actor.tenantId, user_id: actor.userId, event_type: 'ask_action_failed', entity_type: 'ask_action', entity_id: actionId, metadata: { type: a.type, via: VIA } })
     return { ok: false, code: result.code ?? 'FAILED', message: result.error, status: result.status ?? 409, result }
   }
   await store.finish(actor.tenantId, actionId, 'done', result)
-  void writeAuditLog({ tenant_id: actor.tenantId, user_id: actor.userId, event_type: 'ask_action_confirmed', entity_type: 'ask_action', entity_id: actionId, metadata: { type: a.type, recipients: result.recipients ?? ids.length, via: VIA } })   // counts and type only, never the message
+  writeAuditLog({ tenant_id: actor.tenantId, user_id: actor.userId, event_type: 'ask_action_confirmed', entity_type: 'ask_action', entity_id: actionId, metadata: { type: a.type, recipients: result.recipients ?? ids.length, via: VIA } })   // counts and type only, never the message
   return { ok: true, status: 'done', result }
 }
 
@@ -81,7 +96,7 @@ async function runNotification(actor: Actor, a: ActionRow, ids: string[], people
   const who = people.filter(x => kept.includes(x.id)).map(x => ({ id: x.id, name: x.name }))
   // A message without personal fields is ONE notification. With personal fields each person gets their own (their own figures only), in one batch that counts once against the daily limit.
   if (!hasPersonal(`${title}\n${body}`)) {
-    const r = await createAndSendNotification({ tenantId: actor.tenantId, userId: actor.userId, title, body, audience: 'selected', userIds: kept, files: [], email, via: VIA })
+    const r = await (await notifications()).createAndSendNotification({ tenantId: actor.tenantId, userId: actor.userId, title, body, audience: 'selected', userIds: kept, files: [], email, via: VIA })
     if (!r.ok) return { error: r.message, code: r.code, status: r.status }
     return { recipients: r.recipients, emailed: r.emailed, email_failed: r.email_failed, dropped, notification_ids: [r.id], personalised: false }
   }
@@ -89,7 +104,7 @@ async function runNotification(actor: Actor, a: ActionRow, ids: string[], people
   const sentIds: string[] = []; let emailed = 0, failed = 0, first = true
   for (const w of who) {
     const v = values.get(w.id); if (!v) continue
-    const r = await createAndSendNotification({ tenantId: actor.tenantId, userId: actor.userId, title: cleanTitle(renderPersonal(title, v), 120), body: cleanBody(renderPersonal(body, v), 2000), audience: 'selected', userIds: [w.id], files: [], email, skipDailyLimit: !first, via: VIA })
+    const r = await (await notifications()).createAndSendNotification({ tenantId: actor.tenantId, userId: actor.userId, title: cleanTitle(renderPersonal(title, v), 120), body: cleanBody(renderPersonal(body, v), 2000), audience: 'selected', userIds: [w.id], files: [], email, skipDailyLimit: !first, via: VIA })
     if (!r.ok) { if (first) return { error: r.message, code: r.code, status: r.status }; continue }
     first = false; sentIds.push(r.id); emailed += r.emailed; failed += r.email_failed
   }
@@ -98,7 +113,7 @@ async function runNotification(actor: Actor, a: ActionRow, ids: string[], people
 
 async function runUnreadReminder(actor: Actor, a: ActionRow, ids: string[], people: Awaited<ReturnType<typeof eligibleStaff>>) {
   const { kept } = revalidate(ids, people, true)
-  const r = await remindUnread({ tenantId: actor.tenantId, userId: actor.userId, notificationId: String(a.payload.notification_id), onlyUserIds: kept, via: VIA })
+  const r = await (await notifications()).remindUnread({ tenantId: actor.tenantId, userId: actor.userId, notificationId: String(a.payload.notification_id), onlyUserIds: kept, via: VIA })
   if (!r.ok) return { error: r.message, code: r.code, status: r.status }
   return { recipients: r.reminded, emailed: r.emailed, email_failed: r.email_failed }
 }
@@ -106,7 +121,7 @@ async function runUnreadReminder(actor: Actor, a: ActionRow, ids: string[], peop
 async function runAllocation(actor: Actor, a: ActionRow, ids: string[], people: Awaited<ReturnType<typeof eligibleStaff>>) {
   const { kept, dropped } = revalidate(ids, people, false)
   if (!kept.length) return { error: 'None of those people can be allocated training any more.', code: 'NO_RECIPIENTS', status: 409 }
-  const r = await enrollStaff({ tenantId: actor.tenantId, userId: actor.userId, userIds: kept, moduleIds: a.payload.module_ids, dueDate: a.payload.due_date })
+  const r = await (await training()).enrollStaff({ tenantId: actor.tenantId, userId: actor.userId, userIds: kept, moduleIds: a.payload.module_ids, dueDate: a.payload.due_date })
   if (!r.ok) return { error: r.message, code: r.code, status: r.status }
   r.after()
   void writeAuditLog({ tenant_id: actor.tenantId, user_id: actor.userId, event_type: 'ask_action_confirmed', entity_type: 'ask_action', entity_id: a.id, metadata: { type: 'allocate_training_detail', allocated: r.enrolled, skipped: r.skipped, via: VIA } })
@@ -119,7 +134,7 @@ async function runTrainingReminders(actor: Actor, a: ActionRow, ids: string[], p
   const items = (await enrollmentsByIds(actor.tenantId, a.payload.enrollment_ids ?? [])).filter(i => keep.has(i.user_id))
   let sent = 0, skipped = 0
   for (const i of items) {
-    const r = await remindEnrollment({ tenantId: actor.tenantId, actorUserId: actor.userId, enrollmentId: i.id })
+    const r = await (await training()).remindEnrollment({ tenantId: actor.tenantId, actorUserId: actor.userId, enrollmentId: i.id })
     if (r.ok) sent++; else skipped++
   }
   if (sent === 0) return { error: skipped ? 'No reminders could be sent (they may have been reminded in the last few minutes, or have nowhere to send to).' : 'There is nothing to remind.', code: 'NOTHING_TO_DO', status: 409 }

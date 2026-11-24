@@ -10,7 +10,7 @@ import { LETTER_TOOLS } from './letter-tools'
 import { NEWSLETTER_TOOLS } from './newsletter-tools'
 import { ACTION_TOOLS } from './actions/tools-actions'
 
-export interface ToolContext { tenantId: string; userId: string; today: string; conversationId?: string | null; collectProposal?: (id: string) => void }
+export interface ToolContext { tenantId: string; userId: string; today: string; conversationId?: string | null; collectProposal?: (id: string) => void; role?: 'admin' | 'manager'; moneyOk?: boolean }
 export interface ToolResult { data: unknown; method?: string; sources: AskSource[] }
 export interface AskTool {
   name: string

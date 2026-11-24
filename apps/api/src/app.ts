@@ -41,6 +41,7 @@ import { faceToFaceRouter } from './routes/face-to-face'
 import { trainingMatrixRouter } from './routes/training-matrix'
 import { workforceRouter } from './routes/workforce'
 import { holidayRouter, holidayAdminRouter } from './routes/holiday'
+import { askRouter } from './routes/ask'
 import { notificationsAdminRouter, meNotificationsRouter } from './routes/notifications'
 import { cqcQuestionsRouter } from './routes/cqc-staff-questions'
 import { auditsRouter } from './routes/audits'
@@ -306,6 +307,7 @@ app.use('/training-matrix', trainingMatrixRouter)
 app.use('/workforce', workforceRouter)
 app.use('/holiday/admin', holidayAdminRouter)   // holiday tracking pilot (CS-1001 only): administrators
 app.use('/holiday', holidayRouter)                // holiday tracking pilot: staff, approvers and /meta
+app.use('/ask', askRouter)   // Ask CareStream (pilot: CS-1001, administrators only)
 app.use('/cqc-questions', cqcQuestionsRouter)
 app.use('/audits', auditsRouter)
 app.use('/free-tour', freeTourRouter)

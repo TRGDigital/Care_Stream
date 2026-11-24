@@ -188,3 +188,11 @@ export async function loadSummaryRows(tenantId: string): Promise<SummaryRow[]> {
   const rows: any[] = await q().$queryRawUnsafe('select * from resident_funding where tenant_id = $1', tenantId)
   return rows.map(r => { const d = dtoOf(r); return { resident_id: d.resident_id, funding_type: d.funding_type, fee_model: d.fee_model, weekly_value: d.weekly_value, next_review_date: d.next_review_date } })
 }
+
+/** Totals for Ask CareStream: counts, totals and averages only, no names and no individual figures. Includes the hourly care hours planned per week, so a fee uplift can be worked out. */
+export async function askAggregates(tenantId: string, today: string) {
+  const rows = await loadSummaryRows(tenantId)
+  const s = summarise(rows, today, 0)
+  const h: any[] = await q().$queryRawUnsafe("select coalesce(sum(planned_hours_per_week),0) as hours from resident_funding where tenant_id = $1 and fee_model = 'hourly'", tenantId)
+  return { ...s, hourly_hours_per_week: round2(Number(h[0]?.hours ?? 0)) }
+}

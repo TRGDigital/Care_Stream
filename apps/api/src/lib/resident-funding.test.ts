@@ -74,7 +74,7 @@ test('the summary: weekly income, average by type, the mix and reviews due, in c
 
 // ── The safeguards ─────────────────────────────────────────────────────────────
 test('NOTHING else in the API touches the funding table or its fields (hub, family, profile DTOs, knowledge sync, assistant, exports, emails)', () => {
-  const allowed = new Set(['lib/resident-funding.ts', 'routes/resident-funding.ts', 'lib/finance-pilot.ts', 'lib/resident-funding.test.ts'])
+  const allowed = new Set(['lib/resident-funding.ts', 'routes/resident-funding.ts', 'lib/finance-pilot.ts', 'lib/resident-funding.test.ts', 'services/ask/funding-bridge.ts'])   // the bridge is the one place the Ask CareStream agents reach funding (aggregates, or a person the admin names, audit logged)
   const tokens = [/resident_funding/, /residentFunding/, /resident-funding/, /weekly_fee/, /council_contribution/, /family_contribution/, /fnc_contribution/, /hourly_rate_(weekday|weekend|bank_holiday|night)/, /managers_can_see/]
   const hits: string[] = []
   for (const f of walk(API_SRC)) {

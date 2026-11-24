@@ -219,8 +219,8 @@ export const AUDIT_CLUSTERS: ProductCluster[] = [
     items: ['medication-support-level-administration', 'mar-chart-audit-home-care', 'medication-competency-assessment',
             'self-administration-of-medicines', 'daily-medication-audit', 'weekly-medication-stock-and-storage'] },
   { key: 'home-care-safeguarding-consent-audits', label: 'Home care safeguarding and consent audits', kind: 'audits',
-    note: 'Capacity, consent, money, safeguarding and recording injuries in a person\'s home.',
-    items: ['mental-capacity-consent-in-the-home', 'consent-information-sharing', 'client-money-shopping-gifts',
+    note: 'Capacity, consent, skin changes, money, safeguarding and recording injuries in a person\'s home.',
+    items: ['mental-capacity-consent-in-the-home', 'pressure-area-skin-care-in-the-home', 'client-money-shopping-gifts',
             'safeguarding-log-review', 'body-map-injury-recording', 'duty-of-candour-notifications'] },
   { key: 'home-care-safe-visits-audits', label: 'Home care safe visits audits', kind: 'audits',
     note: 'Getting in, staying safe and getting every visit done: access, lone working, the home, moving, rota and missed visits.',
@@ -230,6 +230,14 @@ export const AUDIT_CLUSTERS: ProductCluster[] = [
     note: 'Recruitment, supervision, spot checks, the on call line, complaints and the review call.',
     items: ['recruitment-dbs-induction-new-care-workers', 'home-care-supervision-appraisal-competence', 'care-worker-spot-check',
             'on-call-out-of-hours-response', 'home-care-complaints-compliments', 'client-review-call-satisfaction'] },
+  { key: 'care-home-environment-audits', label: 'Care home environment audits', kind: 'audits',
+    note: 'The building and the spaces people live in: premises, bedrooms, dementia environment, laundry, kitchen and the night walk round.',
+    items: ['premises-and-maintenance', 'resident-bedroom-audit', 'dementia-care-environment',
+            'laundry', 'kitchen-audit', 'night-shift-walkround'] },
+  { key: 'governance-quality-audits', label: 'Governance and quality audits', kind: 'audits',
+    note: 'The management oversight an inspector asks about: governance, quality assurance, the mock inspection, the single assessment framework, complaints and safeguarding.',
+    items: ['monthly-governance-review', 'quality-assurance', 'cqc-mock-inspection',
+            'single-assessment-framework-review', 'complaints-and-concerns', 'safeguarding-log-review'] },
 ]
 
 export const ALL_CLUSTERS: ProductCluster[] = [...POLICY_CLUSTERS, ...TRAINING_CLUSTERS, ...AUDIT_CLUSTERS]

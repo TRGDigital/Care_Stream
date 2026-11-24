@@ -18,7 +18,7 @@ test('the 19 new home care audits each have their own picture, and the rest shar
   const { AUDIT_CATALOGUE } = await web('audit-catalogue'); const { auditImageKeys } = await web('audit-image-key')
   const own = (AUDIT_CATALOGUE as Array<{ name: string }>).filter(a => (auditImageKeys(a.name) as string[]).length === 2 && keys.has((auditImageKeys(a.name) as string[])[0]))
   assert.equal(own.length, 19)
-  assert.equal(AUDIT_IMAGE_SCENES.filter(s => !s.key.startsWith('theme:')).length, 19)
+  assert.equal(AUDIT_IMAGE_SCENES.filter(s => !s.key.startsWith('theme:') && !s.key.startsWith('collection:')).length, 19)
   assert.equal(AUDIT_IMAGE_SCENES.filter(s => s.key.startsWith('theme:')).length, 14)
 })
 

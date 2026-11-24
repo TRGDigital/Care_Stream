@@ -65,21 +65,22 @@ export function DayHoursEditor({ defaultHours, shiftHours, unit = 'hours', avail
       <div className="grid gap-3 sm:grid-cols-3">
         <div>
           <label htmlFor="hol-from" className="mb-1 block text-sm font-medium text-neutral-dark">First day</label>
-          <input id="hol-from" type="date" min={min} max={max} className={`${inp} w-full`} value={from} onChange={e => { setFrom(e.target.value); if (!to || to < e.target.value) setTo(e.target.value) }} />
+          <input id="hol-from" type="date" min={min} max={max} className={`${inp} h-11 w-full`} value={from} onChange={e => { setFrom(e.target.value); if (!to || to < e.target.value) setTo(e.target.value) }} />
         </div>
         <div>
-          <label htmlFor="hol-to" className="mb-1 block text-sm font-medium text-neutral-dark">Last day <span className="font-normal text-neutral-mid">(same day for one day)</span></label>
-          <input id="hol-to" type="date" min={from || min} max={max} className={`${inp} w-full`} value={to} onChange={e => setTo(e.target.value)} />
+          <label htmlFor="hol-to" className="mb-1 block text-sm font-medium text-neutral-dark">Last day</label>
+          <input id="hol-to" type="date" min={from || min} max={max} className={`${inp} h-11 w-full`} value={to} onChange={e => setTo(e.target.value)} />
         </div>
         {unit !== 'days' && (
           <div>
             <label htmlFor="hol-dflt" className="mb-1 block text-sm font-medium text-neutral-dark">Hours for each full day</label>
-            <select id="hol-dflt" className={`${inp} w-full`} value={dflt} onChange={e => applyDefault(Number(e.target.value))}>
+            <select id="hol-dflt" className={`${inp} h-11 w-full`} value={dflt} onChange={e => applyDefault(Number(e.target.value))}>
               {HOURS.map(h => <option key={h} value={h}>{h} {h === 1 ? 'hour' : 'hours'}</option>)}
             </select>
           </div>
         )}
       </div>
+      <p className="-mt-2 text-xs text-neutral-mid">For a single day, choose the same date for the first and last day.</p>
       {tooLong && <p className="text-sm text-red-700" role="alert">A request can cover up to 60 days. Please choose a shorter range.</p>}
       {range.length > 0 && !tooLong && (
         <div>

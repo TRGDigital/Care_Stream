@@ -93,7 +93,7 @@ export function SickOverlay({ token, editId, onClose, onSaved }: { token: string
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/30 p-4" onMouseDown={e => { if (e.target === e.currentTarget) onClose() }}>
-      <div role="dialog" aria-modal="true" aria-labelledby="sick-title" className="my-6 w-full max-w-2xl rounded-2xl bg-white p-6 shadow-xl">
+      <div role="dialog" aria-modal="true" aria-labelledby="sick-title" className="my-6 w-full max-w-3xl rounded-2xl bg-white p-6 shadow-xl">
         <div className="mb-3 flex items-start justify-between gap-3">
           <h2 id="sick-title" className="text-lg font-bold text-neutral-dark">{editId ? 'Sickness record' : 'Add sick day'}</h2>
           <button type="button" aria-label="Close" onClick={onClose} className="rounded-md p-1 text-neutral-mid hover:bg-neutral-light"><X size={18} /></button>

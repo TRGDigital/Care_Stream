@@ -9,7 +9,7 @@ const keys = new Set(AUDIT_IMAGE_SCENES.map(s => s.key))
 
 test('every audit card has a picture to show: its own, or its theme', async () => {
   const { AUDIT_CATALOGUE } = await web('audit-catalogue'); const { auditImageKeys } = await web('audit-image-key')
-  type A = { name: string }
+  type A = { name: string; slug: string }
   const none = (AUDIT_CATALOGUE as A[]).filter(a => !(auditImageKeys(a.name, a.slug) as string[]).some(k => keys.has(k))).map(a => a.name)
   assert.deepEqual(none, [])
 })

@@ -13,7 +13,7 @@ import { UpgradeOverlay } from './upgrade-overlay'
 import {
   LayoutDashboard, FileText, Users, BarChart2, TrendingUp, ClipboardCheck, CreditCard, MessageSquare, Settings, BookOpen, ShieldAlert, GraduationCap, ShieldCheck,
   Building2, ChevronDown, Check, Loader2, HelpCircle, ClipboardList, Menu, X, Lock, KeyRound, BadgeCheck,
-  PanelLeftClose, PanelLeftOpen, Languages, Compass, Award, Gift,
+  PanelLeftClose, PanelLeftOpen, Languages, Compass, Award, Gift, Bell,
 } from 'lucide-react'
 import { GuidedTour } from '@/components/admin/guided-tour'
 import { FreeTourHost } from '@/components/admin/free-tours'
@@ -52,6 +52,7 @@ const NAV_SECTIONS = [
       { href: '/staff', label: 'Staff', Icon: Users },
       { href: '/incentives', label: 'Incentives', Icon: Gift },
       { href: '/workforce', label: 'Compliance', Icon: BadgeCheck, enterprise: true },
+      { href: '/notifications', label: 'Notifications', Icon: Bell },
       { href: '/translation-review', label: 'Translation Review', Icon: Languages },
     ],
   },

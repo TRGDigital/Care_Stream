@@ -5,7 +5,7 @@ import { useSession } from 'next-auth/react'
 import { createApiClient } from '@/lib/api-client'
 import { persistentCache } from '@/lib/page-cache'
 import {
-  ChevronDown, ChevronUp, Search, X,
+  ChevronDown, ChevronUp, Search, X, Bell,
   FileText, Users, MessageSquare, Mail, ClipboardCheck,
   GraduationCap, BarChart2, BookOpen, ShieldAlert, Settings, Zap, ClipboardList,
   LifeBuoy, Upload, CheckCircle, Info, UserPlus, RefreshCw, CalendarDays, Lightbulb, Loader2, Building2, BadgeCheck,
@@ -2775,6 +2775,39 @@ const GUIDE_SECTIONS: GuideSection[] = [
         <SectionBlock title="5. Poster reminders">
           <p className="text-sm text-neutral-mid">
             Under <strong>Settings &rarr; Shared tablets</strong>, choose how often admins are reminded to print a new poster: <strong>monthly</strong>, <strong>quarterly</strong> (the default), <strong>half yearly</strong> or <strong>yearly</strong>.
+          </p>
+        </SectionBlock>
+      </div>
+    ),
+  },
+  {
+    id:      'notifications',
+    icon:    Bell,
+    title:   'Notifications',
+    summary: 'Send a message to all staff or chosen staff, see who has read it, and remind the people who have not',
+    content: (
+      <div className="space-y-5">
+        <SectionBlock title="What it is, on every plan">
+          <p className="text-sm text-neutral-mid">
+            Notifications let you send a message to your team. Each person gets an email from you, and the next time they sign in to their hub with their password or PIN, an alert tells them they have a notification from you. They open it, read it and press <strong>Mark as read</strong>, so you can see it has been seen.
+          </p>
+        </SectionBlock>
+        <SectionBlock title="1. Sending a notification">
+          <div className="space-y-3">
+            <Step n={1}>Click <strong>Notifications</strong> in the left menu, below Compliance.</Step>
+            <Step n={2}>Write a <strong>title</strong> (up to 120 characters) and your <strong>message</strong> (up to 2,000 characters). Line breaks are kept.</Step>
+            <Step n={3}>Choose <strong>All staff</strong>, or <strong>Choose staff</strong> and tick the people you want. Archived staff, agency workers and shared tablets are not included.</Step>
+            <Step n={4}>Click <strong>Review and send</strong>, check how it will look, then <strong>Send</strong>. Once sent it cannot be taken back.</Step>
+          </div>
+        </SectionBlock>
+        <SectionBlock title="2. What staff see">
+          <p className="text-sm text-neutral-mid">
+            An email from you with your picture and your organisation logo, and a button to their hub. When they sign in, an alert says <strong>You have a notification from</strong> your name. <strong>Read it</strong> opens the message; <strong>Later</strong> hides the alert until their next sign in. It keeps coming back until they have marked it as read.
+          </p>
+        </SectionBlock>
+        <SectionBlock title="3. Who has read it">
+          <p className="text-sm text-neutral-mid">
+            The <strong>Sent</strong> list shows how many have read each notification. Open one to see each person and when they read it. <strong>Remind unread</strong> emails the people who have not read it yet, once a day for each notification.
           </p>
         </SectionBlock>
       </div>

@@ -14,6 +14,8 @@ export const RELEASES: Release[] = [
       'Families can now record a voice note of up to two minutes from their invitation link, as well as written answers, photos and a video. Voice notes wait for a manager to approve them before staff can hear them.',
       'The invitation and reminder emails to families now come from the manager who sent them, with your organisation logo at the top, so families know who is asking.',
       'The family page has four clear buttons that take people straight to written answers, photos, a video or a voice note.',
+      'A new Notifications page, below Compliance in the menu. Write a message and send it to all staff or chosen staff. They get an email from you and an alert in their hub the next time they sign in, and they mark it as read so you can see who has seen it. You can remind the people who have not read it, once a day.',
+      'Live chat from the support menu: talk to the CareStream team between 9am and 5pm, Monday to Friday, excluding UK bank holidays. Outside those hours you can leave your details and we will reply by email.',
       'The free audit library now has 124 audits, including 19 new audits for home care, each with its own page. Pictures for the audit cards are being added.',
     ],
   },

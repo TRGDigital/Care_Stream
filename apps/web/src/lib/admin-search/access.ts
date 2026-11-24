@@ -1,10 +1,10 @@
 // Which admin pages each kind of account can open. The sidebar and the admin search both read these, so they cannot disagree.
 // Training only buyers, policies only buyers and Free accounts see the rest locked (the sidebar's upsell).
-export const TRAINING_ONLY_NAV = new Set(['/dashboard', '/group', '/staff', '/training', '/analytics', '/settings', '/licences', '/billing'])
+export const TRAINING_ONLY_NAV = new Set(['/dashboard', '/group', '/staff', '/notifications', '/training', '/analytics', '/settings', '/licences', '/billing'])
 // Policies only buyers came in through the shop with no hub and no subscription: Policies, Settings and Billing.
 export const POLICIES_ONLY_NAV = new Set(['/policies', '/settings', '/billing'])
 // Free accounts: audits, the policy library, gap analysis, staff, settings, billing and help. Everything else opens the paid plans overlay.
-export const FREE_NAV = new Set(['/dashboard', '/audits', '/gaps', '/policies', '/staff', '/training', '/training/annual', '/settings', '/billing', '/guides'])
+export const FREE_NAV = new Set(['/dashboard', '/audits', '/gaps', '/policies', '/staff', '/notifications', '/training', '/training/annual', '/settings', '/billing', '/guides'])
 // Items that exist only for full (subscribed) and free accounts; the two shop tiers never see them.
 export const NOT_FOR_SHOP_TIERS = new Set(['/training/annual'])
 

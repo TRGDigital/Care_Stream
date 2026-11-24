@@ -63,7 +63,7 @@ test('the notification email is sent "<Admin> via CareStream", with the title, t
   const m = sent[0]
   assert.equal(m.from.name, 'Sarah Jones via CareStream')
   assert.ok(m.html.includes('Sarah Jones has sent you a notification') && m.html.includes('Fire drill on Thursday') && m.html.includes('Please read the plan.'))
-  assert.ok(m.html.includes('/notifications/n1') && m.html.includes('Read it in my hub'))
+  assert.ok(m.html.includes('/my-notifications/n1') && m.html.includes('Read it in my hub'))
   setActorOverrideForPreview(() => null)
   sent.length = 0
   await out.sendStaffNotificationEmail({ to: 'a@oak.co.uk', name: 'Amira Khan', orgName: 'Ferndale', title: 'T', body: 'B', notificationId: 'n1' })

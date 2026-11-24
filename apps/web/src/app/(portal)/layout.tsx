@@ -11,6 +11,7 @@ import { HubPrefsApplier } from '@/components/hub/hub-prefs-applier'
 import { ViewAsBanner } from '@/components/view-as/view-as-banner'
 import { SuperUserNotice } from '@/components/hub/super-user-notice'
 import { TabletBar, TabletLock } from '@/components/hub/tablet-bar'
+import { NotificationOverlay } from '@/components/hub/notification-overlay'
 import type { Metadata } from 'next'
 
 // Logged-in app route: never meant for search results. robots.txt already disallows these paths,
@@ -39,6 +40,8 @@ export default async function PortalLayout({ children }: { children: React.React
       <div className="flex h-[100dvh] flex-col bg-neutral-light">
         <ViewAsBanner />
         <TabletBar />
+        {/* "You have a notification from <name>": after sign in, including a person's PIN on a shared tablet (never on the tablet's own lock screen, which returns above). */}
+        <NotificationOverlay />
         <PortalNav
           userName={session.user.name ?? ''}
           userRole={session.user.role}

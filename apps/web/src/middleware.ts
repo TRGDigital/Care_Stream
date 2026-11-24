@@ -18,7 +18,7 @@ const GATED = [
   '/chat', '/cqc', '/progress', '/analytics', '/audits', '/cqc-questions',
   '/dashboard', '/gaps', '/guides', '/knowledge', '/onboarding', '/policies',
   '/queries', '/settings', '/staff', '/training',
-  '/licences', '/group', '/workforce', '/translation-review',
+  '/licences', '/group', '/workforce', '/translation-review', '/notifications', '/my-notifications',
 ]
 
 // Console routes a training-only (gateway-tier) tenant cannot use — the full-CareStream
@@ -40,12 +40,12 @@ const POLICIES_ONLY_ALLOWED = ['/policies', '/settings', '/billing', '/account',
 // for them rather than only on the training-only list.
 const POLICIES_ONLY_BLOCKED_SCAN = ['/dashboard', '/chat', '/staff', '/training', '/licences',
   '/group', '/workforce', '/translation-review', '/analytics', '/queries', '/knowledge',
-  '/cqc-questions', '/audits', '/gaps', '/onboarding', '/guides']
+  '/cqc-questions', '/audits', '/gaps', '/onboarding', '/guides', '/notifications', '/my-notifications']
 
 // Free accounts (tier 'free') get audits, the policy library and gap analysis, staff, settings and
 // billing. Like the policies-only tier this is an ALLOW list, so a route added later stays closed
 // until someone decides otherwise. The sidebar shows the rest locked; this is the typed URL backstop.
-const FREE_ALLOWED = ['/dashboard', '/audits', '/gaps', '/policies', '/staff', '/training', '/settings', '/billing', '/guides', '/account', '/start', '/chat', '/progress']
+const FREE_ALLOWED = ['/dashboard', '/audits', '/gaps', '/policies', '/staff', '/training', '/settings', '/billing', '/guides', '/account', '/start', '/chat', '/progress', '/notifications', '/my-notifications']
 const matches = (path: string, list: string[]) => list.some(p => path === p || path.startsWith(p + '/'))
 
 // ── Store app mode. The Android (Trusted Web Activity) and iOS apps open the site with
@@ -56,7 +56,7 @@ const matches = (path: string, list: string[]) => list.some(p => path === p || p
 // until someone decides otherwise. ?app=off clears it (for testing on a phone browser).
 const APP_COOKIE = 'cs_app'
 const APP_ALLOWED = [
-  '/chat', '/cqc', '/progress',                                              // the staff hub
+  '/chat', '/cqc', '/progress', '/my-notifications',                         // the staff hub
   '/login', '/check-email', '/forgot-password', '/reset-password', '/verify-email', '/auth',
   '/privacy', '/terms', '/cookies',                                          // linked from sign-in
   '/app-console',                                                            // "use a browser" notice
@@ -66,7 +66,7 @@ const APP_ALLOWED = [
 const APP_CONSOLE = [
   '/dashboard', '/analytics', '/audits', '/cqc-questions', '/gaps', '/guides', '/knowledge',
   '/onboarding', '/policies', '/queries', '/settings', '/staff', '/training', '/billing',
-  '/licences', '/group', '/workforce', '/translation-review', '/start', '/platform', '/account',
+  '/licences', '/group', '/workforce', '/translation-review', '/notifications', '/start', '/platform', '/account',
 ]
 
 function appMode(req: NextRequest, path: string): NextResponse | null {

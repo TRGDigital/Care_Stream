@@ -2776,7 +2776,7 @@ export async function sendStaffNotificationEmail(opts: {
   const first = escHtml(opts.name.split(' ')[0] ?? opts.name)
   const card = notificationCardHtml(opts.title, opts.body)
   const admin = await resolveActor(opts.actorUserId)
-  const link = hubLink(`/notifications/${encodeURIComponent(opts.notificationId)}`)
+  const link = hubLink(`/my-notifications/${encodeURIComponent(opts.notificationId)}`)
   if (admin) {
     const html = personLedEmail({
       admin, headline: notificationHeadline(admin.name, kind), intro: kind === 'reminder' ? 'You have not read it yet. It is waiting in your hub.' : 'Here is what they wrote. You can read it and mark it as read in your hub.',

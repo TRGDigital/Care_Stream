@@ -3834,3 +3834,51 @@ model AuditImage {
 
   @@map("audit_images")
 }
+
+// ─── Live support chat (see prisma/sql/2026-11-24_support_chat.sql) ───────────────────────────
+model SupportChat {
+  id                       String    @id @default(uuid())
+  tenant_id                String
+  user_id                  String
+  customer_name            String    @default("")
+  customer_email           String    @default("")
+  customer_reference       String    @default("")
+  home_name                String    @default("")
+  plan                     String    @default("")
+  status                   String    @default("waiting")   // open | waiting | answered | closed
+  mode                     String    @default("live")      // live | offline
+  assigned_to              String?
+  last_message_at          DateTime  @default(now())
+  last_customer_message_at DateTime?
+  last_agent_message_at    DateTime?
+  last_agent_read_at       DateTime?
+  customer_last_read_at    DateTime?
+  notified_at              DateTime?
+  created_at               DateTime  @default(now())
+  closed_at                DateTime?
+
+  @@index([tenant_id, user_id, status])
+  @@index([status, mode, last_message_at])
+  @@map("support_chats")
+}
+
+model SupportChatMessage {
+  id          String   @id @default(uuid())
+  chat_id     String
+  sender      String                       // customer | agent | system
+  sender_name String   @default("")
+  body        String
+  created_at  DateTime @default(now())
+
+  @@index([chat_id, created_at])
+  @@map("support_chat_messages")
+}
+
+model SupportAgentPresence {
+  agent_key    String   @id
+  agent_name   String   @default("")
+  online       Boolean  @default(false)
+  last_seen_at DateTime @default(now())
+
+  @@map("support_agent_presence")
+}

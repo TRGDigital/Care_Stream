@@ -597,6 +597,51 @@ export async function sendPolicyExternalReviewEmail(opts: {
   await sgMail.send({ to: opts.to, from, subject: `Please review: ${opts.policyName}`, html })
 }
 
+// ─── Live support chat ──────────────────────────────────────────────────────────
+// To the team: a customer has started a live chat, or left a message because nobody was online.
+export async function sendSupportChatNotification(opts: {
+  kind: 'live' | 'offline'; customerName: string; customerEmail: string; reference: string; homeName: string; plan: string; message: string; chatId: string
+}): Promise<void> {
+  ensureInitialised()
+  if (!process.env.SENDGRID_API_KEY) { console.warn('[email] SENDGRID_API_KEY not set, skipping support chat notification'); return }
+  const to   = process.env.SUPPORT_CHAT_NOTIFY_EMAIL ?? process.env.PLATFORM_NOTIFY_EMAIL ?? 'lenny@trgdigital.co.uk'
+  const from = process.env.SENDGRID_FROM_ADDRESS ?? process.env.SENDGRID_FROM_EMAIL ?? `noreply@${INBOUND_DOMAIN}`
+  const esc  = (x: any) => String(x ?? '').replace(/[<>&]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' }[c] as string))
+  const row  = (k: string, v: string) => `<tr><td style="padding:5px 16px 5px 0;color:#6b7280;font-size:13px;white-space:nowrap">${k}</td><td style="padding:5px 0;color:${NEUTRAL_DARK};font-size:14px">${esc(v)}</td></tr>`
+  const live = opts.kind === 'live'
+  const link = `${WEB_URL}/platform/live-chat?chat=${encodeURIComponent(opts.chatId)}`
+  const html = emailWrapper(`
+    <p style="color:${NEUTRAL_DARK};font-size:16px;font-weight:700;margin:0 0 6px">${live ? 'A customer is waiting in live chat' : 'A customer left a message'}</p>
+    <p style="color:#374151;font-size:14px;line-height:1.6;margin:0 0 18px">${live ? 'Open the inbox to answer while they are still here.' : 'Nobody was online, so they left their details. You can answer from the inbox and the reply is emailed to them.'}</p>
+    <table style="border-collapse:collapse;margin:0 0 16px">
+      ${row('Home', opts.homeName || '-')}${row('Reference', opts.reference || '-')}${row('Plan', opts.plan || '-')}${row('Name', opts.customerName || '-')}${row('Email', opts.customerEmail || '-')}
+    </table>
+    <div style="white-space:pre-wrap;color:${NEUTRAL_DARK};font-size:14px;line-height:1.6;background:#f9fafb;border:1px solid #eef0f2;border-radius:8px;padding:12px 14px;margin:0 0 18px">${esc(opts.message).slice(0, 4000)}</div>
+    <div style="text-align:center;margin:0 0 24px"><a href="${esc(link)}" style="display:inline-block;padding:14px 32px;background:${PURPLE};color:#ffffff;font-size:15px;font-weight:600;border-radius:8px;text-decoration:none">Open the live chat inbox</a></div>
+    ${emailFooter()}
+  `)
+  await sgMail.send({ to, from, subject: `${live ? 'Live chat' : 'Message'} from ${opts.homeName || opts.customerName || 'a customer'} (${opts.reference || 'no reference'})`, html })
+}
+
+// To the customer: the team's answer to a message they left (or to a chat they left before it was answered).
+export async function sendSupportChatReplyEmail(opts: { to: string; customerName: string; agentName: string; reply: string; original: string }): Promise<void> {
+  ensureInitialised()
+  if (!process.env.SENDGRID_API_KEY) { console.warn('[email] SENDGRID_API_KEY not set, skipping support chat reply'); return }
+  const from = process.env.SENDGRID_FROM_ADDRESS ?? process.env.SENDGRID_FROM_EMAIL ?? `noreply@${INBOUND_DOMAIN}`
+  const esc  = (x: any) => String(x ?? '').replace(/[<>&]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' }[c] as string))
+  const first = (opts.customerName || '').trim().split(' ')[0] || 'there'
+  const html = emailWrapper(`
+    <p style="color:${NEUTRAL_DARK};font-size:15px;margin:0 0 16px">Hello ${esc(first)},</p>
+    <p style="color:#374151;font-size:15px;line-height:1.6;margin:0 0 14px">Thank you for getting in touch. ${esc(opts.agentName || 'The CareStream team')} has replied to your message:</p>
+    <div style="white-space:pre-wrap;color:${NEUTRAL_DARK};font-size:15px;line-height:1.6;background:#faf8fc;border:1px solid #e5e7eb;border-radius:8px;padding:14px 16px;margin:0 0 18px">${esc(opts.reply).slice(0, 4000)}</div>
+    <p style="color:#6b7280;font-size:13px;margin:0 0 4px">Your message was</p>
+    <div style="white-space:pre-wrap;color:#6b7280;font-size:13px;line-height:1.6;border-left:3px solid #e5e7eb;padding:2px 12px;margin:0 0 18px">${esc(opts.original).slice(0, 1500)}</div>
+    <p style="color:#374151;font-size:14px;line-height:1.6;margin:0 0 18px">If you need anything else, just reply to this email or start a chat from Help in CareStream.</p>
+    ${emailFooter()}
+  `)
+  await sgMail.send({ to: opts.to, from: { email: from, name: opts.agentName ? `${opts.agentName} at CareStream` : 'CareStream support' }, replyTo: process.env.SUPPORT_REPLY_TO ?? 'support@carestreamai.com', subject: 'Your reply from CareStream support', html })
+}
+
 // ─── Training licence renewal reminder (training-only tier) ─────────────────────
 
 export async function sendTrainingRenewalEmail(opts: {

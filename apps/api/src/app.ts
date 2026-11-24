@@ -44,6 +44,7 @@ import { cqcQuestionsRouter } from './routes/cqc-staff-questions'
 import { auditsRouter } from './routes/audits'
 import { freeTourRouter } from './routes/free-tour'
 import { featureRequestsRouter } from './routes/feature-requests'
+import { supportChatRouter, supportChatAdminRouter } from './routes/support-chat'
 import { supportRequestsRouter } from './routes/support-requests'
 import { publicBlogRouter } from './routes/blog-public'
 import { publicUserCasesRouter } from './routes/user-cases-public'
@@ -171,6 +172,7 @@ app.use('/admin/policy-gaps', platformPolicyGapsRouter)
 app.use('/admin/adhoc-training', platformAdhocTrainingRouter)
 app.use('/admin/policy-images', platformPolicyImagesRouter)
 app.use('/admin/ai-chat', websiteChatAdminRouter)
+app.use('/admin/support-chat', supportChatAdminRouter)   // the live chat inbox (platform token)
 app.use('/admin', adminRouter)
 
 // §8.1 — SendGrid Inbound Parse webhook. Unauthenticated — auth is handled
@@ -298,6 +300,7 @@ app.use('/cqc-questions', cqcQuestionsRouter)
 app.use('/audits', auditsRouter)
 app.use('/free-tour', freeTourRouter)
 app.use('/feature-requests', featureRequestsRouter)
+app.use('/support-chat', supportChatRouter)   // the customer's live chat
 app.use('/support-requests', supportRequestsRouter)
 app.use('/agent-actions', agentActionsRouter)
 

@@ -30,6 +30,7 @@ type AuditEventType =
   | 'holiday_requested' | 'holiday_approved' | 'holiday_rejected' | 'holiday_cancelled' | 'holiday_edited' | 'holiday_removed' | 'holiday_imported' | 'holiday_settings_changed'   // holiday tracking
   | 'staff_pin_resend' | 'staff_pin_regenerate' | 'staff_pin_show' | 'staff_pins_sent_all'   // a staff member's tablet PIN
   | 'resident_created' | 'resident_updated' | 'resident_archived' | 'resident_archive_confirmed' | 'resident_retention_changed'
+  | 'resident_funding_viewed' | 'resident_funding_created' | 'resident_funding_updated' | 'resident_funding_deleted' | 'resident_funding_setting'
   | 'resident_exported' | 'resident_deleted' | 'resident_family_invited' | 'resident_family_link_created' | 'resident_contribution_decided' | 'resident_archive_viewed'
   | 'staff_photo_set' | 'staff_photo_removed'
   | 'resident_photo_added' | 'resident_photo_decided' | 'resident_photo_deleted'

@@ -78,6 +78,7 @@ import { staffPhotoFileRouter } from './lib/staff-photos'
 import { emailAvatarRouter } from './services/email/email-avatar'
 import { publicFamilyRouter, residentPhotoFileRouter } from './routes/residents-public'
 import { residentsRouter } from './routes/residents'
+import { residentFundingRouter } from './routes/resident-funding'
 import { familyStopRouter } from './routes/family-reminders'
 import { emailPreviewsAdminRouter } from './routes/email-previews-admin'
 import { residentVideosRouter, publicFamilyVideosRouter, residentVideoFileRouter } from './routes/residents-videos'
@@ -289,6 +290,7 @@ app.use('/settings', settingsRouter)
 app.use('/policy-purchases', policyPurchasesRouter)
 app.use('/translation-suggestions', translationSuggestionsRouter)
 app.use('/knowledge', knowledgeRouter)
+app.use('/residents/funding', residentFundingRouter)   // LOCKED funding and fees (pilot, administrators only): before the general residents routes
 app.use('/residents', residentVideosRouter)   // video messages (falls through to the router below for everything else)
 app.use('/residents', residentsRouter)
 app.use('/incentives', incentivesRouter)

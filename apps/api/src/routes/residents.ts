@@ -34,6 +34,7 @@ import {
 } from '../lib/resident-photos'
 import { residentRemindersRouter } from './family-reminders'
 import { cancelResidentReminders } from '../lib/family-reminders'
+import { deleteFunding } from '../lib/resident-funding'
 import { pendingVideoCounts, adminVideosFor, retireResidentVideos, deleteResidentVideos } from '../lib/resident-videos'
 import { sendResidentFamilyInviteEmail, sendResidentArchiveTaskEmail } from '../services/email/outbound'
 
@@ -590,6 +591,7 @@ residentsRouter.delete('/:id', async (req: Request, res: Response) => {
   await syncResidentKnowledge(ctx.tenantId, ctx.r.id)   // belt and braces: nothing of theirs left in the assistant
   await deleteResidentPhotos(ctx.tenantId, ctx.r.id)   // files from storage first, then the rows
   await deleteResidentVideos(ctx.tenantId, ctx.r.id)   // video messages, their files and their play log
+  await deleteFunding(ctx.tenantId, ctx.r.id)   // the locked funding and fees record goes with the profile
   await db.residentContribution.deleteMany({ where: { tenant_id: ctx.tenantId, resident_id: ctx.r.id } })
   await cancelResidentReminders(ctx.tenantId, ctx.r.id, true)
   await db.residentInvite.deleteMany({ where: { tenant_id: ctx.tenantId, resident_id: ctx.r.id } })

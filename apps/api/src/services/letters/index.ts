@@ -2,10 +2,10 @@
 // No routes and no tables live here. Letters are always drafts: nothing is shared until an administrator or manager has approved it.
 
 import { TEMPLATES, TIER2_PLANNED, COMMON_FIELDS, DRAFT_NOTE, type LetterTemplate, type FieldDef } from './templates'
-import { getTemplate as find, renderLetter, renderLetterPdf, validateValues, type Values, type RenderedLetter, type Letterhead } from './render'
+import { getTemplate as find, renderLetter, renderLetterPdf, renderLetterDocx, letterLayout, validateValues, type Values, type RenderedLetter, type Letterhead, type Signer } from './render'
 
 export { TIER2_PLANNED, COMMON_FIELDS, DRAFT_NOTE }
-export type { LetterTemplate, FieldDef, Values, RenderedLetter, Letterhead }
+export type { LetterTemplate, FieldDef, Values, RenderedLetter, Letterhead, Signer }
 export { resolveDefaults } from './fields'
 export type { LetterDataSource, Resolved, ResolveInput } from './fields'
 
@@ -32,10 +32,26 @@ export function render(id: string, values: Values): RenderedLetter {
 }
 
 /** The letter as a PDF on the letterhead. Refuses to produce one while anything is missing, so an unfinished letter can never be printed by accident. */
-export async function renderPdf(id: string, values: Values, head: Letterhead): Promise<Buffer> {
+export async function renderPdf(id: string, values: Values, head: Letterhead, signer?: Signer | null): Promise<Buffer> {
   const t = find(id)
   if (!t) throw new Error(`Unknown letter: ${id}`)
   const check = validateValues(t, values)
   if (!check.ok) throw new Error(`The letter is not finished: ${[...check.missing, ...check.invalid.map(i => i.label)].join(', ')}`)
-  return renderLetterPdf(t, values, head)
+  return renderLetterPdf(t, values, head, signer)
+}
+
+/** The same finished letter as a Word document (.docx). Refuses while anything is missing, like the PDF. */
+export async function renderDocx(id: string, values: Values, head: Letterhead, signer?: Signer | null): Promise<Buffer> {
+  const t = find(id)
+  if (!t) throw new Error(`Unknown letter: ${id}`)
+  const check = validateValues(t, values)
+  if (!check.ok) throw new Error(`The letter is not finished: ${[...check.missing, ...check.invalid.map(i => i.label)].join(', ')}`)
+  return renderLetterDocx(t, values, head, signer)
+}
+
+/** The letter as a layout (for the on screen preview). Works while the letter is unfinished: gaps show as [Label]. */
+export function layout(id: string, values: Values, head: Letterhead, signer?: Signer | null) {
+  const t = find(id)
+  if (!t) throw new Error(`Unknown letter: ${id}`)
+  return letterLayout(t, values, head, signer)
 }

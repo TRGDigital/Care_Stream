@@ -21,8 +21,10 @@ export function prismaLetterSource(): LetterDataSource {
     },
 
     async service(tenantId) {
-      const t = await p().tenant.findUnique({ where: { id: tenantId }, select: { name: true } })
-      return t ? { name: t.name } : null
+      // The name used in a letter is the organisation's TRADING name from the letterhead settings (the account's display name only when none is set).
+      const { loadLetterhead } = await import('./letterhead')
+      const l = await loadLetterhead(tenantId)
+      return l.displayName ? { name: l.head.name } : null
     },
 
     async actor(userId) {

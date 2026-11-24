@@ -34,6 +34,7 @@ import { createResidentsClient } from '@/lib/residents-api'
 import { DisplaySettings } from '@/components/hub/display-settings'
 import { YourPicture } from '@/components/hub/my-photo'
 import Link from 'next/link'
+import { myNotifications } from '@/lib/notifications-client'
 import { createApiClient, apiAssetUrl, type Citation } from '@/lib/api-client'
 import { persistentCache, hubKey, wasHardReload } from '@/lib/page-cache'
 
@@ -42,7 +43,7 @@ import { persistentCache, hubKey, wasHardReload } from '@/lib/page-cache'
 // localStorage before first paint so cached values never flash empty.
 const useIsoLayoutEffect = typeof window !== 'undefined' ? useLayoutEffect : useEffect
 import { Spinner } from '@/components/ui/spinner'
-import { ArrowLeft, BookOpen, Bookmark, BookmarkCheck, Brain, CalendarDays, ChevronDown, ChevronUp, CheckCircle2, ClipboardCheck, FileText, Globe, GraduationCap, Heart, Lightbulb, LifeBuoy, ListChecks, Menu, MessageSquare, Mic, MicOff, Plus, RefreshCw, Send, ShieldCheck, Sparkles, Square, ThumbsDown, ThumbsUp, Trash2, TrendingUp, Users, Volume2, X, XCircle, Award, AlertTriangle, Circle, Clock } from 'lucide-react'
+import { Bell, ArrowLeft, BookOpen, Bookmark, BookmarkCheck, Brain, CalendarDays, ChevronDown, ChevronUp, CheckCircle2, ClipboardCheck, FileText, Globe, GraduationCap, Heart, Lightbulb, LifeBuoy, ListChecks, Menu, MessageSquare, Mic, MicOff, Plus, RefreshCw, Send, ShieldCheck, Sparkles, Square, ThumbsDown, ThumbsUp, Trash2, TrendingUp, Users, Volume2, X, XCircle, Award, AlertTriangle, Circle, Clock } from 'lucide-react'
 import { useSpeech } from '@/hooks/useSpeech'
 import { bcp47 } from '@/lib/locale'
 
@@ -432,6 +433,7 @@ function ChatPageInner() {
   // Voice: dictate in the chosen reply language, else the staff member's own language.
   const { supported: speechSupported, state: speechState, start: startSpeech, stop: stopSpeech } =
     useSpeech((text) => setInput(prev => (prev.trim() ? prev + ' ' + text : text)), bcp47(replyLang || firstLang))
+  const [unreadNotes, setUnreadNotes] = useState(0)
   const [navCounts,    setNavCounts]                    = useState<{ induction: number; training: number; cqc: number; followup: number; annual: number; audits: number; actions: number; programmes: number }>({ induction: 0, training: 0, cqc: 0, followup: 0, annual: 0, audits: 0, actions: 0, programmes: 0 })
   const [savedPolicies, setSavedPolicies]               = useState<Array<{ policy_id: string; title: string }>>([])
   const [sidebarPolicy, setSidebarPolicy]               = useState<string | null>(null)
@@ -484,6 +486,13 @@ function ChatPageInner() {
       .then(r => { const v = { is_manager: r.is_manager, count: r.policies.length }; setPolicyApprovals(v); try { localStorage.setItem(`cs_polappr_${userId}`, JSON.stringify(v)) } catch { /* ignore */ } }).catch(() => {})
   }, [session?.accessToken, userId])
   useEffect(() => { refreshPolicyApprovals() }, [refreshPolicyApprovals])
+  // Notifications from the administrator: the number not yet read, on the sidebar item.
+  useEffect(() => {
+    if (!session?.accessToken) return
+    let live = true
+    myNotifications.unread(session.accessToken).then(r => { if (live) setUnreadNotes(r.count ?? 0) }).catch(() => undefined)
+    return () => { live = false }
+  }, [session?.accessToken])
 
   // Policies past their review date drive the Policies badge too (admins only; silently 0 otherwise).
   const refreshDueReview = useCallback(() => {
@@ -1156,6 +1165,16 @@ function ChatPageInner() {
           )}
           {!isReviewer && (
             <p className="px-3 pb-1 pt-3 text-[10px] font-semibold uppercase tracking-wider text-neutral-mid/70">For you</p>
+          )}
+          {!isReviewer && (
+          <Link
+            href="/my-notifications"
+            className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-neutral-mid transition-colors hover:bg-neutral-light hover:text-neutral-dark"
+          >
+            <Bell size={15} />
+            Notifications
+            {unreadNotes > 0 && <NavBadge count={unreadNotes} className="bg-rose-500" />}
+          </Link>
           )}
           {!isReviewer && (
           <button

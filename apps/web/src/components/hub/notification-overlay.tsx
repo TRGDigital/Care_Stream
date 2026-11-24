@@ -34,7 +34,7 @@ export function NotificationOverlay() {
   }, [token, key, viewingAs])
 
   // Reading is the point: do not cover the notification itself.
-  useEffect(() => { if (pathname?.startsWith('/my-notifications')) setOpen(false) }, [pathname])
+  useEffect(() => { if (pathname?.startsWith('/my-notifications') || (typeof window !== 'undefined' && window.location.search.includes('view=notifications'))) setOpen(false) }, [pathname])
 
   // Focus moves into the dialog, Tab stays inside it, and Escape means Later.
   useEffect(() => {
@@ -56,7 +56,7 @@ export function NotificationOverlay() {
   }, [open])
 
   function later() { if (key) store(key, '1'); setOpen(false) }
-  function readIt() { if (key) store(key, '1'); setOpen(false); router.push(`/my-notifications/${items[0]?.id ?? ''}`) }
+  function readIt() { if (key) store(key, '1'); setOpen(false); router.push(`/chat?view=notifications&id=${encodeURIComponent(items[0]?.id ?? '')}`) }
 
   if (!open || items.length === 0) return null
   const first = items[0]

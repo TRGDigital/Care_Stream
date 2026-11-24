@@ -35,6 +35,10 @@ import { DisplaySettings } from '@/components/hub/display-settings'
 import { YourPicture } from '@/components/hub/my-photo'
 import Link from 'next/link'
 import { myNotifications } from '@/lib/notifications-client'
+import { MyNotificationsView } from '@/components/hub/views/my-notifications-view'
+import { NotificationDetailView } from '@/components/hub/views/notification-detail-view'
+import { MyHolidaysView } from '@/components/hub/views/my-holidays-view'
+import { HolidayRequestsView } from '@/components/hub/views/holiday-requests-view'
 import { useHolidayMeta } from '@/lib/holiday-client'
 import { createApiClient, apiAssetUrl, type Citation } from '@/lib/api-client'
 import { persistentCache, hubKey, wasHardReload } from '@/lib/page-cache'
@@ -372,7 +376,8 @@ function ChatPageInner() {
   const userId                                         = session?.user?.email ?? 'guest'
 
   const [library, setLibrary] = useState<null | 'policies' | 'chats'>(null)
-  const [view,     setView]                            = useState<'chat' | 'induction' | 'training' | 'followup' | 'audits' | 'annual' | 'diplomas' | 'cqc' | 'progress' | 'f2f' | 'supervisions' | 'policies' | 'audit-approvals' | 'actions' | 'my-incentives' | 'incentive-approvals'>('chat')
+  const [view,     setView]                            = useState<'chat' | 'induction' | 'training' | 'followup' | 'audits' | 'annual' | 'diplomas' | 'cqc' | 'progress' | 'f2f' | 'supervisions' | 'policies' | 'audit-approvals' | 'actions' | 'my-incentives' | 'incentive-approvals' | 'notifications' | 'my-holidays' | 'holiday-requests'>('chat')
+  const [noteId, setNoteId] = useState<string | null>(null)
   const [policyApprovals, setPolicyApprovals]          = useState<{ is_manager: boolean; count: number }>({ is_manager: false, count: 0 })
   const [dueReviewCount, setDueReviewCount]            = useState(0)   // policies past their review date (admins)
   const [auditApprovals, setAuditApprovals]            = useState<{ is_manager: boolean; count: number }>({ is_manager: false, count: 0 })
@@ -476,6 +481,7 @@ function ChatPageInner() {
     if (v === 'supervisions' || v === 'f2f' || v === 'induction' || v === 'training' || v === 'annual' || v === 'diplomas' || v === 'followup' || v === 'audits' || v === 'cqc' || v === 'progress' || v === 'policies' || v === 'audit-approvals' || v === 'actions' || v === 'my-incentives' || v === 'incentive-approvals') {
       if (!hubLocked(v)) setView(v)
     }
+    if (v === 'notifications' || v === 'my-holidays' || v === 'holiday-requests') { setView(v); setNoteId(v === 'notifications' ? searchParams.get('id') : null) }
   }, [searchParams]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Care manager: policies awaiting their approval (drives the Policies sidebar item).
@@ -494,7 +500,7 @@ function ChatPageInner() {
     let live = true
     myNotifications.unread(session.accessToken).then(r => { if (live) setUnreadNotes(r.count ?? 0) }).catch(() => undefined)
     return () => { live = false }
-  }, [session?.accessToken])
+  }, [session?.accessToken, view, noteId])
 
   // Policies past their review date drive the Policies badge too (admins only; silently 0 otherwise).
   const refreshDueReview = useCallback(() => {
@@ -1169,33 +1175,33 @@ function ChatPageInner() {
             <p className="px-3 pb-1 pt-3 text-[10px] font-semibold uppercase tracking-wider text-neutral-mid/70">For you</p>
           )}
           {!isReviewer && (
-          <Link
-            href="/my-notifications"
-            className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-neutral-mid transition-colors hover:bg-neutral-light hover:text-neutral-dark"
+          <button
+            onClick={() => { setView('notifications'); setNoteId(null); setNavOpen(false) }}
+            className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors ${view === 'notifications' ? 'bg-teal/10 text-teal' : 'text-neutral-mid hover:bg-neutral-light hover:text-neutral-dark'}`}
           >
             <Bell size={15} />
             Notifications
             {unreadNotes > 0 && <NavBadge count={unreadNotes} className="bg-rose-500" />}
-          </Link>
+          </button>
           )}
           {!isReviewer && holidayMeta?.enabled && (
-          <Link
-            href="/my-holidays"
-            className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-neutral-mid transition-colors hover:bg-neutral-light hover:text-neutral-dark"
+          <button
+            onClick={() => { setView('my-holidays'); setNavOpen(false) }}
+            className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors ${view === 'my-holidays' ? 'bg-teal/10 text-teal' : 'text-neutral-mid hover:bg-neutral-light hover:text-neutral-dark'}`}
           >
             <CalendarDays size={15} />
             My holidays
-          </Link>
+          </button>
           )}
           {!isReviewer && holidayMeta?.enabled && holidayMeta.can_decide && (
-          <Link
-            href="/holiday-requests"
-            className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-neutral-mid transition-colors hover:bg-neutral-light hover:text-neutral-dark"
+          <button
+            onClick={() => { setView('holiday-requests'); setNavOpen(false) }}
+            className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors ${view === 'holiday-requests' ? 'bg-teal/10 text-teal' : 'text-neutral-mid hover:bg-neutral-light hover:text-neutral-dark'}`}
           >
             <ClipboardCheck size={15} />
             Holiday requests
             {(holidayMeta.pending_count ?? 0) > 0 && <NavBadge count={holidayMeta.pending_count ?? 0} className="bg-rose-500" />}
-          </Link>
+          </button>
           )}
           {!isReviewer && (
           <button
@@ -1440,6 +1446,13 @@ function ChatPageInner() {
         {view === 'incentive-approvals' && showIncentiveApprovals && session?.accessToken && (
           <IncentiveApprovalsView token={session.accessToken} userId={userId} onChange={refreshIncentiveQueue} />
         )}
+
+        {/* Notifications and holidays live inside the hub so the sidebar stays in view */}
+        {view === 'notifications' && (noteId
+          ? <NotificationDetailView id={noteId} onBack={() => setNoteId(null)} />
+          : <MyNotificationsView onOpen={id => setNoteId(id)} />)}
+        {view === 'my-holidays' && <MyHolidaysView />}
+        {view === 'holiday-requests' && <HolidayRequestsView />}
 
         {/* My incentives (staff: their own points only) */}
         {view === 'my-incentives' && showMyIncentives && session?.accessToken && (

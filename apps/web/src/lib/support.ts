@@ -1,7 +1,7 @@
 // Settings for the support menu in the admin header (components/admin/support-menu.tsx).
 
 /** The support phone number, shown to paid plans only. null hides the phone line until a number is supplied. */
-export const SUPPORT_PHONE: string | null = null
+export const SUPPORT_PHONE: string | null = '020 8064 1596'
 export const SUPPORT_EMAIL = 'support@carestreamai.com'
 
 const SELF_SERVE = new Set(['free', 'training_only', 'policies_only'])

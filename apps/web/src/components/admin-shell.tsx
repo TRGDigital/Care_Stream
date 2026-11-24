@@ -26,6 +26,7 @@ import { TRAINING_ONLY_NAV, POLICIES_ONLY_NAV, FREE_NAV, NOT_FOR_SHOP_TIERS } fr
 import { AdminSearch } from '@/components/admin/admin-search'
 import { SupportMenu } from '@/components/admin/support-menu'
 import { ReleasesButton } from '@/components/admin/releases-overlay'
+import { AskButton } from '@/components/ask/ask-overlay'
 import { useHolidayMeta } from '@/lib/holiday-client'
 import { SupportChatWidget } from '@/components/support/chat-widget'
 
@@ -319,6 +320,7 @@ export function AdminShell({ userName, tenantName, children }: AdminShellProps) 
           </div>
 
           <div className="flex flex-shrink-0 items-center gap-4 md:gap-5">
+            <AskButton />
             <ReleasesButton />
             <SupportMenu />
             <span className="hidden text-sm text-neutral-mid sm:inline">{userName}</span>

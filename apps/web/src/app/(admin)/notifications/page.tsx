@@ -39,6 +39,10 @@ export default function NotificationsPage() {
 
   const [title, setTitle] = useState('')
   const [body, setBody] = useState('')
+  // A draft from Ask CareStream arrives as ?title=...&body=... : it only fills the form, nothing is sent until the administrator presses Send.
+  useEffect(() => {
+    try { const q = new URLSearchParams(window.location.search); const t = q.get('title'), b = q.get('body'); if (t) setTitle(t.slice(0, 120)); if (b) setBody(b.slice(0, 2000)) } catch { /* ignore */ }
+  }, [])
   const [audience, setAudience] = useState<'all' | 'selected'>('all')
   const [chosen, setChosen] = useState<Set<string>>(new Set())
   const [files, setFiles] = useState<FileItem[]>([])

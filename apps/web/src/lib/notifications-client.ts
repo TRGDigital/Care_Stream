@@ -19,7 +19,7 @@ export const FILE_ACCEPT = '.pdf,.docx,.xlsx,.pptx,.csv,.txt,.jpg,.jpeg,.png,.we
 export const fmtSize = (n: number) => n >= 1024 * 1024 ? `${(n / 1024 / 1024).toFixed(1)} MB` : `${Math.max(1, Math.round(n / 1024))} KB`
 
 export interface StaffOption { id: string; name: string; job_role: string | null; role: string }
-export interface SentItem { id: string; title: string; created_at: string; created_by_name: string; audience: 'all' | 'selected'; total: number; read: number; unread: number; label: string; file_count?: number }
+export interface SentItem { withdrawn?: boolean; id: string; title: string; created_at: string; created_by_name: string; audience: 'all' | 'selected'; total: number; read: number; unread: number; label: string; file_count?: number }
 export interface SentDetail { notification: SentItem & { files?: FileItem[]; body: string; last_reminded_at: string | null; can_remind_in_minutes: number }; people: Array<{ user_id: string; name: string; job_role: string | null; active: boolean; email_sent: boolean; read_at: string | null }> }
 export interface SendResult { id: string; recipients: number; emailed: number; email_failed: number; dropped: number }
 
@@ -44,6 +44,7 @@ export const adminNotifications = {
     xhr.send(form)
   }),
   removeFile: (t: string, id: string) => call<{ deleted: boolean }>(`/notifications/files/${encodeURIComponent(id)}`, t, { method: 'DELETE' }),
+  withdraw: (t: string, id: string) => call<{ withdrawn: boolean; recipients: number; read: number; email_note: string }>(`/notifications/${encodeURIComponent(id)}/withdraw`, t, { method: 'POST', body: '{}' }),
   remind: (t: string, id: string) => call<{ reminded: number; emailed: number; email_failed: number }>(`/notifications/${encodeURIComponent(id)}/remind`, t, { method: 'POST' }),
 }
 

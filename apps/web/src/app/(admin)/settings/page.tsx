@@ -13,12 +13,14 @@ import { HolidaySettingsBody } from '@/components/admin/holiday/holiday-settings
 import { useHolidayMeta } from '@/lib/holiday-client'
 import { useFundingMeta } from '@/lib/funding-client'
 import { FinanceSettingsBody } from '@/components/admin/residents/finance-settings'
+import { AskSettingsBody } from '@/components/ask/ask-settings'
+import { ask as askApi } from '@/lib/ask-client'
 import {
   AlertTriangle, Bell, BedDouble, BookLock, Building2, Check, ChevronDown, ChevronUp, ClipboardList, Copy, Loader2,
   Mail, Plus, Search, ShieldCheck, SlidersHorizontal, Tablet, Trash2, Upload, UserRound, X,
   // `Lock` unaliased resolves to the DOM Web Locks API type, not the icon.
   Lock as LockIcon,
-  CalendarDays,
+  CalendarDays, Sparkles,
 } from 'lucide-react'
 
 // Active search query, shared with every SettingSection so non-matching
@@ -202,6 +204,8 @@ export default function SettingsPage() {
   const { data: session }           = useSession()
   const holidayMeta                 = useHolidayMeta().meta
   const fundingMeta                 = useFundingMeta()   // finance pilot (CS-1001, administrators only)
+  const [askOn, setAskOn]           = useState(false)    // Ask CareStream pilot: the section only shows on pilot accounts
+  useEffect(() => { if (session?.accessToken && (session.user as any)?.role === 'admin') askApi.meta(session.accessToken).then(m => setAskOn(!!m.enabled)).catch(() => setAskOn(false)) }, [session?.accessToken]) // eslint-disable-line react-hooks/exhaustive-deps
   const policiesOnly                = (session?.user as any)?.tier === 'policies_only'
   const [lockedSetting, setLockedSetting] = useState<string | null>(null)
   const { features: planFeatures }  = usePlanFeatures()
@@ -1444,6 +1448,13 @@ export default function SettingsPage() {
         {fundingMeta?.enabled && fundingMeta.is_admin && session?.accessToken && (
           <SettingSection icon={LockIcon} title="Finance" description="Resident funding and fees, and staff pay rates. Locked to administrators.">
             <FinanceSettingsBody token={session.accessToken} />
+          </SettingSection>
+        )}
+
+        {/* Ask CareStream (pilot): what it may do for administrators, always with a Confirm. */}
+        {askOn && session?.accessToken && (
+          <SettingSection icon={Sparkles} title="Ask CareStream" description="What Ask CareStream may do for you, always with a Confirm button. Off by default.">
+            <AskSettingsBody token={session.accessToken} />
           </SettingSection>
         )}
 

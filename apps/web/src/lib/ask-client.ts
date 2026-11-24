@@ -14,6 +14,17 @@ export type AgentStatus = 'ready' | 'shell' | 'soon'
 export interface AskAgent { id: string; name: string; blurb: string; icon: string; status: AgentStatus; starters: string[]; shell_message: string | null }
 export interface AskSource { label: string; as_of: string | null; warning?: string | null; url?: string | null }
 export interface AskMessage { id: string; role: 'user' | 'assistant'; content: string; sources?: AskSource[]; created_at?: string | null }
+export type ActionStatus = 'proposed' | 'confirmed' | 'cancelled' | 'expired' | 'failed' | 'done'
+export interface ActionPerson { id: string; name: string; job_role: string | null; photo_url: string | null; has_email?: boolean }
+export interface AskActionCard {
+  id: string; type: 'send_staff_notification' | 'remind_unread_notification' | 'allocate_training' | 'send_training_reminders'; label: string; status: ActionStatus
+  expires_at: string; created_at: string; recipients: ActionPerson[]; suggested: string[]; max_recipients: number; result: any; summary: string; notes: string[]
+  title?: string; body?: string; email?: boolean; email_allowed?: boolean; all_staff?: boolean; personalised?: string[]; unknown_fields?: string[]
+  preview?: { for_name: string; title: string; body: string } | null
+  notification_title?: string; courses?: string[]; due_date?: string | null; skipped?: Array<{ user_id: string; name: string; course: string; reason: string }>
+  scope?: string; within_days?: number; items?: Array<{ user_id: string; name: string; courses: string[] }>
+}
+export interface AskSettingsView { actions_enabled: boolean; notifications_enabled: boolean; training_enabled: boolean; emails_enabled: boolean; max_recipients: number; min_gap_minutes: number; managers_can_use: boolean }
 export interface AskConversation { id: string; agent_id: string; title: string; updated_at: string | null }
 export interface AskDocument { id: string; type: string; title: string; status: string; mine?: boolean; staff_name?: string | null; updated_at: string | null }
 export interface AskDocActions { needs_approval: boolean; edit: boolean; submit: boolean; approve: boolean; return: boolean; reopen: boolean; share: Array<'pdf' | 'email' | 'notification'> }
@@ -26,13 +37,22 @@ export interface AskDocFull {
 export interface AskApproval { id: string; type: string; title: string; staff_name: string | null; mine: boolean; updated_at: string | null }
 
 export const ask = {
-  meta: (t: string) => call<{ enabled: boolean; ready: boolean; agents: AskAgent[] }>('/ask/meta', t),
+  meta: (t: string) => call<{ enabled: boolean; ready: boolean; role?: 'admin' | 'manager'; agents: AskAgent[] }>('/ask/meta', t),
   chat: (t: string, b: { agent_id: string; conversation_id?: string | null; message: string; context?: { page: string; staffUserId?: string; residentId?: string; year?: number; month?: string } }) =>
-    call<{ conversation_id: string; message: AskMessage; tools_used: string[] }>('/ask/chat', t, { method: 'POST', body: JSON.stringify(b) }),
+    call<{ conversation_id: string; message: AskMessage; actions?: AskActionCard[]; tools_used: string[] }>('/ask/chat', t, { method: 'POST', body: JSON.stringify(b) }),
   conversations: (t: string) => call<{ conversations: AskConversation[] }>('/ask/conversations', t),
-  conversation: (t: string, id: string) => call<{ conversation: AskConversation; messages: AskMessage[] }>(`/ask/conversations/${encodeURIComponent(id)}`, t),
+  conversation: (t: string, id: string) => call<{ conversation: AskConversation; messages: AskMessage[]; actions?: Array<{ message_id: string | null; card: AskActionCard }> }>(`/ask/conversations/${encodeURIComponent(id)}`, t),
   rename: (t: string, id: string, title: string) => call<{ renamed: boolean }>(`/ask/conversations/${encodeURIComponent(id)}`, t, { method: 'PATCH', body: JSON.stringify({ title }) }),
   remove: (t: string, id: string) => call<{ deleted: boolean }>(`/ask/conversations/${encodeURIComponent(id)}`, t, { method: 'DELETE' }),
+  actions: {
+    settings: (t: string) => call<{ settings: AskSettingsView; ready: boolean }>('/ask/actions/settings', t),
+    saveSettings: (t: string, b: Partial<AskSettingsView>) => call<{ settings: AskSettingsView }>('/ask/actions/settings', t, { method: 'PUT', body: JSON.stringify(b) }),
+    staff: (t: string) => call<{ staff: ActionPerson[] }>('/ask/actions/staff', t),
+    get: (t: string, id: string) => call<{ card: AskActionCard }>(`/ask/actions/${encodeURIComponent(id)}`, t),
+    edit: (t: string, id: string, b: { title?: string; body?: string; user_ids?: string[]; due_date?: string | null; email?: boolean }) => call<{ card: AskActionCard }>(`/ask/actions/${encodeURIComponent(id)}`, t, { method: 'PATCH', body: JSON.stringify(b) }),
+    confirm: (t: string, id: string) => call<{ card: AskActionCard; result: any }>(`/ask/actions/${encodeURIComponent(id)}/confirm`, t, { method: 'POST', body: '{}' }),
+    cancel: (t: string, id: string) => call<{ cancelled: boolean }>(`/ask/actions/${encodeURIComponent(id)}/cancel`, t, { method: 'POST', body: '{}' }),
+  },
   documents: (t: string) => call<{ documents: AskDocument[] }>('/ask/documents', t),
   document: (t: string, id: string) => call<{ document: AskDocFull }>(`/ask/documents/${encodeURIComponent(id)}`, t),
   approvals: (t: string) => call<{ approvals: AskApproval[] }>('/ask/approvals', t),

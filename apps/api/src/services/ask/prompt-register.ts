@@ -6,6 +6,7 @@
 import { prisma } from '../../db/client'
 import { AGENTS, HOUSE_RULES, type AgentDef } from './agents'
 import { LOCKED_RULES } from './safety'
+import { DEFAULT_ACTIONS_RULES, ACTION_TOOL_NAMES } from './actions/prompts'
 
 export const ASK_GROUP = 'Ask CareStream'
 export const ASK_PROMPT_MAX = 8000
@@ -57,6 +58,8 @@ export const ASK_PROMPTS: AskPromptMeta[] = [
     note: 'Used for the Finance and pay agent: fee income, staff cost, break even, fee reviews, premium pay and the value of untaken holiday. All locked data, administrators only. It is told never to call income less staff cost profit.' },
   { usage: 'ask_agent_complaints', label: 'Ask CareStream: Complaints and incidents agent', default: jobOf('complaints'),
     note: 'Used for the Complaints and incidents agent: it reads audit results and actions (CareStream holds no complaints register), and themes in text the administrator pastes after removing names.' },
+  { usage: 'ask_actions_rules', label: 'Ask CareStream: how agents use actions', default: DEFAULT_ACTIONS_RULES,
+    note: 'Added for any agent that can propose actions (notifications, reminders, training): how to propose, the personalised placeholders, and what to do when asked for something it cannot do. Nothing it proposes happens until the administrator presses Confirm; that and the privacy rules are locked in code.' },
   { usage: 'ask_page_context', label: 'Ask CareStream: page context line', default: DEFAULT_PAGE_CONTEXT,
     note: 'One line added when the administrator is looking at a page. Placeholders: {{label}} (what they are looking at) and {{who}} (the staff member on screen, if any, already written as a sentence).' },
 ]
@@ -93,12 +96,13 @@ export async function askPrompt(usage: string): Promise<string> {
 // ── Putting it together ───────────────────────────────────────────────────────────
 /** The system prompt for one run: house rules, today, this agent's job (and its drafting rules), the page line, then the LOCKED rules last. */
 export async function buildSystemPrompt(a: AgentDef, today: string, orgName: string, pageLine: string): Promise<string> {
+  const actions = a.tools.some(t => (ACTION_TOOL_NAMES as readonly string[]).includes(t)) ? await askPrompt('ask_actions_rules') : ''
   const [house, job, drafting] = await Promise.all([
     askPrompt('ask_house_rules'),
     askPrompt(`ask_agent_${a.id.replace(/-/g, '_')}`),
     a.id === 'letters' ? askPrompt('ask_letter_drafting') : a.id === 'newsletter' ? askPrompt('ask_newsletter_drafting') : Promise.resolve(''),
   ])
-  const jobText = drafting ? `${job}\n${drafting}` : job
+  const jobText = [job, drafting, actions].filter(Boolean).join('\n')
   return `${house}\n\nTODAY: ${today} (UK). ORGANISATION: ${orgName}.\n\nYOUR JOB: ${jobText}${pageLine}\n\n${LOCKED_RULES}`
 }
 

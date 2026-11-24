@@ -8,7 +8,9 @@ import { prisma } from '../db/client'
 import { getTenantId } from '../db/tenant-context'
 import { ok, err } from '../lib/response'
 import { PlanLimitError } from '../lib/plan-limits'
-import { askPilotEnabled } from '../lib/ask-pilot'
+import { askRoleFor } from '../lib/ask-pilot'
+import { managerMayReach, agentForManager, type AskRole } from '../services/ask/manager-access'
+import { managersMayUseMoney } from '../services/ask/funding-bridge'
 import { AGENTS, agentById, publicAgent } from '../services/ask/agents'
 import { runAgent } from '../services/ask/runner'
 import { resolveContext, type ContextLookups } from '../services/ask/page-context'
@@ -22,6 +24,10 @@ import { pdfFor, emailLetter, emailReportToAdmins, shareAsNotification } from '.
 import { lintReport } from '../services/ask/report-templates'
 import { loadStaff } from '../services/ask/data'
 import { lintNewsletter } from '../services/ask-docs/newsletter-templates'
+import { askActionsRouter } from './ask-actions'
+import * as actionStore from '../services/ask/actions/store'
+import { buildCard } from '../services/ask/actions/card'
+import { loadAskSettings } from '../services/ask/actions/settings'
 
 export const askRouter = Router()
 const notFound = (res: Response) => err(res, 'NOT_FOUND', 'Not found.', 404)
@@ -29,12 +35,16 @@ const notReady = (res: Response) => err(res, 'NOT_READY', 'Ask CareStream is not
 
 async function guard(req: Request, res: Response, next: NextFunction) {
   try {
-    if (req.user?.role !== 'admin' || (req.user as any)?.dev) { notFound(res); return }   // administrators only, never a shared tablet
-    if (!(await askPilotEnabled(getTenantId()))) { notFound(res); return }
+    const role = await askRoleFor(getTenantId(), req.user as any)   // administrators; deciding managers only when the account allows it; never a shared tablet
+    if (!role) { notFound(res); return }
+    if (role === 'manager' && !managerMayReach(req.method, req.path)) { notFound(res); return }
+    ;(req as any).askRole = role
     next()
   } catch { notFound(res) }
 }
+const roleOf = (req: Request): AskRole => ((req as any).askRole as AskRole) ?? 'admin'
 askRouter.use(guard)
+askRouter.use('/actions', askActionsRouter)
 
 // A simple per person limit (per server instance, so soft): 12 questions a minute and 150 an hour.
 const hits = new Map<string, number[]>()
@@ -44,8 +54,10 @@ export function rateOk(userId: string, now = Date.now()): boolean {
   list.push(now); hits.set(userId, list); return true
 }
 
-askRouter.get('/meta', async (_req, res) => {
-  ok(res, { enabled: true, ready: await store.tablesReady(), agents: AGENTS.map(publicAgent), document_types: DOCUMENT_TYPES.map(t => ({ id: t.id, label: t.label, needs_approval: t.needsApproval })) })
+askRouter.get('/meta', async (req, res) => {
+  const manager = roleOf(req) === 'manager'
+  const moneyOk = manager ? await managersMayUseMoney(getTenantId()) : true
+  ok(res, { enabled: true, role: roleOf(req), ready: await store.tablesReady(), agents: AGENTS.filter(a => !manager || a.status !== 'ready' || agentForManager(a.tools, moneyOk)).map(publicAgent), document_types: DOCUMENT_TYPES.map(t => ({ id: t.id, label: t.label, needs_approval: t.needsApproval })) })
 })
 
 const contextLookups: ContextLookups = {
@@ -58,6 +70,7 @@ askRouter.post('/chat', async (req: Request, res: Response) => {
   const agent = agentById(String(req.body?.agent_id ?? ''))
   const message = String(req.body?.message ?? '').trim()
   if (!agent || agent.status !== 'ready') { err(res, 'INVALID', 'That agent is not available yet.', 400); return }
+  if (roleOf(req) === 'manager' && !agentForManager(agent.tools, await managersMayUseMoney(tenantId))) { notFound(res); return }
   if (!message) { err(res, 'INVALID', 'Please type a question.', 400); return }
   if (!rateOk(userId)) { err(res, 'TOO_MANY', 'You are asking quickly. Please wait a moment and try again.', 429); return }
   try {
@@ -72,9 +85,17 @@ askRouter.post('/chat', async (req: Request, res: Response) => {
     const tenant = await (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { name: true } })
     await store.addMessage(tenantId, convId, 'user', message)
     const pageContext = await resolveContext(tenantId, req.body?.context, contextLookups)   // a pointer only: account checked, labels built here, never the browser's words
-    const r = await runAgent({ agentId: agent.id, ctx: { tenantId, userId, today: ukToday() }, orgName: tenant?.name ?? 'this organisation', history, message, pageContext })
+    const mgr = roleOf(req) === 'manager'
+    const r = await runAgent({ agentId: agent.id, ctx: { tenantId, userId, today: ukToday(), role: roleOf(req), moneyOk: mgr ? await managersMayUseMoney(tenantId) : true }, orgName: tenant?.name ?? 'this organisation', history, message, pageContext, conversationId: convId })
     const saved = await store.addMessage(tenantId, convId, 'assistant', r.answer, r.sources)
-    ok(res, { conversation_id: convId, message: { id: saved.id, role: 'assistant', content: r.answer, sources: r.sources, created_at: saved.created_at }, tools_used: r.tools_used })
+    // Any proposals the agent made are tied to this answer and returned as cards (nothing has been done: the administrator confirms on the card).
+    let actions: any[] = []
+    if (r.proposals.length) {
+      await actionStore.linkToMessage(tenantId, r.proposals, saved.id, convId).catch(() => undefined)
+      const settings = await loadAskSettings(tenantId)
+      for (const id of r.proposals) { const a = await actionStore.getProposal(tenantId, id); if (a) actions.push(await buildCard(tenantId, a, settings)) }
+    }
+    ok(res, { conversation_id: convId, message: { id: saved.id, role: 'assistant', content: r.answer, sources: r.sources, created_at: saved.created_at }, actions, tools_used: r.tools_used })
   } catch (e: any) {
     if (e instanceof PlanLimitError) { err(res, e.code, e.message, 402); return }
     if (store.notReady(e)) { notReady(res); return }
@@ -90,7 +111,10 @@ askRouter.get('/conversations', wrap(async (req, res) => { ok(res, { conversatio
 askRouter.get('/conversations/:id', wrap(async (req, res) => {
   const t = getTenantId(), u = req.user!.sub, c = await store.getConversation(t, u, String(req.params.id))
   if (!c) { notFound(res); return }
-  ok(res, { conversation: c, messages: await store.messagesOf(t, c.id) })
+  const settings = await loadAskSettings(t)
+  const actions: any[] = []
+  try { for (const a of await actionStore.forConversation(t, u, c.id)) actions.push({ message_id: a.message_id, card: await buildCard(t, a, settings) }) } catch { /* the actions table is not there yet */ }
+  ok(res, { conversation: c, messages: await store.messagesOf(t, c.id), actions })
 }))
 askRouter.patch('/conversations/:id', wrap(async (req, res) => {
   const title = String(req.body?.title ?? '').trim()

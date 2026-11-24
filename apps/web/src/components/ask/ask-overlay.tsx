@@ -8,12 +8,13 @@ import Link from 'next/link'
 import { useSession } from 'next-auth/react'
 import type { LucideIcon } from 'lucide-react'
 import { AlertTriangle, ArrowLeft, Award, BarChart3, Bell, BookOpen, CalendarDays, Check, ClipboardCheck, Copy, FileText, GraduationCap, Library, Loader2, Lock, Newspaper, PoundSterling, Send, Shield, Sparkles, Trash2, UserPlus, Users, Wallet, X, Pencil, ShieldCheck, BadgeCheck, FileBarChart, Maximize2, Minimize2 } from 'lucide-react'
-import { ask, AskError, parseNotificationDraft, withoutDraftBlock, notificationsLink, type AskAgent, type AskConversation, type AskDocument, type AskMessage, type AskSource } from '@/lib/ask-client'
+import { ask, AskError, parseNotificationDraft, withoutDraftBlock, notificationsLink, type AskAgent, type AskConversation, type AskDocument, type AskMessage, type AskSource, type AskActionCard } from '@/lib/ask-client'
 import { MarkdownLite } from '@/components/ask/markdown-lite'
 import { type AskPageContext, agentForPage, clampWidth, contextStarters, layoutFor, toWireContext, MAX_W, MIN_W, type PanelLayout } from '@/lib/ask-panel-state'
 import { useAskContext } from '@/lib/ask-context'
 import { closeAsk, initAskUi, openAsk, registerAskTrigger, setAskEnabled, setAskExpanded, setAskWidth, toggleAsk, useAskUi } from '@/lib/ask-ui-store'
 import { DocumentPanel } from '@/components/ask/document-panel'
+import { ActionCard } from '@/components/ask/action-card'
 
 export const OPEN_ASK_EVENT = 'cs:open-ask'
 const ICONS: Record<string, LucideIcon> = {
@@ -34,11 +35,14 @@ export function AskButton() {
 
   useEffect(() => { if (who) initAskUi(who) }, [who])
   useEffect(() => {
-    if (!token || !isAdmin) return
+    if (!token) return
+    // Administrators always ask. A member of staff (a manager, when the account allows managers) asks once; a "no" is remembered for 30 minutes so the hub does not ask every time.
+    const offKey = `cs-ask-off:${who}`
+    if (!isAdmin) { try { const t = Number(window.sessionStorage.getItem(offKey) || 0); if (t && Date.now() - t < 30 * 60_000) return } catch { /* storage blocked */ } }
     let live = true
-    ask.meta(token).then(m => { if (live) setAskEnabled(!!m.enabled) }).catch(() => { if (live) setAskEnabled(false) })   // a 404 means not in the pilot: nothing shows
+    ask.meta(token).then(m => { if (live) setAskEnabled(!!m.enabled) }).catch(() => { if (live) { setAskEnabled(false); if (!isAdmin) { try { window.sessionStorage.setItem(offKey, String(Date.now())) } catch { /* ignore */ } } } })   // a 404 means not in the pilot (or not allowed): nothing shows
     return () => { live = false }
-  }, [token, isAdmin])
+  }, [token, isAdmin, who])
   useEffect(() => { registerAskTrigger(btn.current); return () => registerAskTrigger(null) }, [ui.enabled])
   useEffect(() => {
     const on = () => openAsk()
@@ -149,6 +153,7 @@ export function AskPanel({ token, layout, expanded, width, onClose }: { token: s
   const [agent, setAgent] = useState<AskAgent | null>(null)
   const [convId, setConvId] = useState<string | null>(null)
   const [messages, setMessages] = useState<AskMessage[]>([])
+  const [cards, setCards] = useState<Record<string, AskActionCard[]>>({})   // action cards the agent proposed, by the answer they belong to
   const [text, setText] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
@@ -190,7 +195,7 @@ export function AskPanel({ token, layout, expanded, width, onClose }: { token: s
     return () => { document.removeEventListener('keydown', key); document.body.style.overflow = prev }
   }, [onClose, docId, expanded, modal, layout])
 
-  const pick = (a: AskAgent) => { if (a.status === 'soon') return; setAgent(a); setConvId(null); setMessages([]); setError(''); setText(''); setView('chat') }
+  const pick = (a: AskAgent) => { if (a.status === 'soon') return; setAgent(a); setConvId(null); setMessages([]); setCards({}); setError(''); setText(''); setView('chat') }
   const pickAndAsk = (a: AskAgent, q: string) => { pick(a); void send(q, a) }
   async function send(q?: string, forAgent?: AskAgent) {
     const ag = forAgent ?? agent
@@ -200,7 +205,7 @@ export function AskPanel({ token, layout, expanded, width, onClose }: { token: s
     setMessages(m => [...m, { id: `tmp-${Date.now()}`, role: 'user', content: msg }])
     try {
       const r = await ask.chat(token, { agent_id: ag.id, conversation_id: forAgent ? null : convId, message: msg, context: chipOn ? toWireContext(pageCtx) : undefined })
-      setConvId(r.conversation_id); setMessages(m => [...m, r.message])
+      setConvId(r.conversation_id); setMessages(m => [...m, r.message]); if (r.actions?.length) setCards(c => ({ ...c, [r.message.id]: r.actions! }))
     } catch (e) { setError(e instanceof AskError ? e.message : 'Something went wrong. Please try again.') } finally { setBusy(false) }
   }
   const loadLib = useCallback(async () => {
@@ -209,7 +214,7 @@ export function AskPanel({ token, layout, expanded, width, onClose }: { token: s
   useEffect(() => { if (view === 'library') loadLib() }, [view, loadLib])
   async function openChat(c: AskConversation) {
     const a = agents?.find(x => x.id === c.agent_id); if (!a) return
-    try { const r = await ask.conversation(token, c.id); setAgent(a); setConvId(c.id); setMessages(r.messages); setError(''); setView('chat') } catch (e) { setError(e instanceof Error ? e.message : 'Could not open that chat.') }
+    try { const r = await ask.conversation(token, c.id); setAgent(a); setConvId(c.id); setMessages(r.messages); setCards((r.actions ?? []).reduce((acc: Record<string, AskActionCard[]>, x) => { if (x.message_id) (acc[x.message_id] ??= []).push(x.card); return acc }, {})); setError(''); setView('chat') } catch (e) { setError(e instanceof Error ? e.message : 'Could not open that chat.') }
   }
   async function renameChat(c: AskConversation) { const t = window.prompt('Name this chat', c.title); if (t && t.trim()) { await ask.rename(token, c.id, t.trim()).catch(() => undefined); loadLib() } }
   async function removeChat(c: AskConversation) { if (window.confirm('Delete this chat and its answers? This cannot be undone.')) { await ask.remove(token, c.id).catch(() => undefined); loadLib() } }
@@ -303,6 +308,7 @@ export function AskPanel({ token, layout, expanded, width, onClose }: { token: s
                   <div key={m.id} className="max-w-full rounded-2xl rounded-bl-sm border border-gray-200 bg-white px-4 py-3 shadow-sm">
                     <MarkdownLite text={agent.id === 'notifications' ? withoutDraftBlock(m.content) : m.content} />
                     {agent.id === 'notifications' && parseNotificationDraft(m.content) && (() => { const d = parseNotificationDraft(m.content)!; return <div className="mt-3 rounded-lg border border-teal/30 bg-teal/5 p-3 text-sm"><p className="font-semibold text-neutral-dark">{d.title}</p><p className="mt-1 whitespace-pre-line text-neutral-dark">{d.body}</p></div> })()}
+                    {(cards[m.id] ?? []).map(c => <ActionCard key={c.id} token={token} card={c} />)}
                     <SourcesFooter sources={m.sources ?? []} />
                     <AnswerActions m={m} token={token} agentId={agent.id} />
                   </div>

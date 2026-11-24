@@ -8,6 +8,7 @@ import { writeAuditLog } from '../../lib/audit'
 import { AGENTS, agentById, type AgentDef } from './agents'
 import { buildSystemPrompt, pageContextLine } from './prompt-register'
 import { TOOLS, toolByName, type ToolContext } from './tools'
+import { toolAllowed, MANAGER_LINE } from './manager-access'
 import { wrapToolResult } from './safety'
 import { dedupeSources, type AskSource } from './sources'
 import { type ResolvedContext } from './page-context'
@@ -25,25 +26,27 @@ export interface RunDeps {
   now?: () => number
 }
 export interface HistoryMessage { role: 'user' | 'assistant'; content: string }
-export interface RunResult { answer: string; sources: AskSource[]; tools_used: string[]; rounds: number; stopped: 'done' | 'rounds' | 'time' | 'length' }
+export interface RunResult { answer: string; sources: AskSource[]; tools_used: string[]; rounds: number; stopped: 'done' | 'rounds' | 'time' | 'length'; proposals: string[] }
 
 let shared: Anthropic | null = null
 const clientOf = () => (shared ??= new Anthropic())
 
-export function toolDefsFor(agent: AgentDef): Anthropic.Messages.Tool[] {
-  return agent.tools.map(n => toolByName(n)).filter(Boolean).map(t => ({ name: t!.name, description: t!.description, input_schema: t!.input_schema as any }))
+export function toolDefsFor(agent: AgentDef, ctx?: Pick<ToolContext, 'role' | 'moneyOk'>): Anthropic.Messages.Tool[] {
+  return agent.tools.filter(n => toolAllowed(ctx?.role, ctx?.moneyOk ?? true, n)).map(n => toolByName(n)).filter(Boolean).map(t => ({ name: t!.name, description: t!.description, input_schema: t!.input_schema as any }))
 }
 
-export async function runAgent(o: { agentId: string; ctx: ToolContext; orgName: string; history: HistoryMessage[]; message: string; pageContext?: ResolvedContext | null }, deps: RunDeps = {}): Promise<RunResult> {
+export async function runAgent(o: { agentId: string; ctx: ToolContext; orgName: string; history: HistoryMessage[]; message: string; pageContext?: ResolvedContext | null; conversationId?: string | null }, deps: RunDeps = {}): Promise<RunResult> {
   const agent = agentById(o.agentId)
   if (!agent || agent.status !== 'ready') throw new Error('That agent is not available yet.')
   const client = deps.client ?? clientOf(), now = deps.now ?? Date.now
   await (deps.checkLimit ?? checkAiTokenLimit)(o.ctx.tenantId)
   const started = now()
   // The prompts are editable on the Platform Prompts page (cached, with the code wording as the fallback); the locked safety rules are always added last.
-  const system = await buildSystemPrompt(agent, o.ctx.today, o.orgName, await pageContextLine(o.pageContext))
-  const tools = toolDefsFor(agent)
+  const system = await buildSystemPrompt(agent, o.ctx.today, o.orgName, (await pageContextLine(o.pageContext)) + (o.ctx.role === 'manager' ? MANAGER_LINE : ''))
+  const tools = toolDefsFor(agent, o.ctx)
   const msgs: Anthropic.Messages.MessageParam[] = [...o.history.slice(-10).map(m => ({ role: m.role, content: m.content })), { role: 'user', content: o.message.slice(0, 4000) }]
+  const proposals: string[] = []
+  const ctx: ToolContext = { ...o.ctx, conversationId: o.conversationId ?? o.ctx.conversationId ?? null, collectProposal: (id: string) => { if (!proposals.includes(id)) proposals.push(id) } }
   const used: string[] = []; let sources: AskSource[] = []; let answer = ''; let rounds = 0; let stopped = 'done' as RunResult['stopped']
 
   const exec = async () => {
@@ -59,10 +62,10 @@ export async function runAgent(o: { agentId: string; ctx: ToolContext; orgName: 
       const results: Anthropic.Messages.ToolResultBlockParam[] = []
       for (const c of calls) {
         used.push(c.name)
-        const tool = agent.tools.includes(c.name) ? toolByName(c.name) : undefined   // an agent can only call ITS tools
+        const tool = agent.tools.includes(c.name) && toolAllowed(ctx.role, ctx.moneyOk ?? true, c.name) ? toolByName(c.name) : undefined   // an agent can only call ITS tools
         if (!tool) { results.push({ type: 'tool_result', tool_use_id: c.id, content: wrapToolResult(c.name, { error: 'That tool is not available.' }), is_error: true }); continue }
         try {
-          const r = await tool.run(o.ctx, c.input ?? {})
+          const r = await tool.run(ctx, c.input ?? {})
           sources = sources.concat(r.sources)
           results.push({ type: 'tool_result', tool_use_id: c.id, content: wrapToolResult(c.name, { data: r.data, method: r.method ?? null, sources: r.sources.map(s => ({ label: s.label, as_of: s.as_of, warning: s.warning ?? null })) }) })
         } catch (e: any) {
@@ -76,6 +79,6 @@ export async function runAgent(o: { agentId: string; ctx: ToolContext; orgName: 
   await withAiFeature('ask_carestream', exec)
   if (!answer) answer = stopped === 'time' ? 'That took too long to work out. Please try a narrower question.' : 'I could not finish working that out. Please try asking it a little differently, or break it into smaller questions.'
   ;(deps.audit ?? writeAuditLog)({ tenant_id: o.ctx.tenantId, user_id: o.ctx.userId, event_type: 'ask_run', entity_type: 'ask_conversation', entity_id: agent.id, metadata: { agent: agent.id, tools: [...new Set(used)], rounds } })
-  return { answer, sources: dedupeSources(sources), tools_used: [...new Set(used)], rounds, stopped }
+  return { answer, sources: dedupeSources(sources), tools_used: [...new Set(used)], rounds, stopped, proposals }
 }
 export { AGENTS, TOOLS }

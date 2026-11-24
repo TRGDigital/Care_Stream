@@ -9,6 +9,7 @@ import { prisma } from '../db/client'
 import { ok, err } from '../lib/response'
 import { requireAdmin } from '../middleware/auth'
 import { writeAuditLog } from '../lib/audit'
+import { withdrawNotification, withdrawnSet } from '../lib/notification-withdraw'
 import { staffPhotoUrls } from '../lib/staff-photos'
 import { sendStaffNotificationEmail } from '../services/email/outbound'
 import { NOTIFICATION_TITLE_MAX, NOTIFICATION_BODY_MAX } from '../services/email/notification-content'
@@ -75,10 +76,10 @@ async function sendTo(opts: { notification: any; people: Array<{ id: string; nam
 
 /** Creates a notification for the chosen staff, attaches the (already uploaded, still unsent) documents, records who it went to and emails them. Used by the Notifications page and by
  *  Ask CareStream when an approved letter or newsletter is shared. The caller has already checked the title, body and documents. */
-export async function createAndSendNotification(o: { tenantId: string; userId: string; title: string; body: string; audience: unknown; userIds?: unknown; files: any[] }):
+export async function createAndSendNotification(o: { tenantId: string; userId: string; title: string; body: string; audience: unknown; userIds?: unknown; files: any[]; email?: boolean; skipDailyLimit?: boolean; via?: string }):
   Promise<{ ok: true; id: string; recipients: number; emailed: number; email_failed: number; dropped: number } | { ok: false; code: string; message: string; status: number }> {
   const { tenantId } = o
-  const sentToday = await p().staffNotification.count({ where: { tenant_id: tenantId, created_at: { gte: new Date(Date.now() - 24 * 3600_000) } } })
+  const sentToday = o.skipDailyLimit ? 0 : await p().staffNotification.count({ where: { tenant_id: tenantId, created_at: { gte: new Date(Date.now() - 24 * 3600_000) } } })
   if (sentToday >= MAX_SENDS_PER_DAY) return { ok: false, code: 'LIMIT', message: `You can send up to ${MAX_SENDS_PER_DAY} notifications a day. Please try again tomorrow.`, status: 429 }
   const eligible = (await p().user.findMany({ where: ELIGIBLE_WHERE(tenantId), select: { id: true, name: true, email: true, job_role: true, role: true } })).filter((u: any) => u.email)
   const r = resolveAudience({ audience: o.audience, user_ids: o.userIds }, eligible)
@@ -90,8 +91,9 @@ export async function createAndSendNotification(o: { tenantId: string; userId: s
   const n = await p().staffNotification.create({ data: { tenant_id: tenantId, title: o.title, body: o.body, created_by: o.userId, created_by_name: sender?.name ?? 'An administrator', audience: r.audience } })
   if (o.files.length) await p().staffNotificationFile.updateMany({ where: { id: { in: o.files.map((f: any) => f.id) }, tenant_id: tenantId, notification_id: null }, data: { notification_id: n.id } })
   await p().staffNotificationRecipient.createMany({ data: r.people.map(x => ({ notification_id: n.id, tenant_id: tenantId, user_id: x.id })), skipDuplicates: true })
-  void writeAuditLog({ tenant_id: tenantId, user_id: o.userId, event_type: 'staff_notification_sent', entity_type: 'staff_notification', entity_id: n.id, metadata: { audience: r.audience, recipients: r.people.length } })
-  const sent = await sendTo({ notification: n, people: r.people, orgName: tenant?.name ?? 'Your service', kind: 'new', attachments: o.files.length })
+  void writeAuditLog({ tenant_id: tenantId, user_id: o.userId, event_type: 'staff_notification_sent', entity_type: 'staff_notification', entity_id: n.id, metadata: { audience: r.audience, recipients: r.people.length, ...(o.via ? { via: o.via } : {}) } })
+  // Ask CareStream can send a hub only notification (email off); every other caller keeps the usual hub message plus email.
+  const sent = o.email === false ? { emailed: 0, failed: 0 } : await sendTo({ notification: n, people: r.people, orgName: tenant?.name ?? 'Your service', kind: 'new', attachments: o.files.length })
   return { ok: true, id: n.id, recipients: r.people.length, emailed: sent.emailed, email_failed: sent.failed, dropped: r.dropped }
 }
 
@@ -166,7 +168,8 @@ notificationsAdminRouter.get('/', async (req: Request, res: Response) => {
     const tally = new Map<string, { total: number; read: number }>()
     for (const r of recips) { const t = tally.get(r.notification_id) ?? { total: 0, read: 0 }; t.total++; if (r.read_at) t.read++; tally.set(r.notification_id, t) }
     const fileMap = await filesFor(tenantOf(req), ids)
-    ok(res, { notifications: rows.map((n: any) => ({ file_count: fileMap.get(n.id)?.length ?? 0, id: n.id, title: n.title, created_at: iso(n.created_at), created_by_name: n.created_by_name, audience: n.audience, ...progress(tally.get(n.id)?.total ?? 0, tally.get(n.id)?.read ?? 0) })) })
+    const gone = await withdrawnSet(tenantOf(req), ids)
+    ok(res, { notifications: rows.map((n: any) => ({ withdrawn: gone.has(n.id), file_count: fileMap.get(n.id)?.length ?? 0, id: n.id, title: n.title, created_at: iso(n.created_at), created_by_name: n.created_by_name, audience: n.audience, ...progress(tally.get(n.id)?.total ?? 0, tally.get(n.id)?.read ?? 0) })) })
   } catch (e) { isMissingTable(e) ? notReady(res) : err(res, 'ERROR', 'Could not load notifications.', 500) }
 })
 
@@ -181,7 +184,8 @@ notificationsAdminRouter.get('/:id', async (req: Request, res: Response) => {
       .sort((a: any, b: any) => (a.read_at ? 1 : 0) - (b.read_at ? 1 : 0) || a.name.localeCompare(b.name))
     const wait = remindWaitMs(n.last_reminded_at)
     const files = (await filesFor(tenantOf(req), [n.id])).get(n.id) ?? []
-    ok(res, { notification: { files: files.map(fileDto), id: n.id, title: n.title, body: n.body, created_at: iso(n.created_at), created_by_name: n.created_by_name, audience: n.audience, last_reminded_at: iso(n.last_reminded_at), can_remind_in_minutes: Math.ceil(wait / 60000), ...progress(people.length, people.filter((x: any) => x.read_at).length) }, people })
+    const gone = await withdrawnSet(tenantOf(req), [n.id])
+    ok(res, { notification: { withdrawn: gone.has(n.id), files: files.map(fileDto), id: n.id, title: n.title, body: n.body, created_at: iso(n.created_at), created_by_name: n.created_by_name, audience: n.audience, last_reminded_at: iso(n.last_reminded_at), can_remind_in_minutes: Math.ceil(wait / 60000), ...progress(people.length, people.filter((x: any) => x.read_at).length) }, people })
   } catch (e) { isMissingTable(e) ? notReady(res) : err(res, 'ERROR', 'Could not load that notification.', 500) }
 })
 
@@ -208,22 +212,41 @@ notificationsAdminRouter.post('/', async (req: Request, res: Response) => {
   } catch (e) { isMissingTable(e) ? notReady(res) : err(res, 'ERROR', 'Could not send the notification.', 500) }
 })
 
+/** Remind the people who have not read a notification (once a day for each notification). Used by the Notifications page and by Ask CareStream (which may limit it to chosen people). */
+export async function remindUnread(o: { tenantId: string; userId: string; notificationId: string; onlyUserIds?: string[]; via?: string }):
+  Promise<{ ok: true; reminded: number; emailed: number; email_failed: number } | { ok: false; code: string; message: string; status: number }> {
+  const tenantId = o.tenantId
+  const n = await p().staffNotification.findFirst({ where: { id: o.notificationId, tenant_id: tenantId } })
+  if (!n) return { ok: false, code: 'NOT_FOUND', message: 'Notification not found.', status: 404 }
+  const wait = remindWaitMs(n.last_reminded_at)
+  if (wait > 0) return { ok: false, code: 'REMINDED_TODAY', message: 'You have already sent a reminder in the last day.', status: 429 }
+  const unread = await p().staffNotificationRecipient.findMany({ where: { notification_id: n.id, tenant_id: tenantId, read_at: null }, select: { user_id: true } })
+  const only = o.onlyUserIds ? new Set(o.onlyUserIds) : null
+  const users = (await p().user.findMany({ where: { id: { in: unread.map((x: any) => x.user_id).filter((id: string) => !only || only.has(id)) }, ...ELIGIBLE_WHERE(tenantId) }, select: { id: true, name: true, email: true } })).filter((u: any) => u.email)
+  if (users.length === 0) return { ok: false, code: 'NOTHING_TO_DO', message: 'Everyone who can read it has read it.', status: 409 }
+  await p().staffNotification.update({ where: { id: n.id }, data: { last_reminded_at: new Date() } })
+  const tenant = await p().tenant.findUnique({ where: { id: tenantId }, select: { name: true } })
+  const sent = await sendTo({ notification: n, people: users, orgName: tenant?.name ?? 'Your service', kind: 'reminder', attachments: ((await filesFor(tenantId, [n.id])).get(n.id) ?? []).length })
+  void writeAuditLog({ tenant_id: tenantId, user_id: o.userId, event_type: 'staff_notification_reminded', entity_type: 'staff_notification', entity_id: n.id, metadata: { recipients: users.length, emailed: sent.emailed, ...(o.via ? { via: o.via } : {}) } })
+  return { ok: true, reminded: users.length, emailed: sent.emailed, email_failed: sent.failed }
+}
+
 notificationsAdminRouter.post('/:id/remind', async (req: Request, res: Response) => {
-  const tenantId = tenantOf(req)
   try {
-    const n = await p().staffNotification.findFirst({ where: { id: String(req.params.id), tenant_id: tenantId } })
-    if (!n) { err(res, 'NOT_FOUND', 'Notification not found.', 404); return }
-    const wait = remindWaitMs(n.last_reminded_at)
-    if (wait > 0) { err(res, 'REMINDED_TODAY', 'You have already sent a reminder in the last day.', 429); return }
-    const unread = await p().staffNotificationRecipient.findMany({ where: { notification_id: n.id, tenant_id: tenantId, read_at: null }, select: { user_id: true } })
-    const users = (await p().user.findMany({ where: { id: { in: unread.map((x: any) => x.user_id) }, ...ELIGIBLE_WHERE(tenantId) }, select: { id: true, name: true, email: true } })).filter((u: any) => u.email)
-    if (users.length === 0) { err(res, 'NOTHING_TO_DO', 'Everyone who can read it has read it.', 409); return }
-    await p().staffNotification.update({ where: { id: n.id }, data: { last_reminded_at: new Date() } })
-    const tenant = await p().tenant.findUnique({ where: { id: tenantId }, select: { name: true } })
-    const sent = await sendTo({ notification: n, people: users, orgName: tenant?.name ?? 'Your service', kind: 'reminder', attachments: ((await filesFor(tenantId, [n.id])).get(n.id) ?? []).length })
-    void writeAuditLog({ tenant_id: tenantId, user_id: userOf(req), event_type: 'staff_notification_reminded', entity_type: 'staff_notification', entity_id: n.id, metadata: { recipients: users.length } })
-    ok(res, { reminded: users.length, emailed: sent.emailed, email_failed: sent.failed })
+    const r = await remindUnread({ tenantId: tenantOf(req), userId: userOf(req), notificationId: String(req.params.id) })
+    if (!r.ok) { err(res, r.code, r.message, r.status); return }
+    ok(res, { reminded: r.reminded, emailed: r.emailed, email_failed: r.email_failed })
   } catch (e) { isMissingTable(e) ? notReady(res) : err(res, 'ERROR', 'Could not send the reminder.', 500) }
+})
+
+// Withdraw a sent notification: it disappears from every recipient's hub and unread list. The email cannot be recalled.
+notificationsAdminRouter.post('/:id/withdraw', async (req: Request, res: Response) => {
+  try {
+    const r = await withdrawNotification(tenantOf(req), userOf(req), String(req.params.id))
+    if (!r.ok) { err(res, r.code, r.message, r.status); return }
+    void writeAuditLog({ tenant_id: tenantOf(req), user_id: userOf(req), event_type: 'staff_notification_withdrawn', entity_type: 'staff_notification', entity_id: String(req.params.id), metadata: { recipients: r.recipients, read: r.read } })
+    ok(res, { withdrawn: true, recipients: r.recipients, read: r.read, email_note: 'The emails that were already sent cannot be recalled.' })
+  } catch (e) { isMissingTable(e) ? notReady(res) : err(res, 'ERROR', 'Could not withdraw it.', 500) }
 })
 
 // ── Staff: my notifications ──────────────────────────────────────────────────

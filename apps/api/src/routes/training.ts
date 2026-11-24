@@ -602,18 +602,18 @@ trainingRouter.get('/compliance', async (req: Request, res: Response) => {
 // filter by it. A second press within a few minutes is refused so a double click cannot send
 // the same person two emails.
 const REMIND_COOLDOWN_MS = 5 * 60 * 1000
-trainingRouter.post('/enrollments/:id/remind', requireAdmin, async (req: Request, res: Response) => {
-  const tenantId = (req as any).user.tenant_id
+/** Re-send the allocation email and hub notice for one enrolment as a reminder. Used by the Staff progress screen and by Ask CareStream. The caller has checked the person may do this. */
+export async function remindEnrollment(o: { tenantId: string; actorUserId: string; enrollmentId: string }):
+  Promise<{ ok: true; emailed: boolean; push_sent: number; last_reminded_at: Date; reminder_count: number } | { ok: false; code: string; message: string; status: number }> {
+  const { tenantId } = o
   const enr = await (prisma as any).trainingEnrollment.findFirst({
-    where:   { id: String(req.params.id), tenant_id: tenantId },
+    where:   { id: o.enrollmentId, tenant_id: tenantId },
     include: { user: { select: { name: true, email: true, is_active: true } }, module: { select: { name: true, source: true } } },
   })
-  if (!enr) { err(res, 'NOT_FOUND', 'Allocation not found.', 404); return }
-  if (enr.status === 'complete') { err(res, 'ALREADY_COMPLETE', 'This course is already complete.', 400); return }
-  if (!enr.user?.is_active) { err(res, 'NO_USER', 'This staff member is not active.', 400); return }
-  if (enr.last_reminded_at && Date.now() - new Date(enr.last_reminded_at).getTime() < REMIND_COOLDOWN_MS) {
-    err(res, 'TOO_SOON', 'A reminder was sent in the last few minutes.', 429); return
-  }
+  if (!enr) return { ok: false, code: 'NOT_FOUND', message: 'Allocation not found.', status: 404 }
+  if (enr.status === 'complete') return { ok: false, code: 'ALREADY_COMPLETE', message: 'This course is already complete.', status: 400 }
+  if (!enr.user?.is_active) return { ok: false, code: 'NO_USER', message: 'This staff member is not active.', status: 400 }
+  if (enr.last_reminded_at && Date.now() - new Date(enr.last_reminded_at).getTime() < REMIND_COOLDOWN_MS) return { ok: false, code: 'TOO_SOON', message: 'A reminder was sent in the last few minutes.', status: 429 }
   try {
     const tenant = await (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { name: true } })
     // Two channels: an email, and a hub notification (a push to the devices where they have the hub app and have allowed notifications).
@@ -621,14 +621,14 @@ trainingRouter.post('/enrollments/:id/remind', requireAdmin, async (req: Request
     let emailed = false
     {
       const reminderKind = enr.module.source === 'ai_generated' ? 'annual_training' : 'training'
-      await recordNotices({ tenantId, userIds: [enr.user_id as string], actorUserId: (req as any).user.sub, kind: 'training_reminder', build: name => trainingReminderContent(name, { courseName: enr.module.name, dueDate: enr.due_date ? new Date(enr.due_date) : null, kind: reminderKind }) })
+      await recordNotices({ tenantId, userIds: [enr.user_id as string], actorUserId: o.actorUserId, kind: 'training_reminder', build: name => trainingReminderContent(name, { courseName: enr.module.name, dueDate: enr.due_date ? new Date(enr.due_date) : null, kind: reminderKind }) })
     }
     if (enr.user.email) {
       await sendTrainingReminderEmail({
         to: enr.user.email, name: enr.user.name, orgName: tenant?.name ?? '',
         courseName: enr.module.name, dueDate: enr.due_date ? new Date(enr.due_date) : null,
         kind: enr.module.source === 'ai_generated' ? 'annual_training' : 'training', portalUrl: siteUrl(),
-        actorUserId: (req as any).user.sub,
+        actorUserId: o.actorUserId,
       })
       emailed = true
     }
@@ -636,37 +636,41 @@ trainingRouter.post('/enrollments/:id/remind', requireAdmin, async (req: Request
       title: 'Training reminder', body: `${enr.module.name}${enr.due_date ? `, due ${new Date(enr.due_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}` : ''}. Tap to open it in your hub.`,
       url: '/chat', tag: `remind-${enr.id}`,
     }).catch(() => 0)
-    if (!emailed && !pushSent) { err(res, 'NO_CHANNEL', 'There is no email address on file and no device with hub notifications switched on, so there is nowhere to send it.', 400); return }
+    if (!emailed && !pushSent) return { ok: false, code: 'NO_CHANNEL', message: 'There is no email address on file and no device with hub notifications switched on, so there is nowhere to send it.', status: 400 }
     const updated = await (prisma as any).trainingEnrollment.update({
       where:  { id: enr.id },
       data:   { last_reminded_at: new Date(), reminder_count: { increment: 1 } },
       select: { last_reminded_at: true, reminder_count: true },
     })
-    ok(res, { ...updated, emailed, push_sent: pushSent })
+    return { ok: true, emailed, push_sent: pushSent, last_reminded_at: updated.last_reminded_at, reminder_count: updated.reminder_count }
   } catch (e: any) {
-    err(res, 'REMIND_FAILED', e?.message ?? 'Could not send the reminder.', 500)
+    return { ok: false, code: 'REMIND_FAILED', message: e?.message ?? 'Could not send the reminder.', status: 500 }
   }
+}
+
+trainingRouter.post('/enrollments/:id/remind', requireAdmin, async (req: Request, res: Response) => {
+  const r = await remindEnrollment({ tenantId: (req as any).user.tenant_id, actorUserId: (req as any).user.sub, enrollmentId: String(req.params.id) })
+  if (!r.ok) { err(res, r.code, r.message, r.status); return }
+  ok(res, { last_reminded_at: r.last_reminded_at, reminder_count: r.reminder_count, emailed: r.emailed, push_sent: r.push_sent })
 })
 
 // POST /training/enroll — assign modules to staff members (admin only)
-trainingRouter.post('/enroll', requireAdmin, async (req: Request, res: Response) => {
-  const tenantId = (req as any).user.tenant_id
-  const userId   = (req as any).user.sub
-  const { user_ids, module_ids, due_date } = req.body ?? {}
+type EnrollResult =
+  | { ok: true; enrolled: number; skipped: number; validUserIds: string[]; validModuleIds: string[]; after: () => void }
+  | { ok: false; code: string; message: string; status: number }
 
-  if (!Array.isArray(user_ids) || user_ids.length === 0) {
-    err(res, 'INVALID', 'user_ids required', 400); return
-  }
-  if (!Array.isArray(module_ids) || module_ids.length === 0) {
-    err(res, 'INVALID', 'module_ids required', 400); return
-  }
+/** Assign modules to staff. Used by the Training screens and by Ask CareStream (after an administrator confirms). Returns what was created and a function that sends the
+ *  follow up emails (the caller runs it after replying). Existing allocations are skipped, never duplicated. */
+export async function enrollStaff(o: { tenantId: string; userId: string; userIds: unknown; moduleIds: unknown; dueDate?: unknown }): Promise<EnrollResult> {
+  const tenantId = o.tenantId, userId = o.userId
+  const user_ids = o.userIds, module_ids = o.moduleIds, due_date = o.dueDate
+  if (!Array.isArray(user_ids) || user_ids.length === 0) return { ok: false, code: 'INVALID', message: 'user_ids required', status: 400 }
+  if (!Array.isArray(module_ids) || module_ids.length === 0) return { ok: false, code: 'INVALID', message: 'module_ids required', status: 400 }
 
   // Training-only tenants assign modules by allocating a purchased licence, not by
   // free bulk-enrol — otherwise they'd bypass the per-module charge.
   const enrollTenant = await (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { tier: true } })
-  if (enrollTenant?.tier === 'training_only') {
-    err(res, 'TRAINING_ONLY', 'Assign training by allocating a licence on the Licences page.', 403); return
-  }
+  if (enrollTenant?.tier === 'training_only') return { ok: false, code: 'TRAINING_ONLY', message: 'Assign training by allocating a licence on the Licences page.', status: 403 }
   const isFree = enrollTenant?.tier === 'free'
 
   try {
@@ -685,8 +689,8 @@ trainingRouter.post('/enroll', requireAdmin, async (req: Request, res: Response)
     ])
     const validUserIds:   string[] = members.map((m: any) => m.id)
     const validModuleIds: string[] = modules.map((m: any) => m.id)
-    if (validUserIds.length === 0)   { err(res, 'INVALID', 'No valid recipients for this organisation.', 400); return }
-    if (validModuleIds.length === 0) { err(res, 'INVALID', 'No valid modules selected.', 400); return }
+    if (validUserIds.length === 0)   return { ok: false, code: 'INVALID', message: 'No valid recipients for this organisation.', status: 400 }
+    if (validModuleIds.length === 0) return { ok: false, code: 'INVALID', message: 'No valid modules selected.', status: 400 }
 
     // Batch: fetch existing (non-expired) enrollments in one query, then createMany
     // the missing (user × module) pairs — avoids an N×M findFirst/create loop.
@@ -705,7 +709,7 @@ trainingRouter.post('/enroll', requireAdmin, async (req: Request, res: Response)
           user_id:     uid,
           module_id:   mid,
           status:      'not_started',
-          due_date:    due_date ? new Date(due_date) : null,
+          due_date:    due_date ? new Date(String(due_date)) : null,
           assigned_by: userId,
         })
       }
@@ -718,43 +722,56 @@ trainingRouter.post('/enroll', requireAdmin, async (req: Request, res: Response)
     const newAnnualAllocations = toCreate.filter(t => annualSet.has(t.module_id) && !cpdSet.has(t.module_id)).length
     if (newAnnualAllocations > 0) {
       try { await checkAnnualLicenseLimit(tenantId, newAnnualAllocations) }
-      catch (e: any) { if (e instanceof PlanLimitError) { err(res, e.code, e.message, 402); return } throw e }
+      catch (e: any) { if (e instanceof PlanLimitError) return { ok: false, code: e.code, message: e.message, status: 402 }; throw e }
     }
     if (toCreate.length > 0) {
       await (prisma as any).trainingEnrollment.createMany({ data: toCreate, skipDuplicates: true })
     }
     const created = toCreate.length
-    ok(res, { enrolled: created })
+    const skipped = validUserIds.length * validModuleIds.length - created
 
-    // Notify admin and send proactive questions (both fire-and-forget)
-    if (created > 0) {
-      const tenant = await (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { name: true } })
-      notifyAdmin(tenantId, 'training_updates', (email, name) =>
-        sendTrainingUpdateEmail({
-          to: email, name, orgName: tenant?.name ?? '',
-          subject: `Training assigned — ${validUserIds.length} staff member${validUserIds.length > 1 ? 's' : ''} enrolled`,
-          bodyHtml: `<p style="color:#374151;font-size:15px;line-height:1.6;margin:0 0 24px">
+    // Notify admin and send proactive questions (both fire-and-forget), run by the caller once it has replied.
+    const after = () => {
+      void (async () => {
+        if (created > 0) {
+          const tenant = await (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { name: true } })
+          notifyAdmin(tenantId, 'training_updates', (email, name) =>
+            sendTrainingUpdateEmail({
+              to: email, name, orgName: tenant?.name ?? '',
+              subject: `Training assigned — ${validUserIds.length} staff member${validUserIds.length > 1 ? 's' : ''} enrolled`,
+              bodyHtml: `<p style="color:#374151;font-size:15px;line-height:1.6;margin:0 0 24px">
             <strong>${created}</strong> training module assignment${created > 1 ? 's' : ''} have been created for
             <strong>${validUserIds.length}</strong> staff member${validUserIds.length > 1 ? 's' : ''} across
             <strong>${validModuleIds.length}</strong> module${validModuleIds.length > 1 ? 's' : ''}.
             Staff will be contacted via their configured channel to complete their training.
           </p>`,
-        })
-      ).catch(e => console.error('[training/enroll] Notify error:', e))
+            })
+          ).catch(e => console.error('[training/enroll] Notify error:', e))
 
-      // Email each staff member a link to the hub for what was newly assigned —
-      // split into My Training vs Annual Training so the link points to the right view.
-      const newManualUsers = [...new Set(toCreate.filter(t => !annualSet.has(t.module_id)).map(t => t.user_id))]
-      const newAnnualUsers = [...new Set(toCreate.filter(t =>  annualSet.has(t.module_id)).map(t => t.user_id))]
-      notifyStaffAllocation(tenantId, newManualUsers, 'training', userId).catch(e => console.error('[training/enroll] staff email error:', e))
-      notifyStaffAllocation(tenantId, newAnnualUsers, 'annual_training', userId).catch(e => console.error('[training/enroll] staff email error:', e))
+          // Email each staff member a link to the hub for what was newly assigned —
+          // split into My Training vs Annual Training so the link points to the right view.
+          const newManualUsers = [...new Set(toCreate.filter(t => !annualSet.has(t.module_id)).map(t => t.user_id))]
+          const newAnnualUsers = [...new Set(toCreate.filter(t =>  annualSet.has(t.module_id)).map(t => t.user_id))]
+          notifyStaffAllocation(tenantId, newManualUsers, 'training', userId).catch(e => console.error('[training/enroll] staff email error:', e))
+          notifyStaffAllocation(tenantId, newAnnualUsers, 'annual_training', userId).catch(e => console.error('[training/enroll] staff email error:', e))
+        }
+        sendProactiveTrainingQuestions(tenantId, validUserIds, validModuleIds).catch(e =>
+          console.error('[training/enroll] Proactive send error:', e)
+        )
+      })().catch(e => console.error('[training/enroll] follow up error:', e))
     }
-    sendProactiveTrainingQuestions(tenantId, validUserIds, validModuleIds).catch(e =>
-      console.error('[training/enroll] Proactive send error:', e)
-    )
+    return { ok: true, enrolled: created, skipped, validUserIds, validModuleIds, after }
   } catch (e: any) {
-    err(res, 'ENROLL_FAILED', e.message, 500)
+    return { ok: false, code: 'ENROLL_FAILED', message: e.message, status: 500 }
   }
+}
+
+// POST /training/enroll — assign modules to staff members (admin only)
+trainingRouter.post('/enroll', requireAdmin, async (req: Request, res: Response) => {
+  const r = await enrollStaff({ tenantId: (req as any).user.tenant_id, userId: (req as any).user.sub, userIds: req.body?.user_ids, moduleIds: req.body?.module_ids, dueDate: req.body?.due_date })
+  if (!r.ok) { err(res, r.code, r.message, r.status); return }
+  ok(res, { enrolled: r.enrolled })
+  r.after()
 })
 
 // ─── Training licences (training-only gateway tier) ───────────────────────────

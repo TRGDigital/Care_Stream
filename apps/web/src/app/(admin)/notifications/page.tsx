@@ -195,7 +195,7 @@ export default function NotificationsPage() {
                       <span className="block truncate text-sm font-semibold text-neutral-dark">{n.title}</span>
                       <span className="block text-xs text-neutral-mid">{fmtWhen(n.created_at)}, from {n.created_by_name}{n.audience === 'all' ? ', all staff' : ''} <PaperclipCount count={n.file_count} className="ml-1" /></span>
                     </span>
-                    <Progress read={n.read} total={n.total} />
+                    {n.withdrawn ? <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-semibold text-neutral-mid">Withdrawn</span> : <Progress read={n.read} total={n.total} />}
                   </button>
                 </li>
               ))}
@@ -220,6 +220,13 @@ function Detail({ token, id, onBack }: { token: string; id: string; onBack: () =
     catch (e) { setError(e instanceof Error ? e.message : 'Could not send the reminder.') } finally { setBusy(false) }
   }
 
+  async function withdraw() {
+    if (!window.confirm('Withdraw this notification? It will disappear from every recipient\'s hub. Emails that were already sent cannot be recalled.')) return
+    setBusy(true); setError(''); setNote('')
+    try { const r = await adminNotifications.withdraw(token, id); setNote(`Withdrawn from ${r.recipients} ${r.recipients === 1 ? 'hub' : 'hubs'}. ${r.email_note}`); await load() }
+    catch (e) { setError(e instanceof Error ? e.message : 'Could not withdraw it.') } finally { setBusy(false) }
+  }
+
   const n = d?.notification
   return (
     <div className="mx-auto max-w-4xl space-y-5">
@@ -237,9 +244,11 @@ function Detail({ token, id, onBack }: { token: string; id: string; onBack: () =
             <div className="flex flex-wrap items-center justify-between gap-3 border-b border-gray-100 px-5 py-3">
               <Progress read={n.read} total={n.total} />
               <div className="text-right">
-                <button type="button" className={`${BTN} border border-teal text-teal hover:bg-teal/5`} disabled={busy || n.unread === 0 || n.can_remind_in_minutes > 0} onClick={remind}>
+                {n.withdrawn && <p className="mb-1 rounded-md bg-gray-100 px-2 py-1 text-xs font-semibold text-neutral-mid">Withdrawn from staff hubs</p>}
+                <button type="button" className={`${BTN} border border-teal text-teal hover:bg-teal/5`} disabled={busy || n.withdrawn || n.unread === 0 || n.can_remind_in_minutes > 0} onClick={remind}>
                   {busy ? <Loader2 size={15} className="animate-spin" /> : <Mail size={15} />} Remind unread ({n.unread})
                 </button>
+                {!n.withdrawn && <button type="button" className={`${BTN} ml-2 border border-red-300 text-red-700 hover:bg-red-50`} disabled={busy} onClick={withdraw}>Withdraw</button>}
                 {n.can_remind_in_minutes > 0 && <p className="mt-1 text-xs text-neutral-mid">You can send another reminder in about {Math.ceil(n.can_remind_in_minutes / 60)} hour{Math.ceil(n.can_remind_in_minutes / 60) === 1 ? '' : 's'}.</p>}
               </div>
             </div>

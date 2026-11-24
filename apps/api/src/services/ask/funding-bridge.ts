@@ -3,7 +3,7 @@
 // This file is on the funding safeguard test's short allow list; nothing else under services/ask may mention funding fields.
 import { prisma } from '../../db/client'
 import { writeAuditLog } from '../../lib/audit'
-import { askAggregates, askReviewStats, getFunding, fundingTablesReady } from '../../lib/resident-funding'
+import { askAggregates, askReviewStats, getFunding, fundingTablesReady, managersCanSee } from '../../lib/resident-funding'
 
 const db = prisma as any
 export { reviewStats } from '../../lib/resident-funding'   // pure, for the tests
@@ -33,3 +33,6 @@ export async function fundingForNamedPerson(o: { tenantId: string; userId: strin
   if (!f) return { ready: true as const, found: true as const, name: `${r.first_name} ${r.last_name}`, recorded: false as const }
   return { ready: true as const, found: true as const, recorded: true as const, name: `${r.first_name} ${r.last_name}`, funding: f }
 }
+
+/** Whether this account lets managers see pay and funding (the existing "Let managers see funding" switch). A yes or no only: no figures. */
+export const managersMayUseMoney = (tenantId: string): Promise<boolean> => managersCanSee(tenantId)

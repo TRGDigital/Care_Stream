@@ -36,7 +36,7 @@ export function MarkdownLite({ text }: { text: string }) {
           const cells = rows.map(l => l.trim().replace(/^\||\|$/g, '').split('|').map(c => c.trim()))
           const [head, ...body] = cells
           return (
-            <div key={i} className="overflow-x-auto rounded-lg border border-gray-200">
+            <div key={i} className="overflow-x-auto no-scrollbar rounded-lg border border-gray-200">
               <table className="min-w-full text-sm">
                 {head && <thead className="bg-neutral-light"><tr>{head.map((c, j) => <th key={j} className="px-3 py-1.5 text-left font-semibold">{inline(c, `th${i}${j}`)}</th>)}</tr></thead>}
                 <tbody>{body.map((r, j) => <tr key={j} className="border-t border-gray-100">{r.map((c, k) => <td key={k} className="px-3 py-1.5">{inline(c, `td${i}${j}${k}`)}</td>)}</tr>)}</tbody>

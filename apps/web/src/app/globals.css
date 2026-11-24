@@ -347,3 +347,9 @@ html[data-hub-contrast="1"] .opacity-60:not(button):not([disabled]) { opacity: 0
   font-size: .8rem; line-height: 1.6; color: #9333ea; opacity: .75;
 }
 @media print { .cs-editable-policy .policy-content .cs-edit-hover::after { display: none; } }
+
+/* The Ask CareStream side panel slides in over the page (never pushes it). */
+@keyframes askSlideIn { from { transform: translateX(24px); opacity: 0; } to { transform: none; opacity: 1; } }
+.ask-slide-in { animation: askSlideIn 180ms ease-out; }
+@media (prefers-reduced-motion: reduce) { .ask-slide-in { animation: none; } }
+

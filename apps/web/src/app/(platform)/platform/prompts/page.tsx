@@ -234,7 +234,7 @@ function VersionHistoryPanel({
 
             {isExpanded && (
               <div className="mt-3 rounded-lg border border-gray-200 bg-gray-50 p-4">
-                <pre className="overflow-x-auto whitespace-pre-wrap font-mono text-xs leading-relaxed text-neutral-dark">
+                <pre className="whitespace-pre-wrap font-mono text-xs leading-relaxed text-neutral-dark">
                   {v.content}
                 </pre>
                 <button

@@ -82,3 +82,37 @@ test('the support chat bubble moves out of the way of a docked panel', async () 
   const src = fs.readFileSync(path.resolve(__dirname, '../../../web/src/components/support/chat-widget.tsx'), 'utf8')
   assert.ok(src.includes('var(--ask-dock,0px)'))
 })
+
+// ── Len's rules (25 Nov 2026): the Ask panel opens OVER the page like the Orrery one, and no visible scroll bars ──────────────────────
+const webSrc = async (rel: string) => (await import('fs')).readFileSync(path.resolve(__dirname, '../../../web/src', rel), 'utf8')
+
+test('the panel is always an overlay: fixed on the right at every width, never part of the page layout', async () => {
+  const src = await webSrc('components/ask/ask-overlay.tsx')
+  assert.ok(src.includes('fixed bottom-0 right-0 top-14 z-[55]'), 'docked panel is fixed on the right under the header')
+  assert.ok(!src.includes('relative h-full flex-shrink-0'), 'no flex child that would push the page across')
+  assert.ok(!/layout === 'wide'/.test(src), 'no special wide layout')
+  assert.ok(src.includes("const rootCls = expanded ? 'fixed inset-0 z-[75]") && src.includes(": 'contents'"), 'the root takes no space when docked')
+  assert.ok(src.includes('ask-slide-in'))
+  const css = await webSrc('app/globals.css')
+  assert.ok(css.includes('.ask-slide-in') && /prefers-reduced-motion/.test(css))
+  const shell = await webSrc('components/admin-shell.tsx')
+  assert.ok(shell.includes('<AskPanelHost />') && /OVER the page/.test(shell))
+})
+
+test('no scroll bars: every scrolling region and text box in the Ask UI hides its bar (wheel, touch and keyboard still scroll)', async () => {
+  const css = await webSrc('app/globals.css')
+  assert.ok(/\.no-scrollbar::-webkit-scrollbar\s*{\s*display:\s*none/.test(css) && /\.no-scrollbar\s*{[^}]*scrollbar-width:\s*none/.test(css))
+  for (const f of ['components/ask/ask-overlay.tsx', 'components/ask/document-panel.tsx', 'components/ask/markdown-lite.tsx']) {
+    const src = await webSrc(f)
+    for (const m of src.matchAll(/className=(\{`[^`]*`\}|"[^"]*")/g)) {
+      if (/overflow-(x|y)-(auto|scroll)|overflow-auto/.test(m[1])) assert.ok(m[1].includes('no-scrollbar'), `${f}: ${m[1].slice(0, 80)}`)
+    }
+    for (const m of src.matchAll(/<textarea[^>]*className=(\{`[^`]*`\}|"[^"]*")/g)) assert.ok(m[1].includes('no-scrollbar'), `${f}: a text box shows a scroll bar`)
+  }
+})
+
+test('the Prompts page lists Ask CareStream prompts under their own heading with the locked rules panel and no scrolling box', async () => {
+  const src = await webSrc('app/(platform)/platform/prompts/page.tsx')
+  assert.ok(src.includes('Locked safety rules (cannot be edited here)') && src.includes('ask?.group'))
+  assert.ok(!/<pre className="overflow-x-auto/.test(src), 'prompt text wraps instead of scrolling')
+})

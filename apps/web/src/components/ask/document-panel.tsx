@@ -64,7 +64,7 @@ export function DocumentPanel({ token, id, onClose, onChanged }: { token: string
             <button type="button" onClick={onClose} aria-label="Close" className="rounded p-1 text-neutral-mid hover:bg-neutral-light"><X size={18} /></button>
           </div>
 
-          <div className="min-h-0 flex-1 space-y-3 overflow-y-auto pr-1">
+          <div className="min-h-0 flex-1 space-y-3 overflow-y-auto no-scrollbar pr-1">
             {d.data?.review_note && d.status === 'draft' && <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">Sent back: {d.data.review_note.note}</p>}
 
             {editing && letter && d.fields ? (
@@ -81,7 +81,7 @@ export function DocumentPanel({ token, id, onClose, onChanged }: { token: string
             ) : editing && news ? (
               <div className="space-y-3">
                 <div><label className="mb-1 block text-xs font-semibold text-neutral-mid" htmlFor="ask-doc-title">Title</label><input id="ask-doc-title" className={input} value={title} onChange={e => setTitle(e.target.value)} maxLength={160} /></div>
-                <div><label className="mb-1 block text-xs font-semibold text-neutral-mid" htmlFor="ask-doc-body">Newsletter (## for a heading, - for a bullet)</label><textarea id="ask-doc-body" rows={16} className={`${input} font-mono`} value={body} onChange={e => setBody(e.target.value)} /></div>
+                <div><label className="mb-1 block text-xs font-semibold text-neutral-mid" htmlFor="ask-doc-body">Newsletter (## for a heading, - for a bullet)</label><textarea id="ask-doc-body" rows={16} className={`no-scrollbar ${input} font-mono`} value={body} onChange={e => setBody(e.target.value)} /></div>
               </div>
             ) : letter ? <pre className="whitespace-pre-wrap rounded-lg border border-gray-200 bg-neutral-light/50 p-4 font-sans text-sm leading-relaxed text-neutral-dark">{d.body}</pre>
               : <MarkdownLite text={d.body} />}
@@ -108,7 +108,7 @@ export function DocumentPanel({ token, id, onClose, onChanged }: { token: string
                 </div>
                 {audience === 'selected' && (<>
                   <input aria-label="Search staff" placeholder="Search staff" className={`${input} mb-2`} value={q} onChange={e => setQ(e.target.value)} />
-                  <ul className="max-h-40 divide-y divide-gray-100 overflow-y-auto rounded border border-gray-200">{people.map(s => <li key={s.id}><label className="flex items-center gap-2 px-3 py-1.5 text-sm"><input type="checkbox" checked={chosen.has(s.id)} onChange={e => setChosen(c => { const n = new Set(c); e.target.checked ? n.add(s.id) : n.delete(s.id); return n })} /> {s.name}{s.job_role ? <span className="text-xs text-neutral-mid">, {s.job_role}</span> : null}</label></li>)}</ul>
+                  <ul className="max-h-40 divide-y divide-gray-100 overflow-y-auto no-scrollbar rounded border border-gray-200">{people.map(s => <li key={s.id}><label className="flex items-center gap-2 px-3 py-1.5 text-sm"><input type="checkbox" checked={chosen.has(s.id)} onChange={e => setChosen(c => { const n = new Set(c); e.target.checked ? n.add(s.id) : n.delete(s.id); return n })} /> {s.name}{s.job_role ? <span className="text-xs text-neutral-mid">, {s.job_role}</span> : null}</label></li>)}</ul>
                 </>)}
                 <div className="mt-2 flex gap-2">
                   <button type="button" disabled={!!busy || (audience === 'selected' && chosen.size === 0)} className={`${btn} bg-teal text-white hover:bg-teal-dark`} onClick={() => run('share', () => ask.share(token, d.id, { method: 'notification', audience, user_ids: [...chosen] }).then(() => setPicking(false)), 'Sent to your staff as a notification with the PDF attached.')}>{busy === 'share' ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />} Send now</button>

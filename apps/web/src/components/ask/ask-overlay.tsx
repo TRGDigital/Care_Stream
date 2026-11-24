@@ -65,8 +65,8 @@ export function AskPanelHost() {
     window.addEventListener('resize', on); return () => window.removeEventListener('resize', on)
   }, [])
   const layout = layoutFor(vw)
-  const dock = ui.enabled && ui.open && !ui.expanded && layout === 'wide' ? clampWidth(ui.width, vw) : 0
-  // The support chat bubble moves out of the way of a docked panel (it reads this).
+  // The panel is ALWAYS an overlay on top of the page (it never moves or resizes the page). The support chat bubble moves left of it so both stay reachable (the bubble reads this).
+  const dock = ui.enabled && ui.open && !ui.expanded && layout !== 'phone' ? clampWidth(ui.width, vw) : 0
   useEffect(() => { document.documentElement.style.setProperty('--ask-dock', `${dock}px`); return () => { document.documentElement.style.removeProperty('--ask-dock') } }, [dock])
   if (!ui.enabled || !ui.open || !token) return null
   return <AskPanel token={token} layout={layout} expanded={ui.expanded} width={clampWidth(ui.width, vw)} onClose={closeAsk} />
@@ -218,12 +218,11 @@ export function AskPanel({ token, layout, expanded, width, onClose }: { token: s
 
   const grouped = useMemo(() => agents ?? [], [agents])
   // One root element whose classes change with the mode, so the conversation and anything half typed survive docking, expanding and moving between pages.
-  const rootCls = expanded ? 'fixed inset-0 z-[75] flex items-center justify-center bg-black/40 p-2 sm:p-6' : layout === 'wide' ? 'relative h-full flex-shrink-0 transition-[width] duration-200 motion-reduce:transition-none' : 'contents'
+  const rootCls = expanded ? 'fixed inset-0 z-[75] flex items-center justify-center bg-black/40 p-2 sm:p-6' : 'contents'
   const boxCls = expanded
     ? 'flex h-[92vh] w-full max-w-[1400px] flex-col overflow-hidden rounded-2xl bg-white shadow-2xl outline-none sm:w-[90vw]'
     : layout === 'phone' ? 'fixed inset-0 z-[75] flex flex-col overflow-hidden bg-white outline-none'
-    : layout === 'narrow' ? 'fixed bottom-0 right-0 top-14 z-[45] flex max-w-full flex-col overflow-hidden border-l border-gray-200 bg-white shadow-2xl outline-none'
-    : 'relative flex h-full flex-col overflow-hidden border-l border-gray-200 bg-white outline-none'
+    : 'fixed bottom-0 right-0 top-14 z-[55] flex max-w-full flex-col overflow-hidden border-l border-gray-200 bg-white shadow-[-12px_0_32px_rgba(23,18,31,0.12)] outline-none ask-slide-in'
   const boxStyle = !expanded && layout !== 'phone' ? { width } : undefined
   const startResize = (e: React.PointerEvent) => {
     e.preventDefault()
@@ -237,7 +236,7 @@ export function AskPanel({ token, layout, expanded, width, onClose }: { token: s
     if (e.key === 'ArrowLeft') { e.preventDefault(); setAskWidth(width + step) } else if (e.key === 'ArrowRight') { e.preventDefault(); setAskWidth(width - step) }
   }
   return (
-    <div className={rootCls} style={!expanded && layout === 'wide' ? { width } : undefined} onMouseDown={e => { if (expanded && e.target === e.currentTarget) setAskExpanded(false) }}>
+    <div className={rootCls} onMouseDown={e => { if (expanded && e.target === e.currentTarget) setAskExpanded(false) }}>
       <div ref={dlg} id="ask-panel" tabIndex={-1} role={modal ? 'dialog' : 'complementary'} aria-modal={modal ? true : undefined} aria-labelledby="ask-title" className={boxCls} style={boxStyle}>
         {!expanded && layout !== 'phone' && (
           <div role="separator" aria-orientation="vertical" aria-label="Resize Ask CareStream. Use the left and right arrow keys." aria-valuemin={MIN_W} aria-valuemax={MAX_W} aria-valuenow={width} tabIndex={0}
@@ -259,7 +258,7 @@ export function AskPanel({ token, layout, expanded, width, onClose }: { token: s
         {!ready && <p className="border-b border-amber-200 bg-amber-50 px-6 py-2 text-sm text-amber-900">Saving chats is not switched on yet, so questions cannot be answered until it is.</p>}
 
         {view === 'picker' && (
-          <div className={`min-h-0 flex-1 overflow-y-auto px-4 py-5 ${expanded ? 'sm:px-6' : ''}`}>
+          <div className={`min-h-0 flex-1 overflow-y-auto no-scrollbar px-4 py-5 ${expanded ? 'sm:px-6' : ''}`}>
             {chipOn && pageCtx && <ContextCard ctx={pageCtx} agents={agents} onDismiss={() => setChipOff(ctxKey)} onAsk={pickAndAsk} />}
             <p className="mb-4 max-w-3xl text-sm text-neutral-mid">Choose an agent, then ask it anything about that part of your service. It reads your CareStream records and official figures, shows its working and where each figure comes from, and never sends or changes anything without you.</p>
             {!agents ? <p className="flex items-center gap-2 text-sm text-neutral-mid"><Loader2 size={16} className="animate-spin" /> Loading</p> : (
@@ -285,7 +284,7 @@ export function AskPanel({ token, layout, expanded, width, onClose }: { token: s
 
         {view === 'chat' && agent && (
           <div className="flex min-h-0 flex-1 flex-col">
-            <div className={`min-h-0 flex-1 overflow-y-auto px-4 py-5 ${expanded ? 'sm:px-6' : ''}`}>
+            <div className={`min-h-0 flex-1 overflow-y-auto no-scrollbar px-4 py-5 ${expanded ? 'sm:px-6' : ''}`}>
               <div className="mx-auto min-w-0 max-w-3xl space-y-5">
                 {agent.status === 'shell' ? (
                   <div className="rounded-xl border border-sky-200 bg-sky-50 p-5 text-sm leading-relaxed text-sky-900"><p className="font-semibold">{agent.name} is coming next</p><p className="mt-1">{agent.shell_message}</p></div>
@@ -327,7 +326,7 @@ export function AskPanel({ token, layout, expanded, width, onClose }: { token: s
         )}
 
         {view === 'library' && (
-          <div className={`min-h-0 flex-1 overflow-y-auto px-4 py-5 ${expanded ? 'sm:px-6' : ''}`}>
+          <div className={`min-h-0 flex-1 overflow-y-auto no-scrollbar px-4 py-5 ${expanded ? 'sm:px-6' : ''}`}>
             <div className="mx-auto max-w-3xl">
               <div role="tablist" className="mb-4 flex gap-1 rounded-lg bg-neutral-light p-1 text-sm">
                 {([['chats', 'Past chats'], ['docs', 'Saved items']] as const).map(([k, l]) => <button key={k} role="tab" aria-selected={lib.tab === k} type="button" onClick={() => setLib(s => ({ ...s, tab: k }))} className={`flex-1 rounded-md px-3 py-1.5 font-medium ${lib.tab === k ? 'bg-white text-teal shadow-sm' : 'text-neutral-mid'}`}>{l}</button>)}

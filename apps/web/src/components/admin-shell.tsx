@@ -338,7 +338,7 @@ export function AdminShell({ userName, tenantName, children }: AdminShellProps) 
           <main className="min-w-0 flex-1 overflow-y-auto p-4 md:p-6">
             {children}
           </main>
-          {/* Ask CareStream: docked beside the page (pushes it across on wide screens), mounted once so a conversation survives page changes. */}
+          {/* Ask CareStream: a side panel that opens OVER the page (never pushes it), mounted once so a conversation survives page changes. */}
           <AskPanelHost />
         </div>
       </div>

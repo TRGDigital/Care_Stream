@@ -116,7 +116,7 @@ test('WORKFLOW: the author submits; someone else approves (or the sole administr
 test('SHARE PATHS: every transition and share is audit logged, and the PDF is made with the same dynamic import pattern as the letters', () => {
   const routes = fs.readFileSync(path.resolve(__dirname, '../../routes/ask.ts'), 'utf8')
   for (const e of ['ask_document_submitted', 'ask_document_approved', 'ask_document_returned', 'ask_document_reopened', 'ask_document_pdf_downloaded', 'ask_document_shared_email', 'ask_document_shared_notification', 'ask_document_edited']) assert.ok(routes.includes(e), e)
-  const pdf = src('../ask-docs/pdf.ts'), letters = fs.readFileSync(path.resolve(__dirname, '../letters/render.ts'), 'utf8')
+  const pdf = src('../ask-docs/pdf.ts'), letters = fs.readFileSync(path.resolve(__dirname, '../letters/layout-pdf.ts'), 'utf8')
   for (const t of [pdf, letters]) { assert.match(t, /import\('pdfkit'\)/); assert.match(t, /import\('\.\.\/policy\/policy-pdf'\)/) }
   assert.ok(!/^import .*pdfkit/m.test(pdf), 'pdfkit is not imported at the top of the file')
   assert.match(routes, /canShare\(d\)/); assert.match(routes, /adminOnly|req\.user\?\.role !== 'admin'/)

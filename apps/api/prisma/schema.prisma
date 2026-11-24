@@ -3882,3 +3882,36 @@ model SupportAgentPresence {
 
   @@map("support_agent_presence")
 }
+
+// Admin notifications to staff. See prisma/sql/2026-11-25_staff_notifications.sql.
+model StaffNotification {
+  id               String    @id @default(uuid())
+  tenant_id        String
+  title            String
+  body             String
+  created_by       String
+  created_by_name  String    @default("")
+  audience         String    @default("all")   // all | selected
+  created_at       DateTime  @default(now())
+  last_reminded_at DateTime?
+
+  @@index([tenant_id, created_at(sort: Desc)])
+  @@map("staff_notifications")
+}
+
+model StaffNotificationRecipient {
+  id              String    @id @default(uuid())
+  notification_id String
+  tenant_id       String
+  user_id         String
+  email_sent_at   DateTime?
+  shown_at        DateTime?
+  read_at         DateTime?
+  created_at      DateTime  @default(now())
+
+  @@unique([notification_id, user_id])
+  @@index([user_id, read_at])
+  @@index([notification_id])
+  @@index([tenant_id, created_at(sort: Desc)])
+  @@map("staff_notification_recipients")
+}

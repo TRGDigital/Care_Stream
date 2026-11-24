@@ -15,6 +15,7 @@ import {
 } from './person-content'
 import { resolveActor } from './email-avatar'
 import { LOGO_BLOCK, LOGO_ROW } from './org-logo-markers'
+import { notificationCardHtml, notificationHeadline, notificationSubject } from './notification-content'
 import { applyOrgLogo, orgLogoForTenant } from '../../lib/org-logo'
 
 const INBOUND_DOMAIN = process.env.INBOUND_EMAIL_DOMAIN ?? 'carestreamai.co.uk'
@@ -2762,4 +2763,35 @@ export async function sendStaffPinEmail(opts: { to: string; name: string; orgNam
     ${emailFooter(opts.orgName)}
   `)
   await sgMail.send({ to: opts.to, from: { email: from, name: opts.orgName }, subject: `Your ${opts.orgName} tablet PIN`, html })
+}
+
+/** An administrator's notification to a member of staff: the person led layout, the title and message in the card, and a button to read it in the hub. */
+export async function sendStaffNotificationEmail(opts: {
+  to: string; name: string; orgName: string; title: string; body: string; notificationId: string; actorUserId?: string | null; kind?: 'new' | 'reminder'
+}): Promise<void> {
+  ensureInitialised()
+  if (!process.env.SENDGRID_API_KEY) throw new Error('Email is not configured')
+  const kind = opts.kind ?? 'new'
+  const from = process.env.SENDGRID_FROM_ADDRESS ?? `noreply@${INBOUND_DOMAIN}`
+  const first = escHtml(opts.name.split(' ')[0] ?? opts.name)
+  const card = notificationCardHtml(opts.title, opts.body)
+  const admin = await resolveActor(opts.actorUserId)
+  const link = hubLink(`/notifications/${encodeURIComponent(opts.notificationId)}`)
+  if (admin) {
+    const html = personLedEmail({
+      admin, headline: notificationHeadline(admin.name, kind), intro: kind === 'reminder' ? 'You have not read it yet. It is waiting in your hub.' : 'Here is what they wrote. You can read it and mark it as read in your hub.',
+      bodyHtml: card, button: { label: 'Read it in my hub', href: link },
+      footerNote: personFooterNote(admin, 'sent you a notification'), logoUrl: LOGO_URL,
+    })
+    await sgMail.send({ to: opts.to, from: personSender(admin, from), subject: notificationSubject(admin.name, opts.title, kind), html })
+    return
+  }
+  const html = staffWrapper(`
+    <p style="color:${NEUTRAL_DARK};font-size:15px;margin:0 0 16px">Hi ${first},</p>
+    <p style="color:${NEUTRAL_DARK};font-size:15px;line-height:1.6;margin:0 0 16px">${escHtml(opts.orgName)} has sent you a notification.</p>
+    ${card}
+    ${hubButton(link, 'Read it in my hub')}
+    ${emailFooter(opts.orgName)}
+  `)
+  await sgMail.send({ to: opts.to, from: { email: from, name: opts.orgName }, subject: notificationSubject(opts.orgName, opts.title, kind), html })
 }

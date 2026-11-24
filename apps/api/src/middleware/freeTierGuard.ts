@@ -26,6 +26,8 @@ const ALLOW: RegExp[] = [
   /^\/feedback(\/|$)/,
   /^\/support-requests(\/|$)/,
   /^\/feature-requests(\/|$)/,
+  /^\/notifications(\/|$)/,                            // admin notifications to staff (all plans)
+  /^\/me\/notifications(\/.*)?$/,
   /^\/me\/(profile|counts|document-categories|push\/.*|audit-approvals(\/.*)?|actions(\/.*)?|external-actions(\/.*)?)$/,
   // The four gap analyses and what belongs to them.
   /^\/analytics\/gaps$/,

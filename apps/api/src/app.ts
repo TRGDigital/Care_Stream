@@ -40,6 +40,7 @@ import { trainingRouter } from './routes/training'
 import { faceToFaceRouter } from './routes/face-to-face'
 import { trainingMatrixRouter } from './routes/training-matrix'
 import { workforceRouter } from './routes/workforce'
+import { notificationsAdminRouter, meNotificationsRouter } from './routes/notifications'
 import { cqcQuestionsRouter } from './routes/cqc-staff-questions'
 import { auditsRouter } from './routes/audits'
 import { freeTourRouter } from './routes/free-tour'
@@ -272,6 +273,8 @@ app.use('/policies', policiesRouter)
 app.use('/admin-search', adminSearchRouter)
 app.use('/query', queryRouter)
 app.use('/users', usersRouter)
+app.use('/me/notifications', meNotificationsRouter)   // my notifications from an administrator (also for a person signed in by PIN on a shared tablet)
+app.use('/notifications', notificationsAdminRouter)
 app.use('/me', meRouter)
 app.use('/tablet', tabletRouter)
 app.use('/tablets', tabletsAdminRouter)

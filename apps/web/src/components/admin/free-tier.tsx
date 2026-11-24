@@ -4,6 +4,7 @@
 // the upgrade prompts, the locked-section overlay and the free dashboard. Nothing here renders for
 // any other tier: callers check `useIsFree()` (the session tier) first.
 
+import { DashboardGreeting } from '@/components/admin/dashboard-greeting'
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useSession } from 'next-auth/react'
@@ -338,7 +339,7 @@ export function FreeDashboard({ token, name }: { token: string; name?: string | 
   return (
     <div className="mx-auto max-w-4xl space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-neutral-dark">Welcome{name ? `, ${name.split(' ')[0]}` : ''}</h1>
+        <DashboardGreeting />
         <p className="text-sm text-neutral-mid">You are on the free plan: CPD training for your whole team, every audit, and a gap analysis of your first 5 policies.</p>
       </div>
       <div className="grid gap-4 sm:grid-cols-2">

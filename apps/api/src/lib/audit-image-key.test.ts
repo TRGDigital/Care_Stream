@@ -37,3 +37,10 @@ test('no two audits share a picture key', async () => {
     seen.set(k, a.name)
   }
 })
+
+test('the dashboard greeting changes at noon and at six', async () => {
+  const { greetingFor } = await web('greeting')
+  assert.equal(greetingFor(0), 'Good morning'); assert.equal(greetingFor(11), 'Good morning')
+  assert.equal(greetingFor(12), 'Good afternoon'); assert.equal(greetingFor(17), 'Good afternoon')
+  assert.equal(greetingFor(18), 'Good evening'); assert.equal(greetingFor(23), 'Good evening')
+})

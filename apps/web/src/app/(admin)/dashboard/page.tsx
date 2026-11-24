@@ -10,6 +10,7 @@ import { PlanCard } from '@/components/admin/plan-card'
 import { IncentivesDashboardCard } from '@/components/admin/incentives/dashboard-card'
 import { TrainingOnlyDashboard } from '@/components/admin/training-only-dashboard'
 import { FreeDashboard } from '@/components/admin/free-tier'
+import { DashboardGreeting } from '@/components/admin/dashboard-greeting'
 import { persistentCache } from '@/lib/page-cache'
 import { BookOpen, ChevronDown, FileText, Info, Lightbulb, Mail, MessageSquare, Mic, Users, CalendarClock, Loader2, RefreshCw, Check } from 'lucide-react'
 import { useRouter } from 'next/navigation'
@@ -314,7 +315,7 @@ export default function DashboardPage() {
 
   return (
     <div>
-      <h1 className="mb-6 text-2xl font-bold text-neutral-dark">Dashboard</h1>
+      <DashboardGreeting />
 
       {/* Policies due for review — surfaces when a policy's review date has come around. */}
       {dueReview.length > 0 && (

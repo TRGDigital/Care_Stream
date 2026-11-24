@@ -5,12 +5,44 @@
 
 import { StaffAvatar } from '@/components/admin/staff-avatar'
 import { useEffect, useMemo, useState } from 'react'
-import { ChevronLeft, ChevronRight, Download, Loader2, Search, X } from 'lucide-react'
+import { AlertTriangle, ChevronLeft, ChevronRight, Download, Info, Loader2, Search, X } from 'lucide-react'
+import { remainingState, percentState, REMAINING_STYLE, PERCENT_STYLE } from '@/lib/holiday-colours'
 import { holiday, describeRange, fmtNum, unitWord, type Matrix, type MatrixRow, type Request } from '@/lib/holiday-client'
 
 const th = 'whitespace-nowrap border-b border-gray-200 bg-neutral-light px-3 py-2 text-left text-xs font-semibold text-neutral-dark'
 const td = 'whitespace-nowrap border-b border-gray-100 px-3 py-1.5 text-sm'
 const cell = (n: number) => (n ? fmtNum(n) : '')
+
+/** The key to the colours, above the matrix. Open or closed is remembered in this browser. */
+function Legend() {
+  const [open, setOpen] = useState(true)
+  useEffect(() => { try { setOpen(window.localStorage.getItem('cs-holiday-legend') !== 'closed') } catch { /* storage blocked */ } }, [])
+  const toggle = () => { const n = !open; setOpen(n); try { window.localStorage.setItem('cs-holiday-legend', n ? 'open' : 'closed') } catch { /* ignore */ } }
+  const chip = (cls: string, text: string) => <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold ${cls}`}>{text}</span>
+  return (
+    <div className="rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs text-neutral-dark">
+      <button type="button" onClick={toggle} aria-expanded={open} className="inline-flex items-center gap-1.5 font-semibold text-neutral-dark hover:text-teal"><Info size={13} aria-hidden="true" /> Key to the colours {open ? '(hide)' : '(show)'}</button>
+      {open && (
+        <div className="mt-2 grid gap-3 sm:grid-cols-3">
+          <div className="space-y-1.5"><p className="font-semibold text-neutral-mid">Remaining</p>
+            <p className="flex flex-wrap items-center gap-1.5">{chip('bg-gray-100 text-neutral-dark', 'No colour')} more than 20% left</p>
+            <p className="flex flex-wrap items-center gap-1.5">{chip(REMAINING_STYLE.low.cls, 'Low')} 20% or less left</p>
+            <p className="flex flex-wrap items-center gap-1.5">{chip(REMAINING_STYLE.used.cls, 'Used up')} none left</p>
+            <p className="flex flex-wrap items-center gap-1.5">{chip(REMAINING_STYLE.over.cls, 'Over')} below zero: over the allowance</p>
+          </div>
+          <div className="space-y-1.5"><p className="font-semibold text-neutral-mid">% taken</p>
+            {(['start', 'mid', 'high', 'full', 'over'] as const).map(k => <p key={k} className="flex flex-wrap items-center gap-1.5">{chip(PERCENT_STYLE[k].cls, PERCENT_STYLE[k].label.split(':')[0])}{k === 'full' ? 'fully used' : k === 'over' ? 'more than the allowance' : ''}</p>)}
+          </div>
+          <div className="space-y-1.5"><p className="font-semibold text-neutral-mid">Months</p>
+            <p className="flex flex-wrap items-center gap-1.5"><span className="rounded px-1 font-semibold">12</span> taken (the date has passed)</p>
+            <p className="flex flex-wrap items-center gap-1.5"><span className="rounded bg-teal/10 px-1 font-semibold text-teal-900">12</span> booked (still to come, on the Booked row)</p>
+            <p className="flex flex-wrap items-center gap-1.5"><span className="rounded px-1 font-semibold">12<sup className="text-sky-700">&bull;</sup></span> includes a monthly figure loaded from the spreadsheet</p>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
 
 function csvCell(v: unknown) { const s = String(v ?? ''); return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s }
 export function matrixToCsv(m: Matrix): string {
@@ -72,6 +104,8 @@ export function MatrixTab({ token }: { token: string }) {
       </div>
       <p className="text-xs text-neutral-mid">Only approved holiday is counted. Taken is up to and including today, booked is after today.{m.carry_over ? ' Holiday carried over from last year is included in the entitlement.' : ''}</p>
 
+      <Legend />
+
       <div className="max-h-[70vh] overflow-auto rounded-xl border border-gray-200 bg-white">
         <table className="min-w-full border-separate border-spacing-0">
           <thead className="sticky top-0 z-20">
@@ -124,7 +158,7 @@ export function MatrixTab({ token }: { token: string }) {
 function MatrixBlock({ r, months, onOpen }: { r: MatrixRow; months: Matrix['months']; onOpen: (r: MatrixRow, key: string, label: string, kind: 'taken' | 'booked') => void }) {
   const unit = r.unit === 'days' ? 'days' : 'hrs'
   const num = (n: number, key: string, label: string, kind: 'taken' | 'booked') => n
-    ? <button type="button" onClick={() => onOpen(r, key, label, kind)} className="rounded px-1 text-neutral-dark underline decoration-dotted underline-offset-2 hover:bg-teal/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal/40" aria-label={`${fmtNum(n)} ${kind} in ${label}. Show bookings`}>{fmtNum(n)}</button>
+    ? <button type="button" onClick={() => onOpen(r, key, label, kind)} className="rounded px-1 text-neutral-dark underline decoration-dotted underline-offset-2 hover:bg-teal/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal/40" aria-label={`${fmtNum(n)} ${kind} in ${label}. Show bookings`}>{fmtNum(n)}{(() => { const f = r.imported_by_month?.[key]; return f && (kind === 'taken' ? f.taken : f.booked) > 0 ? <sup className="ml-0.5 text-sky-700" title="Includes a monthly figure loaded from the spreadsheet">&bull;</sup> : null })()}</button>
     : <span aria-hidden="true"></span>
   return (
     <>
@@ -135,13 +169,21 @@ function MatrixBlock({ r, months, onOpen }: { r: MatrixRow; months: Matrix['mont
         <td className={td}>{r.contracted != null ? fmtNum(r.contracted) : ''}</td>
         {months.map(x => <td key={x.key} className={`${td} text-right`}>{num(r.taken_by_month[x.key] ?? 0, x.key, x.label, 'taken')}</td>)}
         <td className={`${td} bg-sky-50/60 text-right font-semibold`}>{cell(r.taken)}</td>
-        <td className={`${td} bg-sky-50/60 text-right font-semibold ${r.remaining < 0 ? 'text-red-700' : ''}`}>{fmtNum(r.remaining)}</td>
-        <td className={`${td} bg-yellow-50/60 text-right font-semibold`}>{fmtNum(r.percent_taken)}%</td>
+        {(() => {
+          const rs = remainingState(r.entitlement, r.remaining), st = REMAINING_STYLE[rs], ps = percentState(r.percent_taken), pt = PERCENT_STYLE[ps]
+          const over = `${fmtNum(Math.abs(r.remaining))} ${r.unit === 'days' ? 'days' : 'hours'}`
+          return (<>
+            <td className={`${td} text-right font-semibold ${st.cls}`} title={st.tip(over)}>
+              <span className="inline-flex items-center justify-end gap-1">{rs === 'over' && <AlertTriangle size={13} aria-hidden="true" />}{fmtNum(r.remaining)}{st.label && <span className="text-[10px] font-bold uppercase tracking-wide">{st.label}</span>}</span>
+            </td>
+            <td className={`${td} text-right font-semibold ${pt.cls}`} title={pt.label}>{fmtNum(r.percent_taken)}%</td>
+          </>)
+        })()}
       </tr>
       <tr className="bg-neutral-light/50">
         <td className={`${td} sticky left-0 z-10 bg-neutral-light pl-6 text-xs font-semibold text-neutral-mid`}>Booked</td>
         <td className={td} /><td className={td} /><td className={td} />
-        {months.map(x => <td key={x.key} className={`${td} text-right`}>{num(r.booked_by_month[x.key] ?? 0, x.key, x.label, 'booked')}</td>)}
+        {months.map(x => <td key={x.key} className={`${td} text-right ${(r.booked_by_month[x.key] ?? 0) ? 'bg-teal/10 text-teal-900' : ''}`}>{num(r.booked_by_month[x.key] ?? 0, x.key, x.label, 'booked')}</td>)}
         <td className={`${td} bg-sky-50/40 text-right text-neutral-mid`}>{cell(r.booked)}</td><td className={td} /><td className={td} />
       </tr>
     </>

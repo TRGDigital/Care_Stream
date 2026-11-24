@@ -1506,10 +1506,10 @@ const EMPTY_COLLECTION = {
 // can back any number of collections, because what differs between two pages is the copy and
 // the search intent, not the products.
 function ClusterPicker({ kind, clusterKey, token, onChange }: {
-  kind: 'policies' | 'training'
+  kind: 'policies' | 'training' | 'audits'
   clusterKey: string
   token: string
-  onChange: (kind: 'policies' | 'training', clusterKey: string) => void
+  onChange: (kind: 'policies' | 'training' | 'audits', clusterKey: string) => void
 }) {
   const [clusters, setClusters] = useState<Array<{
     key: string; label: string; note: string; kind: string; items: string[]
@@ -1528,12 +1528,12 @@ function ClusterPicker({ kind, clusterKey, token, onChange }: {
   return (
     <div className="space-y-3">
       <div className="flex gap-2">
-        {(['policies', 'training'] as const).map(k => (
+        {(['policies', 'training', 'audits'] as const).map(k => (
           <button key={k} type="button"
             onClick={() => onChange(k, '')}
             className={`rounded-lg px-3 py-1.5 text-xs font-semibold ${
               kind === k ? 'bg-teal text-white' : 'border border-gray-200 bg-white text-neutral-dark hover:bg-neutral-light'}`}>
-            {k === 'policies' ? 'Policies' : 'Training'}
+            {k === 'policies' ? 'Policies' : k === 'audits' ? 'Audits' : 'Training'}
           </button>
         ))}
         <span className="self-center text-xs text-neutral-mid">
@@ -1633,14 +1633,14 @@ function CollectionForm({
 
       <AccordionSection title="What this page sells" description="Six products, chosen as a themed set. This is the grid." defaultOpen>
         <ClusterPicker
-          kind={form.kind === 'training' ? 'training' : 'policies'}
+          kind={form.kind === 'training' ? 'training' : form.kind === 'audits' ? 'audits' : 'policies'}
           clusterKey={form.cluster_key ?? ''}
           token={token}
           onChange={(kind, cluster_key) => setForm((f: any) => ({
             ...f, kind, cluster_key,
             // The eyebrow follows the kind unless it has been written by hand.
-            eyebrow: (!f.eyebrow || f.eyebrow === 'Policy collection' || f.eyebrow === 'Training collection')
-              ? (kind === 'training' ? 'Training collection' : 'Policy collection')
+            eyebrow: (!f.eyebrow || f.eyebrow === 'Policy collection' || f.eyebrow === 'Training collection' || f.eyebrow === 'Audit collection')
+              ? (kind === 'training' ? 'Training collection' : kind === 'audits' ? 'Audit collection' : 'Policy collection')
               : f.eyebrow,
           }))}
         />
@@ -3193,7 +3193,7 @@ export default function BlogPage() {
                             return (
                               <span className="shrink-0 rounded-full bg-teal/10 px-2 py-0.5 text-[10px] font-semibold text-teal"
                                 title={`What this page sells${cl ? `: ${cl.items.join(', ')}` : ''}${users > 1 ? ` (used on ${users} collections)` : ''}`}>
-                                {c.kind === 'training' ? 'Training' : 'Policies'} · {cl?.label ?? c.cluster_key}{users > 1 ? ` · ×${users}` : ''}
+                                {c.kind === 'training' ? 'Training' : c.kind === 'audits' ? 'Audits' : 'Policies'} · {cl?.label ?? c.cluster_key}{users > 1 ? ` · ×${users}` : ''}
                               </span>
                             )
                           })()}

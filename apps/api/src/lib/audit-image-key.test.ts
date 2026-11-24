@@ -28,3 +28,9 @@ test('scene descriptions are long enough for the generator and use no dashes', (
     assert.ok(!/[–—]/.test(s.scene + s.topic + s.alt), `${s.key} has a dash`)
   }
 })
+
+test('the API theme rules agree with the web ones for every audit', async () => {
+  const { AUDIT_CATALOGUE } = await web('audit-catalogue'); const { auditThemeKey: webKey } = await web('audit-image-key')
+  const { auditThemeKey } = await import('../data/audit-image-theme')
+  for (const a of AUDIT_CATALOGUE as Array<{ name: string }>) assert.equal(auditThemeKey(a.name), webKey(a.name), a.name)
+})

@@ -4017,12 +4017,12 @@ function buildCollectionData(body: any) {
     ...(content          !== undefined && { body:             typeof content === 'string' ? content : '' }),
     ...(links            !== undefined && { links:            normaliseLinks(links)          }),
     ...(faqs             !== undefined && { faqs:             normaliseFaqs(faqs)            }),
-    ...(kind             !== undefined && { kind:             kind === 'training' ? 'training' : 'policies' }),
+    ...(kind             !== undefined && { kind:             kind === 'training' ? 'training' : kind === 'audits' ? 'audits' : 'policies' }),
     ...(cluster_key      !== undefined && { cluster_key:      cluster ? cluster.key : ''      }),
     ...(topic_cluster    !== undefined && { topic_cluster:    String(topic_cluster ?? '').trim().toLowerCase().replace(/[^a-z0-9-]+/g, '-').replace(/^-+|-+$/g, '') || null }),
     ...(primary_keyword  !== undefined && { primary_keyword:  String(primary_keyword ?? '').trim() || null }),
     ...(secondary_keywords !== undefined && { secondary_keywords: Array.isArray(secondary_keywords) ? secondary_keywords.map((k: any) => String(k).trim()).filter(Boolean).slice(0, 20) : [] }),
-    ...(eyebrow          !== undefined && { eyebrow:          eyebrow?.trim() || (cluster?.kind === 'training' ? 'Training collection' : 'Policy collection') }),
+    ...(eyebrow          !== undefined && { eyebrow:          eyebrow?.trim() || (cluster?.kind === 'training' ? 'Training collection' : cluster?.kind === 'audits' ? 'Audit collection' : 'Policy collection') }),
   }
 }
 

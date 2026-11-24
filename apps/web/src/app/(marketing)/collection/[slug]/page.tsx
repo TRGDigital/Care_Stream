@@ -50,7 +50,7 @@ interface Collection {
   slug: string
   title: string
   eyebrow: string
-  kind: 'policies' | 'training'
+  kind: 'policies' | 'training' | 'audits'
   meta_title: string | null
   meta_description: string | null
   og_image_url: string | null
@@ -261,7 +261,7 @@ async function CollectionPageBody(
                     <div className="mt-4 flex items-baseline justify-between">
                       {isTraining && p.cpd_accredited
                         ? <span className="text-xl font-extrabold tracking-tight text-neutral-dark"><s className="mr-1.5 text-sm font-medium text-neutral-mid">{STANDARD_COURSE_PRICE}</s>{FREE_COURSE_PRICE}</span>
-                        : <span className="text-xl font-extrabold tracking-tight text-neutral-dark">{money(p.price_pence)}</span>}
+                        : <span className="text-xl font-extrabold tracking-tight text-neutral-dark">{c.kind === 'audits' ? 'Free' : money(p.price_pence)}</span>}
                       <span className="text-xs text-neutral-mid">{p.meta}</span>
                     </div>
                     <Link href={p.href}
@@ -270,7 +270,7 @@ async function CollectionPageBody(
                         <circle cx="9.5" cy="19" r="1.4" /><circle cx="17" cy="19" r="1.4" />
                         <path d="M3 4h2.2l2.3 10.5h10.2L20 7.5H6" />
                       </svg>
-                      {isTraining ? 'View module' : 'View policy'}
+                      {c.kind === 'audits' ? 'See this audit' : isTraining ? 'View module' : 'View policy'}
                     </Link>
                   </div>
                 </div>

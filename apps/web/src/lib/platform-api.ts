@@ -375,7 +375,7 @@ export interface ProductCluster {
   key: string
   label: string
   note: string
-  kind: 'policies' | 'training'
+  kind: 'policies' | 'training' | 'audits'
   items: string[]
 }
 
@@ -392,7 +392,7 @@ export interface Collection {
   body:             string
   links:            CollectionLink[]
   faqs:             Array<{ question: string; answer: string }>
-  kind:             'policies' | 'training'
+  kind:             'policies' | 'training' | 'audits'
   cluster_key:      string
   eyebrow:          string
   primary_keyword?: string | null

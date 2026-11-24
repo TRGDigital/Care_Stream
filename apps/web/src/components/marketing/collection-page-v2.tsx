@@ -33,7 +33,7 @@ export interface CollectionProduct {
 export interface CollectionV2 {
   /** Which cart the products go into. A training course must never land in the policy
    *  basket, which checks out somewhere else entirely. */
-  kind: 'policies' | 'training'
+  kind: 'policies' | 'training' | 'audits'
   title: string
   eyebrow: string
   intro: string
@@ -67,8 +67,10 @@ export function CollectionPageV2({ c, s, siblings = [], related = null }: {
   const faqs = (c.faqs ?? []).filter(f => f.question && f.answer)
   const products = c.products ?? []
   const training = c.kind === 'training'
+  const audits = c.kind === 'audits'
   const library = training
     ? { label: 'All training modules', url: '/staff-training' }
+    : audits ? { label: 'All care audits', url: '/care-audits' }
     : { label: 'All care policies', url: '/care-policies' }
   // The row under the headline. Links set on the collection in the console come first; without
   // them it falls back to what the theme shows there: the first products in the collection, then
@@ -133,10 +135,15 @@ export function CollectionPageV2({ c, s, siblings = [], related = null }: {
                     <Link className="tl" href={p.href}><b>{p.title}</b></Link>
                     <p>{p.description}</p>
                     <div className="foot">
-                      <em>{training && p.cpd_accredited ? <><s style={{ fontWeight: 400, opacity: 0.6, marginRight: 6 }}>{STANDARD_COURSE_PRICE}</s>{FREE_COURSE_PRICE}</> : money(p.price_pence)}</em><i>{training && p.cpd_accredited ? <img className="clcpd" src={CPD_CERTIFIED_LOGO} alt="CPD Certified" /> : p.meta}</i>
+                      <em>{audits ? 'Free' : training && p.cpd_accredited ? <><s style={{ fontWeight: 400, opacity: 0.6, marginRight: 6 }}>{STANDARD_COURSE_PRICE}</s>{FREE_COURSE_PRICE}</> : money(p.price_pence)}</em><i>{training && p.cpd_accredited ? <img className="clcpd" src={CPD_CERTIFIED_LOGO} alt="CPD Certified" /> : p.meta}</i>
                     </div>
                     <div className="clbuy">
-                      {training && p.cpd_accredited ? (
+                      {audits ? (
+                        <>
+                          <Link className="clbuy-add clbuy-free" href={`/register?tier=free&source=audit-${p.slug}`}>Run it free</Link>
+                          <Link className="clbuy-save" href={p.href}>See this audit</Link>
+                        </>
+                      ) : training && p.cpd_accredited ? (
                         <>
                           <Link className="clbuy-add clbuy-free" href={freeCpdHref(p.slug)}>{FREE_CPD_COPY.cta}</Link>
                           <TrainingSaveButton className="clbuy-save" slug={p.slug} title={p.title} />
@@ -205,7 +212,9 @@ export function CollectionPageV2({ c, s, siblings = [], related = null }: {
               <p>{s('cta.lede')}</p>
               <div className="btns">
                 <Link className="primary" href="/pricing">See pricing</Link>
-                {training
+                {audits
+                  ? <Link className="ghost" href="/care-audits">See all free audits</Link>
+                  : training
                   ? <Link className="ghost" href="/register?tier=free&source=cpd">Get CPD training free</Link>
                   : <Link className="ghost" href={`/register?tier=free&source=policy-${c.title.toLowerCase().replace(/&/g, 'and').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 85)}`}>Check your policies free</Link>}
                 <Link className="ghost" href="/demo">Book a demo</Link>
@@ -220,7 +229,7 @@ export function CollectionPageV2({ c, s, siblings = [], related = null }: {
         </div>
       </section>
 
-      {training ? <TrainingCartLink /> : <BasketPill />}
+      {audits ? null : training ? <TrainingCartLink /> : <BasketPill />}
     </div>
   )
 }

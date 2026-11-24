@@ -20,7 +20,7 @@ export interface ProductCluster {
   label: string
   /** What this cluster is for, shown when choosing one. */
   note: string
-  kind: 'policies' | 'training'
+  kind: 'policies' | 'training' | 'audits'
   /** Exactly six, in the order they should appear. */
   items: [string, string, string, string, string, string]
 }
@@ -207,9 +207,34 @@ export const TRAINING_CLUSTERS: ProductCluster[] = [
             'std-privacy-dignity-and-respect-in-a-care-home'] },
 ]
 
-export const ALL_CLUSTERS: ProductCluster[] = [...POLICY_CLUSTERS, ...TRAINING_CLUSTERS]
+// Audits are free, so an audits collection sells nothing: each card links to the audit's own page and the call to action is to run it free.
+// Items are audit PAGE slugs (apps/web/src/lib/audit-pages/slugs.ts; names in data/audit-collection-items.ts).
+export const AUDIT_CLUSTERS: ProductCluster[] = [
+  { key: 'home-care-audits', label: 'Home care audits', kind: 'audits',
+    note: 'The hub for domiciliary care: start up, medicines, the care plan, falls, infection control and the mock inspection.',
+    items: ['care-package-start-up-initial-assessment', 'medication-support-level-administration', 'care-plan-risk-assessment',
+            'falls-emergency-response-in-the-home', 'home-care-infection-prevention-and-control', 'home-care-mock-inspection'] },
+  { key: 'home-care-medicines-audits', label: 'Home care medicines audits', kind: 'audits',
+    note: 'Who gives what, the MAR chart, competence, stock and self-administration.',
+    items: ['medication-support-level-administration', 'mar-chart-audit-home-care', 'medication-competency-assessment',
+            'self-administration-of-medicines', 'daily-medication-audit', 'weekly-medication-stock-and-storage'] },
+  { key: 'home-care-safeguarding-consent-audits', label: 'Home care safeguarding and consent audits', kind: 'audits',
+    note: 'Capacity, consent, money, safeguarding and recording injuries in a person\'s home.',
+    items: ['mental-capacity-consent-in-the-home', 'consent-information-sharing', 'client-money-shopping-gifts',
+            'safeguarding-log-review', 'body-map-injury-recording', 'duty-of-candour-notifications'] },
+  { key: 'home-care-safe-visits-audits', label: 'Home care safe visits audits', kind: 'audits',
+    note: 'Getting in, staying safe and getting every visit done: access, lone working, the home, moving, rota and missed visits.',
+    items: ['key-safe-access-no-reply', 'lone-working-safety', 'home-environment-client-risk',
+            'moving-handling-in-the-home', 'rota-continuity-travel-time', 'late-missed-visit-review'] },
+  { key: 'home-care-team-governance-audits', label: 'Home care team and governance audits', kind: 'audits',
+    note: 'Recruitment, supervision, spot checks, the on call line, complaints and the review call.',
+    items: ['recruitment-dbs-induction-new-care-workers', 'home-care-supervision-appraisal-competence', 'care-worker-spot-check',
+            'on-call-out-of-hours-response', 'home-care-complaints-compliments', 'client-review-call-satisfaction'] },
+]
 
-export function clustersFor(kind: 'policies' | 'training'): ProductCluster[] {
+export const ALL_CLUSTERS: ProductCluster[] = [...POLICY_CLUSTERS, ...TRAINING_CLUSTERS, ...AUDIT_CLUSTERS]
+
+export function clustersFor(kind: 'policies' | 'training' | 'audits'): ProductCluster[] {
   return ALL_CLUSTERS.filter(c => c.kind === kind)
 }
 

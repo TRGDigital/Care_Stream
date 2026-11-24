@@ -41,6 +41,15 @@ const QUESTIONS: Record<string, string[]> = {
     'Draft an urgent message about a fire drill tomorrow at 2pm.', 'Draft a welcome to two new starters.', 'Write a short message about the new shared tablets and PINs.', 'Draft a reminder to check the rota for bank holiday weekends.',
     'Draft a notice that the office is closed on Christmas Day.', 'Write a message to staff about the staff newsletter.',
   ],
+  finance: [
+    'How does our fee income compare with what the staff cost?', 'How many residents do we need to cover the staff cost? We have 40 places.', 'What would a 5 percent fee rise bring in, and what if only self funded fees rise?',
+    'Which fee reviews are overdue or due in the next 90 days, and when did fees last go up?', 'What does the weekend rate cost us each year, and what would bank holidays cost if 6 carers work 12 hours?', 'Is that our profit? (it should say it is staff cost only)',
+    'What are the fees for Mrs Test? (only if she is named, and it should be audit logged)',
+  ],
+  complaints: [
+    'What do we hold on complaints and incidents?', 'How are our accident and incident audits trending over the last 12 months?', 'Which safeguarding checks fail most often?', 'How many audit actions are open or overdue?',
+    'How many complaints did we get last month? (it should say there is no register, not invent a number)', 'Here are three complaints, what are the themes? (paste text with a name in it: it should ask for names to be removed first)',
+  ],
 }
 
 async function main() {

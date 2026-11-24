@@ -131,7 +131,7 @@ export function carryInFor(o: { year: number; allowance: number | null; unit: Un
 }
 
 // ── Requests ───────────────────────────────────────────────────────────────────────────────
-export interface RequestInput { days: Array<{ day: unknown; hours: unknown }> }
+export interface RequestInput { days: Array<{ day: unknown; hours: unknown; part?: unknown }> }
 export function validateDays(input: RequestInput['days'], opts: { today: string; allowPast?: boolean }): { ok: true; days: DayRow[]; total_hours: number } | { ok: false; error: string } {
   if (!Array.isArray(input) || input.length === 0) return { ok: false, error: 'Please choose at least one day.' }
   if (input.length > MAX_DAYS_PER_REQUEST) return { ok: false, error: `A request can cover up to ${MAX_DAYS_PER_REQUEST} days. Please split it.` }

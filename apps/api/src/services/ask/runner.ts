@@ -9,6 +9,7 @@ import { AGENTS, agentById, systemPromptFor, type AgentDef } from './agents'
 import { TOOLS, toolByName, type ToolContext } from './tools'
 import { wrapToolResult } from './safety'
 import { dedupeSources, type AskSource } from './sources'
+import { contextPromptLine, type ResolvedContext } from './page-context'
 
 export const MAX_ROUNDS = 6
 export const MAX_TOKENS_PER_CALL = 2200
@@ -32,13 +33,13 @@ export function toolDefsFor(agent: AgentDef): Anthropic.Messages.Tool[] {
   return agent.tools.map(n => toolByName(n)).filter(Boolean).map(t => ({ name: t!.name, description: t!.description, input_schema: t!.input_schema as any }))
 }
 
-export async function runAgent(o: { agentId: string; ctx: ToolContext; orgName: string; history: HistoryMessage[]; message: string }, deps: RunDeps = {}): Promise<RunResult> {
+export async function runAgent(o: { agentId: string; ctx: ToolContext; orgName: string; history: HistoryMessage[]; message: string; pageContext?: ResolvedContext | null }, deps: RunDeps = {}): Promise<RunResult> {
   const agent = agentById(o.agentId)
   if (!agent || agent.status !== 'ready') throw new Error('That agent is not available yet.')
   const client = deps.client ?? clientOf(), now = deps.now ?? Date.now
   await (deps.checkLimit ?? checkAiTokenLimit)(o.ctx.tenantId)
   const started = now()
-  const system = systemPromptFor(agent, o.ctx.today, o.orgName)
+  const system = systemPromptFor(agent, o.ctx.today, o.orgName) + contextPromptLine(o.pageContext)
   const tools = toolDefsFor(agent)
   const msgs: Anthropic.Messages.MessageParam[] = [...o.history.slice(-10).map(m => ({ role: m.role, content: m.content })), { role: 'user', content: o.message.slice(0, 4000) }]
   const used: string[] = []; let sources: AskSource[] = []; let answer = ''; let rounds = 0; let stopped = 'done' as RunResult['stopped']

@@ -11,6 +11,7 @@ import { PlanLimitError } from '../lib/plan-limits'
 import { askPilotEnabled } from '../lib/ask-pilot'
 import { AGENTS, agentById, publicAgent } from '../services/ask/agents'
 import { runAgent } from '../services/ask/runner'
+import { resolveContext, type ContextLookups } from '../services/ask/page-context'
 import { DOCUMENT_TYPES, documentType } from '../services/ask/document-types'
 import * as store from '../services/ask/store'
 import { ukToday } from '../lib/holiday-math'
@@ -45,6 +46,11 @@ askRouter.get('/meta', async (_req, res) => {
   ok(res, { enabled: true, ready: await store.tablesReady(), agents: AGENTS.map(publicAgent), document_types: DOCUMENT_TYPES.map(t => ({ id: t.id, label: t.label, needs_approval: t.needsApproval })) })
 })
 
+const contextLookups: ContextLookups = {
+  staffInTenant: async (tenantId, userId) => (await (prisma as any).user.findFirst({ where: { id: userId, tenant_id: tenantId, is_active: true, is_shared: false }, select: { id: true, name: true } })) ?? null,
+  residentInTenant: async (tenantId, residentId) => !!(await (prisma as any).resident.findFirst({ where: { id: residentId, tenant_id: tenantId }, select: { id: true } })),
+}
+
 askRouter.post('/chat', async (req: Request, res: Response) => {
   const tenantId = getTenantId(), userId = req.user!.sub
   const agent = agentById(String(req.body?.agent_id ?? ''))
@@ -63,7 +69,8 @@ askRouter.post('/chat', async (req: Request, res: Response) => {
     } else convId = await store.createConversation(tenantId, userId, agent.id, message.slice(0, 80))
     const tenant = await (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { name: true } })
     await store.addMessage(tenantId, convId, 'user', message)
-    const r = await runAgent({ agentId: agent.id, ctx: { tenantId, userId, today: ukToday() }, orgName: tenant?.name ?? 'this organisation', history, message })
+    const pageContext = await resolveContext(tenantId, req.body?.context, contextLookups)   // a pointer only: account checked, labels built here, never the browser's words
+    const r = await runAgent({ agentId: agent.id, ctx: { tenantId, userId, today: ukToday() }, orgName: tenant?.name ?? 'this organisation', history, message, pageContext })
     const saved = await store.addMessage(tenantId, convId, 'assistant', r.answer, r.sources)
     ok(res, { conversation_id: convId, message: { id: saved.id, role: 'assistant', content: r.answer, sources: r.sources, created_at: saved.created_at }, tools_used: r.tools_used })
   } catch (e: any) {

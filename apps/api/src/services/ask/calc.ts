@@ -81,7 +81,7 @@ export function holidayLiability(people: HolidayPerson[], onCostPct = 0) {
 /** What the fees need to rise by to cover an extra weekly cost: the percentage on the weekly fee income, or the pounds per hour on hourly care. */
 export function feeUplift(extraWeekly: number, weeklyIncome: number, hourlyChargedHoursPerWeek: number) {
   return {
-    weekly_fee_percent: weeklyIncome > 0 ? round2((extraWeekly / weeklyIncome) * 100) : null,
+    fee_rise_percent: weeklyIncome > 0 ? round2((extraWeekly / weeklyIncome) * 100) : null,
     hourly_rate_rise: hourlyChargedHoursPerWeek > 0 ? round2(extraWeekly / hourlyChargedHoursPerWeek) : null,
   }
 }

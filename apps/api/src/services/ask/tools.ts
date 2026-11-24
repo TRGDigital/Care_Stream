@@ -209,7 +209,7 @@ export const TOOLS: AskTool[] = [
   },
   {
     name: 'fee_uplift_needed',
-    description: 'How far fees need to rise to cover an extra weekly cost (for example from nlw_impact or pay_rise_cost): the percentage on weekly fee income, and the pound rise per charged hour for hourly care. Uses resident funding totals only (no individual figures).',
+    description: 'How far fees need to rise to cover an extra weekly cost (for example from nlw_impact or pay_rise_cost): the percentage on weekly income from fees, and the pound rise per charged hour for hourly care. Uses resident funding totals only (no individual figures).',
     input_schema: { type: 'object', properties: { extra_per_week: { type: 'number' } }, required: ['extra_per_week'] },
     async run(ctx, input) {
       const extra = Math.max(0, pct(input?.extra_per_week))
@@ -217,7 +217,7 @@ export const TOOLS: AskTool[] = [
       if (!f.ready) return { data: { error: 'Funding and fees are not switched on, so there is no fee income to compare with.' }, sources: [] }
       const hourlyIncome = 0
       const r = feeUplift(extra, f.weekly_income, f.hourly_hours_per_week)
-      return { data: { extra_cost_per_week: extra, weekly_fee_income_recorded: f.weekly_income, people_with_fees_recorded: f.people, hourly_care_hours_per_week: f.hourly_hours_per_week, ...r, note: 'Income includes estimates for hourly clients where hours and rates were recorded. It covers only people whose funding has been entered.' }, method: 'Fee rise needed = extra weekly cost divided by weekly fee income (as a percentage). Hourly rise = extra weekly cost divided by hourly care hours per week.', sources: [OWN('Resident funding totals (locked, administrators only)', ctx)] }
+      return { data: { extra_cost_per_week: extra, weekly_income_recorded: f.weekly_income, people_with_fees_recorded: f.people, hourly_care_hours_per_week: f.hourly_hours_per_week, ...r, note: 'Income includes estimates for hourly clients where hours and rates were recorded. It covers only people whose funding has been entered.' }, method: 'Fee rise needed = extra weekly cost divided by weekly fee income (as a percentage). Hourly rise = extra weekly cost divided by hourly care hours per week.', sources: [OWN('Resident funding totals (locked, administrators only)', ctx)] }
     },
   },
   {

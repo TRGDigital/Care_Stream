@@ -43,10 +43,11 @@ type AuditEventType =
   | 'admin_view_as_started' | 'admin_view_as_ended' | 'admin_view_as_action'   // an admin looked at a staff member's hub (view or act mode)
   | 'platform_pushed_policy_gaps'      // TRG pushed missing policies to a client's /policies page
   | 'ask_run' | 'ask_funding_named_viewed'
+  | 'ask_action_proposed' | 'ask_action_confirmed' | 'ask_action_cancelled' | 'ask_action_failed' | 'ask_settings_changed' | 'staff_notification_withdrawn'   // Ask CareStream actions: a proposal, a confirmation, its result (counts and type only, never the message), and a withdrawn notification
   | 'ask_document_edited' | 'ask_document_submitted' | 'ask_document_approved' | 'ask_document_returned' | 'ask_document_reopened' | 'ask_document_pdf_downloaded' | 'ask_document_shared_email' | 'ask_document_shared_notification'   // Ask CareStream: an agent was run (agent and tool names only, never content); a named person's funding figures were read at the admin's request
   | 'platform_viewed_staff_chats'      // TRG opened a staff member's chats (full text) in the platform console   // TRG looked at a staff member's activity record from the platform console
 
-type AuditEntityType = 'policy' | 'user' | 'tenant' | 'query' | 'resident' | 'audit_run' | 'shared_device' | 'staff_notification' | 'staff_notification_file' | 'holiday_request' | 'sick_spell' | 'ask_conversation' | 'ask_document'
+type AuditEntityType = 'policy' | 'user' | 'tenant' | 'query' | 'resident' | 'audit_run' | 'shared_device' | 'staff_notification' | 'staff_notification_file' | 'holiday_request' | 'sick_spell' | 'ask_conversation' | 'ask_document' | 'ask_action'
 
 interface AuditParams {
   tenant_id?: string | null

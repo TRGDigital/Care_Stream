@@ -75,10 +75,10 @@ async function sendTo(opts: { notification: any; people: Array<{ id: string; nam
 
 /** Creates a notification for the chosen staff, attaches the (already uploaded, still unsent) documents, records who it went to and emails them. Used by the Notifications page and by
  *  Ask CareStream when an approved letter or newsletter is shared. The caller has already checked the title, body and documents. */
-export async function createAndSendNotification(o: { tenantId: string; userId: string; title: string; body: string; audience: unknown; userIds?: unknown; files: any[] }):
+export async function createAndSendNotification(o: { tenantId: string; userId: string; title: string; body: string; audience: unknown; userIds?: unknown; files: any[]; email?: boolean; skipDailyLimit?: boolean; via?: string }):
   Promise<{ ok: true; id: string; recipients: number; emailed: number; email_failed: number; dropped: number } | { ok: false; code: string; message: string; status: number }> {
   const { tenantId } = o
-  const sentToday = await p().staffNotification.count({ where: { tenant_id: tenantId, created_at: { gte: new Date(Date.now() - 24 * 3600_000) } } })
+  const sentToday = o.skipDailyLimit ? 0 : await p().staffNotification.count({ where: { tenant_id: tenantId, created_at: { gte: new Date(Date.now() - 24 * 3600_000) } } })
   if (sentToday >= MAX_SENDS_PER_DAY) return { ok: false, code: 'LIMIT', message: `You can send up to ${MAX_SENDS_PER_DAY} notifications a day. Please try again tomorrow.`, status: 429 }
   const eligible = (await p().user.findMany({ where: ELIGIBLE_WHERE(tenantId), select: { id: true, name: true, email: true, job_role: true, role: true } })).filter((u: any) => u.email)
   const r = resolveAudience({ audience: o.audience, user_ids: o.userIds }, eligible)
@@ -90,8 +90,9 @@ export async function createAndSendNotification(o: { tenantId: string; userId: s
   const n = await p().staffNotification.create({ data: { tenant_id: tenantId, title: o.title, body: o.body, created_by: o.userId, created_by_name: sender?.name ?? 'An administrator', audience: r.audience } })
   if (o.files.length) await p().staffNotificationFile.updateMany({ where: { id: { in: o.files.map((f: any) => f.id) }, tenant_id: tenantId, notification_id: null }, data: { notification_id: n.id } })
   await p().staffNotificationRecipient.createMany({ data: r.people.map(x => ({ notification_id: n.id, tenant_id: tenantId, user_id: x.id })), skipDuplicates: true })
-  void writeAuditLog({ tenant_id: tenantId, user_id: o.userId, event_type: 'staff_notification_sent', entity_type: 'staff_notification', entity_id: n.id, metadata: { audience: r.audience, recipients: r.people.length } })
-  const sent = await sendTo({ notification: n, people: r.people, orgName: tenant?.name ?? 'Your service', kind: 'new', attachments: o.files.length })
+  void writeAuditLog({ tenant_id: tenantId, user_id: o.userId, event_type: 'staff_notification_sent', entity_type: 'staff_notification', entity_id: n.id, metadata: { audience: r.audience, recipients: r.people.length, ...(o.via ? { via: o.via } : {}) } })
+  // Ask CareStream can send a hub only notification (email off); every other caller keeps the usual hub message plus email.
+  const sent = o.email === false ? { emailed: 0, failed: 0 } : await sendTo({ notification: n, people: r.people, orgName: tenant?.name ?? 'Your service', kind: 'new', attachments: o.files.length })
   return { ok: true, id: n.id, recipients: r.people.length, emailed: sent.emailed, email_failed: sent.failed, dropped: r.dropped }
 }
 
@@ -208,21 +209,30 @@ notificationsAdminRouter.post('/', async (req: Request, res: Response) => {
   } catch (e) { isMissingTable(e) ? notReady(res) : err(res, 'ERROR', 'Could not send the notification.', 500) }
 })
 
+/** Remind the people who have not read a notification (once a day for each notification). Used by the Notifications page and by Ask CareStream (which may limit it to chosen people). */
+export async function remindUnread(o: { tenantId: string; userId: string; notificationId: string; onlyUserIds?: string[]; via?: string }):
+  Promise<{ ok: true; reminded: number; emailed: number; email_failed: number } | { ok: false; code: string; message: string; status: number }> {
+  const tenantId = o.tenantId
+  const n = await p().staffNotification.findFirst({ where: { id: o.notificationId, tenant_id: tenantId } })
+  if (!n) return { ok: false, code: 'NOT_FOUND', message: 'Notification not found.', status: 404 }
+  const wait = remindWaitMs(n.last_reminded_at)
+  if (wait > 0) return { ok: false, code: 'REMINDED_TODAY', message: 'You have already sent a reminder in the last day.', status: 429 }
+  const unread = await p().staffNotificationRecipient.findMany({ where: { notification_id: n.id, tenant_id: tenantId, read_at: null }, select: { user_id: true } })
+  const only = o.onlyUserIds ? new Set(o.onlyUserIds) : null
+  const users = (await p().user.findMany({ where: { id: { in: unread.map((x: any) => x.user_id).filter((id: string) => !only || only.has(id)) }, ...ELIGIBLE_WHERE(tenantId) }, select: { id: true, name: true, email: true } })).filter((u: any) => u.email)
+  if (users.length === 0) return { ok: false, code: 'NOTHING_TO_DO', message: 'Everyone who can read it has read it.', status: 409 }
+  await p().staffNotification.update({ where: { id: n.id }, data: { last_reminded_at: new Date() } })
+  const tenant = await p().tenant.findUnique({ where: { id: tenantId }, select: { name: true } })
+  const sent = await sendTo({ notification: n, people: users, orgName: tenant?.name ?? 'Your service', kind: 'reminder', attachments: ((await filesFor(tenantId, [n.id])).get(n.id) ?? []).length })
+  void writeAuditLog({ tenant_id: tenantId, user_id: o.userId, event_type: 'staff_notification_reminded', entity_type: 'staff_notification', entity_id: n.id, metadata: { recipients: users.length, emailed: sent.emailed, ...(o.via ? { via: o.via } : {}) } })
+  return { ok: true, reminded: users.length, emailed: sent.emailed, email_failed: sent.failed }
+}
+
 notificationsAdminRouter.post('/:id/remind', async (req: Request, res: Response) => {
-  const tenantId = tenantOf(req)
   try {
-    const n = await p().staffNotification.findFirst({ where: { id: String(req.params.id), tenant_id: tenantId } })
-    if (!n) { err(res, 'NOT_FOUND', 'Notification not found.', 404); return }
-    const wait = remindWaitMs(n.last_reminded_at)
-    if (wait > 0) { err(res, 'REMINDED_TODAY', 'You have already sent a reminder in the last day.', 429); return }
-    const unread = await p().staffNotificationRecipient.findMany({ where: { notification_id: n.id, tenant_id: tenantId, read_at: null }, select: { user_id: true } })
-    const users = (await p().user.findMany({ where: { id: { in: unread.map((x: any) => x.user_id) }, ...ELIGIBLE_WHERE(tenantId) }, select: { id: true, name: true, email: true } })).filter((u: any) => u.email)
-    if (users.length === 0) { err(res, 'NOTHING_TO_DO', 'Everyone who can read it has read it.', 409); return }
-    await p().staffNotification.update({ where: { id: n.id }, data: { last_reminded_at: new Date() } })
-    const tenant = await p().tenant.findUnique({ where: { id: tenantId }, select: { name: true } })
-    const sent = await sendTo({ notification: n, people: users, orgName: tenant?.name ?? 'Your service', kind: 'reminder', attachments: ((await filesFor(tenantId, [n.id])).get(n.id) ?? []).length })
-    void writeAuditLog({ tenant_id: tenantId, user_id: userOf(req), event_type: 'staff_notification_reminded', entity_type: 'staff_notification', entity_id: n.id, metadata: { recipients: users.length } })
-    ok(res, { reminded: users.length, emailed: sent.emailed, email_failed: sent.failed })
+    const r = await remindUnread({ tenantId: tenantOf(req), userId: userOf(req), notificationId: String(req.params.id) })
+    if (!r.ok) { err(res, r.code, r.message, r.status); return }
+    ok(res, { reminded: r.reminded, emailed: r.emailed, email_failed: r.email_failed })
   } catch (e) { isMissingTable(e) ? notReady(res) : err(res, 'ERROR', 'Could not send the reminder.', 500) }
 })
 

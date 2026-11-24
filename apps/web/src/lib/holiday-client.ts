@@ -29,10 +29,10 @@ export interface BlockedDate { from: string; to: string; reason: string }
 export interface CheckResult { ok: boolean; issues: RuleIssue[]; can_override: boolean }
 export interface Person { id: string; name: string; job_role: string | null; unit: Unit; shift_hours: number; half_hours: number; default_hours: number }
 export interface Clash { day: string; approved: Array<{ user_id: string; name: string; hours: number; part?: Part }>; pending: Array<{ user_id: string; name: string; hours: number; part?: Part }>; approved_count: number; over_limit: boolean }
-export interface WeekOff { user_id: string; name: string; hours: number; status: 'approved' | 'pending'; part?: Part; self?: boolean }
-export interface WeekDay { day: string; requested: boolean; off: WeekOff[] }
-export interface WeekBlock { start: string; days: WeekDay[] }
-export interface ApprovalItem extends Request { unit: Unit; clashes: Clash[]; weeks?: WeekBlock[] }
+export interface WeekOff { user_id: string; name: string; hours: number; status: 'approved' | 'pending'; part?: Part }
+export interface WeekDay { day: string; off: WeekOff[] }
+export interface WeekData { start: string; days: WeekDay[]; photos?: Record<string, string> }
+export interface ApprovalItem extends Request { unit: Unit; clashes: Clash[] }
 export interface MatrixRow { user_id: string; name: string; job_role: string | null; start_date: string | null; unit: Unit; allowance: number | null; carry_in: number; entitlement: number; contracted: number | null; taken_by_month: Record<string, number>; booked_by_month: Record<string, number>; imported_by_month?: Record<string, { taken: number; booked: number }>; photo_url?: string | null; taken: number; booked: number; remaining: number; percent_taken: number }
 export interface Matrix { year: number; label: string; from: string; to: string; months: Array<{ key: string; label: string }>; rows: MatrixRow[]; today: string; carry_over: boolean }
 export interface CalendarData { month: string; max_off: number | null; today: string; days: Array<{ day: string; user_id: string; name: string; job_role: string | null; photo_url?: string | null; hours: number; part?: Part }>; bank_holidays: BankHoliday[] }
@@ -48,6 +48,7 @@ export const holiday = {
   people: (t: string) => call<{ people: Person[] }>('/holiday/people', t),
   book: (t: string, o: { user_id: string; days: DayRow[]; note?: string } & Override) => call<{ id: string }>('/holiday/book', t, J('POST', o)),
   cancel: (t: string, id: string) => call<{ id: string }>(`/holiday/requests/${encodeURIComponent(id)}/cancel`, t, J('POST')),
+  approvalsWeek: (t: string, start: string) => call<WeekData>(`/holiday/approvals/week?start=${start}`, t),
   approvals: (t: string, status = 'pending') => call<{ requests: ApprovalItem[]; max_off: number | null; photos?: Record<string, string> }>(`/holiday/approvals?status=${status}`, t),
   decide: (t: string, id: string, decision: 'approve' | 'reject', note?: string, ov?: Override) => call<{ id: string }>(`/holiday/requests/${encodeURIComponent(id)}/decision`, t, J('POST', { decision, note, ...ov })),
   edit: (t: string, id: string, days: DayRow[], note?: string, ov?: Override) => call<{ id: string }>(`/holiday/requests/${encodeURIComponent(id)}`, t, J('PATCH', { days, note, ...ov })),

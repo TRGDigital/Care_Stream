@@ -5,8 +5,8 @@
 
 import { createContext, useCallback, useContext, useEffect, useState } from 'react'
 import { StaffAvatar } from '@/components/admin/staff-avatar'
-import { AlertTriangle, Check, Loader2, Pencil, Plus, ShieldAlert, Trash2, X } from 'lucide-react'
-import { holiday, describeRange, fmtNum, niceDate, partNotes, unitWord, HolidayError, type ApprovalItem, type DayRow, type Person, type RuleIssue } from '@/lib/holiday-client'
+import { AlertTriangle, Check, ChevronLeft, ChevronRight, Loader2, Pencil, Plus, ShieldAlert, Trash2, X } from 'lucide-react'
+import { holiday, describeRange, fmtNum, niceDate, partNotes, unitWord, HolidayError, type ApprovalItem, type WeekData, type DayRow, type Person, type RuleIssue } from '@/lib/holiday-client'
 import { partLabel } from '@/lib/holiday-parts'
 import { DayHoursEditor } from './day-hours-editor'
 
@@ -55,42 +55,58 @@ function useRuleSave() {
   return { issues, can, allow, setAllow, why, setWhy, error, run, reset }
 }
 
-/** The week (Monday to Sunday) around the request, so the approver sees at a glance who else is off or has asked. The requested days are outlined. */
-function WeekView({ r, max }: { r: ApprovalItem; max: number | null }) {
-  if (!r.weeks?.length) return null
+/** ONE calendar for the whole page: the week (Monday to Sunday) of the request being looked at. Click a request to move it. The days that request asks for are outlined. */
+function WeekCalendar({ token, focus, focusLabel }: { token: string; focus: { start: string; days: string[] } | null; focusLabel: string }) {
+  const [start, setStart] = useState<string>('')
+  const [data, setData] = useState<WeekData | null>(null)
+  const [error, setError] = useState('')
+  const photos = useContext(Photos)
+  useEffect(() => { if (focus?.start) setStart(focus.start) }, [focus?.start])
+  useEffect(() => {
+    if (!start) return
+    let live = true; setError('')
+    holiday.approvalsWeek(token, start).then(d => { if (live) setData(d) }).catch(e => { if (live) setError(e?.message ?? 'Could not load the week.') })
+    return () => { live = false }
+  }, [token, start])
+  const shift = (n: number) => { const d = new Date((start || data?.start || '') + 'T00:00:00Z'); d.setUTCDate(d.getUTCDate() + n); setStart(d.toISOString().slice(0, 10)) }
   const dow = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+  const asked = new Set(focus?.days ?? [])
+  const merged = { ...photos, ...(data?.photos ?? {}) }
   return (
-    <div className="rounded-lg border border-gray-200 bg-white p-3">
-      <p className="text-sm font-semibold text-neutral-dark">Who is off that week</p>
-      <p className="mb-2 text-xs text-neutral-mid">Monday to Sunday. The days {r.name.split(' ')[0]} is asking for are outlined in teal. A green Approved tag means it is already agreed. Dashed names have asked and are waiting.</p>
-      <div className="space-y-3 overflow-x-auto">
-        {r.weeks.map(w => (
-          <div key={w.start} className="min-w-[640px]">
-            <p className="mb-1 text-xs font-semibold text-neutral-mid">Week of {niceDate(w.start)}</p>
-            <div className="grid grid-cols-7 gap-1.5">
-              {w.days.map((d, i) => {
-                const approved = d.off.filter(o => o.status === 'approved' && !o.self).length + (d.requested ? 0 : d.off.filter(o => o.status === 'approved' && o.self).length)
-                const over = max != null && approved + (d.requested ? 1 : 0) > max
-                return (
-                  <div key={d.day} className={`min-h-[84px] rounded-lg border p-1.5 text-xs ${d.requested ? 'border-teal bg-teal/5 ring-1 ring-teal' : i > 4 ? 'border-gray-200 bg-gray-50' : 'border-gray-200 bg-white'}`}>
-                    <p className="flex items-center justify-between font-semibold text-neutral-dark"><span>{dow[i]} {Number(d.day.slice(8))}</span><span className={`rounded-full px-1.5 text-[10px] font-bold ${over ? 'bg-red-100 text-red-700' : d.off.length + (d.requested ? 1 : 0) > 0 ? 'bg-sky-100 text-sky-800' : 'text-neutral-mid'}`}>{d.off.length + (d.requested ? 1 : 0) || ''}</span></p>
-                    {d.requested && <p className="mt-0.5 rounded bg-teal/10 px-1 font-semibold text-teal">{r.name.split(' ')[0]}</p>}
-                    <ul className="mt-0.5 space-y-0.5">
-                      {d.off.map(o => (
-                        <li key={o.user_id + o.status} className={o.status === 'pending' ? 'rounded border border-dashed border-amber-400 px-1 text-amber-900' : 'rounded bg-sky-50 px-1 text-sky-900'} title={o.status === 'pending' ? 'Asked, waiting for approval' : 'Approved'}>
-                          <Who id={o.user_id} name={o.name} part={o.part} />
-                          <span className={`ml-0.5 rounded-full px-1.5 py-px text-[10px] font-bold ${o.status === 'approved' ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800'}`}>{o.status === 'approved' ? 'Approved' : 'Waiting'}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )
-              })}
-            </div>
-          </div>
-        ))}
+    <section className="rounded-xl border border-gray-200 bg-white p-4" aria-label="Who is off that week">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <h3 className="text-base font-bold text-neutral-dark">Who is off that week</h3>
+          <p className="text-xs text-neutral-mid">{focusLabel ? `Showing the week of ${focusLabel}. Click another request to move the calendar.` : 'Click a request to see its week.'} Days asked for are outlined in teal.</p>
+        </div>
+        <div className="flex items-center gap-1">
+          <button type="button" aria-label="Earlier week" onClick={() => shift(-7)} disabled={!start && !data} className="rounded-lg border border-gray-200 p-1.5 text-neutral-mid hover:text-teal disabled:opacity-40"><ChevronLeft size={16} /></button>
+          <span className="min-w-[8rem] text-center text-sm font-semibold text-neutral-dark">{data ? `Week of ${niceDate(data.start)}` : ''}</span>
+          <button type="button" aria-label="Later week" onClick={() => shift(7)} disabled={!start && !data} className="rounded-lg border border-gray-200 p-1.5 text-neutral-mid hover:text-teal disabled:opacity-40"><ChevronRight size={16} /></button>
+        </div>
       </div>
-    </div>
+      {error && <p className="mt-2 text-sm text-red-700" role="alert">{error}</p>}
+      {!data && !error && start && <p className="mt-3 flex items-center gap-2 text-sm text-neutral-mid"><Loader2 size={14} className="animate-spin" /> Loading</p>}
+      {data && (
+        <div className="mt-3 overflow-x-auto">
+          <div className="grid min-w-[760px] grid-cols-7 gap-1.5">
+            {data.days.map((d, i) => (
+              <div key={d.day} className={`min-h-[96px] rounded-lg border p-1.5 text-xs ${asked.has(d.day) ? 'border-teal bg-teal/5 ring-1 ring-teal' : i > 4 ? 'border-gray-200 bg-gray-50' : 'border-gray-200 bg-white'}`}>
+                <p className="flex items-center justify-between font-semibold text-neutral-dark"><span>{dow[i]} {Number(d.day.slice(8))}</span>{d.off.length > 0 && <span className="rounded-full bg-sky-100 px-1.5 text-[10px] font-bold text-sky-800">{d.off.length}</span>}</p>
+                <ul className="mt-1 space-y-1">
+                  {d.off.map(o => (
+                    <li key={o.user_id + o.status} className={o.status === 'pending' ? 'rounded border border-dashed border-amber-400 px-1 py-0.5 text-amber-900' : 'rounded bg-sky-50 px-1 py-0.5 text-sky-900'}>
+                      <span className="inline-flex items-center gap-1"><StaffAvatar name={o.name} photoUrl={merged[o.user_id]} size={16} />{o.name}{partLabel(o.part) && <span className="rounded bg-teal/10 px-1 text-[10px] font-bold text-teal">{partLabel(o.part)}</span>}</span>
+                      <span className={`ml-1 rounded-full px-1.5 py-px text-[10px] font-bold ${o.status === 'approved' ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800'}`}>{o.status === 'approved' ? 'Approved' : 'Waiting'}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </section>
   )
 }
 
@@ -135,7 +151,7 @@ function EditBox({ token, r, onDone }: { token: string; r: ApprovalItem; onDone:
   )
 }
 
-function Row({ token, r, max, onChanged }: { token: string; r: ApprovalItem; max: number | null; onChanged: () => void }) {
+function Row({ token, r, max, onChanged, focused, onFocus }: { token: string; r: ApprovalItem; max: number | null; onChanged: () => void; focused: boolean; onFocus: () => void }) {
   const [note, setNote] = useState('')
   const [mode, setMode] = useState<'idle' | 'reject' | 'remove' | 'edit'>('idle')
   const [busy, setBusy] = useState(false)
@@ -145,7 +161,7 @@ function Row({ token, r, max, onChanged }: { token: string; r: ApprovalItem; max
   // Approving checks the balance and the other rules again; if they now fail, the approver sees why and can allow it with a reason.
   async function approve() { setBusy(true); const done = await rule.run(ov => holiday.decide(token, r.id, 'approve', undefined, ov)); setBusy(false); if (done) onChanged() }
   return (
-    <li className="space-y-3 rounded-xl border border-gray-200 bg-white p-4">
+    <li onClick={onFocus} className={`space-y-3 rounded-xl border bg-white p-4 ${focused ? 'border-teal ring-2 ring-teal/30' : 'border-gray-200'} ${focused ? '' : 'cursor-pointer'}`} aria-current={focused ? 'true' : undefined}>
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div>
           <p className="flex items-center gap-2 text-base font-bold text-neutral-dark"><Who id={r.user_id} name={r.name} /></p>
@@ -170,7 +186,6 @@ function Row({ token, r, max, onChanged }: { token: string; r: ApprovalItem; max
       {r.note && <p className="rounded-lg bg-neutral-light px-3 py-2 text-sm text-neutral-dark">{r.name.split(' ')[0]} wrote: {r.note}</p>}
       {r.decision_note && r.status !== 'pending' && <p className="rounded-lg bg-neutral-light px-3 py-2 text-sm text-neutral-dark">Note: {r.decision_note}</p>}
       {(r.status === 'pending' || r.status === 'approved') && <Clashes r={r} max={max} />}
-      {(r.status === 'pending' || r.status === 'approved') && <WeekView r={r} max={max} />}
 
       {mode === 'edit' ? <EditBox token={token} r={r} onDone={() => { setMode('idle'); onChanged() }} /> : (
         <>
@@ -268,6 +283,7 @@ export function RequestsPanel({ token, onCount }: { token: string; onCount?: (n:
   const [photos, setPhotos] = useState<Record<string, string>>({})
   const [error, setError] = useState('')
   const [booking, setBooking] = useState(false)
+  const [focusId, setFocusId] = useState<string | null>(null)
   const load = useCallback(() => {
     setError('')
     holiday.approvals(token, tab).then(r => { setItems(r.requests); setMax(r.max_off); setPhotos(r.photos ?? {}); if (tab === 'pending') onCount?.(r.requests.length) }).catch(e => { setItems([]); setError(e?.message ?? 'Could not load the requests.') })
@@ -285,7 +301,18 @@ export function RequestsPanel({ token, onCount }: { token: string; onCount?: (n:
       {error && <p className="text-sm text-red-700" role="alert">{error}</p>}
       {items === null ? <p className="flex items-center gap-2 text-sm text-neutral-mid"><Loader2 size={14} className="animate-spin" /> Loading</p>
         : items.length === 0 ? <p className="rounded-xl bg-neutral-light px-4 py-6 text-center text-sm text-neutral-mid">{tab === 'pending' ? 'No requests are waiting.' : tab === 'approved' ? 'No approved holiday yet.' : 'Nothing here.'}</p>
-        : <Photos.Provider value={photos}><ul className="space-y-3">{items.map(r => <Row key={r.id} token={token} r={r} max={max} onChanged={load} />)}</ul></Photos.Provider>}
+        : (() => {
+          const focusItem = items.find(r => r.id === focusId) ?? items[0]
+          const focusDays = focusItem?.days.map(d => d.day) ?? []
+          const first = [...focusDays].sort()[0]
+          const monday = first ? (() => { const d = new Date(first + 'T00:00:00Z'); d.setUTCDate(d.getUTCDate() - ((d.getUTCDay() + 6) % 7)); return d.toISOString().slice(0, 10) })() : ''
+          return (
+            <Photos.Provider value={photos}>
+              <ul className="space-y-3">{items.map(r => <Row key={r.id} token={token} r={r} max={max} onChanged={load} focused={focusItem?.id === r.id} onFocus={() => setFocusId(r.id)} />)}</ul>
+              <WeekCalendar token={token} focus={monday ? { start: monday, days: focusDays } : null} focusLabel={focusItem ? `${focusItem.name.split(' ')[0]}'s request` : ''} />
+            </Photos.Provider>
+          )
+        })()}
     </div>
   )
 }

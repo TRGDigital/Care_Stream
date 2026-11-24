@@ -219,6 +219,19 @@ async function requireDecider(req: Request, res: Response, next: NextFunction) {
   try { if (await canDecide(tenantOf(req), userOf(req), roleOf(req))) { next(); return } err(res, 'FORBIDDEN', 'You cannot decide holiday requests.', 403) } catch { err(res, 'FORBIDDEN', 'You cannot decide holiday requests.', 403) }
 }
 
+// ONE week (Monday to Sunday) for the Requests page: who is off or has asked on each day. The page shows a single calendar and moves it to the week of the request being looked at.
+holidayRouter.get('/approvals/week', requireDecider, async (req: Request, res: Response) => {
+  const tenantId = tenantOf(req)
+  const start = /^\d{4}-\d{2}-\d{2}$/.test(String(req.query.start ?? '')) ? weekStart(String(req.query.start)) : weekStart(ukToday())
+  try {
+    const days = Array.from({ length: 7 }, (_, i) => addDays(start, i))
+    const off = await othersOnDays(tenantId, days)
+    const out = days.map(day => ({ day, off: off.filter(o => o.day === day).map(o => ({ user_id: o.user_id, name: o.name, hours: o.hours, status: o.status, ...(o.part ? { part: o.part } : {}) })) }))
+    const photos = Object.fromEntries(await staffPhotoUrls(tenantId, [...new Set(off.map(o => o.user_id))]))
+    ok(res, { start, days: out, photos })
+  } catch (e) { isMissingTable(e) ? notReady(res) : err(res, 'ERROR', 'Could not load the week.', 500) }
+})
+
 holidayRouter.get('/approvals', requireDecider, async (req: Request, res: Response) => {
   const tenantId = tenantOf(req)
   try {
@@ -232,28 +245,8 @@ holidayRouter.get('/approvals', requireDecider, async (req: Request, res: Respon
       const others = status === 'pending' || status === 'approved' ? (await othersFor(tenantId, r.days.map(d => d.day), r.id)).filter(o => o.user_id !== r.user_id) : []
       out.push({ ...r, unit: unit.get(r.user_id) ?? 'hours', clashes: clashesFor({ days: r.days.map(d => d.day), userId: r.user_id, others, maxOff: settings.max_off }).filter(c => c.approved.length || c.pending.length || c.over_limit) })
     }
-    // The week view under each request: the Monday to Sunday weeks around the requested days (at most three), with everyone off or asking on each day.
-    const weekDays = new Map<string, string[]>()
-    for (const r of out as any[]) {
-      if (r.status !== 'pending' && r.status !== 'approved') continue
-      const starts = [...new Set<string>(r.days.map((d: any) => weekStart(d.day)))].sort().slice(0, 3)
-      weekDays.set(r.id, starts)
-    }
-    const allDays = [...new Set<string>([...weekDays.values()].flatMap(s => s.flatMap(w => Array.from({ length: 7 }, (_, i) => addDays(w, i)))))]
-    const everyone = allDays.length ? await othersOnDays(tenantId, allDays) : []
-    for (const r of out as any[]) {
-      const starts = weekDays.get(r.id); if (!starts) continue
-      const mine = new Set<string>(r.days.map((d: any) => d.day))
-      r.weeks = starts.map(w => ({ start: w, days: Array.from({ length: 7 }, (_, i) => {
-        const day = addDays(w, i)
-        // This request's own days are excluded (it is shown as "requested"); everyone else off or asking that day is listed.
-        const off = everyone.filter(o => o.day === day && !(o.user_id === r.user_id && mine.has(day))).map(o => ({ user_id: o.user_id, name: o.name, hours: o.hours, status: o.status, ...(o.part ? { part: o.part } : {}), self: o.user_id === r.user_id }))
-        return { day, requested: mine.has(day), off }
-      }) }))
-    }
     const ids = new Set<string>(out.map((r: any) => r.user_id))
     for (const r of out) for (const c of r.clashes ?? []) for (const x of [...c.approved, ...c.pending]) ids.add(x.user_id)
-    for (const r of out as any[]) for (const w of r.weeks ?? []) for (const d of w.days) for (const x of d.off) ids.add(x.user_id)
     const photos = Object.fromEntries(await staffPhotoUrls(tenantId, [...ids]))
     ok(res, { requests: out, max_off: settings.max_off, photos })
   } catch (e) { isMissingTable(e) ? notReady(res) : err(res, 'ERROR', 'Could not load the requests.', 500) }

@@ -43,6 +43,14 @@ export async function orgLogoForRecipient(email: string): Promise<OrgLogo | null
   return v
 }
 
+/** The logo of an account, looked up by its id (for emails to people who are not users, such as a resident's family). */
+export async function orgLogoForTenant(tenantId: string): Promise<OrgLogo | null> {
+  try {
+    const t = await p().tenant.findUnique({ where: { id: tenantId }, select: { name: true, logo_url: true } })
+    return t?.logo_url && /^data:image\//.test(t.logo_url) ? { url: logoAddress(tenantId, t.logo_url), alt: t.name ?? '' } : null
+  } catch { return null }
+}
+
 /** Replace the markers with the logo, or remove them when there is none. */
 export function applyOrgLogo(html: string, logo: OrgLogo | null): string {
   if (!html.includes(LOGO_ROW) && !html.includes(LOGO_BLOCK)) return html

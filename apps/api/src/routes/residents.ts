@@ -332,11 +332,11 @@ residentsRouter.post('/:id/status', async (req: Request, res: Response) => {
 // ─── Family invitations ────────────────────────────────────────────────────────
 const InviteSchema = z.object({ email: z.string().trim().toLowerCase().email().max(200), name: z.string().trim().min(1).max(100), relationship: z.string().trim().min(1).max(60) })
 
-async function sendInvite(opts: { tenantId: string; resident: any; invite: any; token: string; senderName: string }) {
+async function sendInvite(opts: { tenantId: string; resident: any; invite: any; token: string; senderName: string; senderUserId?: string }) {
   const tenant = await db.tenant.findUnique({ where: { id: opts.tenantId }, select: { name: true } })
   await sendResidentFamilyInviteEmail({
     to: opts.invite.email, inviteeName: opts.invite.name, residentName: opts.resident.preferred_name || opts.resident.first_name,
-    homeName: tenant?.name ?? 'the home', senderName: opts.senderName, link: `${siteUrl()}/family/${opts.token}`, days: INVITE_DAYS,
+    homeName: tenant?.name ?? 'the home', senderName: opts.senderName, link: `${siteUrl()}/family/${opts.token}`, days: INVITE_DAYS, tenantId: opts.tenantId, senderUserId: opts.senderUserId,
   })
 }
 
@@ -355,7 +355,7 @@ residentsRouter.post('/:id/invites', async (req: Request, res: Response) => {
   const invite = await db.residentInvite.create({
     data: { tenant_id: tenantId, resident_id: r.id, email: p.data.email, name: cleanText(p.data.name, 100), relationship: cleanText(p.data.relationship, 60), token_hash: hash, expires_at: new Date(Date.now() + INVITE_DAYS * 86400000), created_by: a.email },
   })
-  try { await sendInvite({ tenantId, resident: r, invite, token, senderName: a.name }) }
+  try { await sendInvite({ tenantId, resident: r, invite, token, senderName: a.name, senderUserId: a.id }) }
   catch (e: any) {
     await db.residentInvite.delete({ where: { id: invite.id } }).catch(() => undefined)
     err(res, 'EMAIL_FAILED', 'We could not send the email. Please check the address and try again.', 502); return
@@ -411,7 +411,7 @@ residentsRouter.post('/:id/invites/:inviteId/resend', async (req: Request, res: 
   const a = await actor(req)
   const { token, hash } = newInviteToken()
   const updated = await db.residentInvite.update({ where: { id: inv.id }, data: { token_hash: hash, sent_at: new Date(), expires_at: new Date(Date.now() + INVITE_DAYS * 86400000), opened_at: null, submitted_at: null } })
-  try { await sendInvite({ tenantId, resident: r, invite: updated, token, senderName: a.name }) }
+  try { await sendInvite({ tenantId, resident: r, invite: updated, token, senderName: a.name, senderUserId: a.id }) }
   catch { err(res, 'EMAIL_FAILED', 'We could not send the email. Please try again.', 502); return }
   ok(res, inviteDto(updated))
 })

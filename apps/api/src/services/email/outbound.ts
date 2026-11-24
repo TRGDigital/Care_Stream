@@ -14,6 +14,7 @@ import {
 } from './person-content'
 import { resolveActor } from './email-avatar'
 import { LOGO_BLOCK, LOGO_ROW } from './org-logo-markers'
+import { applyOrgLogo, orgLogoForTenant } from '../../lib/org-logo'
 
 const INBOUND_DOMAIN = process.env.INBOUND_EMAIL_DOMAIN ?? 'carestreamai.co.uk'
 const WEB_URL        = siteUrl()
@@ -2429,24 +2430,48 @@ const residentButton = (href: string, label: string) => `
   </div>
   <p style="color:#9ca3af;font-size:12px;margin:0 0 8px">If the button does not work, copy and paste this link into your browser:<br><span style="color:${PURPLE}">${escResident(href)}</span></p>`
 
+/** The person-led layout for emails to families: the organisation logo, the administrator's picture and name, then the message, sent "<Name> via CareStream".
+ *  Families are not users of any account, so the logo is looked up by the tenant (not by the recipient). Returns null when the sender cannot be resolved,
+ *  and the caller keeps the plain layout. */
+async function residentPersonMessage(o: { tenantId?: string | null; actorUserId?: string | null; headline: (adminName: string) => string; intro: string; bodyHtml: string; button: { label: string; href: string }; footerNote: (admin: PersonAdmin) => string }) {
+  const admin = await resolveActor(o.actorUserId)
+  if (!admin) return null
+  const from = process.env.SENDGRID_FROM_ADDRESS ?? process.env.SENDGRID_FROM_EMAIL ?? `noreply@${INBOUND_DOMAIN}`
+  const headline = o.headline(admin.name)
+  let html = personLedEmail({ admin, headline, intro: o.intro, bodyHtml: o.bodyHtml, button: o.button, footerNote: o.footerNote(admin), logoUrl: LOGO_URL })
+  html = applyOrgLogo(html, o.tenantId ? await orgLogoForTenant(o.tenantId).catch(() => null) : null)
+  return { html, headline, from: personSender(admin, from) }
+}
+
 /** To a friend or family member: a private link to a short form about the resident. Throws on a send failure so the caller can say so. */
 export async function sendResidentFamilyInviteEmail(opts: {
-  to: string; inviteeName: string; residentName: string; homeName: string; senderName: string; link: string; days: number
+  to: string; inviteeName: string; residentName: string; homeName: string; senderName: string; link: string; days: number; tenantId?: string | null; senderUserId?: string | null
 }): Promise<void> {
   ensureInitialised()
   if (!process.env.SENDGRID_API_KEY) { console.warn('[email] SENDGRID_API_KEY not set, skipping resident family invite'); return }
   const first = (opts.inviteeName || '').trim().split(' ')[0] || 'there'
+  const para = (t: string, last = false) => `<p style="color:#374151;font-size:15px;line-height:1.6;margin:0 0 ${last ? 0 : 14}px">${t}</p>`
+  const how = `The form takes about five minutes. It asks the kind of things that help the team care for ${escResident(opts.residentName)} as the person they are: favourite things, routines, what helps when they are worried, the people who matter to them. Answer as many or as few as you like, and you can add photos and a short video message too.`
+  const privacy = `Your answers go to the manager at ${escResident(opts.homeName)}, who reads them first. They are only shared with the care team once the manager has approved them. Please do not include medical details or anything private you would not want the team to know.`
+  const person = await residentPersonMessage({
+    tenantId: opts.tenantId, actorUserId: opts.senderUserId,
+    headline: n => `${n} would love your help getting to know ${opts.residentName}`,
+    intro: `Hello ${first}. ${opts.homeName} would like to get to know ${opts.residentName} a little better, and you can help.`,
+    bodyHtml: para(how) + para(privacy, true),
+    button: { label: 'Tell us about ' + opts.residentName, href: opts.link },
+    footerNote: a => `You received this because ${a.name} at ${opts.homeName} invited you through CareStream. This link is just for you and stops working after ${opts.days} days. If you were not expecting this email, you can ignore it.`,
+  })
+  if (person) {
+    await sgMail.send({ to: opts.to, from: person.from, subject: person.headline, html: person.html, trackingSettings: { clickTracking: { enable: false, enableText: false } } })
+    return
+  }
   const html = emailWrapper(`
     <p style="color:${NEUTRAL_DARK};font-size:15px;margin:0 0 16px">Hello ${escResident(first)},</p>
     <p style="color:#374151;font-size:15px;line-height:1.6;margin:0 0 16px">
       ${escResident(opts.senderName)} at <strong>${escResident(opts.homeName)}</strong> would love your help getting to know <strong>${escResident(opts.residentName)}</strong> a little better.
     </p>
-    <p style="color:#374151;font-size:15px;line-height:1.6;margin:0 0 16px">
-      The form takes about five minutes. It asks the kind of things that help the team care for ${escResident(opts.residentName)} as the person they are: favourite things, routines, what helps when they are worried, the people who matter to them. Answer as many or as few as you like.
-    </p>
-    <p style="color:#374151;font-size:15px;line-height:1.6;margin:0 0 22px">
-      Your answers go to the manager at ${escResident(opts.homeName)}, who reads them first. They are only shared with the care team once the manager has approved them. Please do not include medical details or anything private you would not want the team to know.
-    </p>
+    <p style="color:#374151;font-size:15px;line-height:1.6;margin:0 0 16px">${how}</p>
+    <p style="color:#374151;font-size:15px;line-height:1.6;margin:0 0 22px">${privacy}</p>
     ${residentButton(opts.link, 'Tell us about ' + opts.residentName)}
     <p style="color:#6b7280;font-size:13px;line-height:1.6;margin:0">This link is just for you and stops working after ${opts.days} days. If you were not expecting this email, you can ignore it.</p>
     ${emailFooter(opts.homeName)}
@@ -2478,19 +2503,32 @@ export async function sendResidentFamilySubmissionEmail(opts: {
 
 /** A friendly, plain reminder to a family contact with a fresh private link and a one click stop link. Throws on a send failure so the caller can retry later. */
 export async function sendResidentFamilyReminderEmail(opts: {
-  to: string; inviteeName: string; residentName: string; homeName: string; link: string; stopLink: string; days: number
+  to: string; inviteeName: string; residentName: string; homeName: string; link: string; stopLink: string; days: number; tenantId?: string | null; senderUserId?: string | null
 }): Promise<void> {
   ensureInitialised()
   if (!process.env.SENDGRID_API_KEY) { console.warn('[email] SENDGRID_API_KEY not set, skipping family reminder'); return }
   const c = reminderCopy({ residentName: opts.residentName, homeName: opts.homeName, days: opts.days })
   const first = (opts.inviteeName || '').trim().split(' ')[0] || 'there'
+  const stop = `<p style="color:#6b7280;font-size:13px;line-height:1.6;margin:0">${escResident(c.stopLead)} <a href="${escResident(opts.stopLink)}" style="color:${PURPLE_DARK}">${escResident(c.stop)}</a></p>`
+  const person = await residentPersonMessage({
+    tenantId: opts.tenantId, actorUserId: opts.senderUserId,
+    headline: () => c.subject,
+    intro: `Hello ${first}. ${c.intro}`,
+    bodyHtml: `<p style="color:#374151;font-size:15px;line-height:1.6;margin:0 0 14px">${escResident(c.review)}</p>` + stop,
+    button: { label: c.button, href: opts.link },
+    footerNote: a => `You received this because ${a.name} at ${opts.homeName} invited you through CareStream. ${c.expiry}`,
+  })
+  if (person) {
+    await sgMail.send({ to: opts.to, from: person.from, subject: c.subject, html: person.html, trackingSettings: { clickTracking: { enable: false, enableText: false } } })
+    return
+  }
   const html = emailWrapper(`
     <p style="color:${NEUTRAL_DARK};font-size:15px;margin:0 0 16px">Hello ${escResident(first)},</p>
     <p style="color:#374151;font-size:15px;line-height:1.6;margin:0 0 16px">${escResident(c.intro)}</p>
     <p style="color:#374151;font-size:15px;line-height:1.6;margin:0 0 22px">${escResident(c.review)}</p>
     ${residentButton(opts.link, c.button)}
     <p style="color:#6b7280;font-size:13px;line-height:1.6;margin:0 0 16px">${escResident(c.expiry)}</p>
-    <p style="color:#6b7280;font-size:13px;line-height:1.6;margin:0">${escResident(c.stopLead)} <a href="${escResident(opts.stopLink)}" style="color:${PURPLE_DARK}">${escResident(c.stop)}</a></p>
+    ${stop}
     ${emailFooter(opts.homeName)}
   `)
   await sgMail.send({ to: opts.to, from: residentFrom('CareStream'), subject: c.subject, html, trackingSettings: { clickTracking: { enable: false, enableText: false } } })

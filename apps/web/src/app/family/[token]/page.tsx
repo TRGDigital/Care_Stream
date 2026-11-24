@@ -5,7 +5,7 @@
 
 import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
-import { CheckCircle2, Heart, Info, Loader2, LinkIcon } from 'lucide-react'
+import { Camera, CheckCircle2, Heart, Info, Loader2, LinkIcon, PenLine, Video as VideoIcon } from 'lucide-react'
 import { getFamilyForm, submitFamilyForm, type FamilyForm } from '@/lib/residents-api'
 import { PhotoBox } from './photo-box'
 import { VideoBox } from './video-box'
@@ -21,6 +21,28 @@ function Shell({ children }: { children: React.ReactNode }) {
       </div>
       <div className="mx-auto max-w-xl">{children}</div>
     </main>
+  )
+}
+
+// Jump buttons under the introduction: the page is long, and a family member who only wants to add a photo should not have to scroll past the questions.
+function JumpButtons({ items }: { items: Array<{ id: string; label: string; icon: React.ReactNode }> }) {
+  function go(id: string) {
+    const el = document.getElementById(id)
+    if (!el) return
+    const calm = typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+    el.scrollIntoView({ behavior: calm ? 'auto' : 'smooth', block: 'start' })
+    window.setTimeout(() => { try { (el.querySelector('textarea,input,button') as HTMLElement | null)?.focus({ preventScroll: true }) } catch { /* ignore */ } }, calm ? 0 : 450)
+  }
+  if (items.length < 2) return null
+  return (
+    <nav aria-label="Jump to a part of this page" className="flex flex-wrap gap-2">
+      {items.map(i => (
+        <button key={i.id} type="button" onClick={() => go(i.id)}
+          className="inline-flex min-h-[48px] flex-1 items-center justify-center gap-2 rounded-xl border border-teal bg-white px-4 py-2.5 text-base font-semibold text-teal hover:bg-teal/5 focus:outline-none focus:ring-2 focus:ring-teal/30">
+          {i.icon}{i.label}
+        </button>
+      ))}
+    </nav>
   )
 }
 
@@ -132,6 +154,13 @@ export default function FamilyFormPage() {
           <p className="mt-3 rounded-xl bg-neutral-light px-4 py-3 text-sm leading-relaxed text-neutral-dark">Your answers go to the manager at {home}, who checks them before the care team can see them. Please do not include medical or private financial details.</p>
         </div>
 
+        <JumpButtons items={[
+          { id: 'fam-written', label: 'Written answers', icon: <PenLine size={18} aria-hidden="true" /> },
+          ...(form.photos_enabled ? [{ id: 'fam-photos', label: 'Upload photos', icon: <Camera size={18} aria-hidden="true" /> }] : []),
+          ...(form.videos_enabled ? [{ id: 'fam-video', label: 'Upload a video', icon: <VideoIcon size={18} aria-hidden="true" /> }] : []),
+        ]} />
+
+        <div id="fam-written" className="scroll-mt-4 space-y-5">
         <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm space-y-4">
           <div>
             <label htmlFor="fam-name" className="mb-1 block text-base font-medium text-neutral-dark">Your name</label>
@@ -156,14 +185,16 @@ export default function FamilyFormPage() {
           </div>
         ))}
 
+        </div>
+
         {form.photos_enabled && (
-          <PhotoBox token={token} resident={resident} home={home} initial={form.photos ?? []} max={form.max_photos ?? 5} maxMb={form.max_photo_mb ?? 5}
-            captionMax={form.caption_max ?? 140} onCount={setPhotoCount} />
+          <div id="fam-photos" className="scroll-mt-4"><PhotoBox token={token} resident={resident} home={home} initial={form.photos ?? []} max={form.max_photos ?? 5} maxMb={form.max_photo_mb ?? 5}
+            captionMax={form.caption_max ?? 140} onCount={setPhotoCount} /></div>
         )}
 
         {form.videos_enabled && (
-          <VideoBox token={token} resident={resident} home={home} initial={form.videos ?? []} max={form.max_videos ?? 5} maxSeconds={form.max_video_seconds ?? 60}
-            maxMb={form.max_video_mb ?? 150} titleMax={form.video_title_max ?? 60} onCount={setVideoCount} onBusy={setVideoBusy} />
+          <div id="fam-video" className="scroll-mt-4"><VideoBox token={token} resident={resident} home={home} initial={form.videos ?? []} max={form.max_videos ?? 5} maxSeconds={form.max_video_seconds ?? 60}
+            maxMb={form.max_video_mb ?? 150} titleMax={form.video_title_max ?? 60} onCount={setVideoCount} onBusy={setVideoBusy} /></div>
         )}
 
         {error && <p role="alert" className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-base text-red-700">{error}</p>}

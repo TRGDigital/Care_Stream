@@ -178,7 +178,7 @@ export async function runFamilyReminders(opts: { now?: Date; dryRun?: boolean } 
       try {
         await sendResidentFamilyReminderEmail({
           to: invite.email, inviteeName: invite.name, residentName: resident.preferred_name || resident.first_name, homeName: homeName.get(s.tenant_id)!,
-          link: `${siteUrl()}/family/${token}`, stopLink: `${siteUrl()}/family/stop/${stopToken}`, days: INVITE_DAYS,
+          tenantId: s.tenant_id, senderUserId: invite.created_by ?? null, link: `${siteUrl()}/family/${token}`, stopLink: `${siteUrl()}/family/stop/${stopToken}`, days: INVITE_DAYS,
         })
       } catch (e: any) {
         await db.residentReminderSetting.update({ where: { id: s.id }, data: { last_sent_at: s.last_sent_at } }).catch(() => undefined)   // try again tomorrow

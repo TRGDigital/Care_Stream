@@ -25,6 +25,7 @@ import { pageCache, persistentCache } from '@/lib/page-cache'
 import { TRAINING_ONLY_NAV, POLICIES_ONLY_NAV, FREE_NAV, NOT_FOR_SHOP_TIERS } from '@/lib/admin-search/access'
 import { AdminSearch } from '@/components/admin/admin-search'
 import { SupportMenu } from '@/components/admin/support-menu'
+import { SupportChatWidget } from '@/components/support/chat-widget'
 
 const NAV_SECTIONS = [
   {
@@ -331,6 +332,8 @@ export function AdminShell({ userName, tenantName, children }: AdminShellProps) 
           {children}
         </main>
       </div>
+
+      <SupportChatWidget />
 
       {/* Guided tour: auto-opens once for brand-new tenants, replayable via the
           sidebar "Take the tour" button on any page. */}

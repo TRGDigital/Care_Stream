@@ -3,6 +3,7 @@
 // The support menu in the admin header, for every plan: help centre, release notes, report a bug, suggest a feature, and how to get in touch.
 // Closes on Escape, on a click outside and when the page changes; focus goes back to the button. Bug and feature forms post to /feature-requests.
 
+import { OPEN_EVENT } from '@/lib/support-chat-widget'
 import { useCallback, useEffect, useId, useRef, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
@@ -173,7 +174,7 @@ export function SupportMenu() {
             </div>
           </div>
           <div className="grid grid-cols-2 border-t border-gray-200 bg-neutral-light/60">
-            <Link href="/support/chat" onClick={() => setOpen(false)} className="flex items-center justify-center gap-2 px-3 py-3 text-sm font-semibold text-neutral-dark hover:bg-gray-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-teal/40"><MessageCircle size={16} aria-hidden="true" /> Live Chat</Link>
+            <button type="button" onClick={() => { setOpen(false); window.dispatchEvent(new CustomEvent(OPEN_EVENT)) }} className="flex items-center justify-center gap-2 px-3 py-3 text-sm font-semibold text-neutral-dark hover:bg-gray-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-teal/40"><MessageCircle size={16} aria-hidden="true" /> Live Chat</button>
             <a href={mailtoSupport(ref)} className="flex items-center justify-center gap-2 border-l border-gray-200 px-3 py-3 text-sm font-semibold text-neutral-dark hover:bg-gray-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-teal/40"><Mail size={16} aria-hidden="true" /> Email Support</a>
           </div>
         </div>

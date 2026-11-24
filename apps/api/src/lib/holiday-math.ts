@@ -11,7 +11,10 @@ export const MAX_HOURS_PER_DAY = 13
 export const MAX_DAYS_PER_REQUEST = 60
 
 export type Unit = 'hours' | 'days'
-export interface DayRow { day: string; hours: number }
+/** What part of the day is booked: the whole shift, the morning half, the afternoon half, or part of a day in hours of the person's own choosing. */
+export type Part = 'full' | 'am' | 'pm' | 'part'
+export interface DayRow { day: string; hours: number; part?: Part }
+export const normalisePart = (v: unknown): Part => (v === 'am' || v === 'pm' || v === 'part' ? v : 'full')
 
 // ── Dates ──────────────────────────────────────────────────────────────────────────────────
 const pad = (n: number) => String(n).padStart(2, '0')
@@ -62,7 +65,8 @@ export function monthsOfYear(r: YearRange): MonthBucket[] {
 // ── Balances ───────────────────────────────────────────────────────────────────────────────
 const round2 = (n: number) => Math.round(n * 100) / 100
 /** What one approved day counts for: its hours, or 1 when the person is measured in days. */
-export const valueOf = (d: DayRow, unit: Unit) => (unit === 'days' ? 1 : d.hours)
+export const valueOf = (d: DayRow, unit: Unit) => (unit === 'days' ? (d.part && d.part !== 'full' ? 0.5 : 1) : d.hours)   // AM, PM and part days count half a day for people measured in days
+export const valueOfAll = (days: DayRow[], unit: Unit) => round2(days.reduce((s, d) => s + valueOf(d, unit), 0))
 
 export interface Balance {
   unit: Unit
@@ -132,16 +136,23 @@ export function validateDays(input: RequestInput['days'], opts: { today: string;
   if (!Array.isArray(input) || input.length === 0) return { ok: false, error: 'Please choose at least one day.' }
   if (input.length > MAX_DAYS_PER_REQUEST) return { ok: false, error: `A request can cover up to ${MAX_DAYS_PER_REQUEST} days. Please split it.` }
   const seen = new Set<string>(); const days: DayRow[] = []
-  for (const r of input) {
+  for (const r of input as Array<{ day: unknown; hours: unknown; part?: unknown }>) {
     if (!isYmd(r?.day)) return { ok: false, error: 'One of the dates is not valid.' }
+    const part = normalisePart(r?.part)
     const hours = Number(r.hours)
-    if (!Number.isInteger(hours) || hours < 1 || hours > MAX_HOURS_PER_DAY) return { ok: false, error: `Hours for each day must be a whole number from 1 to ${MAX_HOURS_PER_DAY}.` }
+    if (part === 'full') {
+      if (!Number.isInteger(hours) || hours < 1 || hours > MAX_HOURS_PER_DAY) return { ok: false, error: `Hours for each day must be a whole number from 1 to ${MAX_HOURS_PER_DAY}.` }
+    } else if (!isFinite(hours) || hours <= 0 || hours > MAX_HOURS_PER_DAY || Math.round(hours * 100) / 100 !== hours) {
+      return { ok: false, error: `Hours for part of a day must be more than 0 and no more than ${MAX_HOURS_PER_DAY}.` }
+    } else if ((part === 'am' || part === 'pm') && Math.round(hours * 2) / 2 !== hours) {
+      return { ok: false, error: 'The morning or afternoon of a day must be a whole or half hour.' }
+    }
     if (seen.has(r.day)) return { ok: false, error: 'A date appears twice.' }
     if (!opts.allowPast && r.day < addDays(opts.today, -1)) return { ok: false, error: 'You cannot request a day that has already passed. Ask your manager to add it.' }
-    seen.add(r.day); days.push({ day: r.day, hours })
+    seen.add(r.day); days.push({ day: r.day, hours, ...(part === 'full' ? {} : { part }) })
   }
   days.sort((a, b) => a.day.localeCompare(b.day))
-  return { ok: true, days, total_hours: days.reduce((s, d) => s + d.hours, 0) }
+  return { ok: true, days, total_hours: round2(days.reduce((s, d) => s + d.hours, 0)) }
 }
 
 /** The default hours for a booked day: contracted hours a week over 5, rounded, kept between 1 and 13 (8 when we do not know). */
@@ -150,8 +161,22 @@ export function defaultDayHours(contractedPerWeek: number | null | undefined): n
   return Math.min(MAX_HOURS_PER_DAY, Math.max(1, Math.round(contractedPerWeek / 5)))
 }
 
+// ── Part days ──────────────────────────────────────────────────────────────────────────────
+/** A person's usual shift in hours: their contracted hours a week over five working days (8 when we do not know). */
+export const shiftHoursFor = (contractedPerWeek: number | null | undefined): number => defaultDayHours(contractedPerWeek)
+/** The morning or the afternoon: half of a shift, to the nearest half hour (never below half an hour). */
+export const halfShift = (shift: number): number => Math.max(0.5, Math.round((shift / 2) * 2) / 2)
+/** What each choice for a day is worth in hours, capped at what is left to book (null cap = no limit, for an approver). */
+export function dayChoices(shift: number, cap: number | null): { full: number; am: number; pm: number; last: number | null } {
+  const c = cap == null ? Infinity : Math.max(0, cap)
+  const half = halfShift(shift)
+  // "Use my last X hours": when what is left is less than a full shift, offer exactly that, even when it is not a whole or half hour (for example 2.4).
+  const last = cap != null && c > 0 && c < shift ? round2(c) : null
+  return { full: Math.min(shift, c), am: Math.min(half, c), pm: Math.min(half, c), last }
+}
+
 // ── Clashes ────────────────────────────────────────────────────────────────────────────────
-export interface OffRow { day: string; user_id: string; name: string; status: 'approved' | 'pending'; hours: number }
+export interface OffRow { day: string; user_id: string; name: string; status: 'approved' | 'pending'; hours: number; part?: Part }
 export interface DayClash { day: string; approved: Array<{ user_id: string; name: string; hours: number }>; pending: Array<{ user_id: string; name: string; hours: number }>; approved_count: number; over_limit: boolean }
 
 /** For each requested day: who else is off (approved) and who else has asked (pending), and whether approving would go over the limit of people off at once. */

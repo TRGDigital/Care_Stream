@@ -3965,6 +3965,9 @@ model HolidayRequest {
   @@map("holiday_requests")
 }
 
+// NOTE: columns added by prisma/sql/2026-11-25_holiday_balance_rules.sql (holiday_days.part, holiday_requests.over_allowance and over_allowance_note,
+// holiday_settings.blocked_dates) are deliberately NOT modelled here. They are read and written with plain SQL in lib/holiday-data.ts so that every query on
+// these models keeps working before that SQL has been run.
 model HolidayDay {
   id         String   @id @default(uuid())
   request_id String

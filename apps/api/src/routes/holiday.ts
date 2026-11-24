@@ -13,12 +13,14 @@ import { requireAdmin } from '../middleware/auth'
 import { holidayPilotEnabled } from '../lib/holiday-pilot'
 import { staffPhotoUrls } from '../lib/staff-photos'
 import {
-  addDays, bankMultiplier, BANK_MULTIPLIERS, clashesFor, defaultDayHours, parseImportCsv, parseMatrixCsv, looksLikeMatrix, nameKey, ukToday, validateDays, yearContaining, yearRange, MAX_HOURS_PER_DAY, type DayRow, type OffRow,
+  addDays, bankMultiplier, BANK_MULTIPLIERS, clashesFor, defaultDayHours, parseImportCsv, parseMatrixCsv, looksLikeMatrix, nameKey, ukToday, validateDays, yearContaining, yearRange, MAX_HOURS_PER_DAY, normalisePart, type DayRow, type OffRow, type Part,
 } from '../lib/holiday-math'
 import {
-  approvedDays, approversFor, audit, bankHolidaysWithPay, buildMatrix, canDecide, holidayTablesReady, isMissingTable, loadRoster, loadSettings, monthTotals, personBalance, postHubMessage,
+  approvedDays, approversFor, audit, bankHolidaysWithPay, buildMatrix, canDecide, checkRequest, holidayTablesReady, isMissingTable, loadOver, loadPartsForRequests, loadRoster, loadSettings, monthTotals, othersOnDays,
+  personBalance, postHubMessage, saveBlockedDates, saveOver, savePartsFor, shiftInfo, withUserLock,
   type HolidaySettingsView,
 } from '../lib/holiday-data'
+import { cleanBlocked, gate, reserve, type Locker, type RuleIssue } from '../lib/holiday-rules'
 import { holidayMessage, hoursLabel, HOLIDAY_NOTE_MAX, type HolidayEmailKind } from '../services/email/holiday-content'
 import { sendHolidayEmail } from '../services/email/outbound'
 
@@ -57,12 +59,14 @@ export async function pilotGate(req: Request, res: Response, next: NextFunction)
 holidayRouter.use(pilotGate)
 
 // ── Shapes ───────────────────────────────────────────────────────────────────────────────
-function shapeRequest(r: any, days: any[], names: Map<string, string>) {
-  const ds = days.filter(d => d.request_id === r.id).map(d => ({ day: ymd(d.day), hours: Number(d.hours) })).sort((a, b) => a.day.localeCompare(b.day))
+function shapeRequest(r: any, days: any[], names: Map<string, string>, parts: Map<string, Part>, over: Map<string, { over: boolean; note: string | null }>) {
+  const ds = days.filter(d => d.request_id === r.id).map(d => { const part = parts.get(`${r.id}|${ymd(d.day)}`); return { day: ymd(d.day), hours: Number(d.hours), ...(part ? { part } : {}) } }).sort((a, b) => a.day.localeCompare(b.day))
+  const o = over.get(r.id)
   return {
     id: r.id, user_id: r.user_id, name: names.get(r.user_id) ?? 'Former member of staff', status: r.status, total_hours: Number(r.total_hours), total_days: r.total_days,
     note: r.note ?? null, decision_note: r.decision_note ?? null, source: r.source, requested_at: iso(r.requested_at), decided_by_name: r.decided_by_name ?? null, decided_at: iso(r.decided_at),
     days: ds, from: ds[0]?.day ?? null, to: ds[ds.length - 1]?.day ?? null,
+    over_allowance: !!o?.over, exception_note: o?.note ?? null,
   }
 }
 async function loadRequests(tenantId: string, where: Record<string, unknown>, take = 200) {
@@ -70,24 +74,22 @@ async function loadRequests(tenantId: string, where: Record<string, unknown>, ta
   const days = reqs.length ? await p().holidayDay.findMany({ where: { request_id: { in: reqs.map((r: any) => r.id) } } }) : []
   const users = await p().user.findMany({ where: { id: { in: [...new Set(reqs.map((r: any) => r.user_id))] as string[] }, tenant_id: tenantId }, select: { id: true, name: true } })
   const names = new Map<string, string>(users.map((u: any) => [u.id, u.name]))
-  return reqs.map((r: any) => shapeRequest(r, days, names))
+  const ids = reqs.map((r: any) => r.id)
+  const [parts, over] = await Promise.all([loadPartsForRequests(ids), loadOver(ids)])
+  return reqs.map((r: any) => shapeRequest(r, days, names, parts, over))
 }
 const labelFor = (unit: 'hours' | 'days', hours: number, days: number) => hoursLabel(hours, unit, days)
 
 /** Who else is off (approved) or has asked (pending) on the given days, for the approver's decision. */
-async function othersFor(tenantId: string, days: string[], excludeRequestId?: string): Promise<OffRow[]> {
-  if (!days.length) return []
-  const rows = await p().holidayDay.findMany({ where: { tenant_id: tenantId, status: { in: ['approved', 'pending'] }, day: { in: days.map(dayDate) }, ...(excludeRequestId ? { request_id: { not: excludeRequestId } } : {}) }, select: { user_id: true, day: true, hours: true, status: true } })
-  const users = await p().user.findMany({ where: { id: { in: [...new Set(rows.map((r: any) => r.user_id))] as string[] }, tenant_id: tenantId }, select: { id: true, name: true } })
-  const names = new Map<string, string>(users.map((u: any) => [u.id, u.name]))
-  return rows.map((r: any) => ({ day: ymd(r.day), user_id: r.user_id, name: names.get(r.user_id) ?? 'A colleague', status: r.status, hours: Number(r.hours) }))
-}
+async function othersFor(tenantId: string, days: string[], excludeRequestId?: string): Promise<OffRow[]> { return othersOnDays(tenantId, days, undefined, excludeRequestId) }
 
 async function orgName(tenantId: string) { return (await p().tenant.findUnique({ where: { id: tenantId }, select: { name: true } }))?.name ?? 'Your service' }
 
 /** Email and hub message for a decision or a change (never throws). */
-async function tellPerson(o: { tenantId: string; kind: Exclude<HolidayEmailKind, 'requested'>; request: any; days: DayRow[]; approver: { id: string; name: string }; unit: 'hours' | 'days'; note: string | null }) {
+const EXCEPTION_LINE = 'This was agreed as an exception to your usual allowance.'
+async function tellPerson(o: { tenantId: string; kind: Exclude<HolidayEmailKind, 'requested'>; request: any; days: DayRow[]; approver: { id: string; name: string }; unit: 'hours' | 'days'; note: string | null; exception?: boolean }) {
   try {
+    if (o.exception && (o.kind === 'approved' || o.kind === 'edited')) o = { ...o, note: [o.note, EXCEPTION_LINE].filter(Boolean).join(' ') }
     const person = await p().user.findFirst({ where: { id: o.request.user_id, tenant_id: o.tenantId }, select: { id: true, name: true, email: true } })
     if (!person) return
     const total = labelFor(o.unit, o.days.reduce((s, d) => s + d.hours, 0), o.days.length)
@@ -107,12 +109,13 @@ holidayRouter.get('/me', async (req: Request, res: Response) => {
     if (!roster) { ok(res, { tracked: false }); return }
     const today = ukToday()
     const year = Number(req.query.year) || yearContaining(today, settings.year_start.month, settings.year_start.day)
-    const { range, balance } = await personBalance(tenantId, roster, year, settings, today)
+    const { range, balance, pending, available } = await personBalance(tenantId, roster, year, settings, today)
     const requests = await loadRequests(tenantId, { user_id: userId }, 100)
     const upcoming = requests.filter(r => r.status === 'approved').flatMap(r => r.days.filter(d => d.day > today).map(d => ({ ...d, request_id: r.id }))).sort((a, b) => a.day.localeCompare(b.day)).slice(0, 30)
     ok(res, {
       tracked: true, unit: roster.unit, year, label: range.label, from: range.from, to: range.to, balance, default_hours: defaultDayHours(roster.contracted),
-      requests, upcoming, bank_holidays: bankHolidaysWithPay(settings, range.from, range.to), today,
+      pending, available, ...shiftInfo(roster.contracted), max_off: settings.max_off, blocked_dates: settings.blocked_dates, carry_over: settings.carry_over,
+      requests, upcoming, bank_holidays: bankHolidaysWithPay(settings, range.from, yearRange(year + 1, settings.year_start.month, settings.year_start.day).to), today,
     })
   } catch (e) { isMissingTable(e) ? notReady(res) : err(res, 'ERROR', 'Could not load your holidays.', 500) }
 })
@@ -122,15 +125,51 @@ async function overlapError(tenantId: string, userId: string, days: string[], ex
   return rows.length ? `You already have holiday on ${rows.map((r: any) => ymd(r.day)).sort().slice(0, 3).join(', ')}${rows.length > 3 ? ' and more' : ''}.` : null
 }
 
-async function createRequest(o: { tenantId: string; userId: string; days: DayRow[]; note: string | null; source: 'hub' | 'admin' | 'import'; status: 'pending' | 'approved'; actor: { id: string; name: string } }) {
+async function createRequest(o: { tenantId: string; userId: string; days: DayRow[]; note: string | null; source: 'hub' | 'admin' | 'import'; status: 'pending' | 'approved'; actor: { id: string; name: string }; over?: { over: boolean; note: string | null } }) {
   const total = o.days.reduce((s, d) => s + d.hours, 0)
   const r = await p().holidayRequest.create({ data: {
     tenant_id: o.tenantId, user_id: o.userId, status: o.status, total_hours: total, total_days: o.days.length, note: o.note, source: o.source, created_by: o.actor.id,
     ...(o.status === 'approved' ? { decided_by: o.actor.id, decided_by_name: o.actor.name, decided_at: new Date() } : {}),
   } })
   await p().holidayDay.createMany({ data: o.days.map(d => ({ request_id: r.id, tenant_id: o.tenantId, user_id: o.userId, day: dayDate(d.day), hours: d.hours, status: o.status })), skipDuplicates: true })
+  await savePartsFor(r.id, o.days)
+  if (o.over) await saveOver(r.id, o.over.over, o.over.note)
   return r
 }
+
+// ── The rules (lib/holiday-rules.ts): balance, year boundary, people off, blocked dates ──────────
+const locker: Locker = { lock: (key, fn) => withUserLock(key, fn) }
+/** The issues for days someone wants, including a day they already have. */
+async function issuesFor(tenantId: string, person: Awaited<ReturnType<typeof loadRoster>>[number], days: DayRow[], settings: HolidaySettingsView, exceptRequestId?: string): Promise<RuleIssue[]> {
+  const dup = await overlapError(tenantId, person.id, days.map(d => d.day), exceptRequestId)
+  const issues = await checkRequest({ tenantId, person, days, settings, today: ukToday(), excludeRequestId: exceptRequestId })
+  return dup ? [{ code: 'overlap' as const, message: dup, overridable: false }, ...issues] : issues
+}
+/** The answer when the rules say no: 409 with every issue, and whether an approver could still go ahead with a reason. */
+function refuse(res: Response, g: { reason: 'rules' | 'needs_note' | 'refused'; issues: RuleIssue[]; canOverride: boolean }) {
+  const only = g.issues.length === 1 ? g.issues[0] : null
+  const code = g.reason === 'needs_note' ? 'NEEDS_NOTE' : only?.code === 'overlap' ? 'OVERLAP' : 'RULES'
+  const message = g.reason === 'needs_note' ? 'Please write a reason for allowing this exception.' : g.issues.map(i => i.message).join(' ')
+  res.status(409).json({ success: false, error: { code, message, issues: g.issues, can_override: g.canOverride } })
+}
+const overrideOf = (req: Request) => ({ override: req.body?.override === true, note: note(req.body?.override_note) })
+
+// Check a request without saving it: the hub form asks while the person is choosing days. A person checks their own; an approver can check for someone else.
+holidayRouter.post('/requests/check', async (req: Request, res: Response) => {
+  const tenantId = tenantOf(req), userId = userOf(req)
+  try {
+    const settings = await loadSettings(tenantId)
+    const roster = await loadRoster(tenantId)
+    const decider = await canDecide(tenantId, userId, roleOf(req), settings)
+    const targetId = decider && req.body?.user_id ? String(req.body.user_id) : userId
+    const person = roster.find(r => r.id === targetId)
+    if (!person) { err(res, 'FORBIDDEN', 'Your holiday is not tracked here.', 403); return }
+    const v = validateDays(req.body?.days, { today: ukToday(), allowPast: decider && targetId !== userId })
+    if (!v.ok) { err(res, 'INVALID', v.error, 400); return }
+    const issues = await issuesFor(tenantId, person, v.days, settings, decider && req.body?.exclude_request_id ? String(req.body.exclude_request_id) : undefined)
+    ok(res, { ok: issues.length === 0, issues, can_override: decider && issues.length > 0 && issues.every(i => i.overridable) })
+  } catch (e) { isMissingTable(e) ? notReady(res) : err(res, 'ERROR', 'Could not check that request.', 500) }
+})
 
 holidayRouter.post('/requests', async (req: Request, res: Response) => {
   const tenantId = tenantOf(req), userId = userOf(req)
@@ -141,10 +180,12 @@ holidayRouter.post('/requests', async (req: Request, res: Response) => {
     if (!me) { err(res, 'FORBIDDEN', 'Your holiday is not tracked here.', 403); return }
     const v = validateDays(req.body?.days, { today: ukToday() })
     if (!v.ok) { err(res, 'INVALID', v.error, 400); return }
-    const clash = await overlapError(tenantId, userId, v.days.map(d => d.day))
-    if (clash) { err(res, 'OVERLAP', clash, 409); return }
     const actor = { id: userId, name: me.name }
-    const r = await createRequest({ tenantId, userId, days: v.days, note: note(req.body?.note), source: 'hub', status: 'pending', actor })
+    // Staff can never go over: the check and the save happen under one lock for this person, so two requests sent together cannot both pass.
+    const out = await reserve(locker, userId, () => issuesFor(tenantId, me, v.days, settings), { approver: false, override: false, note: null },
+      () => createRequest({ tenantId, userId, days: v.days, note: note(req.body?.note), source: 'hub', status: 'pending', actor }))
+    if (!out.ok) { refuse(res, out); return }
+    const r = out.value
     audit(tenantId, userId, 'holiday_requested', r.id, { days: v.days.length, hours: v.total_hours })
     // Tell the people who decide (never blocks the request).
     void (async () => {
@@ -188,7 +229,7 @@ holidayRouter.get('/approvals', requireDecider, async (req: Request, res: Respon
     const unit = new Map(roster.map(r => [r.id, r.unit]))
     const out = []
     for (const r of list) {
-      const others = status === 'pending' || status === 'approved' ? await othersFor(tenantId, r.days.map(d => d.day), r.id) : []
+      const others = status === 'pending' || status === 'approved' ? (await othersFor(tenantId, r.days.map(d => d.day), r.id)).filter(o => o.user_id !== r.user_id) : []
       out.push({ ...r, unit: unit.get(r.user_id) ?? 'hours', clashes: clashesFor({ days: r.days.map(d => d.day), userId: r.user_id, others, maxOff: settings.max_off }).filter(c => c.approved.length || c.pending.length || c.over_limit) })
     }
     const ids = new Set<string>(out.map((r: any) => r.user_id))
@@ -205,7 +246,8 @@ async function unitOf(tenantId: string, userId: string): Promise<'hours' | 'days
 }
 async function daysOfRequest(requestId: string): Promise<DayRow[]> {
   const rows = await p().holidayDay.findMany({ where: { request_id: requestId }, orderBy: { day: 'asc' } })
-  return rows.map((d: any) => ({ day: ymd(d.day), hours: Number(d.hours) }))
+  const parts = await loadPartsForRequests([requestId])
+  return rows.map((d: any) => { const part = parts.get(`${requestId}|${ymd(d.day)}`); return { day: ymd(d.day), hours: Number(d.hours), ...(part ? { part } : {}) } })
 }
 
 holidayRouter.post('/requests/:id/decision', requireDecider, async (req: Request, res: Response) => {
@@ -220,15 +262,35 @@ holidayRouter.post('/requests/:id/decision', requireDecider, async (req: Request
     const actor = await actorOf(req)
     const n = note(req.body?.note)
     const status = decision === 'approve' ? 'approved' : 'rejected'
-    await p().holidayRequest.update({ where: { id: r.id }, data: { status, decision_note: n, decided_by: actor.id, decided_by_name: actor.name, decided_at: new Date() } })
-    await p().holidayDay.updateMany({ where: { request_id: r.id }, data: { status } })
-    audit(tenantId, actor.id, decision === 'approve' ? 'holiday_approved' : 'holiday_rejected', r.id, { for: r.user_id })
-    await tellPerson({ tenantId, kind: decision === 'approve' ? 'approved' : 'rejected', request: r, days: await daysOfRequest(r.id), approver: actor, unit: await unitOf(tenantId, r.user_id), note: n })
+    const days = await daysOfRequest(r.id)
+    let exception = false
+    if (decision === 'approve') {
+      // The balance, the people off and the blocked dates are checked AGAIN now: things can change between the request and the decision.
+      const settings = await loadSettings(tenantId)
+      const person = (await loadRoster(tenantId)).find(x => x.id === r.user_id)
+      const ov = overrideOf(req)
+      const out = await reserve(locker, r.user_id, async () => (person ? issuesFor(tenantId, person, days, settings, r.id) : []), { approver: true, override: ov.override, note: ov.note },
+        async g => {
+          await p().holidayRequest.update({ where: { id: r.id }, data: { status, decision_note: n, decided_by: actor.id, decided_by_name: actor.name, decided_at: new Date() } })
+          await p().holidayDay.updateMany({ where: { request_id: r.id }, data: { status } })
+          if (g.override) await saveOver(r.id, g.overBalance, ov.note)
+          return g
+        })
+      if (!out.ok) { refuse(res, out); return }
+      exception = out.gate.overBalance
+      if (out.gate.override) audit(tenantId, actor.id, 'holiday_approved', r.id, { for: r.user_id, exception: out.issues.map(i => i.code), exception_note: ov.note })
+      else audit(tenantId, actor.id, 'holiday_approved', r.id, { for: r.user_id })
+    } else {
+      await p().holidayRequest.update({ where: { id: r.id }, data: { status, decision_note: n, decided_by: actor.id, decided_by_name: actor.name, decided_at: new Date() } })
+      await p().holidayDay.updateMany({ where: { request_id: r.id }, data: { status } })
+      audit(tenantId, actor.id, 'holiday_rejected', r.id, { for: r.user_id })
+    }
+    await tellPerson({ tenantId, kind: decision === 'approve' ? 'approved' : 'rejected', request: r, days, approver: actor, unit: await unitOf(tenantId, r.user_id), note: n, exception })
     ok(res, { id: r.id, status })
   } catch (e) { isMissingTable(e) ? notReady(res) : err(res, 'ERROR', 'Could not save the decision.', 500) }
 })
 
-// Change an approved booking (dates or hours).
+// Change an approved (or pending) booking: dates, hours or parts of days. Checked again against the allowance and the other rules.
 holidayRouter.patch('/requests/:id', requireDecider, async (req: Request, res: Response) => {
   const tenantId = tenantOf(req)
   try {
@@ -237,15 +299,23 @@ holidayRouter.patch('/requests/:id', requireDecider, async (req: Request, res: R
     if (r.status !== 'approved' && r.status !== 'pending') { err(res, 'NOT_EDITABLE', 'Only pending or approved holiday can be changed.', 409); return }
     const v = validateDays(req.body?.days, { today: ukToday(), allowPast: true })
     if (!v.ok) { err(res, 'INVALID', v.error, 400); return }
-    const clash = await overlapError(tenantId, r.user_id, v.days.map(d => d.day), r.id)
-    if (clash) { err(res, 'OVERLAP', clash, 409); return }
     const actor = await actorOf(req)
     const n = note(req.body?.note)
-    await p().holidayDay.deleteMany({ where: { request_id: r.id } })
-    await p().holidayDay.createMany({ data: v.days.map(d => ({ request_id: r.id, tenant_id: tenantId, user_id: r.user_id, day: dayDate(d.day), hours: d.hours, status: r.status })) })
-    await p().holidayRequest.update({ where: { id: r.id }, data: { total_hours: v.total_hours, total_days: v.days.length, decision_note: n ?? r.decision_note } })
-    audit(tenantId, actor.id, 'holiday_edited', r.id, { for: r.user_id, days: v.days.length, hours: v.total_hours })
-    if (r.status === 'approved') await tellPerson({ tenantId, kind: 'edited', request: r, days: v.days, approver: actor, unit: await unitOf(tenantId, r.user_id), note: n })
+    const settings = await loadSettings(tenantId)
+    const person = (await loadRoster(tenantId)).find(x => x.id === r.user_id)
+    const ov = overrideOf(req)
+    const out = await reserve(locker, r.user_id, async () => (person ? issuesFor(tenantId, person, v.days, settings, r.id) : []), { approver: true, override: ov.override, note: ov.note },
+      async g => {
+        await p().holidayDay.deleteMany({ where: { request_id: r.id } })
+        await p().holidayDay.createMany({ data: v.days.map(d => ({ request_id: r.id, tenant_id: tenantId, user_id: r.user_id, day: dayDate(d.day), hours: d.hours, status: r.status })) })
+        await savePartsFor(r.id, v.days)
+        await p().holidayRequest.update({ where: { id: r.id }, data: { total_hours: v.total_hours, total_days: v.days.length, decision_note: n ?? r.decision_note } })
+        await saveOver(r.id, g.override ? g.overBalance : false, g.override ? ov.note : null)
+        return g
+      })
+    if (!out.ok) { refuse(res, out); return }
+    audit(tenantId, actor.id, 'holiday_edited', r.id, { for: r.user_id, days: v.days.length, hours: v.total_hours, ...(out.gate.override ? { exception: out.issues.map(i => i.code), exception_note: ov.note } : {}) })
+    if (r.status === 'approved') await tellPerson({ tenantId, kind: 'edited', request: r, days: v.days, approver: actor, unit: await unitOf(tenantId, r.user_id), note: n, exception: out.gate.overBalance })
     ok(res, { id: r.id, status: r.status, total_hours: v.total_hours, days: v.days.length })
   } catch (e) { isMissingTable(e) ? notReady(res) : err(res, 'ERROR', 'Could not change that booking.', 500) }
 })
@@ -296,7 +366,7 @@ holidayAdminRouter.get('/calendar', async (req: Request, res: Response) => {
     const photos = await staffPhotoUrls(tenantId, users.map((u: any) => u.id))
     ok(res, {
       month: m, max_off: settings.max_off, today: ukToday(),
-      days: rows.map(r => ({ day: r.day, user_id: r.user_id, name: names.get(r.user_id)?.name ?? 'Former member of staff', job_role: names.get(r.user_id)?.job_role ?? null, photo_url: photos.get(r.user_id) ?? null, hours: r.hours })),
+      days: rows.map(r => ({ day: r.day, user_id: r.user_id, name: names.get(r.user_id)?.name ?? 'Former member of staff', job_role: names.get(r.user_id)?.job_role ?? null, photo_url: photos.get(r.user_id) ?? null, hours: r.hours, part: r.part ?? 'full' })),
       bank_holidays: bankHolidaysWithPay(settings, from, to),
     })
   } catch (e) { isMissingTable(e) ? notReady(res) : err(res, 'ERROR', 'Could not load the calendar.', 500) }
@@ -341,7 +411,11 @@ holidayAdminRouter.put('/settings', async (req: Request, res: Response) => {
   }
   try {
     await p().holidaySettings.upsert({ where: { tenant_id: tenantId }, create: { tenant_id: tenantId, ...data }, update: data })
-    audit(tenantId, userOf(req), 'holiday_settings_changed', tenantId, { year_start: `${month}-${day}`, carry_over: data.carry_over, manager_approval: data.manager_approval, max_off: maxOff })
+    if ('blocked_dates' in b) {
+      try { await saveBlockedDates(tenantId, cleanBlocked(b.blocked_dates)) }
+      catch { err(res, 'NEEDS_SQL', 'Blocked dates need the new holiday SQL (balance rules) to be run first. Your other settings were saved.', 503); return }
+    }
+    audit(tenantId, userOf(req), 'holiday_settings_changed', tenantId, { year_start: `${month}-${day}`, carry_over: data.carry_over, manager_approval: data.manager_approval, max_off: maxOff, ...('blocked_dates' in b ? { blocked_dates: cleanBlocked(b.blocked_dates).length } : {}) })
     const s = await loadSettings(tenantId)
     ok(res, { settings: s, bank_holidays: bankHolidaysWithPay(s) })
   } catch (e) { isMissingTable(e) ? notReady(res) : err(res, 'ERROR', 'Could not save the settings.', 500) }
@@ -388,23 +462,37 @@ holidayAdminRouter.put('/staff/:userId', async (req: Request, res: Response) => 
   } catch (e) { isMissingTable(e) ? notReady(res) : err(res, 'ERROR', 'Could not save that person.', 500) }
 })
 
-// An administrator books days for someone (approved at once).
-holidayAdminRouter.post('/book', async (req: Request, res: Response) => {
+// An administrator, or a manager who decides requests, books days for someone (approved at once). Over the allowance only with the override and a reason.
+async function bookForSomeone(req: Request, res: Response) {
   const tenantId = tenantOf(req)
   try {
+    const settings = await loadSettings(tenantId)
     const roster = await loadRoster(tenantId)
     const who = roster.find(r => r.id === String(req.body?.user_id))
     if (!who) { err(res, 'NOT_FOUND', 'Staff member not found.', 404); return }
+    if (who.id === userOf(req) && roleOf(req) !== 'admin') { err(res, 'FORBIDDEN', 'You cannot book your own holiday here. Ask for it in your hub.', 403); return }
     const v = validateDays(req.body?.days, { today: ukToday(), allowPast: true })
     if (!v.ok) { err(res, 'INVALID', v.error, 400); return }
-    const clash = await overlapError(tenantId, who.id, v.days.map(d => d.day))
-    if (clash) { err(res, 'OVERLAP', clash, 409); return }
     const actor = await actorOf(req)
-    const r = await createRequest({ tenantId, userId: who.id, days: v.days, note: note(req.body?.note), source: 'admin', status: 'approved', actor })
-    audit(tenantId, actor.id, 'holiday_approved', r.id, { for: who.id, booked_by_admin: true })
-    await tellPerson({ tenantId, kind: 'approved', request: r, days: v.days, approver: actor, unit: who.unit, note: null })
+    const ov = overrideOf(req)
+    const out = await reserve(locker, who.id, () => issuesFor(tenantId, who, v.days, settings), { approver: true, override: ov.override, note: ov.note },
+      g => createRequest({ tenantId, userId: who.id, days: v.days, note: note(req.body?.note), source: 'admin', status: 'approved', actor, ...(g.override ? { over: { over: g.overBalance, note: ov.note } } : {}) }))
+    if (!out.ok) { refuse(res, out); return }
+    const r = out.value
+    audit(tenantId, actor.id, 'holiday_approved', r.id, { for: who.id, booked_by_admin: true, ...(out.gate.override ? { exception: out.issues.map(i => i.code), exception_note: ov.note } : {}) })
+    await tellPerson({ tenantId, kind: 'approved', request: r, days: v.days, approver: actor, unit: who.unit, note: null, exception: out.gate.overBalance })
     ok(res, { id: r.id, status: 'approved' }, 201)
   } catch (e) { isMissingTable(e) ? notReady(res) : err(res, 'ERROR', 'Could not book that holiday.', 500) }
+}
+holidayAdminRouter.post('/book', bookForSomeone)
+holidayRouter.post('/book', requireDecider, bookForSomeone)
+
+// Who an approver can book for (active staff, with the shift length the day choices are worked out from).
+holidayRouter.get('/people', requireDecider, async (req: Request, res: Response) => {
+  try {
+    const roster = await loadRoster(tenantOf(req))
+    ok(res, { people: roster.map(r => ({ id: r.id, name: r.name, job_role: r.job_role, unit: r.unit, ...shiftInfo(r.contracted), default_hours: defaultDayHours(r.contracted) })) })
+  } catch (e) { isMissingTable(e) ? notReady(res) : err(res, 'ERROR', 'Could not load the staff list.', 500) }
 })
 
 // ── Import of bookings that already exist (CSV: email or name, date, hours, status) ──────

@@ -26,6 +26,7 @@ type AuditEventType =
   | 'shared_tablet_created' | 'shared_tablet_connected' | 'shared_tablet_revoked' | 'shared_tablet_poster_rotated' | 'shared_tablet_session_started'   // shared tablets
   | 'staff_notification_sent' | 'staff_notification_reminded' | 'staff_notification_read'   // admin notifications to staff
   | 'staff_notification_file_uploaded' | 'staff_notification_file_removed' | 'staff_notification_file_downloaded'   // documents on a notification
+  | 'sickness_added' | 'sickness_edited' | 'sickness_ended' | 'sickness_removed' | 'sickness_report_viewed' | 'sickness_downloaded'   // sickness records (administrators only)
   | 'holiday_requested' | 'holiday_approved' | 'holiday_rejected' | 'holiday_cancelled' | 'holiday_edited' | 'holiday_removed' | 'holiday_imported' | 'holiday_settings_changed'   // holiday tracking
   | 'staff_pin_resend' | 'staff_pin_regenerate' | 'staff_pin_show' | 'staff_pins_sent_all'   // a staff member's tablet PIN
   | 'resident_created' | 'resident_updated' | 'resident_archived' | 'resident_archive_confirmed' | 'resident_retention_changed'
@@ -42,7 +43,7 @@ type AuditEventType =
   | 'platform_pushed_policy_gaps'      // TRG pushed missing policies to a client's /policies page
   | 'platform_viewed_staff_chats'      // TRG opened a staff member's chats (full text) in the platform console   // TRG looked at a staff member's activity record from the platform console
 
-type AuditEntityType = 'policy' | 'user' | 'tenant' | 'query' | 'resident' | 'audit_run' | 'shared_device' | 'staff_notification' | 'staff_notification_file' | 'holiday_request'
+type AuditEntityType = 'policy' | 'user' | 'tenant' | 'query' | 'resident' | 'audit_run' | 'shared_device' | 'staff_notification' | 'staff_notification_file' | 'holiday_request' | 'sick_spell'
 
 interface AuditParams {
   tenant_id?: string | null

@@ -23,6 +23,7 @@ import {
 import { cleanBlocked, gate, reserve, type Locker, type RuleIssue } from '../lib/holiday-rules'
 import { holidayMessage, hoursLabel, HOLIDAY_NOTE_MAX, type HolidayEmailKind } from '../services/email/holiday-content'
 import { sendHolidayEmail } from '../services/email/outbound'
+import { buildSickRouter } from './holiday-sick'
 
 const p = () => prisma as any
 const tenantOf = (req: Request): string => (req as any).user.tenant_id
@@ -355,6 +356,8 @@ holidayRouter.post('/requests/:id/remove', requireDecider, async (req: Request, 
 export const holidayAdminRouter = Router()
 holidayAdminRouter.use(pilotGate)
 holidayAdminRouter.use(requireAdmin)
+// Sickness recording: administrators only (health information). Kept in its own file; it never changes a holiday balance.
+holidayAdminRouter.use('/sick', buildSickRouter({ actorOf, tellPerson, unitOf, daysOfRequest }))
 
 holidayAdminRouter.get('/matrix', async (req: Request, res: Response) => {
   const tenantId = tenantOf(req)

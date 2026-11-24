@@ -6,11 +6,12 @@ import { useSession } from 'next-auth/react'
 import { Check, ChevronLeft, Loader2 } from 'lucide-react'
 import { AttachmentList } from '@/components/notifications/attachments'
 import { myNotifications, fmtWhen } from '@/lib/notifications-client'
+import { myLetters, type MyLetter } from '@/lib/letters-client'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
 const initials = (n: string) => n.split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0]!.toUpperCase()).join('') || '?'
 
-export function NotificationDetailView({ id, onBack }: { id: string; onBack: () => void }) {
+export function NotificationDetailView({ id, onBack, onOpenLetter }: { id: string; onBack: () => void; onOpenLetter?: (letterId: string) => void }) {
   const { data: session } = useSession()
   const token = session?.accessToken
   const viewingAs = !!(session?.user as any)?.impersonation
@@ -18,6 +19,8 @@ export function NotificationDetailView({ id, onBack }: { id: string; onBack: () 
   const [missing, setMissing] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
+  const [letter, setLetter] = useState<MyLetter | null>(null)   // when this notification is about a letter shared in my hub
+  useEffect(() => { if (token && id) myLetters.byNotification(token, id).then(r => setLetter(r.letter)).catch(() => setLetter(null)) }, [token, id])
   useEffect(() => { if (token && id) myNotifications.get(token, id).then(r => setN(r.notification)).catch(() => setMissing(true)) }, [token, id])
 
   async function markRead() {
@@ -46,6 +49,9 @@ export function NotificationDetailView({ id, onBack }: { id: string; onBack: () 
               <div className="mt-3 space-y-3 text-base leading-relaxed text-neutral-dark">
                 {n.body.split(/\n{2,}/).filter(p => p.trim()).map((p, i) => <p key={i} className="whitespace-pre-line">{p}</p>)}
               </div>
+              {letter && onOpenLetter && (
+                <button type="button" onClick={() => onOpenLetter(letter.id)} className="mt-4 inline-flex min-h-[48px] items-center gap-2 rounded-xl bg-teal px-5 py-2.5 text-base font-semibold text-white hover:bg-teal-dark">Open the letter</button>
+              )}
               {token && <AttachmentList files={n.files} token={token} pathFor={fid => `/me/notifications/${encodeURIComponent(n.id)}/files/${encodeURIComponent(fid)}`} />}
               <div className="mt-6 border-t border-gray-100 pt-5">
                 {n.read_at

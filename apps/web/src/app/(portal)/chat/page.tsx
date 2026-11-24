@@ -38,6 +38,8 @@ import { myNotifications } from '@/lib/notifications-client'
 import { MySignature } from '@/components/hub/my-signature'
 import { MyNotificationsView } from '@/components/hub/views/my-notifications-view'
 import { NotificationDetailView } from '@/components/hub/views/notification-detail-view'
+import { MyLettersView } from '@/components/hub/views/my-letters-view'
+import { myLetters } from '@/lib/letters-client'
 import { MyHolidaysView } from '@/components/hub/views/my-holidays-view'
 import { HolidayRequestsView } from '@/components/hub/views/holiday-requests-view'
 import { useHolidayMeta } from '@/lib/holiday-client'
@@ -377,8 +379,10 @@ function ChatPageInner() {
   const userId                                         = session?.user?.email ?? 'guest'
 
   const [library, setLibrary] = useState<null | 'policies' | 'chats'>(null)
-  const [view,     setView]                            = useState<'chat' | 'induction' | 'training' | 'followup' | 'audits' | 'annual' | 'diplomas' | 'cqc' | 'progress' | 'f2f' | 'supervisions' | 'policies' | 'audit-approvals' | 'actions' | 'my-incentives' | 'incentive-approvals' | 'notifications' | 'my-holidays' | 'holiday-requests'>('chat')
+  const [view,     setView]                            = useState<'chat' | 'induction' | 'training' | 'followup' | 'audits' | 'annual' | 'diplomas' | 'cqc' | 'progress' | 'f2f' | 'supervisions' | 'policies' | 'audit-approvals' | 'actions' | 'my-incentives' | 'incentive-approvals' | 'notifications' | 'my-holidays' | 'holiday-requests' | 'my-letters'>('chat')
   const [noteId, setNoteId] = useState<string | null>(null)
+  const [letterId, setLetterId] = useState<string | null>(null)
+  const [lettersMeta, setLettersMeta] = useState<{ enabled: boolean; unread: number }>({ enabled: false, unread: 0 })   // My letters shows only for people who have been sent a letter
   const [policyApprovals, setPolicyApprovals]          = useState<{ is_manager: boolean; count: number }>({ is_manager: false, count: 0 })
   const [dueReviewCount, setDueReviewCount]            = useState(0)   // policies past their review date (admins)
   const [auditApprovals, setAuditApprovals]            = useState<{ is_manager: boolean; count: number }>({ is_manager: false, count: 0 })
@@ -482,6 +486,7 @@ function ChatPageInner() {
     if (v === 'supervisions' || v === 'f2f' || v === 'induction' || v === 'training' || v === 'annual' || v === 'diplomas' || v === 'followup' || v === 'audits' || v === 'cqc' || v === 'progress' || v === 'policies' || v === 'audit-approvals' || v === 'actions' || v === 'my-incentives' || v === 'incentive-approvals') {
       if (!hubLocked(v)) setView(v)
     }
+    if (v === 'my-letters') { setView('my-letters'); setLetterId(searchParams.get('id')) }
     if (v === 'notifications' || v === 'my-holidays' || v === 'holiday-requests') { setView(v); setNoteId(v === 'notifications' ? searchParams.get('id') : null) }
   }, [searchParams]) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -502,6 +507,12 @@ function ChatPageInner() {
     myNotifications.unread(session.accessToken).then(r => { if (live) setUnreadNotes(r.count ?? 0) }).catch(() => undefined)
     return () => { live = false }
   }, [session?.accessToken, view, noteId])
+  // Letters shared in my hub: whether to show the menu item, and the unread count for its badge (refreshed as I move around, and after reading one).
+  const refreshLetters = useCallback(() => {
+    if (!session?.accessToken) return
+    myLetters.meta(session.accessToken).then(r => setLettersMeta({ enabled: !!r.enabled, unread: r.unread ?? 0 })).catch(() => undefined)
+  }, [session?.accessToken])
+  useEffect(() => { refreshLetters() }, [refreshLetters, view, letterId])
 
   // Policies past their review date drive the Policies badge too (admins only; silently 0 otherwise).
   const refreshDueReview = useCallback(() => {
@@ -1185,6 +1196,16 @@ function ChatPageInner() {
             {unreadNotes > 0 && <NavBadge count={unreadNotes} className="bg-rose-500" />}
           </button>
           )}
+          {!isReviewer && lettersMeta.enabled && (
+          <button
+            onClick={() => { setView('my-letters'); setLetterId(null); setNavOpen(false) }}
+            className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors ${view === 'my-letters' ? 'bg-teal/10 text-teal' : 'text-neutral-mid hover:bg-neutral-light hover:text-neutral-dark'}`}
+          >
+            <FileText size={15} />
+            My letters
+            {lettersMeta.unread > 0 && <NavBadge count={lettersMeta.unread} className="bg-rose-500" />}
+          </button>
+          )}
           {!isReviewer && holidayMeta?.enabled && (
           <button
             onClick={() => { setView('my-holidays'); setNavOpen(false) }}
@@ -1450,8 +1471,9 @@ function ChatPageInner() {
         )}
 
         {/* Notifications and holidays live inside the hub so the sidebar stays in view */}
+        {view === 'my-letters' && <MyLettersView key={letterId ?? 'list'} initialId={letterId} onChanged={refreshLetters} />}
         {view === 'notifications' && (noteId
-          ? <NotificationDetailView id={noteId} onBack={() => setNoteId(null)} />
+          ? <NotificationDetailView id={noteId} onBack={() => setNoteId(null)} onOpenLetter={id => { setView('my-letters'); setLetterId(id) }} />
           : <MyNotificationsView onOpen={id => setNoteId(id)} />)}
         {view === 'my-holidays' && <MyHolidaysView />}
         {view === 'holiday-requests' && <HolidayRequestsView />}

@@ -3,8 +3,8 @@
 // One saved item in the library. A saved answer is just text. A LETTER or NEWSLETTER goes draft -> waiting for approval -> approved -> shared: this panel shows the status, lets the
 // author edit and submit, lets another administrator tick the "before you send" checklist and approve, and then shares it (PDF, email to the person, or a staff notification with the PDF).
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { AlertTriangle, Check, Copy, Download, FileText, Loader2, Mail, Bell, Pencil, RotateCcw, Send, X } from 'lucide-react'
-import { ask, AskError, type AskDocFull } from '@/lib/ask-client'
+import { AlertTriangle, Check, Copy, Download, FileText, Loader2, Mail, Bell, Pencil, Printer, RotateCcw, Send, Trash2, X } from 'lucide-react'
+import { ask, AskError, type AskDocFull, type ShareIntent } from '@/lib/ask-client'
 import { adminNotifications, type StaffOption } from '@/lib/notifications-client'
 import { MarkdownLite } from './markdown-lite'
 
@@ -28,6 +28,7 @@ export function DocumentPanel({ token, id, onClose, onChanged }: { token: string
   const [note, setNote] = useState('')
   const [staff, setStaff] = useState<StaffOption[] | null>(null)
   const [sign, setSign] = useState(false)
+  const [ack, setAck] = useState<boolean | null>(null)   // ask the person to confirm they have read it (the template's default unless the administrator changes it)
   const [docStatus, setDocStatus] = useState<{ letterhead_ready: boolean; trading_name: string; missing: string[]; signature: boolean } | null>(null)
   const [paper, setPaper] = useState<{ html: string; css: string } | null>(null)
   const [showPaper, setShowPaper] = useState(false)
@@ -53,6 +54,29 @@ export function DocumentPanel({ token, id, onClose, onChanged }: { token: string
   const st = d ? STATUS[d.status] ?? STATUS.draft : null
   const people = useMemo(() => (staff ?? []).filter(s => !q || s.name.toLowerCase().includes(q.toLowerCase())), [staff, q])
 
+  // How the letter is to be shared: in their hub, by email, hub and email, or print only (which stays with me and is never shown to the staff member).
+  const intent: ShareIntent = d?.share_intent ?? { hub: false, email: false, print_only: false }
+  async function changeIntent(next: Partial<ShareIntent>) {
+    if (!d) return
+    let n: ShareIntent = { ...intent, ...next }
+    if (next.print_only) n = { hub: false, email: false, print_only: true }
+    else if (next.hub || next.email) n = { ...n, print_only: false }
+    if (!n.hub && !n.email && !n.print_only) { setError('Choose at least one way to share it: in their hub, by email, or print only.'); return }
+    await run('intent', () => ask.setShareIntent(token, d.id, n))
+  }
+  async function printIt() {
+    if (!d) return
+    setBusy('print'); setError('')
+    try {
+      const url = await ask.pdfBlobUrl(token, d.id, sign && letter)
+      const f = document.createElement('iframe'); f.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0'; f.src = url
+      f.onload = () => { try { f.contentWindow?.focus(); f.contentWindow?.print() } catch { window.open(url, '_blank') } setTimeout(() => { URL.revokeObjectURL(url); f.remove() }, 60_000) }
+      document.body.appendChild(f)
+      await load(); onChanged()
+    } catch (e) { setError(msg(e)) } finally { setBusy('') }
+  }
+  const channels = (intent.print_only ? [] : [intent.hub ? 'hub' : '', intent.email ? 'email' : ''].filter(Boolean)) as string[]
+  const first = (d?.staff_name ?? 'the person').split(' ')[0]
   async function save() {
     if (!d) return
     await run('save', async () => {
@@ -120,7 +144,37 @@ export function DocumentPanel({ token, id, onClose, onChanged }: { token: string
                 )}
               </div>
             )}
-            {d.shared.length > 0 && <p className="text-xs text-neutral-mid">Shared: {d.shared.map(s => `${s.method === 'pdf' ? 'PDF downloaded' : s.method === 'word' ? 'Word downloaded' : s.method === 'email' ? 'emailed' : 'sent as a notification'} ${new Date(s.at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}`).join(', ')}</p>}
+            {flow && letter && (
+              <fieldset className="rounded-lg border border-gray-200 p-3">
+                <legend className="px-1 text-sm font-semibold text-neutral-dark">How will this letter be shared?</legend>
+                <div className="space-y-1.5 text-sm text-neutral-dark">
+                  <label className="flex items-start gap-2"><input type="checkbox" className="mt-0.5 h-4 w-4" checked={intent.hub} disabled={!!busy} onChange={e => changeIntent({ hub: e.target.checked })} /> <span><strong className="font-medium">In {first}&apos;s hub.</strong> They read, print and download it under My letters. It stays there as a record.</span></label>
+                  <label className="flex items-start gap-2"><input type="checkbox" className="mt-0.5 h-4 w-4" checked={intent.email} disabled={!!busy} onChange={e => changeIntent({ email: e.target.checked })} /> <span><strong className="font-medium">By email.</strong> A PDF from you.</span></label>
+                  <label className="flex items-start gap-2"><input type="checkbox" className="mt-0.5 h-4 w-4" checked={intent.print_only} disabled={!!busy} onChange={e => changeIntent({ print_only: e.target.checked })} /> <span><strong className="font-medium">Print only.</strong> It stays with you and {first} never sees it in CareStream.</span></label>
+                </div>
+                {!d.share_intent && <p className="mt-2 text-xs text-amber-900">Choose how it is to be shared before you share it.</p>}
+              </fieldset>
+            )}
+            {flow && letter && d.hub_shares && d.hub_shares.length > 0 && (
+              <div className="rounded-lg border border-gray-200 p-3">
+                <p className="text-sm font-semibold text-neutral-dark">Shared in their hub</p>
+                <ul className="mt-1.5 divide-y divide-gray-100 text-sm">
+                  {d.hub_shares.map(h => (
+                    <li key={h.id} className="flex flex-wrap items-center justify-between gap-2 py-1.5">
+                      <span className="min-w-0 text-neutral-dark">
+                        <strong className="font-medium">{h.person}</strong>, shared {h.shared_at ? new Date(h.shared_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : ''}.{' '}
+                        {h.withdrawn_at ? <span className="font-semibold text-red-700">Withdrawn.</span> : <>
+                          {h.read_at ? `Read ${new Date(h.read_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}.` : 'Not read yet.'}{' '}
+                          {h.needs_acknowledgement ? (h.acknowledged_at ? `Acknowledged ${new Date(h.acknowledged_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}.` : 'Waiting for them to acknowledge it.') : ''}
+                        </>}
+                      </span>
+                      {!h.withdrawn_at && <button type="button" disabled={!!busy} onClick={() => { if (window.confirm(`Withdraw this letter from ${h.person}'s hub? It disappears from their hub, and the record stays here.`)) run('withdraw', () => ask.withdrawHubShare(token, d.id, h.id), 'Withdrawn from their hub.') }} className={`${btn} border border-red-300 text-red-700 hover:bg-red-50`}><Trash2 size={14} /> Withdraw</button>}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {d.shared.length > 0 && <p className="text-xs text-neutral-mid">Shared: {d.shared.map(s => `${s.method === 'pdf' ? 'PDF downloaded' : s.method === 'word' ? 'Word downloaded' : s.method === 'email' ? 'emailed' : s.method === 'hub' ? 'shared in their hub' : 'sent as a notification'} ${new Date(s.at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}`).join(', ')}</p>}
 
             {picking && (
               <div className="rounded-lg border border-gray-200 p-3">
@@ -159,8 +213,16 @@ export function DocumentPanel({ token, id, onClose, onChanged }: { token: string
               {d.actions.reopen && <button type="button" disabled={!!busy} onClick={() => run('reopen', () => ask.reopen(token, d.id), 'Back to draft. It needs approving again.')} className={`${btn} border border-gray-200 text-neutral-dark hover:bg-neutral-light`}><RotateCcw size={14} /> Re-open</button>}
               {d.actions.share.includes('pdf') && <button type="button" disabled={!!busy} onClick={() => run('pdf', () => ask.downloadPdf(token, d.id, d.title, sign && letter), 'The PDF has been downloaded.')} className={`${btn} border border-teal text-teal hover:bg-teal/5`}>{busy === 'pdf' ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />} Download PDF</button>}
               {d.actions.share.includes('pdf') && <button type="button" disabled={!!busy} onClick={() => run('docx', () => ask.downloadDocx(token, d.id, d.title, sign && letter), 'The Word document has been downloaded.')} className={`${btn} border border-teal text-teal hover:bg-teal/5`}>{busy === 'docx' ? <Loader2 size={14} className="animate-spin" /> : <FileText size={14} />} Download as Word</button>}
-              {d.actions.share.includes('email') && <button type="button" disabled={!!busy} onClick={() => { if (window.confirm(report ? 'Email this report to all the administrators now?' : `Email this letter to ${d.staff_name ?? 'the person'} now?`)) run('email', () => ask.share(token, d.id, { method: 'email', sign: sign && letter }), report ? 'Emailed to the administrators with the PDF attached.' : 'Emailed with the PDF attached.') }} className={`${btn} border border-teal text-teal hover:bg-teal/5`}>{busy === 'email' ? <Loader2 size={14} className="animate-spin" /> : <Mail size={14} />} {report ? 'Email to administrators' : 'Email it'}</button>}
-              {d.actions.share.includes('notification') && (letter
+              {letter && d.actions.share.includes('pdf') && <button type="button" disabled={!!busy} onClick={printIt} className={`${btn} border border-teal text-teal hover:bg-teal/5`}>{busy === 'print' ? <Loader2 size={14} className="animate-spin" /> : <Printer size={14} />} Print</button>}
+              {letter && d.actions.share.includes('hub') && channels.length > 0 && (
+                <>
+                  {intent.hub && <label className="flex items-center gap-1.5 text-xs text-neutral-dark"><input type="checkbox" className="h-4 w-4" checked={ack ?? d.ack_default ?? false} onChange={e => setAck(e.target.checked)} /> Ask {first} to confirm they have read it</label>}
+                  <button type="button" disabled={!!busy} onClick={() => { if (window.confirm(`Share this letter ${channels.map(c => (c === 'hub' ? `in ${first}'s hub` : 'by email')).join(' and ')} now?`)) run('now', () => ask.share(token, d.id, { method: 'now', sign, ...(intent.hub ? { needs_acknowledgement: ack ?? d.ack_default ?? false } : {}) }), 'Shared.') }} className={`${btn} bg-teal text-white hover:bg-teal-dark`}>{busy === 'now' ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />} Share now</button>
+                </>
+              )}
+              {letter && intent.print_only && d.actions.share.includes('pdf') && <span className="text-xs text-neutral-mid">Print only: download or print it from here. Nothing is shared with {first}.</span>}
+              {(!letter || !d.share_intent) && d.actions.share.includes('email') && <button type="button" disabled={!!busy} onClick={() => { if (window.confirm(report ? 'Email this report to all the administrators now?' : `Email this letter to ${d.staff_name ?? 'the person'} now?`)) run('email', () => ask.share(token, d.id, { method: 'email', sign: sign && letter }), report ? 'Emailed to the administrators with the PDF attached.' : 'Emailed with the PDF attached.') }} className={`${btn} border border-teal text-teal hover:bg-teal/5`}>{busy === 'email' ? <Loader2 size={14} className="animate-spin" /> : <Mail size={14} />} {report ? 'Email to administrators' : 'Email it'}</button>}
+              {(!letter || !d.share_intent) && d.actions.share.includes('notification') && (letter
                 ? <button type="button" disabled={!!busy} onClick={() => { if (window.confirm(`Send this letter to ${d.staff_name ?? 'the person'} as a notification in their hub?`)) run('note', () => ask.share(token, d.id, { method: 'notification', sign: sign && letter }), 'Sent to their hub as a notification with the PDF attached.') }} className={`${btn} border border-teal text-teal hover:bg-teal/5`}><Bell size={14} /> Send as notification</button>
                 : <button type="button" disabled={!!busy} onClick={openPicker} className={`${btn} bg-teal text-white hover:bg-teal-dark`}><Bell size={14} /> Share with staff</button>)}
             </>)}

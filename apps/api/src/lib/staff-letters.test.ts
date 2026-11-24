@@ -196,3 +196,31 @@ test('the Letters agent must ask how the letter is shared: the tool refuses with
   assert.ok(at > 0 && saveAt > at, 'no draft is saved before the share choice is known')
   assert.match(src, /share_intent: check\.intent/)
 })
+
+// ── The screens (source level: nothing here has been seen in a browser) ─────────────────────────────────────────────────────────────────
+const web = (f: string) => fs.readFileSync(path.resolve(__dirname, '../../../web/src', f), 'utf8')
+
+test('HUB: My letters opens inside the hub, shows only for people who have a letter, and keeps the sidebar', () => {
+  const chat = web('app/(portal)/chat/page.tsx')
+  assert.match(chat, /'my-letters'/); assert.match(chat, /lettersMeta\.enabled/); assert.match(chat, /My letters/); assert.match(chat, /<MyLettersView /)
+  assert.match(chat, /v === 'my-letters'/, 'the query string opens it (view=my-letters&id=)')
+  const view = web('components/hub/views/my-letters-view.tsx')
+  assert.match(view, /max-w-5xl/, 'as wide as the other hub pages'); assert.match(view, /no-scrollbar/)
+  assert.match(view, /Print/); assert.match(view, /Download PDF/); assert.match(view, /I have read and understood this/)
+  assert.match(view, /myLetters\.fileUrl/, 'the private file is fetched with the signed in token (a blob), never a public address')
+  assert.match(view, /viewingAs/, 'viewing the hub as someone else never marks anything')
+})
+
+test('HUB: the notification about a letter offers Open the letter', () => {
+  const n = web('components/hub/views/notification-detail-view.tsx')
+  assert.match(n, /byNotification/); assert.match(n, /Open the letter/)
+  assert.match(web('app/(portal)/chat/page.tsx'), /onOpenLetter=/)
+})
+
+test('ADMIN: the document panel asks how the letter is shared, offers Share now for the chosen way, shows hub status and can withdraw', () => {
+  const p = web('components/ask/document-panel.tsx')
+  assert.match(p, /How will this letter be shared\?/); assert.match(p, /Print only\./); assert.match(p, /never sees it/)
+  assert.match(p, /Share now/); assert.match(p, /method: 'now'/); assert.match(p, /Withdraw/); assert.match(p, /window\.confirm\(`Withdraw this letter/)
+  assert.match(p, /Shared in their hub/); assert.match(p, /Waiting for them to acknowledge it/)
+  const c = web('lib/ask-client.ts'); assert.match(c, /setShareIntent/); assert.match(c, /withdrawHubShare/); assert.match(c, /'now'/)
+})

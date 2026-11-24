@@ -27,11 +27,14 @@ export interface AskActionCard {
 export interface AskSettingsView { actions_enabled: boolean; notifications_enabled: boolean; training_enabled: boolean; emails_enabled: boolean; max_recipients: number; min_gap_minutes: number; managers_can_use: boolean }
 export interface AskConversation { id: string; agent_id: string; title: string; updated_at: string | null }
 export interface AskDocument { id: string; type: string; title: string; status: string; mine?: boolean; staff_name?: string | null; updated_at: string | null }
-export interface AskDocActions { needs_approval: boolean; edit: boolean; submit: boolean; approve: boolean; return: boolean; reopen: boolean; share: Array<'pdf' | 'email' | 'notification'> }
+export interface AskDocActions { needs_approval: boolean; edit: boolean; submit: boolean; approve: boolean; return: boolean; reopen: boolean; share: Array<'pdf' | 'email' | 'notification' | 'hub'> }
+export interface ShareIntent { hub: boolean; email: boolean; print_only: boolean }
+export interface HubShare { id: string; person: string; shared_at: string | null; read_at: string | null; needs_acknowledgement: boolean; acknowledged_at: string | null; withdrawn_at: string | null; signed: boolean }
 export interface AskDocField { key: string; label: string; type: string; required: boolean; choices: Array<{ value: string; label: string }> | null }
 export interface AskDocFull {
   id: string; type: string; title: string; body: string; status: string; version: number; updated_at: string | null; mine: boolean; created_by: string
   staff_name: string | null; internal_only?: boolean; checklist: string[]; references: Array<{ label: string; url: string }>; shared: Array<{ method: string; at: string }>
+  share_intent?: ShareIntent | null; share_intent_text?: string; ack_default?: boolean; hub_shares?: HubShare[]
   values?: Record<string, string | number>; fields?: AskDocField[]; actions: AskDocActions; data?: { review_note?: { note: string; at: string } } | null
 }
 export interface AskApproval { id: string; type: string; title: string; staff_name: string | null; mine: boolean; updated_at: string | null }
@@ -61,7 +64,17 @@ export const ask = {
   approve: (t: string, id: string, checklist_confirmed: boolean) => call<{ status: string }>(`/ask/documents/${encodeURIComponent(id)}/approve`, t, { method: 'POST', body: JSON.stringify({ checklist_confirmed }) }),
   returnToDraft: (t: string, id: string, note?: string) => call<{ status: string }>(`/ask/documents/${encodeURIComponent(id)}/return`, t, { method: 'POST', body: JSON.stringify({ note }) }),
   reopen: (t: string, id: string) => call<{ status: string }>(`/ask/documents/${encodeURIComponent(id)}/reopen`, t, { method: 'POST', body: '{}' }),
-  share: (t: string, id: string, b: { method: 'email' | 'notification'; audience?: 'all' | 'selected'; user_ids?: string[]; sign?: boolean }) => call<{ shared: boolean; method: string }>(`/ask/documents/${encodeURIComponent(id)}/share`, t, { method: 'POST', body: JSON.stringify(b) }),
+  share: (t: string, id: string, b: { method: 'email' | 'notification' | 'hub' | 'now'; audience?: 'all' | 'selected'; user_ids?: string[]; sign?: boolean; needs_acknowledgement?: boolean }) => call<{ shared: boolean; method: string; channels?: string[] }>(`/ask/documents/${encodeURIComponent(id)}/share`, t, { method: 'POST', body: JSON.stringify(b) }),
+  /** How a letter is to be shared: in their hub, by email, hub and email, or print only (exclusive). */
+  setShareIntent: (t: string, id: string, b: ShareIntent) => call<{ share_intent: ShareIntent; share_intent_text: string }>(`/ask/documents/${encodeURIComponent(id)}/share-intent`, t, { method: 'POST', body: JSON.stringify(b) }),
+  /** Takes one shared letter out of the person's hub (the record stays here). */
+  withdrawHubShare: (t: string, id: string, letterId: string) => call<{ withdrawn: boolean }>(`/ask/documents/${encodeURIComponent(id)}/hub-shares/${encodeURIComponent(letterId)}/withdraw`, t, { method: 'POST', body: '{}' }),
+  /** The finished PDF as a blob address, for printing (an approved document only). */
+  pdfBlobUrl: async (t: string, id: string, sign = false) => {
+    const res = await fetch(`${API_URL}/ask/documents/${encodeURIComponent(id)}/pdf${sign ? '?sign=1' : ''}`, { headers: { Authorization: `Bearer ${t}` } })
+    if (!res.ok) { let m = 'The PDF could not be made just now.'; try { m = (await res.json())?.error?.message ?? m } catch { /* not json */ } throw new AskError('PDF_FAILED', m, res.status) }
+    return URL.createObjectURL(await res.blob())
+  },
   /** Downloads the finished PDF (an approved document only) and saves it in the browser. */
   downloadPdf: async (t: string, id: string, fallbackName: string, sign = false) => {
     const res = await fetch(`${API_URL}/ask/documents/${encodeURIComponent(id)}/pdf${sign ? '?sign=1' : ''}`, { headers: { Authorization: `Bearer ${t}` } })

@@ -21,7 +21,7 @@ import { writeAuditLog } from '../lib/audit'
 import { render as renderLetter, validate as validateLetter, getTemplate as letterTemplate } from '../services/letters'
 import { needsApproval, canEdit, canSubmit, canApprove, canReturn, canReopen, canShare, sharesFor, SHARE_METHODS, type ShareMethod } from '../services/ask-docs/workflow'
 import { pdfFor, emailLetter, emailReportToAdmins, shareAsNotification, shareInHub } from '../services/ask-docs/share'
-import { readShareIntent, checkShareIntent, channelsFor, describeIntent } from '../services/ask-docs/share-intent'
+import { readShareIntent, checkShareIntent, channelsFor, describeIntent, defaultNeedsAcknowledgement } from '../services/ask-docs/share-intent'
 import { sharesOfDocument, withdraw as withdrawLetter, isMissingTable as lettersMissing } from '../lib/staff-letters'
 import { withdrawNotification } from '../lib/notification-withdraw'
 import { lintReport } from '../services/ask/report-templates'
@@ -155,7 +155,8 @@ askRouter.get('/documents/:id', wrap(async (req, res) => {
   const checklist = d.type === 'letter' ? (d.data?.before_you_send ?? []) : d.type === 'newsletter' || d.type === 'report' ? (d.data?.checklist ?? []) : []
   const hubShares = d.type === 'letter' ? await sharesOfDocument(getTenantId(), d.id).catch(() => []) : []
   const intent = d.type === 'letter' ? readShareIntent(d.data?.share_intent) : null
-  ok(res, { document: { ...d, share_intent: intent, share_intent_text: d.type === 'letter' ? describeIntent(intent) : undefined, hub_shares: hubShares.map(h => ({ id: h.id, person: h.person_name, shared_at: h.shared_at, read_at: h.read_at, needs_acknowledgement: h.needs_acknowledgement, acknowledged_at: h.acknowledged_at, withdrawn_at: h.withdrawn_at, signed: h.signed })), mine: d.created_by === req.user!.sub, checklist, references: d.data?.references ?? [], internal_only: d.type === 'report' ? d.data?.internal_only === true : undefined, shared: d.data?.shared ?? [], staff_name: d.data?.staff_name ?? null, values: d.type === 'letter' ? d.data?.values ?? {} : undefined, fields: d.type === 'letter' ? letterTemplate(String(d.data?.template_id ?? ''))?.fields.map(f => ({ key: f.key, label: f.label, type: f.type, required: f.required, choices: f.choices ?? null })) : undefined, actions: await actionsFor(d, req.user!.sub) } })
+  const ackDefault = d.type === 'letter' ? defaultNeedsAcknowledgement(String(d.data?.template_id ?? ''), d.data?.values ?? {}) : undefined
+  ok(res, { document: { ...d, share_intent: intent, share_intent_text: d.type === 'letter' ? describeIntent(intent) : undefined, ack_default: ackDefault, hub_shares: hubShares.map(h => ({ id: h.id, person: h.person_name, shared_at: h.shared_at, read_at: h.read_at, needs_acknowledgement: h.needs_acknowledgement, acknowledged_at: h.acknowledged_at, withdrawn_at: h.withdrawn_at, signed: h.signed })), mine: d.created_by === req.user!.sub, checklist, references: d.data?.references ?? [], internal_only: d.type === 'report' ? d.data?.internal_only === true : undefined, shared: d.data?.shared ?? [], staff_name: d.data?.staff_name ?? null, values: d.type === 'letter' ? d.data?.values ?? {} : undefined, fields: d.type === 'letter' ? letterTemplate(String(d.data?.template_id ?? ''))?.fields.map(f => ({ key: f.key, label: f.label, type: f.type, required: f.required, choices: f.choices ?? null })) : undefined, actions: await actionsFor(d, req.user!.sub) } })
 }))
 
 askRouter.patch('/documents/:id', wrap(async (req, res) => {
@@ -249,7 +250,7 @@ askRouter.post('/documents/:id/share-intent', wrap(async (req, res) => {
   if (d.type !== 'letter') { err(res, 'INVALID', 'Only a letter has a share choice.', 400); return }
   const c = checkShareIntent(readShareIntent(req.body))
   if (!c.ok) { err(res, 'INVALID', c.reason, 400); return }
-  if (!(await store.setShareIntent(t, id, c.intent))) { err(res, 'NOT_ALLOWED', 'The choice can only be changed before the letter has been shared.', 409); return }
+  if (!(await store.setShareIntent(t, id, c.intent))) { err(res, 'NOT_ALLOWED', 'The choice could not be changed.', 409); return }
   audit(req, 'ask_document_share_intent_set', id, { type: d.type, hub: c.intent.hub, email: c.intent.email, print_only: c.intent.print_only })
   ok(res, { share_intent: c.intent, share_intent_text: describeIntent(c.intent) })
 }))

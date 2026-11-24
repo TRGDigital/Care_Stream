@@ -101,7 +101,7 @@ export const LETTER_TOOLS: AskTool[] = [
       const check = checkShareIntent(readShareIntent(input?.share_intent))
       if (!check.ok) return { data: { saved: false, share_intent_missing: true, message: check.reason }, sources: [] }
       const done = await setShareIntent(ctx.tenantId, String(input?.document_id ?? ''), check.intent)
-      return { data: done ? { saved: true, share: describeIntent(check.intent) } : { saved: false, message: 'I could not change that. The letter may not exist, or it has already been shared.' }, sources: [] }
+      return { data: done ? { saved: true, share: describeIntent(check.intent) } : { saved: false, message: 'I could not change that. The letter may not exist, or it does not belong to this account.' }, sources: [] }
     },
   },
 ]

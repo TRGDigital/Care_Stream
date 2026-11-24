@@ -14,7 +14,7 @@ import { ServicePageIfPublished } from '@/components/marketing/service-page-load
 import { isV2 } from '@/lib/v2-rollout'
 import { freeLive } from '@/lib/free-rollout'
 import { FreeBanner } from '@/components/marketing/free-banner'
-import { AuditLibrary } from '@/components/marketing/audit-library'
+import { AuditLibraryWithImages as AuditLibrary } from '@/components/marketing/audit-library-loader'
 
 const RICH_LINK = '[&_a]:font-semibold [&_a]:text-teal [&_a]:underline [&_a]:underline-offset-2'
 

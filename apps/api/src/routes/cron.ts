@@ -44,6 +44,10 @@ import { runCredentialExpiryAllTenants } from '../services/workforce/credentialE
 import { runStaffBirthdaysAllTenants, runStaffBirthdaysForTenant } from '../services/workforce/staffBirthdays'
 import { remindPostersAllTenants, remindPosterForTenant } from '../services/workforce/tabletPosterReminder'
 import { importPendingDrafts } from '../services/content/pendingDrafts'
+import { generateAuditImages } from './audit-images'
+import { submitUrlsForIndexing, ralfyIndexBalance } from '../services/ralfyindex/indexer'
+import { AUDIT_IMAGE_SCENES } from '../data/audit-image-scenes'
+import { siteUrl } from '../lib/urls'
 import { runSupervisionReminders } from '../services/workforce/supervisionReminders'
 import { runAgencyAccess } from '../services/workforce/agencyAccess'
 import { runPolicyReviewReminders } from '../services/policies/review-reminders'
@@ -180,6 +184,21 @@ cronRouter.get('/credential-expiry', (req, res) =>
 // Daily: staff birthdays. Admins are told 7 days ahead; the staff member gets a happy birthday email from the company on the day.
 // Query options (cron secret only): tenant=<id> runs just that account, dry=1 sends nothing, preview_to=<email> sends the emails only
 // there and logs nothing (needs tenant; add on=YYYY-MM-DD to pretend today is that date so a real birthday shows up).
+// Makes the next few missing pictures for the audit cards on /care-audits (a unique one for each new home care audit, one per theme for the rest), in the
+// house style. limit=N (at most 6 a call, each takes about a minute); dry=1 only counts. Safe to run repeatedly: an existing picture is never remade.
+cronRouter.get('/generate-audit-images', (req, res) =>
+  job('generate-audit-images', req, res, () => generateAuditImages(Number(req.query.limit) || 3, req.query.dry === '1')))
+
+// One off: asks RalfyIndex to index the 19 new home care audit pages and the /care-audits listing. dry=1 only shows the URLs and the credit balance.
+// Each URL costs a credit, so it does nothing without confirm=1.
+cronRouter.get('/index-audit-pages', (req, res) =>
+  job('index-audit-pages', req, res, async () => {
+    const urls = [`${siteUrl()}/care-audits`, ...AUDIT_IMAGE_SCENES.filter(s => !s.key.startsWith('theme:')).map(s => `${siteUrl()}/care-audits/${s.key}`)]
+    const balance = await ralfyIndexBalance().catch(() => null)
+    if (req.query.confirm !== '1') return { dry_run: true, urls: urls.length, balance, list: urls }
+    return { submitted: urls.length, balance_before: balance, result: await submitUrlsForIndexing(urls, { source: 'page' }) }
+  }))
+
 // Nightly: saves pages that were written outside the nightly routine (src/data/pending-drafts) as DRAFTS in the platform. Idempotent: a slug that
 // already exists is never touched, and nothing is ever published.
 cronRouter.get('/import-pending-drafts', (req, res) =>

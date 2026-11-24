@@ -3822,3 +3822,13 @@ model SharedSession {
   @@index([device_id, started_at])
   @@map("shared_sessions")
 }
+
+// Pictures for the audit cards on /care-audits. See prisma/sql/2026-11-24_audit_images.sql and data/audit-image-scenes.ts.
+model AuditImage {
+  key        String   @id
+  url        String
+  alt        String
+  created_at DateTime @default(now())
+
+  @@map("audit_images")
+}

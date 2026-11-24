@@ -6,6 +6,7 @@ import './audit-library.css'
 import { FocusOnHash } from './focus-on-hash'
 import { AUDIT_CATALOGUE, SERVICE_LABEL } from '@/lib/audit-catalogue'
 import { AUDIT_PAGE_NAME_SLUG } from '@/lib/audit-pages/slugs'
+import { auditImageKeys } from '@/lib/audit-image-key'
 
 // The public library of free audits, labelled with the care services each one suits, on /care-audits.
 // Every card is in the server HTML (this renders on the server too); the chips only narrow what is shown.
@@ -13,7 +14,7 @@ import { AUDIT_PAGE_NAME_SLUG } from '@/lib/audit-pages/slugs'
 const FREQ: Record<string, string> = { daily: 'Daily', weekly: 'Weekly', monthly: 'Monthly', quarterly: 'Quarterly', periodic: 'Periodic' }
 const SCOPE: Record<string, string> = { resident: 'Per person', staff: 'Per staff member', room: 'Per room' }
 
-export function AuditLibrary() {
+export function AuditLibrary({ images = {} }: { images?: Record<string, { url: string; alt: string }> }) {
   const [service, setService] = useState('all')
   const [query, setQuery] = useState('')
   const counts: Record<string, number> = {}
@@ -62,8 +63,14 @@ export function AuditLibrary() {
           </div>
         )}
         <ul className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {shown.map(a => (
-            <li key={a.slug} className="flex flex-col rounded-xl border border-gray-200 bg-white p-5">
+          {shown.map(a => {
+            const pic = auditImageKeys(a.name).map(k => images[k]).find(Boolean)
+            return (
+            <li key={a.slug} className="flex flex-col overflow-hidden rounded-xl border border-gray-200 bg-white p-5">
+              {pic && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={pic.url} alt={pic.alt} loading="lazy" className="-mx-5 -mt-5 mb-4 aspect-[3/2] w-[calc(100%+2.5rem)] max-w-none bg-gray-100 object-cover" />
+              )}
               <div className="flex flex-wrap items-center gap-2 text-[11px] font-semibold">
                 <span className="rounded-full bg-teal/10 px-2 py-0.5 text-teal">{FREQ[a.frequency] ?? a.frequency}</span>
                 {SCOPE[a.scope] && <span className="rounded-full bg-gray-100 px-2 py-0.5 text-neutral-mid">{SCOPE[a.scope]}</span>}
@@ -86,7 +93,8 @@ export function AuditLibrary() {
                 )}
               </div>
             </li>
-          ))}
+            )
+          })}
         </ul>
       </div>
     </section>

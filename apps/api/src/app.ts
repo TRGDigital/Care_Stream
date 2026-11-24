@@ -10,6 +10,7 @@ import { viewAsGuard } from './lib/view-as'
 import { sharedDeviceGuard } from './middleware/sharedDeviceGuard'
 import { orgLogoFileRouter } from './lib/org-logo'
 import { emailSamplesRouter } from './routes/email-samples'
+import { auditImagesPublicRouter } from './routes/audit-images'
 import { tabletPublicRouter, tabletRouter, tabletsAdminRouter } from './routes/shared-tablets'
 import { queryRouter } from './routes/query'
 import { usersRouter } from './routes/users'
@@ -226,6 +227,7 @@ app.use('/public/staff-photo', staffPhotoFileRouter)
 app.use('/public/tablet', tabletPublicRouter)   // connect a shared tablet from the printed QR (needs the key and a staff PIN)
 // The small picture shown in emails to staff: a link that changes when the picture changes, 404 once it is removed. BEFORE requireAuth.
 app.use('/public/email-avatar', emailAvatarRouter)
+app.use('/public/audit-images', auditImagesPublicRouter)   // the pictures on the audit cards
 app.use('/public/org-logo', orgLogoFileRouter)   // the organisation logo as a PNG, for the top of staff emails
 // "This is me" video files: signed for about ten minutes, re-checked on every request, HTTP Range supported. BEFORE requireAuth.
 app.use('/public/resident-video', residentVideoFileRouter)

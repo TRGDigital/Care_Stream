@@ -116,6 +116,6 @@ test('PRIVACY: the new files are read only, scoped to the account, never touch f
 
 test('ADMIN ONLY: the whole Ask feature is behind the pilot and the administrator check, and the funding for one person is only for a named resident', () => {
   const route = here('../../routes/ask.ts')
-  assert.ok(/role !== 'admin'|role === 'admin'/.test(route))
+  assert.ok(/role !== 'admin'|role === 'admin'|askRoleFor/.test(route))   // the guard is now askRoleFor: administrators, and managers only when the account allows it
   assert.ok(/funding_for_person/.test(agentById('finance')!.prompt) && /names that person/.test(agentById('finance')!.prompt))
 })

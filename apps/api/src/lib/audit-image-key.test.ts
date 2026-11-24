@@ -10,16 +10,15 @@ const keys = new Set(AUDIT_IMAGE_SCENES.map(s => s.key))
 test('every audit card has a picture to show: its own, or its theme', async () => {
   const { AUDIT_CATALOGUE } = await web('audit-catalogue'); const { auditImageKeys } = await web('audit-image-key')
   type A = { name: string }
-  const none = (AUDIT_CATALOGUE as A[]).filter(a => !(auditImageKeys(a.name) as string[]).some(k => keys.has(k))).map(a => a.name)
+  const none = (AUDIT_CATALOGUE as A[]).filter(a => !(auditImageKeys(a.name, a.slug) as string[]).some(k => keys.has(k))).map(a => a.name)
   assert.deepEqual(none, [])
 })
 
-test('the 19 new home care audits each have their own picture, and the rest share a theme', async () => {
+test('every one of the 124 audits has its own picture scene', async () => {
   const { AUDIT_CATALOGUE } = await web('audit-catalogue'); const { auditImageKeys } = await web('audit-image-key')
-  const own = (AUDIT_CATALOGUE as Array<{ name: string }>).filter(a => (auditImageKeys(a.name) as string[]).length === 2 && keys.has((auditImageKeys(a.name) as string[])[0]))
-  assert.equal(own.length, 19)
-  assert.equal(AUDIT_IMAGE_SCENES.filter(s => !s.key.startsWith('theme:') && !s.key.startsWith('collection:')).length, 19)
-  assert.equal(AUDIT_IMAGE_SCENES.filter(s => s.key.startsWith('theme:')).length, 14)
+  const missing = (AUDIT_CATALOGUE as Array<{ name: string; slug: string }>).filter(a => !keys.has((auditImageKeys(a.name, a.slug) as string[])[0])).map(a => a.name)
+  assert.deepEqual(missing, [])
+  assert.equal((AUDIT_CATALOGUE as unknown[]).length, 124)
 })
 
 test('scene descriptions are long enough for the generator and use no dashes', () => {

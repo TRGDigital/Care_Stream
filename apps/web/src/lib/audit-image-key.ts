@@ -26,7 +26,8 @@ export function auditThemeKey(name: string): string {
 }
 
 /** The keys to look for, best first: the audit's own picture, then its theme's. */
-export function auditImageKeys(name: string): string[] {
-  const own = AUDIT_PAGE_NAME_SLUG[name]
+export function auditImageKeys(name: string, catalogueSlug?: string): string[] {
+  // Every audit has its own picture: keyed by its page slug, or by its catalogue slug when it has no page yet.
+  const own = AUDIT_PAGE_NAME_SLUG[name] ?? catalogueSlug
   return [...(own ? [own] : []), auditThemeKey(name)]
 }

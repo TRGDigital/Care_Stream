@@ -64,7 +64,7 @@ export function AuditLibrary({ images = {} }: { images?: Record<string, { url: s
         )}
         <ul className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {shown.map(a => {
-            const pic = auditImageKeys(a.name).map(k => images[k]).find(Boolean)
+            const pic = auditImageKeys(a.name, a.slug).map(k => images[k]).find(Boolean)
             return (
             <li key={a.slug} className="flex flex-col overflow-hidden rounded-xl border border-gray-200 bg-white p-5">
               {pic && (

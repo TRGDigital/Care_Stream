@@ -35,6 +35,7 @@ import { DisplaySettings } from '@/components/hub/display-settings'
 import { YourPicture } from '@/components/hub/my-photo'
 import Link from 'next/link'
 import { myNotifications } from '@/lib/notifications-client'
+import { useHolidayMeta } from '@/lib/holiday-client'
 import { createApiClient, apiAssetUrl, type Citation } from '@/lib/api-client'
 import { persistentCache, hubKey, wasHardReload } from '@/lib/page-cache'
 
@@ -434,6 +435,7 @@ function ChatPageInner() {
   const { supported: speechSupported, state: speechState, start: startSpeech, stop: stopSpeech } =
     useSpeech((text) => setInput(prev => (prev.trim() ? prev + ' ' + text : text)), bcp47(replyLang || firstLang))
   const [unreadNotes, setUnreadNotes] = useState(0)
+  const holidayMeta = useHolidayMeta().meta   // holiday tracking pilot (CS-1001 only): the items below appear only when it is on
   const [navCounts,    setNavCounts]                    = useState<{ induction: number; training: number; cqc: number; followup: number; annual: number; audits: number; actions: number; programmes: number }>({ induction: 0, training: 0, cqc: 0, followup: 0, annual: 0, audits: 0, actions: 0, programmes: 0 })
   const [savedPolicies, setSavedPolicies]               = useState<Array<{ policy_id: string; title: string }>>([])
   const [sidebarPolicy, setSidebarPolicy]               = useState<string | null>(null)
@@ -1174,6 +1176,25 @@ function ChatPageInner() {
             <Bell size={15} />
             Notifications
             {unreadNotes > 0 && <NavBadge count={unreadNotes} className="bg-rose-500" />}
+          </Link>
+          )}
+          {!isReviewer && holidayMeta?.enabled && (
+          <Link
+            href="/my-holidays"
+            className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-neutral-mid transition-colors hover:bg-neutral-light hover:text-neutral-dark"
+          >
+            <CalendarDays size={15} />
+            My holidays
+          </Link>
+          )}
+          {!isReviewer && holidayMeta?.enabled && holidayMeta.can_decide && (
+          <Link
+            href="/holiday-requests"
+            className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-neutral-mid transition-colors hover:bg-neutral-light hover:text-neutral-dark"
+          >
+            <ClipboardCheck size={15} />
+            Holiday requests
+            {(holidayMeta.pending_count ?? 0) > 0 && <NavBadge count={holidayMeta.pending_count ?? 0} className="bg-rose-500" />}
           </Link>
           )}
           {!isReviewer && (

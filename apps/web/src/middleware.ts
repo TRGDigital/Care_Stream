@@ -19,6 +19,7 @@ const GATED = [
   '/dashboard', '/gaps', '/guides', '/knowledge', '/onboarding', '/policies',
   '/queries', '/settings', '/staff', '/training',
   '/licences', '/group', '/workforce', '/translation-review', '/notifications', '/my-notifications',
+  '/holiday', '/my-holidays', '/holiday-requests',   // holiday tracking (pilot)
 ]
 
 // Console routes a training-only (gateway-tier) tenant cannot use — the full-CareStream
@@ -40,7 +41,7 @@ const POLICIES_ONLY_ALLOWED = ['/policies', '/settings', '/billing', '/account',
 // for them rather than only on the training-only list.
 const POLICIES_ONLY_BLOCKED_SCAN = ['/dashboard', '/chat', '/staff', '/training', '/licences',
   '/group', '/workforce', '/translation-review', '/analytics', '/queries', '/knowledge',
-  '/cqc-questions', '/audits', '/gaps', '/onboarding', '/guides', '/notifications', '/my-notifications']
+  '/cqc-questions', '/audits', '/gaps', '/onboarding', '/guides', '/notifications', '/my-notifications', '/holiday', '/my-holidays', '/holiday-requests']
 
 // Free accounts (tier 'free') get audits, the policy library and gap analysis, staff, settings and
 // billing. Like the policies-only tier this is an ALLOW list, so a route added later stays closed
@@ -56,7 +57,7 @@ const matches = (path: string, list: string[]) => list.some(p => path === p || p
 // until someone decides otherwise. ?app=off clears it (for testing on a phone browser).
 const APP_COOKIE = 'cs_app'
 const APP_ALLOWED = [
-  '/chat', '/cqc', '/progress', '/my-notifications',                         // the staff hub
+  '/chat', '/cqc', '/progress', '/my-notifications', '/my-holidays', '/holiday-requests',   // the staff hub
   '/login', '/check-email', '/forgot-password', '/reset-password', '/verify-email', '/auth',
   '/privacy', '/terms', '/cookies',                                          // linked from sign-in
   '/app-console',                                                            // "use a browser" notice
@@ -66,7 +67,7 @@ const APP_ALLOWED = [
 const APP_CONSOLE = [
   '/dashboard', '/analytics', '/audits', '/cqc-questions', '/gaps', '/guides', '/knowledge',
   '/onboarding', '/policies', '/queries', '/settings', '/staff', '/training', '/billing',
-  '/licences', '/group', '/workforce', '/translation-review', '/notifications', '/start', '/platform', '/account',
+  '/licences', '/group', '/workforce', '/translation-review', '/notifications', '/holiday', '/start', '/platform', '/account',
 ]
 
 function appMode(req: NextRequest, path: string): NextResponse | null {

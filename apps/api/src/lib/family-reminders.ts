@@ -16,6 +16,12 @@ import {
 
 const db = prisma as any
 
+// An invite stores the inviting admin's EMAIL (created_by), not their id: look the person up so the reminder can show who it is from.
+async function inviterUserId(tenantId: string, createdBy: string | null | undefined): Promise<string | null> {
+  if (!createdBy) return null
+  try { return (await (prisma as any).user.findFirst({ where: { tenant_id: tenantId, email: { equals: createdBy, mode: 'insensitive' }, is_active: true }, select: { id: true } }))?.id ?? null } catch { return null }
+}
+
 export async function remindersReady(): Promise<boolean> {
   try { await db.residentReminderSetting.findFirst({ select: { id: true } }); return true } catch { return false }
 }
@@ -178,7 +184,7 @@ export async function runFamilyReminders(opts: { now?: Date; dryRun?: boolean } 
       try {
         await sendResidentFamilyReminderEmail({
           to: invite.email, inviteeName: invite.name, residentName: resident.preferred_name || resident.first_name, homeName: homeName.get(s.tenant_id)!,
-          tenantId: s.tenant_id, senderUserId: invite.created_by ?? null, link: `${siteUrl()}/family/${token}`, stopLink: `${siteUrl()}/family/stop/${stopToken}`, days: INVITE_DAYS,
+          tenantId: s.tenant_id, senderUserId: await inviterUserId(s.tenant_id, invite.created_by), link: `${siteUrl()}/family/${token}`, stopLink: `${siteUrl()}/family/stop/${stopToken}`, days: INVITE_DAYS,
         })
       } catch (e: any) {
         await db.residentReminderSetting.update({ where: { id: s.id }, data: { last_sent_at: s.last_sent_at } }).catch(() => undefined)   // try again tomorrow

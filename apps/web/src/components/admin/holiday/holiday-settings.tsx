@@ -4,8 +4,8 @@
 // approval (managers, most people off at once) and bank holiday pay. Administrators only; pilot accounts only.
 
 import { useEffect, useMemo, useState } from 'react'
-import { Loader2, Check } from 'lucide-react'
-import { holiday, MONTHS, type HolidaySettings, type BankHoliday } from '@/lib/holiday-client'
+import { Loader2, Check, Plus, Trash2 } from 'lucide-react'
+import { holiday, MONTHS, type HolidaySettings, type BankHoliday, type BlockedDate } from '@/lib/holiday-client'
 
 const sel = 'rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-neutral-dark outline-none focus:border-teal focus:ring-2 focus:ring-teal/20'
 const DIM = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
@@ -41,6 +41,7 @@ export function HolidaySettingsBody({ token }: { token: string }) {
   const [busy, setBusy] = useState(false)
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState('')
+  const [nb, setNb] = useState<BlockedDate>({ from: '', to: '', reason: '' })
 
   useEffect(() => {
     let live = true
@@ -97,7 +98,27 @@ export function HolidaySettingsBody({ token }: { token: string }) {
         </div>
         <label className="mt-2 block text-sm font-medium text-neutral-dark" htmlFor="hol-max">Most people off on one day (optional)</label>
         <input id="hol-max" inputMode="numeric" className={`${sel} w-28`} value={maxOff} onChange={e => { setMaxOff(e.target.value.replace(/[^\d]/g, '').slice(0, 3)); setSaved(false) }} placeholder="No limit" />
-        <p className="text-xs text-neutral-mid">The person approving sees a clear warning when a request would go over this. It never blocks a decision.</p>
+        <p className="text-xs text-neutral-mid">Staff cannot ask for a day when this many people are already off or have asked for it. An administrator or manager can still allow it, with a reason.</p>
+      </Sub>
+
+      <Sub title="Blocked dates" hint="Days staff cannot book, for example Christmas week. An administrator or manager can still book or approve them, with a reason.">
+        {(s.blocked_dates ?? []).length === 0 ? <p className="text-sm text-neutral-mid">No dates are blocked.</p> : (
+          <ul className="divide-y divide-gray-100 rounded-lg border border-gray-200">
+            {(s.blocked_dates ?? []).map((b, i) => (
+              <li key={`${b.from}-${i}`} className="flex flex-wrap items-center justify-between gap-2 px-3 py-2 text-sm">
+                <span className="text-neutral-dark"><strong>{new Date(b.from + 'T00:00:00Z').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' })}{b.to !== b.from ? ` to ${new Date(b.to + 'T00:00:00Z').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' })}` : ''}</strong> <span className="text-neutral-mid">{b.reason}</span></span>
+                <button type="button" aria-label={`Remove blocked dates ${b.reason}`} onClick={() => upd({ blocked_dates: (s.blocked_dates ?? []).filter((_, n) => n !== i) })} className="inline-flex items-center gap-1 text-red-700 hover:underline"><Trash2 size={14} aria-hidden="true" /> Remove</button>
+              </li>
+            ))}
+          </ul>
+        )}
+        <div className="grid gap-2 sm:grid-cols-[auto_auto_1fr_auto] sm:items-end">
+          <div><label htmlFor="blk-from" className="mb-1 block text-xs font-medium text-neutral-dark">From</label><input id="blk-from" type="date" className={sel} value={nb.from} onChange={e => setNb({ ...nb, from: e.target.value, to: nb.to && nb.to >= e.target.value ? nb.to : e.target.value })} /></div>
+          <div><label htmlFor="blk-to" className="mb-1 block text-xs font-medium text-neutral-dark">To (same day for one day)</label><input id="blk-to" type="date" min={nb.from} className={sel} value={nb.to} onChange={e => setNb({ ...nb, to: e.target.value })} /></div>
+          <div><label htmlFor="blk-why" className="mb-1 block text-xs font-medium text-neutral-dark">Reason</label><input id="blk-why" maxLength={120} className={`${sel} w-full`} placeholder="For example Christmas week" value={nb.reason} onChange={e => setNb({ ...nb, reason: e.target.value })} /></div>
+          <button type="button" disabled={!nb.from || !nb.to || nb.to < nb.from} onClick={() => { upd({ blocked_dates: [...(s.blocked_dates ?? []), { ...nb, reason: nb.reason.trim() || 'Not available for holiday' }].sort((a, b) => a.from.localeCompare(b.from)) }); setNb({ from: '', to: '', reason: '' }) }} className="inline-flex items-center gap-1.5 rounded-lg border border-teal px-3 py-2 text-sm font-semibold text-teal hover:bg-teal/5 disabled:opacity-50"><Plus size={14} aria-hidden="true" /> Add</button>
+        </div>
+        <p className="text-xs text-neutral-mid">Remember to press Save holiday settings below after adding or removing dates.</p>
       </Sub>
 
       <Sub title="Bank holiday pay" hint="Bank holidays are worked in care, so staff are paid more. Choose the usual multiplier and change it for any bank holiday. This is recorded for you, nothing is calculated from it yet, and bank holidays are never taken off a person's holiday.">

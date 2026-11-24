@@ -151,3 +151,19 @@ test('the exception line goes only to a person whose approved or edited booking 
   assert.match(data, /part <> 'full'/)   // new columns are read with plain SQL that tolerates the column not being there yet
   assert.match(data, /catch \{ return \[\] \}/)
 })
+
+// ── The page uses the same part day sizes as the API ────────────────────────────────────────
+test('the web part day helpers give the same sizes as the API ones', async () => {
+  const web = await import(path.resolve(__dirname, '../../../web/src/lib/holiday-parts'))
+  for (const shift of [1, 4, 5, 7, 8, 9, 12, 13]) for (const cap of [null, 0, 0.5, 2.4, 5, 8, 100]) {
+    assert.deepEqual(web.dayChoices(shift, cap), dayChoices(shift, cap), `${shift}/${cap}`)
+    assert.equal(web.halfShift(shift), halfShift(shift))
+  }
+  assert.deepEqual(web.halfHourSteps(2.4), [0.5, 1, 1.5, 2]); assert.equal(web.halfHourSteps(null).length, 26); assert.deepEqual(web.halfHourSteps(0), [])
+})
+test('the legend sits below the matrix and the settings can hold blocked dates', () => {
+  const m = fs.readFileSync(path.resolve(__dirname, '../../../web/src/components/admin/holiday/matrix-tab.tsx'), 'utf8')
+  assert.ok(m.indexOf('<Legend />') > m.indexOf('</table>'))
+  const st = fs.readFileSync(path.resolve(__dirname, '../../../web/src/components/admin/holiday/holiday-settings.tsx'), 'utf8')
+  assert.match(st, /Blocked dates/)
+})

@@ -104,8 +104,6 @@ export function MatrixTab({ token }: { token: string }) {
       </div>
       <p className="text-xs text-neutral-mid">Only approved holiday is counted. Taken is up to and including today, booked is after today.{m.carry_over ? ' Holiday carried over from last year is included in the entitlement.' : ''}</p>
 
-      <Legend />
-
       <div className="max-h-[70vh] overflow-auto rounded-xl border border-gray-200 bg-white">
         <table className="min-w-full border-separate border-spacing-0">
           <thead className="sticky top-0 z-20">
@@ -128,6 +126,8 @@ export function MatrixTab({ token }: { token: string }) {
           </tbody>
         </table>
       </div>
+
+      <Legend />
 
       {detail && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4" onMouseDown={e => { if (e.target === e.currentTarget) setDetail(null) }}>

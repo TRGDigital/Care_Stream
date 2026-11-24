@@ -383,7 +383,7 @@ const SUPERVISION_TYPES = ['supervision', 'appraisal'] as const
 // one type: the most recent past session, the earliest upcoming (booked) one,
 // and a status. A future session is "booked"; otherwise the next-due date drives
 // overdue / due-soon / ok; no records at all is "none".
-function buildCell(records: any[]) {
+export function buildCell(records: any[]) {
   const now = Date.now()
   const sorted = records.slice().sort((a, b) => new Date(b.held_on).getTime() - new Date(a.held_on).getTime())  // desc
   const past     = sorted.find(r => new Date(r.held_on).getTime() <= now) ?? null

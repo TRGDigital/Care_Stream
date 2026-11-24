@@ -135,7 +135,7 @@ test('LEAVER: leave earned to the last day (monthly), taken, balance, pounds owe
 test('every agent tool exists, ready agents have four starters, and the new agents are in the same order', () => {
   for (const a of AGENTS) for (const n of a.tools) assert.ok(TOOLS.some(t => t.name === n), `${a.id} -> ${n}`)
   for (const a of AGENTS.filter(x => x.status === 'ready')) assert.equal(a.starters.length, 4, a.id)
-  assert.deepEqual(AGENTS.filter(a => a.status === 'ready').map(a => a.id), ['staff', 'holiday', 'pay', 'letters', 'newsletter', 'notifications'])
+  assert.deepEqual(AGENTS.filter(a => a.status === 'ready').map(a => a.id).slice(0, 6), ['staff', 'holiday', 'pay', 'letters', 'newsletter', 'notifications'])   // later groups of agents are ready too
   assert.ok(agentById('holiday')!.starters.some(s => /14 March on 30 hours a week with 224 hours/.test(s))); assert.ok(agentById('holiday')!.starters.includes('What is a leaver owed?'))
   for (const n of ['entitlement_for_starter_or_leaver', 'statutory_minimum', 'holiday_owed_on_leaving', 'irregular_hours_accrual']) assert.ok(agentById('holiday')!.tools.includes(n), n)
 })

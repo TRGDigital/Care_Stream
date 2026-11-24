@@ -35,6 +35,7 @@ import { DisplaySettings } from '@/components/hub/display-settings'
 import { YourPicture } from '@/components/hub/my-photo'
 import Link from 'next/link'
 import { myNotifications } from '@/lib/notifications-client'
+import { MySignature } from '@/components/hub/my-signature'
 import { MyNotificationsView } from '@/components/hub/views/my-notifications-view'
 import { NotificationDetailView } from '@/components/hub/views/notification-detail-view'
 import { MyHolidaysView } from '@/components/hub/views/my-holidays-view'
@@ -1238,6 +1239,7 @@ function ChatPageInner() {
           <div className="mt-1 border-t border-gray-100 pt-2">
             <DisplaySettings />
             <YourPicture name={userName} />
+            <MySignature />
           </div>
         </div>
 

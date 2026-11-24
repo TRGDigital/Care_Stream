@@ -13,12 +13,15 @@ import { HolidaySettingsBody } from '@/components/admin/holiday/holiday-settings
 import { useHolidayMeta } from '@/lib/holiday-client'
 import { useFundingMeta } from '@/lib/funding-client'
 import { FinanceSettingsBody } from '@/components/admin/residents/finance-settings'
+import { LetterheadSettingsBody } from '@/components/admin/settings/letterhead-settings'
+import { SignatureSettingsBody } from '@/components/admin/settings/signature-settings'
+import { useLetterheadAvailable } from '@/lib/letterhead-client'
 import {
   AlertTriangle, Bell, BedDouble, BookLock, Building2, Check, ChevronDown, ChevronUp, ClipboardList, Copy, Loader2,
   Mail, Plus, Search, ShieldCheck, SlidersHorizontal, Tablet, Trash2, Upload, UserRound, X,
   // `Lock` unaliased resolves to the DOM Web Locks API type, not the icon.
   Lock as LockIcon,
-  CalendarDays,
+  CalendarDays, FileText, PenLine,
 } from 'lucide-react'
 
 // Active search query, shared with every SettingSection so non-matching
@@ -202,6 +205,7 @@ export default function SettingsPage() {
   const { data: session }           = useSession()
   const holidayMeta                 = useHolidayMeta().meta
   const fundingMeta                 = useFundingMeta()   // finance pilot (CS-1001, administrators only)
+  const letterheadOn                = useLetterheadAvailable()   // letterhead and signatures (pilot, CS-1001)
   const policiesOnly                = (session?.user as any)?.tier === 'policies_only'
   const [lockedSetting, setLockedSetting] = useState<string | null>(null)
   const { features: planFeatures }  = usePlanFeatures()
@@ -1444,6 +1448,18 @@ export default function SettingsPage() {
         {fundingMeta?.enabled && fundingMeta.is_admin && session?.accessToken && (
           <SettingSection icon={LockIcon} title="Finance" description="Resident funding and fees, and staff pay rates. Locked to administrators.">
             <FinanceSettingsBody token={session.accessToken} />
+          </SettingSection>
+        )}
+
+        {/* Letterhead and signatures (pilot, CS-1001): how formal letters, reports and newsletters look, and my own signature. */}
+        {letterheadOn && session?.accessToken && (
+          <SettingSection icon={FileText} title="Letterhead and company details" description="The logo, name, address and registration details printed on formal letters, reports and newsletters.">
+            <LetterheadSettingsBody token={session.accessToken} />
+          </SettingSection>
+        )}
+        {letterheadOn && session?.accessToken && (
+          <SettingSection icon={PenLine} title="My signature" description="Add your signature to use on letters and reports you approve or send.">
+            <SignatureSettingsBody token={session.accessToken} />
           </SettingSection>
         )}
 

@@ -33,7 +33,8 @@ const adminOnly = (req: Request, res: Response, next: NextFunction) => (req.user
 
 signaturesRouter.get('/me', async (req: Request, res: Response) => {
   const t = getTenantId()
-  ok(res, { allowed: true, table_ready: await signatureTableReady(), ...(await getMeta(t, req.user!.sub)) })
+  const me = await db.user.findFirst({ where: { id: req.user!.sub, tenant_id: t }, select: { name: true, job_role: true } }).catch(() => null)
+  ok(res, { allowed: true, table_ready: await signatureTableReady(), name: me?.name ?? '', job_role: me?.job_role ?? '', ...(await getMeta(t, req.user!.sub)) })
 })
 
 // Only the owner's own picture, and only for their editor. The server never sends anyone else's.

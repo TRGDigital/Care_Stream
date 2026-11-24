@@ -9,6 +9,7 @@ import { createApiClient } from '@/lib/api-client'
 import { SiteImage } from '@/components/site-image'
 import { IncentiveTracker } from '@/components/hub/incentive-tracker'
 import { HeaderAvatar } from '@/components/hub/my-photo'
+import { myNotifications } from '@/lib/notifications-client'
 
 interface Props {
   userName: string
@@ -20,6 +21,7 @@ export function PortalNav({ userName, userRole }: Props) {
   const token = (session as any)?.accessToken as string | undefined
   const pathname = usePathname()
   const [pendingCqc, setPendingCqc] = useState(0)
+  const [unreadNotes, setUnreadNotes] = useState(0)
   const [open, setOpen] = useState(false)
 
   useEffect(() => {
@@ -29,6 +31,14 @@ export function PortalNav({ userName, userRole }: Props) {
       .catch(() => {})
   }, [token])
 
+  // Notifications from the administrator: the number not yet read, shown on the tab. Checked on load and each time the person moves to another page.
+  useEffect(() => {
+    if (!token) return
+    let live = true
+    myNotifications.unread(token).then(r => { if (live) setUnreadNotes(r.count ?? 0) }).catch(() => undefined)
+    return () => { live = false }
+  }, [token, pathname])
+
   // Close the mobile menu on navigation.
   useEffect(() => { setOpen(false) }, [pathname])
 
@@ -36,6 +46,7 @@ export function PortalNav({ userName, userRole }: Props) {
     { href: '/chat',     label: 'Chat Hub'    },
     { href: '/chat?view=progress', label: 'My Progress' },
     { href: '/chat?view=cqc', label: 'CQC Prep', badge: pendingCqc },
+    { href: '/my-notifications', label: 'Notifications', badge: unreadNotes },
     ...(userRole === 'admin' ? [{ href: '/dashboard', label: 'Admin' }] : []),
   ]
 
@@ -73,7 +84,7 @@ export function PortalNav({ userName, userRole }: Props) {
         className="relative rounded-md p-1.5 text-neutral-mid hover:bg-neutral-light hover:text-neutral-dark md:hidden"
       >
         {open ? <X size={22} /> : <Menu size={22} />}
-        {!open && pendingCqc > 0 && <span className="absolute right-0.5 top-0.5 h-2 w-2 rounded-full bg-rose-500" />}
+        {!open && (pendingCqc > 0 || unreadNotes > 0) && <span className="absolute right-0.5 top-0.5 h-2 w-2 rounded-full bg-rose-500" />}
       </button>
 
       {/* Mobile dropdown menu */}

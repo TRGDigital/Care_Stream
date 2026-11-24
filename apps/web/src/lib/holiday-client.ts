@@ -29,7 +29,10 @@ export interface BlockedDate { from: string; to: string; reason: string }
 export interface CheckResult { ok: boolean; issues: RuleIssue[]; can_override: boolean }
 export interface Person { id: string; name: string; job_role: string | null; unit: Unit; shift_hours: number; half_hours: number; default_hours: number }
 export interface Clash { day: string; approved: Array<{ user_id: string; name: string; hours: number; part?: Part }>; pending: Array<{ user_id: string; name: string; hours: number; part?: Part }>; approved_count: number; over_limit: boolean }
-export interface ApprovalItem extends Request { unit: Unit; clashes: Clash[] }
+export interface WeekOff { user_id: string; name: string; hours: number; status: 'approved' | 'pending'; part?: Part; self?: boolean }
+export interface WeekDay { day: string; requested: boolean; off: WeekOff[] }
+export interface WeekBlock { start: string; days: WeekDay[] }
+export interface ApprovalItem extends Request { unit: Unit; clashes: Clash[]; weeks?: WeekBlock[] }
 export interface MatrixRow { user_id: string; name: string; job_role: string | null; start_date: string | null; unit: Unit; allowance: number | null; carry_in: number; entitlement: number; contracted: number | null; taken_by_month: Record<string, number>; booked_by_month: Record<string, number>; imported_by_month?: Record<string, { taken: number; booked: number }>; photo_url?: string | null; taken: number; booked: number; remaining: number; percent_taken: number }
 export interface Matrix { year: number; label: string; from: string; to: string; months: Array<{ key: string; label: string }>; rows: MatrixRow[]; today: string; carry_over: boolean }
 export interface CalendarData { month: string; max_off: number | null; today: string; days: Array<{ day: string; user_id: string; name: string; job_role: string | null; photo_url?: string | null; hours: number; part?: Part }>; bank_holidays: BankHoliday[] }

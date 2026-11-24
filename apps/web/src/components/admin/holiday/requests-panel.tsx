@@ -55,6 +55,44 @@ function useRuleSave() {
   return { issues, can, allow, setAllow, why, setWhy, error, run, reset }
 }
 
+/** The week (Monday to Sunday) around the request, so the approver sees at a glance who else is off or has asked. The requested days are outlined. */
+function WeekView({ r, max }: { r: ApprovalItem; max: number | null }) {
+  if (!r.weeks?.length) return null
+  const dow = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+  return (
+    <div className="rounded-lg border border-gray-200 bg-white p-3">
+      <p className="text-sm font-semibold text-neutral-dark">Who is off that week</p>
+      <p className="mb-2 text-xs text-neutral-mid">Monday to Sunday. The days {r.name.split(' ')[0]} is asking for are outlined in teal. Solid names are approved, dashed names have asked and are waiting.</p>
+      <div className="space-y-3 overflow-x-auto">
+        {r.weeks.map(w => (
+          <div key={w.start} className="min-w-[640px]">
+            <p className="mb-1 text-xs font-semibold text-neutral-mid">Week of {niceDate(w.start)}</p>
+            <div className="grid grid-cols-7 gap-1.5">
+              {w.days.map((d, i) => {
+                const approved = d.off.filter(o => o.status === 'approved' && !o.self).length + (d.requested ? 0 : d.off.filter(o => o.status === 'approved' && o.self).length)
+                const over = max != null && approved + (d.requested ? 1 : 0) > max
+                return (
+                  <div key={d.day} className={`min-h-[84px] rounded-lg border p-1.5 text-xs ${d.requested ? 'border-teal bg-teal/5 ring-1 ring-teal' : i > 4 ? 'border-gray-200 bg-gray-50' : 'border-gray-200 bg-white'}`}>
+                    <p className="flex items-center justify-between font-semibold text-neutral-dark"><span>{dow[i]} {Number(d.day.slice(8))}</span><span className={`rounded-full px-1.5 text-[10px] font-bold ${over ? 'bg-red-100 text-red-700' : d.off.length + (d.requested ? 1 : 0) > 0 ? 'bg-sky-100 text-sky-800' : 'text-neutral-mid'}`}>{d.off.length + (d.requested ? 1 : 0) || ''}</span></p>
+                    {d.requested && <p className="mt-0.5 rounded bg-teal/10 px-1 font-semibold text-teal">{r.name.split(' ')[0]}</p>}
+                    <ul className="mt-0.5 space-y-0.5">
+                      {d.off.map(o => (
+                        <li key={o.user_id + o.status} className={o.status === 'pending' ? 'rounded border border-dashed border-amber-400 px-1 text-amber-900' : 'rounded bg-sky-50 px-1 text-sky-900'} title={o.status === 'pending' ? 'Asked, waiting for approval' : 'Approved'}>
+                          <Who id={o.user_id} name={o.name} part={o.part} />
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 function Clashes({ r, max }: { r: ApprovalItem; max: number | null }) {
   if (!r.clashes.length) return <p className="text-sm text-green-700">Nobody else is off on these days.</p>
   return (
@@ -131,6 +169,7 @@ function Row({ token, r, max, onChanged }: { token: string; r: ApprovalItem; max
       {r.note && <p className="rounded-lg bg-neutral-light px-3 py-2 text-sm text-neutral-dark">{r.name.split(' ')[0]} wrote: {r.note}</p>}
       {r.decision_note && r.status !== 'pending' && <p className="rounded-lg bg-neutral-light px-3 py-2 text-sm text-neutral-dark">Note: {r.decision_note}</p>}
       {(r.status === 'pending' || r.status === 'approved') && <Clashes r={r} max={max} />}
+      {(r.status === 'pending' || r.status === 'approved') && <WeekView r={r} max={max} />}
 
       {mode === 'edit' ? <EditBox token={token} r={r} onDone={() => { setMode('idle'); onChanged() }} /> : (
         <>

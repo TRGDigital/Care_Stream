@@ -33,21 +33,20 @@ publicCollectionsRouter.get('/', async (_req: Request, res: Response) => {
 const topicSlug = (s: string): string =>
   s.toLowerCase().replace(/&/g, ' and ').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
 
-import { auditThemeKey } from '../data/audit-image-theme'
 import { AUDIT_COLLECTION_ITEMS } from '../data/audit-collection-items'
 async function productsFor(kind: string, clusterKey: string) {
   const cluster = clusterByKey(clusterKey)
   if (!cluster) return []
 
   if (kind === 'audits') {
-    // Free audits: no price, no basket. Each card links to the audit's own page and shows the audit's picture (its own, else its theme's), as /care-audits does.
+    // Free audits: no price, no basket. Each card links to the audit's own page and shows the audit's own picture, as /care-audits does.
     let pics: Record<string, { url: string }> = {}
     try { for (const r of await (prisma as any).auditImage.findMany()) pics[r.key] = { url: r.url } } catch { pics = {} }
     const abs = (u?: string) => (u ? (/^https?:/.test(u) ? u : `${(process.env.API_PUBLIC_URL || 'https://api.carestreamai.com').replace(/\/$/, '')}${u}`) : null)
     return cluster.items.map(slug => ({ slug, item: AUDIT_COLLECTION_ITEMS[slug] })).filter(x => x.item).map(({ slug, item }) => ({
       slug, title: item.title, description: item.description, price_pence: 0,
       meta: `Free audit, ${item.frequency}`, href: `/care-audits/${slug}`,
-      image_url: abs((pics[slug] ?? pics[auditThemeKey(item.title)])?.url),
+      image_url: abs(pics[slug]?.url),
     }))
   }
 

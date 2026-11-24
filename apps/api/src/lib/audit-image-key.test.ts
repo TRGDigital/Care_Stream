@@ -7,7 +7,7 @@ import { AUDIT_IMAGE_SCENES } from '../data/audit-image-scenes'
 const web = (f: string) => import(path.resolve(__dirname, '../../../web/src/lib', f))
 const keys = new Set(AUDIT_IMAGE_SCENES.map(s => s.key))
 
-test('every audit card has a picture to show: its own, or its theme', async () => {
+test('every audit card has a picture to show: its own', async () => {
   const { AUDIT_CATALOGUE } = await web('audit-catalogue'); const { auditImageKeys } = await web('audit-image-key')
   type A = { name: string; slug: string }
   const none = (AUDIT_CATALOGUE as A[]).filter(a => !(auditImageKeys(a.name, a.slug) as string[]).some(k => keys.has(k))).map(a => a.name)
@@ -28,8 +28,12 @@ test('scene descriptions are long enough for the generator and use no dashes', (
   }
 })
 
-test('the API theme rules agree with the web ones for every audit', async () => {
-  const { AUDIT_CATALOGUE } = await web('audit-catalogue'); const { auditThemeKey: webKey } = await web('audit-image-key')
-  const { auditThemeKey } = await import('../data/audit-image-theme')
-  for (const a of AUDIT_CATALOGUE as Array<{ name: string }>) assert.equal(auditThemeKey(a.name), webKey(a.name), a.name)
+test('no two audits share a picture key', async () => {
+  const { AUDIT_CATALOGUE } = await web('audit-catalogue'); const { auditImageKeys } = await web('audit-image-key')
+  const seen = new Map<string, string>()
+  for (const a of AUDIT_CATALOGUE as Array<{ name: string; slug: string }>) {
+    const k = (auditImageKeys(a.name, a.slug) as string[])[0]
+    assert.ok(!seen.has(k), `${a.name} shares a picture with ${seen.get(k)}`)
+    seen.set(k, a.name)
+  }
 })

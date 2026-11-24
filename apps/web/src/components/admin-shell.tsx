@@ -13,7 +13,7 @@ import { UpgradeOverlay } from './upgrade-overlay'
 import {
   LayoutDashboard, FileText, Users, BarChart2, TrendingUp, ClipboardCheck, CreditCard, MessageSquare, Settings, BookOpen, ShieldAlert, GraduationCap, ShieldCheck,
   Building2, ChevronDown, Check, Loader2, HelpCircle, ClipboardList, Menu, X, Lock, KeyRound, BadgeCheck,
-  PanelLeftClose, PanelLeftOpen, Languages, Compass, Award, Gift, Bell,
+  PanelLeftClose, PanelLeftOpen, Languages, Compass, Award, Gift, Bell, CalendarDays,
 } from 'lucide-react'
 import { GuidedTour } from '@/components/admin/guided-tour'
 import { FreeTourHost } from '@/components/admin/free-tours'
@@ -26,6 +26,7 @@ import { TRAINING_ONLY_NAV, POLICIES_ONLY_NAV, FREE_NAV, NOT_FOR_SHOP_TIERS } fr
 import { AdminSearch } from '@/components/admin/admin-search'
 import { SupportMenu } from '@/components/admin/support-menu'
 import { ReleasesButton } from '@/components/admin/releases-overlay'
+import { useHolidayMeta } from '@/lib/holiday-client'
 import { SupportChatWidget } from '@/components/support/chat-widget'
 
 const NAV_SECTIONS = [
@@ -369,6 +370,13 @@ function SidebarContent({ pathname, trainingOnly, policiesOnly, freeTier, selfSe
   if (multiSite) {
     sections = sections.map(s => s.heading === 'Overview'
       ? { ...s, items: [{ href: '/group', label: 'Benchmarking', Icon: Building2 }, ...s.items] }
+      : s)
+  }
+  // Holiday tracking (pilot, CS-1001 only): the item appears below Staff only when the API says this account is in the pilot.
+  const holidayMeta = useHolidayMeta().meta
+  if (holidayMeta?.enabled) {
+    sections = sections.map(s => s.heading === 'Team'
+      ? { ...s, items: s.items.flatMap(i => (i.href === '/staff' ? [i, { href: '/holiday', label: 'Holiday tracking', Icon: CalendarDays }] : [i])) }
       : s)
   }
   // The CPD training sub-item is for full and free accounts only (shop tiers buy licences instead).

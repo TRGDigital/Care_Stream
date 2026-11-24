@@ -6,7 +6,7 @@
 import { StaffPictureField, StaffPictureBlock } from '@/components/admin/staff-picture-controls'
 import { StaffAvatar } from '@/components/admin/staff-avatar'
 import { NewTabletForm } from '@/components/admin/shared-tablets'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import Link from 'next/link'
 import { useSession } from 'next-auth/react'
 import { createApiClient, type StaffContact } from '@/lib/api-client'
@@ -14,6 +14,7 @@ import { persistentCache } from '@/lib/page-cache'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { FreeLanguageLock, useIsFree } from '@/components/admin/free-tier'
+import { HolidayStaffFields } from '@/components/admin/holiday/holiday-staff-fields'
 import { Globe, GraduationCap, ListChecks, Loader2, Mail, Pencil, Plus, X } from 'lucide-react'
 import {
   CommsLanguageToggle,
@@ -515,6 +516,7 @@ export function InviteModal({
   const [error,     setError]     = useState('')
   const isFree = useIsFree()
   const [loading,   setLoading]   = useState(false)
+  const holidayRef = useRef<((userId: string) => Promise<void>) | null>(null)   // holiday boxes (pilot accounts only)
   const [onboardingNote, setOnboardingNote] = useState('')
   const [sendLink, setSendLink] = useState(true)          // email them a one-time sign-in link now (ticked by default)
   const [linkNote, setLinkNote] = useState<{ ok: boolean; text: string } | null>(null)
@@ -592,6 +594,9 @@ export function InviteModal({
         setPictureNote({ ok: false, text: `They were added, but the picture could not be uploaded (${e?.message ?? 'please try again'}). You can add it from their page.` })
       }
     } else setPictureNote(null)
+
+    // The holiday boxes (pilot accounts only). A failure never undoes the new person: say so and point to their edit form.
+    try { await holidayRef.current?.(res.user.id) } catch (e: any) { setError(`They were added, but their holiday details could not be saved (${e?.message ?? 'please try again'}). You can add them by editing the person.`) }
 
     // Refresh the list in the background, but keep modal open to show credentials
     onInvited()
@@ -736,6 +741,7 @@ export function InviteModal({
                 </div>
                 <p className="mt-1 text-xs text-neutral-mid">Only used for face-to-face training attended off shift, to cost their owed hours on the payroll report.</p>
               </div>
+              <HolidayStaffFields token={token} saveRef={holidayRef} />
               <div className="sm:col-span-2">
                 <AccessLevelField
                   token={token}
@@ -949,6 +955,7 @@ export function EditModal({
   const [error,   setError]   = useState('')
   const isFree = useIsFree()
   const [loading, setLoading] = useState(false)
+  const holidayRef = useRef<((userId: string) => Promise<void>) | null>(null)   // holiday boxes (pilot accounts only)
 
   // Persist a new position to Settings (staff_roles) and select it here.
   async function addStaffRole(name: string) {
@@ -993,6 +1000,7 @@ export function EditModal({
       allow_language_switching: allowSwitch && !!form.second_language,
       can_suggest_translations: canSuggest,
     }).catch((err: Error) => { setError(err.message); return null })
+    if (res) { try { await holidayRef.current?.(user.id) } catch (e: any) { setError(`Saved, but the holiday details could not be saved (${e?.message ?? 'please try again'}).`) } }
     setLoading(false)
     if (res) onSaved(res.user)
   }
@@ -1117,6 +1125,7 @@ export function EditModal({
             )}
           </div>
 
+          <HolidayStaffFields token={token} userId={user.id} saveRef={holidayRef} />
           <div className="sm:col-span-2">
             <AccessLevelField
               token={token}

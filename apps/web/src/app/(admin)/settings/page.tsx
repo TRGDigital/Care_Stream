@@ -9,11 +9,14 @@ import { UpgradeOverlay } from '@/components/upgrade-overlay'
 import { persistentCache } from '@/lib/page-cache'
 import { Button } from '@/components/ui/button'
 import { TabletReminderSetting } from '@/components/admin/tablet-reminder-setting'
+import { HolidaySettingsBody } from '@/components/admin/holiday/holiday-settings'
+import { useHolidayMeta } from '@/lib/holiday-client'
 import {
   AlertTriangle, Bell, BedDouble, BookLock, Building2, Check, ChevronDown, ChevronUp, ClipboardList, Copy, Loader2,
   Mail, Plus, Search, ShieldCheck, SlidersHorizontal, Tablet, Trash2, Upload, UserRound, X,
   // `Lock` unaliased resolves to the DOM Web Locks API type, not the icon.
   Lock as LockIcon,
+  CalendarDays,
 } from 'lucide-react'
 
 // Active search query, shared with every SettingSection so non-matching
@@ -195,6 +198,7 @@ function DangerZone({ token }: { token: string }) {
 
 export default function SettingsPage() {
   const { data: session }           = useSession()
+  const holidayMeta                 = useHolidayMeta().meta
   const policiesOnly                = (session?.user as any)?.tier === 'policies_only'
   const [lockedSetting, setLockedSetting] = useState<string | null>(null)
   const { features: planFeatures }  = usePlanFeatures()
@@ -1433,6 +1437,13 @@ export default function SettingsPage() {
         )}
 
         {/* ── Rooms ─────────────────────────────────────────────────────────── */}
+        {/* Holiday tracking (pilot, CS-1001 only): ONE accordion for everything holiday. */}
+        {holidayMeta?.enabled && holidayMeta.is_admin && session?.accessToken && (
+          <SettingSection icon={CalendarDays} title="Holiday" description="Holiday year, carry over, who approves, and bank holiday pay.">
+            <HolidaySettingsBody token={session.accessToken} />
+          </SettingSection>
+        )}
+
         <SettingSection icon={BedDouble} title="Rooms" description="The number of rooms/beds in your home — used for per-room audits (e.g. bedroom checks).">
           <p className="mb-4 text-sm text-neutral-mid">
             When you start a room-based audit in the hub or here, you&apos;ll pick a room from <strong>1</strong> to this number. Any custom room names you type while auditing are remembered too.

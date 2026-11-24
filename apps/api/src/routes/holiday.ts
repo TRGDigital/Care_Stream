@@ -6,6 +6,7 @@
 // Staff and approvers use the same routes as the admin page for decisions; the approver check follows the policy approvals pattern (admins always,
 // managers when 'Manager approval' is on in Settings). Pay rates are administrators only and never leave the /holiday/admin routes.
 import { Router, Request, Response, NextFunction } from 'express'
+import { randomUUID } from 'crypto'
 import { prisma } from '../db/client'
 import { ok, err } from '../lib/response'
 import { requireAdmin } from '../middleware/auth'
@@ -296,6 +297,19 @@ holidayAdminRouter.get('/calendar', async (req: Request, res: Response) => {
   } catch (e) { isMissingTable(e) ? notReady(res) : err(res, 'ERROR', 'Could not load the calendar.', 500) }
 })
 
+// The requests behind a matrix cell or a person: approved and pending, any that touch the dates.
+holidayAdminRouter.get('/person-requests', async (req: Request, res: Response) => {
+  const tenantId = tenantOf(req), userId = String(req.query.user_id ?? '')
+  const from = String(req.query.from ?? ''), to = String(req.query.to ?? '')
+  if (!userId || !/^\d{4}-\d{2}-\d{2}$/.test(from) || !/^\d{4}-\d{2}-\d{2}$/.test(to)) { err(res, 'INVALID', 'Choose a person and dates.', 400); return }
+  try {
+    const hit = await p().holidayDay.findMany({ where: { tenant_id: tenantId, user_id: userId, status: { in: ['approved', 'pending'] }, day: { gte: dayDate(from), lte: dayDate(to) } }, select: { request_id: true } })
+    const ids = [...new Set(hit.map((h: any) => h.request_id))] as string[]
+    const requests = ids.length ? await loadRequests(tenantId, { id: { in: ids } }, 100) : []
+    ok(res, { requests })
+  } catch (e) { isMissingTable(e) ? notReady(res) : err(res, 'ERROR', 'Could not load that.', 500) }
+})
+
 holidayAdminRouter.get('/settings', async (req: Request, res: Response) => {
   const s = await loadSettings(tenantOf(req))
   ok(res, { settings: s, bank_holidays: bankHolidaysWithPay(s), multiplier_choices: BANK_MULTIPLIERS })
@@ -356,6 +370,13 @@ holidayAdminRouter.put('/staff/:userId', async (req: Request, res: Response) => 
     if (start && !/^\d{4}-\d{2}-\d{2}$/.test(start)) { err(res, 'INVALID', 'The start date is not valid.', 400); return }
     const data = { start_date: start ? dayDate(start) : null, weekday_rate: wd, weekend_rate: we }
     await p().holidayStaff.upsert({ where: { user_id: userId }, create: { user_id: userId, tenant_id: tenantId, ...data }, update: data })
+    // The allowance, its unit and contracted hours stay on the staff record (staff_details), where the Compliance register also reads them.
+    // Only the fields sent are changed, so the contract type and probation date that live there are never touched.
+    const detail: Record<string, unknown> = {}
+    if ('unit' in b) detail.holiday_unit = b.unit === 'hours' ? 'hours' : 'days'
+    if ('allowance' in b) { const n = b.allowance === '' || b.allowance == null ? null : Number(b.allowance); if (n !== null && (!isFinite(n) || n < 0 || n > 3000)) { err(res, 'INVALID', 'The allocation must be a number.', 400); return } detail.holiday_entitlement = n }
+    if ('contracted_hours' in b) { const n = b.contracted_hours === '' || b.contracted_hours == null ? null : Number(b.contracted_hours); if (n !== null && (!isFinite(n) || n < 0 || n > 168)) { err(res, 'INVALID', 'Contracted hours must be between 0 and 168.', 400); return } detail.contract_hours_per_week = n }
+    if (Object.keys(detail).length) await p().staffDetail.upsert({ where: { user_id: userId }, create: { id: randomUUID(), tenant_id: tenantId, user_id: userId, ...detail }, update: detail })
     ok(res, { saved: true })
   } catch (e) { isMissingTable(e) ? notReady(res) : err(res, 'ERROR', 'Could not save that person.', 500) }
 })

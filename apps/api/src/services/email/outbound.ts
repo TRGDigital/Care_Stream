@@ -15,6 +15,7 @@ import {
 } from './person-content'
 import { resolveActor } from './email-avatar'
 import { LOGO_BLOCK, LOGO_ROW } from './org-logo-markers'
+import { holidayCardHtml, holidayHeadline, holidayIntro, holidaySubject, holidayButton, type HolidayEmailInput } from './holiday-content'
 import { notificationCardHtml, notificationHeadline, notificationSubject } from './notification-content'
 import { applyOrgLogo, orgLogoForTenant } from '../../lib/org-logo'
 
@@ -2766,6 +2767,37 @@ export async function sendStaffPinEmail(opts: { to: string; name: string; orgNam
 }
 
 /** An administrator's notification to a member of staff: the person led layout, the title and message in the card, and a button to read it in the hub. */
+/** Holiday emails, in the person led layout: from the approver (or, for a request, from the person asking), the organisation logo, the days and the total.
+ *  kind: requested (to an approver), approved, rejected, edited, removed (to the person). Throws on a send failure so the caller can record it. */
+export async function sendHolidayEmail(opts: { to: string; name: string; orgName: string; actorUserId?: string | null } & HolidayEmailInput): Promise<void> {
+  ensureInitialised()
+  if (!process.env.SENDGRID_API_KEY) throw new Error('Email is not configured')
+  const from = process.env.SENDGRID_FROM_ADDRESS ?? `noreply@${INBOUND_DOMAIN}`
+  const first = escHtml(opts.name.split(' ')[0] ?? opts.name)
+  const btn = holidayButton(opts.kind)
+  const link = hubLink(btn.path)
+  const card = holidayCardHtml(opts)
+  const subject = holidaySubject(opts)
+  const admin = await resolveActor(opts.actorUserId)
+  if (admin) {
+    const did = opts.kind === 'requested' ? 'asked for holiday' : opts.kind === 'approved' ? 'approved your holiday' : opts.kind === 'edited' ? 'changed your holiday' : opts.kind === 'removed' ? 'removed your holiday' : 'not approved your holiday'
+    const html = personLedEmail({
+      admin, headline: holidayHeadline(opts), intro: holidayIntro(opts), bodyHtml: card, button: { label: btn.label, href: link },
+      footerNote: personFooterNote(admin, did), logoUrl: LOGO_URL,
+    })
+    await sgMail.send({ to: opts.to, from: personSender(admin, from), subject, html })
+    return
+  }
+  const html = staffWrapper(`
+    <p style="color:${NEUTRAL_DARK};font-size:15px;margin:0 0 16px">Hi ${first},</p>
+    <p style="color:${NEUTRAL_DARK};font-size:15px;line-height:1.6;margin:0 0 16px">${escHtml(holidayHeadline(opts))}. ${escHtml(holidayIntro(opts))}</p>
+    ${card}
+    ${hubButton(link, btn.label)}
+    ${emailFooter(opts.orgName)}
+  `)
+  await sgMail.send({ to: opts.to, from: { email: from, name: opts.orgName }, subject, html })
+}
+
 export async function sendStaffNotificationEmail(opts: {
   to: string; name: string; orgName: string; title: string; body: string; notificationId: string; actorUserId?: string | null; kind?: 'new' | 'reminder'
 }): Promise<void> {

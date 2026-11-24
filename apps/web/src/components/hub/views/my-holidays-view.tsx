@@ -54,10 +54,10 @@ export function MyHolidaysView() {
   }
   async function cancel(id: string) { if (!token) return; try { await holiday.cancel(token, id); load() } catch (e: any) { setError(e?.message ?? 'Could not cancel.') } }
 
-  if (meta && !meta.enabled) return <div className="flex-1 px-4 py-6"><p className="mx-auto max-w-2xl text-sm text-neutral-mid">Holiday booking is not switched on for your service yet.</p></div>
+  if (meta && !meta.enabled) return <div className="flex-1 px-4 py-6"><p className="mx-auto max-w-5xl text-sm text-neutral-mid">Holiday booking is not switched on for your service yet.</p></div>
   return (
     <div className="flex-1 overflow-y-auto px-4 py-6">
-      <div className="mx-auto max-w-3xl space-y-6">
+      <div className="mx-auto max-w-5xl space-y-6">
         <div>
           <h1 className="flex items-center gap-2 text-2xl font-bold text-neutral-dark"><CalendarDays size={22} className="text-teal" aria-hidden="true" /> My holidays</h1>
           <p className="mt-1 text-sm text-neutral-mid">{me?.label ? `Holiday year ${me.label}. ` : ''}Only approved holiday is counted.</p>

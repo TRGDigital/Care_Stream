@@ -13,7 +13,7 @@ export function MyNotificationsView({ onOpen }: { onOpen: (id: string) => void }
   useEffect(() => { if (token) myNotifications.list(token).then(r => setItems(r.notifications)).catch(() => setItems([])) }, [token])
   return (
     <div className="flex-1 overflow-y-auto px-4 py-6">
-      <div className="mx-auto max-w-2xl">
+      <div className="mx-auto max-w-5xl">
         <h1 className="flex items-center gap-2 text-2xl font-bold text-neutral-dark"><Bell size={22} className="text-teal" aria-hidden="true" /> Notifications</h1>
         <p className="mt-1 text-sm text-neutral-mid">Messages from your managers.</p>
         <div className="mt-5">

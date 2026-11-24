@@ -28,7 +28,7 @@ export function NotificationDetailView({ id, onBack }: { id: string; onBack: () 
 
   return (
     <div className="flex-1 overflow-y-auto px-4 py-6">
-      <div className="mx-auto max-w-2xl">
+      <div className="mx-auto max-w-5xl">
         <button type="button" onClick={onBack} className="inline-flex min-h-[40px] items-center gap-1 text-sm font-medium text-teal hover:underline"><ChevronLeft size={16} aria-hidden="true" /> All notifications</button>
         {missing ? <p className="mt-6 rounded-xl border border-gray-200 bg-white px-4 py-8 text-center text-sm text-neutral-mid">We could not find that notification. It may have been sent to someone else.</p>
           : !n ? <p className="mt-6 flex items-center gap-2 text-sm text-neutral-mid" role="status"><Loader2 size={16} className="animate-spin" /> Loading</p>

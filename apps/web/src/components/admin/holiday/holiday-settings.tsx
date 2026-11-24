@@ -72,6 +72,14 @@ export function HolidaySettingsBody({ token }: { token: string }) {
 
   return (
     <div className="space-y-5">
+      <Sub title="How holiday is counted">
+        <div className="space-y-2 rounded-lg bg-neutral-light px-3 py-3 text-sm leading-relaxed text-neutral-dark">
+          <p><strong>Only approved holiday counts.</strong> A request that is still waiting is held back from what the person can book, but it does not show on the matrix or the calendar until it is approved.</p>
+          <p><strong>Booked and taken.</strong> Once holiday is approved it appears on the <strong>Booked</strong> row under the person's name in the matrix. When the dates have passed, it moves up automatically to the row with their name, which shows what they have <strong>taken</strong>. Nobody has to do anything: it is worked out from the dates each time the matrix is opened. A day counts as taken on the day itself.</p>
+          <p><strong>What is left.</strong> Remaining is the allowance (plus any carried over, if that is switched on below) minus what has been taken, minus what is booked. Rejected and cancelled requests give their hours straight back.</p>
+          <p><strong>Part days.</strong> A morning or afternoon counts as half of the person's usual shift, or the hours they choose, and never more than they have left.</p>
+        </div>
+      </Sub>
       <Sub title="Holiday year" hint="When each person's holiday year begins. Most services use 1 January to 31 December.">
         <div className="flex flex-wrap items-center gap-2">
           <select aria-label="Month the holiday year starts" className={sel} value={s.year_start.month} onChange={e => upd({ year_start: { month: Number(e.target.value), day: Math.min(s.year_start.day, DIM[Number(e.target.value) - 1]) } })}>

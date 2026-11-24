@@ -11,11 +11,12 @@ import { prisma } from '../db/client'
 import { ok, err } from '../lib/response'
 import { requireAdmin } from '../middleware/auth'
 import { holidayPilotEnabled } from '../lib/holiday-pilot'
+import { staffPhotoUrls } from '../lib/staff-photos'
 import {
-  addDays, bankMultiplier, BANK_MULTIPLIERS, clashesFor, defaultDayHours, parseImportCsv, ukToday, validateDays, yearContaining, yearRange, MAX_HOURS_PER_DAY, type DayRow, type OffRow,
+  addDays, bankMultiplier, BANK_MULTIPLIERS, clashesFor, defaultDayHours, parseImportCsv, parseMatrixCsv, looksLikeMatrix, nameKey, ukToday, validateDays, yearContaining, yearRange, MAX_HOURS_PER_DAY, type DayRow, type OffRow,
 } from '../lib/holiday-math'
 import {
-  approvedDays, approversFor, audit, bankHolidaysWithPay, buildMatrix, canDecide, holidayTablesReady, isMissingTable, loadRoster, loadSettings, personBalance, postHubMessage,
+  approvedDays, approversFor, audit, bankHolidaysWithPay, buildMatrix, canDecide, holidayTablesReady, isMissingTable, loadRoster, loadSettings, monthTotals, personBalance, postHubMessage,
   type HolidaySettingsView,
 } from '../lib/holiday-data'
 import { holidayMessage, hoursLabel, HOLIDAY_NOTE_MAX, type HolidayEmailKind } from '../services/email/holiday-content'
@@ -190,7 +191,10 @@ holidayRouter.get('/approvals', requireDecider, async (req: Request, res: Respon
       const others = status === 'pending' || status === 'approved' ? await othersFor(tenantId, r.days.map(d => d.day), r.id) : []
       out.push({ ...r, unit: unit.get(r.user_id) ?? 'hours', clashes: clashesFor({ days: r.days.map(d => d.day), userId: r.user_id, others, maxOff: settings.max_off }).filter(c => c.approved.length || c.pending.length || c.over_limit) })
     }
-    ok(res, { requests: out, max_off: settings.max_off })
+    const ids = new Set<string>(out.map((r: any) => r.user_id))
+    for (const r of out) for (const c of r.clashes ?? []) for (const x of [...c.approved, ...c.pending]) ids.add(x.user_id)
+    const photos = Object.fromEntries(await staffPhotoUrls(tenantId, [...ids]))
+    ok(res, { requests: out, max_off: settings.max_off, photos })
   } catch (e) { isMissingTable(e) ? notReady(res) : err(res, 'ERROR', 'Could not load the requests.', 500) }
 })
 
@@ -289,9 +293,10 @@ holidayAdminRouter.get('/calendar', async (req: Request, res: Response) => {
     const rows = await approvedDays(tenantId, from, to)
     const users = await p().user.findMany({ where: { tenant_id: tenantId, id: { in: [...new Set(rows.map(r => r.user_id))] } }, select: { id: true, name: true, job_role: true } })
     const names = new Map<string, any>(users.map((u: any) => [u.id, u]))
+    const photos = await staffPhotoUrls(tenantId, users.map((u: any) => u.id))
     ok(res, {
       month: m, max_off: settings.max_off, today: ukToday(),
-      days: rows.map(r => ({ day: r.day, user_id: r.user_id, name: names.get(r.user_id)?.name ?? 'Former member of staff', job_role: names.get(r.user_id)?.job_role ?? null, hours: r.hours })),
+      days: rows.map(r => ({ day: r.day, user_id: r.user_id, name: names.get(r.user_id)?.name ?? 'Former member of staff', job_role: names.get(r.user_id)?.job_role ?? null, photo_url: photos.get(r.user_id) ?? null, hours: r.hours })),
       bank_holidays: bankHolidaysWithPay(settings, from, to),
     })
   } catch (e) { isMissingTable(e) ? notReady(res) : err(res, 'ERROR', 'Could not load the calendar.', 500) }
@@ -306,7 +311,9 @@ holidayAdminRouter.get('/person-requests', async (req: Request, res: Response) =
     const hit = await p().holidayDay.findMany({ where: { tenant_id: tenantId, user_id: userId, status: { in: ['approved', 'pending'] }, day: { gte: dayDate(from), lte: dayDate(to) } }, select: { request_id: true } })
     const ids = [...new Set(hit.map((h: any) => h.request_id))] as string[]
     const requests = ids.length ? await loadRequests(tenantId, { id: { in: ids } }, 100) : []
-    ok(res, { requests })
+    // Figures loaded from the old spreadsheet for the months this cell covers (no dates, so they are not in the list above).
+    const imported = ((await monthTotals(tenantId, [userId])).get(userId) ?? []).filter(f => f.key >= from.slice(0, 7) && f.key <= to.slice(0, 7) && (f.taken > 0 || f.booked > 0))
+    ok(res, { requests, imported })
   } catch (e) { isMissingTable(e) ? notReady(res) : err(res, 'ERROR', 'Could not load that.', 500) }
 })
 
@@ -401,6 +408,61 @@ holidayAdminRouter.post('/book', async (req: Request, res: Response) => {
 })
 
 // ── Import of bookings that already exist (CSV: email or name, date, hours, status) ──────
+// ── Import of the monthly matrix (the old spreadsheet): figures per person per month, no dates ──
+async function importMatrix(req: Request, res: Response, tenantId: string, csv: string) {
+  try {
+    const parsed = parseMatrixCsv(csv)
+    const roster = await loadRoster(tenantId)
+    const byEmail = new Map(roster.filter(r => r.email).map(r => [String(r.email).toLowerCase(), r]))
+    const byName = new Map<string, typeof roster>()
+    for (const r of roster) { const k = nameKey(r.name); byName.set(k, [...(byName.get(k) ?? []), r]) }
+    const applyDetails = req.body?.apply_details === true
+    const sum = (o: Record<string, number>) => Math.round(Object.values(o).reduce((a, b) => a + b, 0) * 100) / 100
+    const people = parsed.people.map(pp => {
+      let person = pp.email ? byEmail.get(pp.email) ?? null : null
+      let status: 'matched' | 'unmatched' | 'ambiguous' = 'matched'
+      if (!person) { const m = byName.get(nameKey(pp.name)) ?? []; if (m.length === 1) person = m[0]; else status = m.length > 1 ? 'ambiguous' : 'unmatched' }
+      const change = person && applyDetails ? {
+        start_date: pp.start_date && pp.start_date !== person.start_date ? [person.start_date, pp.start_date] : null,
+        allowance: pp.entitlement != null && pp.entitlement !== person.allowance ? [person.allowance, pp.entitlement] : null,
+        contracted: pp.contracted != null && pp.contracted !== person.contracted ? [person.contracted, pp.contracted] : null,
+        unit: person.unit !== 'hours' && (pp.entitlement != null) ? [person.unit, 'hours'] : null,
+      } : null
+      return { line: pp.line, name: pp.name, user_id: person?.id ?? null, matched_name: person?.name ?? null, status, taken_total: sum(pp.taken), booked_total: sum(pp.booked), months: new Set([...Object.keys(pp.taken), ...Object.keys(pp.booked)]).size, change }
+    })
+    const matched = people.filter(x => x.status === 'matched')
+    const summary = {
+      matrix: true, people_in_file: people.length, matched: matched.length, unmatched: people.filter(x => x.status === 'unmatched').length, ambiguous: people.filter(x => x.status === 'ambiguous').length,
+      months: parsed.months, taken_total: Math.round(matched.reduce((a, b) => a + b.taken_total, 0) * 100) / 100, booked_total: Math.round(matched.reduce((a, b) => a + b.booked_total, 0) * 100) / 100,
+      date_format: parsed.date_format, problems: parsed.problems.length, apply_details: applyDetails,
+    }
+    if (req.body?.commit !== true) { ok(res, { committed: false, matrix: true, summary, people, problems: parsed.problems.slice(0, 100) }); return }
+    if (parsed.problems.length > 0) { err(res, 'HAS_ERRORS', 'Fix the problems listed first, or remove those rows from the file.', 400); return }
+    if (matched.length === 0) { err(res, 'NOTHING', 'No one in the file matched an active staff member.', 400); return }
+    const actor = await actorOf(req)
+    const wanted = new Map(parsed.people.map(pp => [pp.line, pp]))
+    let figures = 0
+    for (const m of matched) {
+      const pp = wanted.get(m.line)!, uid = m.user_id!
+      const rows = parsed.months.map(key => ({ key, taken: pp.taken[key] ?? 0, booked: pp.booked[key] ?? 0 }))
+      await p().$transaction([
+        p().holidayMonthTotal.deleteMany({ where: { tenant_id: tenantId, user_id: uid, OR: parsed.months.map(k => ({ year: Number(k.slice(0, 4)), month: Number(k.slice(5, 7)) })) } }),
+        ...rows.filter(r => r.taken > 0 || r.booked > 0).map(r => p().holidayMonthTotal.create({ data: { tenant_id: tenantId, user_id: uid, year: Number(r.key.slice(0, 4)), month: Number(r.key.slice(5, 7)), taken_hours: r.taken, booked_hours: r.booked, source: 'import' } })),
+      ])
+      figures += rows.filter(r => r.taken > 0 || r.booked > 0).length
+      if (applyDetails) {
+        if (pp.start_date) await p().holidayStaff.upsert({ where: { user_id: uid }, create: { user_id: uid, tenant_id: tenantId, start_date: dayDate(pp.start_date) }, update: { start_date: dayDate(pp.start_date) } })
+        const detail: Record<string, unknown> = {}
+        if (pp.entitlement != null) { detail.holiday_entitlement = pp.entitlement; detail.holiday_unit = 'hours' }
+        if (pp.contracted != null) detail.contract_hours_per_week = pp.contracted
+        if (Object.keys(detail).length) await p().staffDetail.upsert({ where: { user_id: uid }, create: { id: randomUUID(), tenant_id: tenantId, user_id: uid, ...detail }, update: detail })
+      }
+      audit(tenantId, actor.id, 'holiday_imported', uid, { for: uid, matrix: true, months: parsed.months.length, details: applyDetails })
+    }
+    ok(res, { committed: true, matrix: true, summary, figures })
+  } catch (e) { isMissingTable(e) ? err(res, 'NOT_READY', 'Monthly figures are not switched on yet. Please run the new SQL first (holiday month totals).', 503) : err(res, 'ERROR', 'Could not import that file.', 500) }
+}
+
 holidayAdminRouter.get('/import/template', (_req: Request, res: Response) => {
   res.setHeader('Content-Type', 'text/csv; charset=utf-8'); res.setHeader('Content-Disposition', 'attachment; filename="holiday-import-template.csv"')
   res.send('email,date,hours,status\nsample.person@yourhome.co.uk,2026-03-04,8,approved\nsample.person@yourhome.co.uk,2026-03-05,8,approved\n')
@@ -411,6 +473,7 @@ holidayAdminRouter.post('/import', async (req: Request, res: Response) => {
   const csv = String(req.body?.csv ?? '')
   if (!csv.trim()) { err(res, 'INVALID', 'Paste or choose a CSV file first.', 400); return }
   if (csv.length > 400_000) { err(res, 'INVALID', 'That file is too large. Please split it.', 400); return }
+  if (looksLikeMatrix(csv)) { await importMatrix(req, res, tenantId, csv); return }   // the monthly spreadsheet layout
   try {
     const roster = await loadRoster(tenantId)
     const byEmail = new Map(roster.filter(r => r.email).map(r => [String(r.email).toLowerCase(), r]))

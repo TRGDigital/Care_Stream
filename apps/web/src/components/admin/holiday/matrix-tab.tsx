@@ -3,6 +3,7 @@
 // The holiday matrix: one block per active person (what they have taken, and a "Booked" row beneath), by month, with totals, what is left and the percentage taken.
 // Like the spreadsheet it replaces. Only approved holiday counts. Click a figure to see the bookings behind it. Export to CSV for payroll.
 
+import { StaffAvatar } from '@/components/admin/staff-avatar'
 import { useEffect, useMemo, useState } from 'react'
 import { ChevronLeft, ChevronRight, Download, Loader2, Search, X } from 'lucide-react'
 import { holiday, describeRange, fmtNum, unitWord, type Matrix, type MatrixRow, type Request } from '@/lib/holiday-client'
@@ -98,11 +99,15 @@ export function MatrixTab({ token }: { token: string }) {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4" onMouseDown={e => { if (e.target === e.currentTarget) setDetail(null) }}>
           <div role="dialog" aria-modal="true" aria-label="Bookings" className="max-h-[85vh] w-full max-w-md overflow-y-auto rounded-2xl bg-white p-5 shadow-xl">
             <div className="mb-3 flex items-start justify-between gap-3">
-              <div><p className="text-base font-bold text-neutral-dark">{detail.row.name}</p><p className="text-sm text-neutral-mid">{detail.kind === 'taken' ? 'Taken' : 'Booked'} in {detail.label}</p></div>
+              <div className="flex items-center gap-3"><StaffAvatar name={detail.row.name} photoUrl={detail.row.photo_url} size={36} /><div><p className="text-base font-bold text-neutral-dark">{detail.row.name}</p><p className="text-sm text-neutral-mid">{detail.kind === 'taken' ? 'Taken' : 'Booked'} in {detail.label}</p></div></div>
               <button type="button" aria-label="Close" onClick={() => setDetail(null)} className="rounded-md p-1 text-neutral-mid hover:bg-neutral-light"><X size={18} /></button>
             </div>
+            {(() => {
+              const f = detail.row.imported_by_month?.[detail.monthKey], v = f ? (detail.kind === 'taken' ? f.taken : f.booked) : 0
+              return v > 0 ? <p className="mb-2 rounded-lg border border-sky-200 bg-sky-50 px-3 py-2 text-sm text-sky-900">Imported figure from your spreadsheet: <strong>{fmtNum(v)} {detail.row.unit === 'days' ? unitWord('days', v) : unitWord('hours', v)}</strong> {detail.kind === 'taken' ? 'taken' : 'booked'} in {detail.label}. It has no dates, so it is not on the calendar.</p> : null
+            })()}
             {detail.items === null ? <p className="flex items-center gap-2 text-sm text-neutral-mid"><Loader2 size={14} className="animate-spin" /> Loading</p>
-              : detail.items.length === 0 ? <p className="text-sm text-neutral-mid">No bookings found.</p>
+              : detail.items.length === 0 ? <p className="text-sm text-neutral-mid">{detail.row.imported_by_month?.[detail.monthKey] ? 'No dated bookings.' : 'No bookings found.'}</p>
               : <ul className="space-y-2">{detail.items.map(i => (
                 <li key={i.id} className="rounded-lg border border-gray-200 p-3 text-sm">
                   <p className="font-medium text-neutral-dark">{describeRange(i.days)}</p>
@@ -124,7 +129,7 @@ function MatrixBlock({ r, months, onOpen }: { r: MatrixRow; months: Matrix['mont
   return (
     <>
       <tr className="bg-white">
-        <td className={`${td} sticky left-0 z-10 bg-white font-medium text-neutral-dark`}>{r.name}{r.carry_in > 0 && <span className="ml-1 text-[11px] font-normal text-neutral-mid">(+{fmtNum(r.carry_in)} carried)</span>}</td>
+        <td className={`${td} sticky left-0 z-10 bg-white font-medium text-neutral-dark`}><span className="inline-flex items-center gap-2"><StaffAvatar name={r.name} photoUrl={r.photo_url} size={24} />{r.name}</span>{r.carry_in > 0 && <span className="ml-1 text-[11px] font-normal text-neutral-mid">(+{fmtNum(r.carry_in)} carried)</span>}</td>
         <td className={`${td} text-neutral-mid`}>{r.start_date ? new Date(r.start_date + 'T00:00:00Z').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' }) : ''}</td>
         <td className={`${td} font-semibold`}>{fmtNum(r.entitlement)} {unit}</td>
         <td className={td}>{r.contracted != null ? fmtNum(r.contracted) : ''}</td>

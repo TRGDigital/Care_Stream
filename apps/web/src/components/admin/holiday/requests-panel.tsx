@@ -3,13 +3,18 @@
 // Holiday requests for the person who decides (an administrator, or a manager when Manager approval is on): the pending list with who else is off on those
 // days, approve or reject with an optional note, and the approved bookings with Change and Remove. Used on the Holiday tracking page and in the hub.
 
-import { useCallback, useEffect, useState } from 'react'
+import { createContext, useCallback, useContext, useEffect, useState } from 'react'
+import { StaffAvatar } from '@/components/admin/staff-avatar'
 import { AlertTriangle, Check, Loader2, Pencil, Trash2, X } from 'lucide-react'
 import { holiday, describeRange, fmtNum, niceDate, unitWord, type ApprovalItem, type DayRow } from '@/lib/holiday-client'
 import { DayHoursEditor } from './day-hours-editor'
 
 const btn = 'inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-semibold disabled:opacity-50'
 const total = (r: ApprovalItem) => (r.unit === 'days' ? `${r.days.length} ${unitWord('days', r.days.length)}` : `${fmtNum(r.total_hours)} ${unitWord('hours', r.total_hours)}`)
+
+// Pictures for the people shown in a request (the owner and the others who are off), keyed by person.
+const Photos = createContext<Record<string, string>>({})
+const Who = ({ id, name }: { id: string; name: string }) => { const ph = useContext(Photos); return <span className="mr-1.5 inline-flex items-center gap-1 align-middle"><StaffAvatar name={name} photoUrl={ph[id]} size={18} />{name}</span> }
 
 function Clashes({ r, max }: { r: ApprovalItem; max: number | null }) {
   if (!r.clashes.length) return <p className="text-sm text-green-700">Nobody else is off on these days.</p>
@@ -22,8 +27,8 @@ function Clashes({ r, max }: { r: ApprovalItem; max: number | null }) {
             <span className="font-medium">{niceDate(c.day)}</span>
             {c.over_limit && <span className="ml-2 rounded-full bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-700">Over the limit</span>}
             <span className="block text-neutral-mid">
-              {c.approved.length > 0 && <>Off: {c.approved.map(a => a.name).join(', ')}. </>}
-              {c.pending.length > 0 && <>Also asked: {c.pending.map(a => a.name).join(', ')}.</>}
+              {c.approved.length > 0 && <>Off: {c.approved.map(a => <Who key={a.user_id} id={a.user_id} name={a.name} />)} </>}
+              {c.pending.length > 0 && <>Also asked: {c.pending.map(a => <Who key={a.user_id} id={a.user_id} name={a.name} />)}</>}
             </span>
           </li>
         ))}
@@ -66,7 +71,7 @@ function Row({ token, r, max, onChanged }: { token: string; r: ApprovalItem; max
     <li className="space-y-3 rounded-xl border border-gray-200 bg-white p-4">
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div>
-          <p className="text-base font-bold text-neutral-dark">{r.name}</p>
+          <p className="flex items-center gap-2 text-base font-bold text-neutral-dark"><Who id={r.user_id} name={r.name} /></p>
           <p className="text-sm text-neutral-dark">{describeRange(r.days)}</p>
           <p className="text-sm text-neutral-mid">{total(r)}{r.requested_at ? ` · asked ${new Date(r.requested_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}` : ''}</p>
         </div>
@@ -109,10 +114,11 @@ export function RequestsPanel({ token, onCount }: { token: string; onCount?: (n:
   const [tab, setTab] = useState<'pending' | 'approved' | 'rejected'>('pending')
   const [items, setItems] = useState<ApprovalItem[] | null>(null)
   const [max, setMax] = useState<number | null>(null)
+  const [photos, setPhotos] = useState<Record<string, string>>({})
   const [error, setError] = useState('')
   const load = useCallback(() => {
     setError('')
-    holiday.approvals(token, tab).then(r => { setItems(r.requests); setMax(r.max_off); if (tab === 'pending') onCount?.(r.requests.length) }).catch(e => { setItems([]); setError(e?.message ?? 'Could not load the requests.') })
+    holiday.approvals(token, tab).then(r => { setItems(r.requests); setMax(r.max_off); setPhotos(r.photos ?? {}); if (tab === 'pending') onCount?.(r.requests.length) }).catch(e => { setItems([]); setError(e?.message ?? 'Could not load the requests.') })
   }, [token, tab, onCount])
   useEffect(() => { setItems(null); load() }, [load])
   return (
@@ -125,7 +131,7 @@ export function RequestsPanel({ token, onCount }: { token: string; onCount?: (n:
       {error && <p className="text-sm text-red-700" role="alert">{error}</p>}
       {items === null ? <p className="flex items-center gap-2 text-sm text-neutral-mid"><Loader2 size={14} className="animate-spin" /> Loading</p>
         : items.length === 0 ? <p className="rounded-xl bg-neutral-light px-4 py-6 text-center text-sm text-neutral-mid">{tab === 'pending' ? 'No requests are waiting.' : tab === 'approved' ? 'No approved holiday yet.' : 'Nothing here.'}</p>
-        : <ul className="space-y-3">{items.map(r => <Row key={r.id} token={token} r={r} max={max} onChanged={load} />)}</ul>}
+        : <Photos.Provider value={photos}><ul className="space-y-3">{items.map(r => <Row key={r.id} token={token} r={r} max={max} onChanged={load} />)}</ul></Photos.Provider>}
     </div>
   )
 }

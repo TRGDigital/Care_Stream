@@ -3979,3 +3979,20 @@ model HolidayDay {
   @@index([user_id, day])
   @@map("holiday_days")
 }
+
+// Monthly holiday figures loaded from the old spreadsheet (no dates). See prisma/sql/2026-11-25_holiday_month_totals.sql.
+model HolidayMonthTotal {
+  id           String   @id @default(uuid())
+  tenant_id    String
+  user_id      String
+  year         Int
+  month        Int
+  taken_hours  Decimal  @default(0) @db.Decimal(8, 2)
+  booked_hours Decimal  @default(0) @db.Decimal(8, 2)
+  source       String   @default("import")
+  updated_at   DateTime @default(now()) @updatedAt
+
+  @@unique([tenant_id, user_id, year, month])
+  @@index([tenant_id, year])
+  @@map("holiday_month_totals")
+}

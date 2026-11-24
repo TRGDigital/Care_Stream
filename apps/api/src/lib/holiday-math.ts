@@ -78,7 +78,10 @@ export interface Balance {
   by_month_booked: Record<string, number>
 }
 
-export function balanceFor(o: { allowance: number | null; unit: Unit; carryIn?: number; days: DayRow[]; range: YearRange; today: string }): Balance {
+/** Monthly figures loaded from the old spreadsheet (no dates): they count as taken or booked in that month, in the person's own unit. */
+export interface MonthlyFigure { key: string; taken: number; booked: number }
+
+export function balanceFor(o: { allowance: number | null; unit: Unit; carryIn?: number; days: DayRow[]; range: YearRange; today: string; monthly?: MonthlyFigure[] }): Balance {
   const allowance = o.allowance != null && isFinite(o.allowance) ? o.allowance : 0
   const carry_in = Math.max(0, o.carryIn ?? 0)
   const months = monthsOfYear(o.range)
@@ -90,6 +93,10 @@ export function balanceFor(o: { allowance: number | null; unit: Unit; carryIn?: 
     const v = valueOf(d, o.unit)
     const key = d.day.slice(0, 7)
     if (d.day <= o.today) { t += v; if (key in taken) taken[key] += v } else { b += v; if (key in booked) booked[key] += v }
+  }
+  for (const f of o.monthly ?? []) {
+    if (!(f.key in taken)) continue
+    taken[f.key] += f.taken; booked[f.key] += f.booked; t += f.taken; b += f.booked
   }
   const entitlement = round2(allowance + carry_in)
   const used = round2(t + b)
@@ -103,7 +110,7 @@ export function balanceFor(o: { allowance: number | null; unit: Unit; carryIn?: 
 }
 
 /** Untaken holiday brought in from the years before `year`, when carry over is on (0 when it is off). Looks back at most `back` years. */
-export function carryInFor(o: { year: number; allowance: number | null; unit: Unit; days: DayRow[]; month: number; day: number; carryOver: boolean; back?: number }): number {
+export function carryInFor(o: { year: number; allowance: number | null; unit: Unit; days: DayRow[]; month: number; day: number; carryOver: boolean; back?: number; monthly?: MonthlyFigure[] }): number {
   if (!o.carryOver) return 0
   const back = o.back ?? 3
   let carry = 0
@@ -111,8 +118,9 @@ export function carryInFor(o: { year: number; allowance: number | null; unit: Un
   for (let y = o.year - back; y < o.year; y++) {
     const r = yearRange(y, o.month, o.day)
     const inYear = o.days.filter(d => d.day >= r.from && d.day <= r.to)
-    if (inYear.length === 0 && carry === 0) continue   // nothing booked and nothing carried: the person was not tracked that year
-    const used = inYear.reduce((s, d) => s + valueOf(d, o.unit), 0)
+    const figs = (o.monthly ?? []).filter(f => f.key >= r.from.slice(0, 7) && f.key <= r.to.slice(0, 7))
+    if (inYear.length === 0 && figs.length === 0 && carry === 0) continue   // nothing booked and nothing carried: the person was not tracked that year
+    const used = inYear.reduce((s, d) => s + valueOf(d, o.unit), 0) + figs.reduce((s, f) => s + f.taken + f.booked, 0)
     carry = Math.max(0, (o.allowance ?? 0) + carry - used)
   }
   return round2(carry)
@@ -211,3 +219,82 @@ export function parseImportCsv(text: string): { rows: ImportRow[]; header: boole
   })
   return { rows, header }
 }
+
+
+// ── The monthly matrix (the old spreadsheet) ────────────────────────────────────────────────
+// One block per person: a row of TAKEN hours per month, then a row whose first cell is "Booked" with the BOOKED hours per month. The Total, Remaining
+// and Percentage columns are ignored (they are worked out again). Month columns look like Jan-26.
+const MONTH_WORDS = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec']
+export function parseMonthHeader(cell: string): { year: number; month: number } | null {
+  const m = String(cell ?? '').trim().toLowerCase().match(/^([a-z]{3})[a-z]*[\s\-\/']*(\d{2}|\d{4})$/)
+  if (!m) return null
+  const mi = MONTH_WORDS.indexOf(m[1]); if (mi < 0) return null
+  const y = Number(m[2]); return { year: y < 100 ? 2000 + y : y, month: mi + 1 }
+}
+export interface MatrixPerson { line: number; name: string; email: string | null; start_date: string | null; entitlement: number | null; contracted: number | null; taken: Record<string, number>; booked: Record<string, number> }
+export interface MatrixProblem { line: number; message: string }
+export interface MatrixParse { matrix: boolean; people: MatrixPerson[]; problems: MatrixProblem[]; months: string[]; date_format: 'mdy' | 'dmy' | 'ambiguous' }
+
+export function looksLikeMatrix(text: string): boolean {
+  const first = String(text ?? '').replace(/^\uFEFF/, '').split(/\r?\n/).find(l => l.replace(/[,\s]/g, '') !== '')
+  if (!first) return false
+  const c = splitCsv(first)
+  return /^(staff )?name$/i.test((c[0] ?? '').trim()) && c.filter(x => parseMonthHeader(x)).length >= 3
+}
+
+const numCell = (v: string | undefined): number | null | 'bad' => {
+  const t = String(v ?? '').trim().replace(/,/g, '')
+  if (t === '') return null
+  const n = Number(t); return isFinite(n) && n >= 0 ? Math.round(n * 100) / 100 : 'bad'
+}
+
+export function parseMatrixCsv(text: string): MatrixParse {
+  const lines = String(text ?? '').replace(/^\uFEFF/, '').split(/\r?\n/)
+  const out: MatrixParse = { matrix: false, people: [], problems: [], months: [], date_format: 'ambiguous' }
+  let hi = lines.findIndex(l => l.replace(/[,\s]/g, '') !== '')
+  if (hi < 0) return out
+  const head = splitCsv(lines[hi])
+  const cols: Array<{ idx: number; key: string }> = []
+  head.forEach((h, idx) => { const m = parseMonthHeader(h); if (m) cols.push({ idx, key: `${m.year}-${pad(m.month)}` }) })
+  if (!/^(staff )?name$/i.test((head[0] ?? '').trim()) || cols.length < 3) return out
+  out.matrix = true; out.months = cols.map(c => c.key)
+  const find = (re: RegExp) => head.findIndex(h => re.test(h.toLowerCase()))
+  const iStart = find(/start/), iEnt = find(/entitle/), iHrs = find(/contract/), iEmail = find(/e-?mail/)
+  // Dates in the file are month first or day first: decided from the whole column (a day above 12 settles it), month first when it cannot be told.
+  const rawDates: string[] = []
+  for (let i = hi + 1; i < lines.length; i++) { const c = splitCsv(lines[i]); if (iStart >= 0 && c[iStart]) rawDates.push(c[iStart].trim()) }
+  const parts = rawDates.map(d => d.match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{4})$/)).filter(Boolean) as RegExpMatchArray[]
+  const dmy = parts.some(m => Number(m[1]) > 12), mdy = parts.some(m => Number(m[2]) > 12)
+  out.date_format = dmy && !mdy ? 'dmy' : mdy && !dmy ? 'mdy' : 'ambiguous'
+  const fmt = out.date_format === 'dmy' ? 'dmy' : 'mdy'
+  const toDate = (t: string): string | null => {
+    const s = t.trim(); if (!s) return null
+    if (/^\d{4}-\d{2}-\d{2}$/.test(s) && isYmd(s as string)) return s
+    const m = s.match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{4})$/); if (!m) return null
+    const d = fmt === 'dmy' ? Number(m[1]) : Number(m[2]), mo = fmt === 'dmy' ? Number(m[2]) : Number(m[1])
+    const iso = `${m[3]}-${pad(mo)}-${pad(d)}`; return isYmd(iso) ? iso : null
+  }
+  let cur: MatrixPerson | null = null
+  for (let i = hi + 1; i < lines.length; i++) {
+    const raw = lines[i]; if (raw.replace(/[,\s]/g, '') === '') continue
+    const c = splitCsv(raw), name = (c[0] ?? '').trim(), line = i + 1
+    const cells = (target: Record<string, number>) => {
+      for (const col of cols) { const v = numCell(c[col.idx]); if (v === 'bad') out.problems.push({ line, message: `${head[col.idx]} is not a number.` }); else if (v !== null) target[col.key] = v }
+    }
+    if (name.toLowerCase() === 'booked') {
+      if (!cur) { out.problems.push({ line, message: 'A Booked row with no person above it.' }); continue }
+      cells(cur.booked); continue
+    }
+    if (!name) { out.problems.push({ line, message: 'A row with no name.' }); continue }
+    cur = { line, name, email: iEmail >= 0 ? ((c[iEmail] ?? '').trim().toLowerCase() || null) : null, start_date: iStart >= 0 ? toDate(c[iStart] ?? '') : null, entitlement: null, contracted: null, taken: {}, booked: {} }
+    if (iStart >= 0 && (c[iStart] ?? '').trim() && !cur.start_date) out.problems.push({ line, message: `The start date "${c[iStart].trim()}" is not a date.` })
+    if (iEnt >= 0) { const v = numCell(c[iEnt]); cur.entitlement = v === 'bad' ? null : v; if (v === 'bad') out.problems.push({ line, message: 'The entitlement is not a number.' }) }
+    if (iHrs >= 0) { const v = numCell(c[iHrs]); cur.contracted = v === 'bad' ? null : v; if (v === 'bad') out.problems.push({ line, message: 'The contracted hours are not a number.' }) }
+    cells(cur.taken)
+    out.people.push(cur)
+  }
+  return out
+}
+
+/** A name for matching people between a file and the staff list: lower case, punctuation and extra spaces ignored. */
+export const nameKey = (s: string): string => String(s ?? '').toLowerCase().replace(/[^\p{L}\p{N}\s]/gu, ' ').replace(/\s+/g, ' ').trim()

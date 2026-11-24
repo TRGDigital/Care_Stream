@@ -3,6 +3,7 @@
 // Who is off, by month, in the same style as the face to face training calendar (Monday first, today ringed). Approved holiday only. Each row ends with a
 // summary for that week (a week is 7 days, Monday to Sunday). Bank holidays are marked with their pay multiplier. "This week" lists the week in full.
 
+import { StaffAvatar } from '@/components/admin/staff-avatar'
 import { useEffect, useMemo, useState } from 'react'
 import { ChevronLeft, ChevronRight, Loader2 } from 'lucide-react'
 import { holiday, addDays, eachDay, niceDate, type CalendarData } from '@/lib/holiday-client'
@@ -78,7 +79,7 @@ export function CalendarTab({ token }: { token: string }) {
                 <li key={d} className="flex flex-wrap items-baseline gap-x-4 gap-y-1 py-2">
                   <span className={`w-28 text-sm font-medium ${d === today ? 'text-teal' : 'text-neutral-dark'}`}>{niceDate(d)}</span>
                   {b && <span className="rounded bg-amber-50 px-1.5 py-0.5 text-xs text-amber-800">{b.name}, paid at {b.multiplier} times</span>}
-                  <span className={`text-sm ${max && list.length > max ? 'font-semibold text-red-700' : 'text-neutral-dark'}`}>{list.length ? list.map(p => p.name).join(', ') : <span className="text-neutral-mid">Nobody off</span>}</span>
+                  <span className={`text-sm ${max && list.length > max ? 'font-semibold text-red-700' : 'text-neutral-dark'}`}>{list.length ? list.map(p => <span key={p.user_id} className="mr-2 inline-flex items-center gap-1 align-middle"><StaffAvatar name={p.name} photoUrl={p.photo_url} size={18} />{p.name}</span>) : <span className="text-neutral-mid">Nobody off</span>}</span>
                 </li>
               )
             })}
@@ -106,7 +107,7 @@ export function CalendarTab({ token }: { token: string }) {
                       </div>
                       {b && <p className="mt-0.5 truncate rounded bg-amber-50 px-1 text-[10px] text-amber-800" title={`${b.name}, paid at ${b.multiplier} times`}>{b.name} {b.multiplier}x</p>}
                       <ul className="mt-0.5 space-y-0.5">
-                        {list.slice(0, 3).map(p => <li key={p.user_id} className="truncate text-[11px] text-neutral-dark" title={`${p.name}, ${p.hours} hours`}>{p.name}</li>)}
+                        {list.slice(0, 3).map(p => <li key={p.user_id} className="flex items-center gap-1 truncate text-[11px] text-neutral-dark" title={`${p.name}, ${p.hours} hours`}><StaffAvatar name={p.name} photoUrl={p.photo_url} size={14} /><span className="truncate">{p.name}</span></li>)}
                         {list.length > 3 && <li className="text-[11px] text-neutral-mid" title={list.slice(3).map(p => p.name).join(', ')}>+{list.length - 3} more</li>}
                       </ul>
                     </div>

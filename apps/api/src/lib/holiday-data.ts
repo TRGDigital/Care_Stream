@@ -4,8 +4,9 @@ import { prisma } from '../db/client'
 import { writeAuditLog } from './audit'
 import { isManagerJobRole } from './care-manager'
 import { SUPPORT_BANK_HOLIDAYS } from '../data/support-chat-bank-holidays'
+import { staffPhotoUrls } from './staff-photos'
 import {
-  type Unit, type DayRow, balanceFor, carryInFor, monthsOfYear, yearRange, yearContaining, bankMultiplier, DEFAULT_BANK_MULTIPLIER, BANK_MULTIPLIERS, ukToday,
+  type Unit, type DayRow, type MonthlyFigure, balanceFor, carryInFor, monthsOfYear, yearRange, yearContaining, bankMultiplier, DEFAULT_BANK_MULTIPLIER, BANK_MULTIPLIERS, ukToday,
 } from './holiday-math'
 
 const p = () => prisma as any
@@ -76,10 +77,26 @@ export async function approvedDays(tenantId: string, from: string, to: string, u
   return rows.map((r: any) => ({ user_id: r.user_id, request_id: r.request_id, day: ymd(r.day), hours: Number(r.hours) }))
 }
 
+/** Monthly figures loaded from the old spreadsheet, by person. A missing table means there are none (the SQL may not have been run yet). */
+export async function monthTotals(tenantId: string, userIds: string[]): Promise<Map<string, MonthlyFigure[]>> {
+  const out = new Map<string, MonthlyFigure[]>()
+  if (!userIds.length) return out
+  try {
+    const rows = await p().holidayMonthTotal.findMany({ where: { tenant_id: tenantId, user_id: { in: userIds } }, select: { user_id: true, year: true, month: true, taken_hours: true, booked_hours: true } })
+    for (const r of rows) {
+      const l = out.get(r.user_id) ?? []
+      l.push({ key: `${r.year}-${String(r.month).padStart(2, '0')}`, taken: Number(r.taken_hours), booked: Number(r.booked_hours) })
+      out.set(r.user_id, l)
+    }
+  } catch { /* table not created yet: no imported figures */ }
+  return out
+}
+
 export interface MatrixRow {
   user_id: string; name: string; job_role: string | null; start_date: string | null; unit: Unit
   allowance: number | null; carry_in: number; entitlement: number; contracted: number | null
   taken_by_month: Record<string, number>; booked_by_month: Record<string, number>
+  imported_by_month: Record<string, { taken: number; booked: number }>; photo_url: string | null
   taken: number; booked: number; remaining: number; percent_taken: number
 }
 
@@ -90,15 +107,20 @@ export async function buildMatrix(tenantId: string, year: number, settings: Holi
   const roster = await loadRoster(tenantId)
   const earliest = yearRange(year - 3, month, day).from
   const all = await approvedDays(tenantId, earliest, range.to, roster.map(r => r.id))
+  const totals = await monthTotals(tenantId, roster.map(r => r.id))
+  const photos = await staffPhotoUrls(tenantId, roster.map(r => r.id))
   const by = new Map<string, DayRow[]>()
   for (const d of all) { const l = by.get(d.user_id) ?? []; l.push({ day: d.day, hours: d.hours }); by.set(d.user_id, l) }
   const rows: MatrixRow[] = roster.map(r => {
     const days = by.get(r.id) ?? []
-    const carry = carryInFor({ year, allowance: r.allowance, unit: r.unit, days, month, day, carryOver: settings.carry_over })
-    const b = balanceFor({ allowance: r.allowance, unit: r.unit, carryIn: carry, days, range, today })
+    const figs = totals.get(r.id) ?? []
+    const carry = carryInFor({ year, allowance: r.allowance, unit: r.unit, days, month, day, carryOver: settings.carry_over, monthly: figs })
+    const b = balanceFor({ allowance: r.allowance, unit: r.unit, carryIn: carry, days, range, today, monthly: figs })
+    const imported: Record<string, { taken: number; booked: number }> = {}
+    for (const f of figs) if (f.key in b.by_month_taken) imported[f.key] = { taken: f.taken, booked: f.booked }
     return {
       user_id: r.id, name: r.name, job_role: r.job_role, start_date: r.start_date, unit: r.unit, allowance: r.allowance, carry_in: b.carry_in, entitlement: b.entitlement, contracted: r.contracted,
-      taken_by_month: b.by_month_taken, booked_by_month: b.by_month_booked, taken: b.taken, booked: b.booked, remaining: b.remaining, percent_taken: b.percent_taken,
+      taken_by_month: b.by_month_taken, booked_by_month: b.by_month_booked, imported_by_month: imported, photo_url: photos.get(r.id) ?? null, taken: b.taken, booked: b.booked, remaining: b.remaining, percent_taken: b.percent_taken,
     }
   })
   return { year, label: range.label, from: range.from, to: range.to, months: monthsOfYear(range), rows, today }
@@ -109,8 +131,9 @@ export async function personBalance(tenantId: string, person: RosterPerson, year
   const { month, day } = settings.year_start
   const range = yearRange(year, month, day)
   const days = (await approvedDays(tenantId, yearRange(year - 3, month, day).from, range.to, [person.id])).map(d => ({ day: d.day, hours: d.hours }))
-  const carry = carryInFor({ year, allowance: person.allowance, unit: person.unit, days, month, day, carryOver: settings.carry_over })
-  return { range, balance: balanceFor({ allowance: person.allowance, unit: person.unit, carryIn: carry, days, range, today }) }
+  const figs = (await monthTotals(tenantId, [person.id])).get(person.id) ?? []
+  const carry = carryInFor({ year, allowance: person.allowance, unit: person.unit, days, month, day, carryOver: settings.carry_over, monthly: figs })
+  return { range, balance: balanceFor({ allowance: person.allowance, unit: person.unit, carryIn: carry, days, range, today, monthly: figs }) }
 }
 
 /** England and Wales bank holidays with the pay multiplier the account has chosen. Stored and shown, never deducted. */

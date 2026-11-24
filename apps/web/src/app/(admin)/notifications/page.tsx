@@ -6,7 +6,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useSession } from 'next-auth/react'
 import { Bell, Check, ChevronLeft, Loader2, Mail, Search, Send } from 'lucide-react'
-import { adminNotifications, fmtWhen, BODY_MAX, TITLE_MAX, NotificationsError, type SentItem, type SentDetail, type StaffOption } from '@/lib/notifications-client'
+import { AttachPicker } from '@/components/notifications/attach-picker'
+import { AttachmentList, PaperclipCount, fileIcon } from '@/components/notifications/attachments'
+import { adminNotifications, fmtSize, type FileItem, fmtWhen, BODY_MAX, TITLE_MAX, NotificationsError, type SentItem, type SentDetail, type StaffOption } from '@/lib/notifications-client'
 
 const FIELD = 'w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-neutral-dark outline-none focus:border-teal focus:ring-2 focus:ring-teal/20'
 const BTN = 'inline-flex min-h-[40px] items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold disabled:opacity-50'
@@ -39,6 +41,7 @@ export default function NotificationsPage() {
   const [body, setBody] = useState('')
   const [audience, setAudience] = useState<'all' | 'selected'>('all')
   const [chosen, setChosen] = useState<Set<string>>(new Set())
+  const [files, setFiles] = useState<FileItem[]>([])
   const [query, setQuery] = useState('')
   const [step, setStep] = useState<'write' | 'confirm'>('write')
   const [busy, setBusy] = useState(false)
@@ -74,9 +77,9 @@ export default function NotificationsPage() {
     if (!token || busy) return
     setBusy(true); setError('')
     try {
-      const r = await adminNotifications.send(token, { title: title.trim(), body: body.trim(), audience, ...(audience === 'selected' ? { user_ids: [...chosen] } : {}) })
+      const r = await adminNotifications.send(token, { title: title.trim(), body: body.trim(), audience, ...(audience === 'selected' ? { user_ids: [...chosen] } : {}), ...(files.length ? { file_ids: files.map(f => f.id) } : {}) })
       setDone(`Sent to ${r.recipients} ${r.recipients === 1 ? 'person' : 'people'}.${r.email_failed ? ` ${r.email_failed} email${r.email_failed === 1 ? '' : 's'} could not be sent, but ${r.email_failed === 1 ? 'it' : 'they'} will still see it in their hub.` : ' They have been emailed and will see it in their hub.'}`)
-      setTitle(''); setBody(''); setChosen(new Set()); setAudience('all'); setStep('write')
+      setTitle(''); setBody(''); setFiles([]); setChosen(new Set()); setAudience('all'); setStep('write')
       await load()
     } catch (e) { setError(e instanceof Error ? e.message : 'Could not send it.'); setStep('write') } finally { setBusy(false) }
   }
@@ -105,6 +108,8 @@ export default function NotificationsPage() {
               <label htmlFor="n-body" className="mb-1 flex justify-between text-sm font-medium text-neutral-dark"><span>Message</span><span className="text-xs font-normal text-neutral-mid">{body.length}/{BODY_MAX}</span></label>
               <textarea id="n-body" className={FIELD} rows={6} maxLength={BODY_MAX} value={body} onChange={e => setBody(e.target.value)} placeholder="Write what you want your team to know. Plain text, line breaks are kept." />
             </div>
+
+            <AttachPicker token={token} files={files} onChange={setFiles} disabled={busy} />
 
             <fieldset>
               <legend className="mb-2 text-sm font-medium text-neutral-dark">Send to</legend>
@@ -155,6 +160,11 @@ export default function NotificationsPage() {
               <p className="text-xs text-neutral-mid">From {me}</p>
               <p className="mt-2 text-base font-bold text-neutral-dark">{title}</p>
               <div className="mt-2 space-y-3 text-sm leading-relaxed text-neutral-dark">{paragraphs(body).map((p, i) => <p key={i} className="whitespace-pre-line">{p}</p>)}</div>
+              {files.length > 0 && (
+                <ul className="mt-3 space-y-1 border-t border-gray-200 pt-3" aria-label="Attached documents">
+                  {files.map(f => <li key={f.id} className="flex items-center gap-2 text-sm text-neutral-dark"><span className="text-teal">{fileIcon(f.mime, 16)}</span><span className="truncate">{f.name}</span><span className="text-xs text-neutral-mid">{fmtSize(f.size_bytes)}</span></li>)}
+                </ul>
+              )}
             </div>
             <p className="flex items-center gap-2 text-sm text-neutral-dark"><Mail size={15} aria-hidden="true" /> {recipientCount} {recipientCount === 1 ? 'person' : 'people'} will be emailed: {audience === 'all' ? 'all staff' : 'the staff you chose'}.</p>
             {error && <p role="alert" className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
@@ -177,7 +187,7 @@ export default function NotificationsPage() {
                   <button type="button" onClick={() => setOpenId(n.id)} className="flex w-full flex-wrap items-center justify-between gap-3 px-4 py-3 text-left hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-teal/30">
                     <span className="min-w-0">
                       <span className="block truncate text-sm font-semibold text-neutral-dark">{n.title}</span>
-                      <span className="block text-xs text-neutral-mid">{fmtWhen(n.created_at)}, from {n.created_by_name}{n.audience === 'all' ? ', all staff' : ''}</span>
+                      <span className="block text-xs text-neutral-mid">{fmtWhen(n.created_at)}, from {n.created_by_name}{n.audience === 'all' ? ', all staff' : ''} <PaperclipCount count={n.file_count} className="ml-1" /></span>
                     </span>
                     <Progress read={n.read} total={n.total} />
                   </button>
@@ -215,6 +225,7 @@ function Detail({ token, id, onBack }: { token: string; id: string; onBack: () =
             <h1 className="text-xl font-bold text-neutral-dark">{n.title}</h1>
             <p className="mt-1 text-xs text-neutral-mid">{fmtWhen(n.created_at)}, from {n.created_by_name}</p>
             <div className="mt-3 space-y-3 text-sm leading-relaxed text-neutral-dark">{paragraphs(n.body).map((p, i) => <p key={i} className="whitespace-pre-line">{p}</p>)}</div>
+            <AttachmentList files={n.files} token={token} pathFor={fid => `/notifications/files/${encodeURIComponent(fid)}/download`} />
           </div>
           <div className="rounded-xl border border-gray-200 bg-white shadow-sm">
             <div className="flex flex-wrap items-center justify-between gap-3 border-b border-gray-100 px-5 py-3">

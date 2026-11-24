@@ -7,6 +7,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import { Bell } from 'lucide-react'
+import { PaperclipCount } from '@/components/notifications/attachments'
 import { myNotifications, type MyItem } from '@/lib/notifications-client'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
@@ -75,7 +76,7 @@ export function NotificationOverlay() {
           </div>
         </div>
         <ul className="mt-4 space-y-1.5">
-          {items.slice(0, 3).map(i => <li key={i.id} className="truncate rounded-lg bg-gray-50 px-3 py-2 text-sm font-medium text-neutral-dark">{i.title}</li>)}
+          {items.slice(0, 3).map(i => <li key={i.id} className="flex items-center gap-2 rounded-lg bg-gray-50 px-3 py-2 text-sm font-medium text-neutral-dark"><span className="min-w-0 flex-1 truncate">{i.title}</span><PaperclipCount count={i.file_count} /></li>)}
           {items.length > 3 && <li className="px-1 text-xs text-neutral-mid">and {items.length - 3} more</li>}
         </ul>
         <div className="mt-5 flex flex-col gap-2 sm:flex-row-reverse">

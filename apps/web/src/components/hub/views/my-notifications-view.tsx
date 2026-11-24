@@ -4,6 +4,7 @@
 import { useEffect, useState } from 'react'
 import { useSession } from 'next-auth/react'
 import { Bell, Check, Loader2 } from 'lucide-react'
+import { PaperclipCount } from '@/components/notifications/attachments'
 import { myNotifications, fmtWhen, type MyItem } from '@/lib/notifications-client'
 
 export function MyNotificationsView({ onOpen }: { onOpen: (id: string) => void }) {
@@ -26,7 +27,7 @@ export function MyNotificationsView({ onOpen }: { onOpen: (id: string) => void }
                     <button type="button" onClick={() => onOpen(n.id)} className="flex min-h-[60px] items-center justify-between gap-3 px-4 py-3 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-teal/30 w-full text-left">
                       <span className="min-w-0">
                         <span className={`block truncate text-base ${n.read_at ? 'font-medium text-neutral-dark' : 'font-bold text-neutral-dark'}`}>{n.title}</span>
-                        <span className="block text-xs text-neutral-mid">From {n.sender_name}, {fmtWhen(n.created_at)}</span>
+                        <span className="block text-xs text-neutral-mid">From {n.sender_name}, {fmtWhen(n.created_at)} <PaperclipCount count={n.file_count} className="ml-1" /></span>
                       </span>
                       {n.read_at ? <span className="inline-flex shrink-0 items-center gap-1 text-xs text-green-700"><Check size={14} aria-hidden="true" /> Read</span>
                         : <span className="shrink-0 rounded-full bg-teal px-2.5 py-0.5 text-xs font-semibold text-white">New</span>}

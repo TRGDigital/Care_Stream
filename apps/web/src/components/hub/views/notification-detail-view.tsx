@@ -4,6 +4,7 @@
 import { useEffect, useState } from 'react'
 import { useSession } from 'next-auth/react'
 import { Check, ChevronLeft, Loader2 } from 'lucide-react'
+import { AttachmentList } from '@/components/notifications/attachments'
 import { myNotifications, fmtWhen } from '@/lib/notifications-client'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
@@ -45,6 +46,7 @@ export function NotificationDetailView({ id, onBack }: { id: string; onBack: () 
               <div className="mt-3 space-y-3 text-base leading-relaxed text-neutral-dark">
                 {n.body.split(/\n{2,}/).filter(p => p.trim()).map((p, i) => <p key={i} className="whitespace-pre-line">{p}</p>)}
               </div>
+              {token && <AttachmentList files={n.files} token={token} pathFor={fid => `/me/notifications/${encodeURIComponent(n.id)}/files/${encodeURIComponent(fid)}`} />}
               <div className="mt-6 border-t border-gray-100 pt-5">
                 {n.read_at
                   ? <p className="inline-flex items-center gap-2 text-base font-semibold text-green-700" role="status"><Check size={18} aria-hidden="true" /> Read {fmtWhen(n.read_at)}</p>

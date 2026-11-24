@@ -61,3 +61,24 @@ test('what is sent to the server is ids and numbers only: no names and no labels
   assert.ok(!JSON.stringify(w).includes('Aisha') && !JSON.stringify(w).includes('salary'))
   assert.equal(toWireContext(null), undefined)
 })
+
+test('page publishers: the residents screen publishes an id only, and no publisher sends pay, funding or health text (source check)', async () => {
+  const fs = await import('fs')
+  const root = path.resolve(__dirname, '../../../web/src')
+  const res = fs.readFileSync(path.join(root, 'components/admin/residents-overlay.tsx'), 'utf8')
+  const line = res.split('\n').find(l => l.includes("page: 'residents'")) ?? ''
+  assert.ok(line.includes('residentId: selected'), 'publishes the id')
+  assert.ok(!/name|fee|funding|£/i.test(line.replace('the residents screen', '').replace('a resident record', '')), 'no names or money')
+  for (const f of ['app/(admin)/holiday/page.tsx', 'components/admin/holiday/matrix-tab.tsx', 'components/admin/holiday/calendar-tab.tsx', 'app/(admin)/staff/page.tsx', 'app/(admin)/staff/[id]/page.tsx', 'app/(admin)/notifications/page.tsx', 'app/(admin)/dashboard/page.tsx']) {
+    const src = fs.readFileSync(path.join(root, f), 'utf8')
+    const l = src.split('\n').filter(x => x.includes('useAskPageContext(')).join('\n')
+    assert.ok(l.length > 0, `${f} publishes a context`)
+    assert.ok(!/rate|salary|sick|pay\b|funding|£/i.test(l), `${f} publishes nothing about pay, health or funding`)
+  }
+})
+
+test('the support chat bubble moves out of the way of a docked panel', async () => {
+  const fs = await import('fs')
+  const src = fs.readFileSync(path.resolve(__dirname, '../../../web/src/components/support/chat-widget.tsx'), 'utf8')
+  assert.ok(src.includes('var(--ask-dock,0px)'))
+})

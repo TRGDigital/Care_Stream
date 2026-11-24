@@ -1,6 +1,7 @@
 'use client'
 
 // Holiday tracking (pilot: account CS-1001 only). Matrix, calendar, requests and import. See apps/api/src/routes/holiday.ts.
+import { useAskPageContext } from '@/lib/ask-context'
 import { useState } from 'react'
 import { useSession } from 'next-auth/react'
 import { Loader2 } from 'lucide-react'
@@ -19,6 +20,7 @@ export default function HolidayPage() {
   const token = (session as any)?.accessToken as string | undefined
   const { meta } = useHolidayMeta()
   const [tab, setTab] = useState<typeof TABS[number][0]>('matrix')
+  useAskPageContext(tab === 'requests' ? { page: 'holiday-requests', label: 'the holiday requests' } : null)   // matrix and calendar publish their own (with the year or month)
   const [pending, setPending] = useState<number | null>(null)
   const [addSick, setAddSick] = useState(false)
   const [reloadKey, setReloadKey] = useState(0)

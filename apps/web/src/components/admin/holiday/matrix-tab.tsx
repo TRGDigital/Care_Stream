@@ -3,6 +3,7 @@
 // The holiday matrix: one block per active person (what they have taken, and a "Booked" row beneath), by month, with totals, what is left and the percentage taken.
 // Like the spreadsheet it replaces. Only approved holiday counts. Click a figure to see the bookings behind it. Export to CSV for payroll.
 
+import { useAskPageContext } from '@/lib/ask-context'
 import { StaffAvatar } from '@/components/admin/staff-avatar'
 import { useEffect, useMemo, useState } from 'react'
 import { AlertTriangle, ChevronLeft, ChevronRight, Download, Info, Loader2, Search, X } from 'lucide-react'
@@ -58,6 +59,7 @@ export function matrixToCsv(m: Matrix): string {
 export function MatrixTab({ token }: { token: string }) {
   const [m, setM] = useState<Matrix | null>(null)
   const [year, setYear] = useState<number | undefined>(undefined)
+  useAskPageContext({ page: 'holiday-matrix', label: m?.year ? `the holiday matrix for ${m.label ?? m.year}` : 'the holiday matrix', year: m?.year })
   const [q, setQ] = useState('')
   const [error, setError] = useState('')
   const [detail, setDetail] = useState<{ row: MatrixRow; monthKey: string; label: string; kind: 'taken' | 'booked'; items: Request[] | null } | null>(null)

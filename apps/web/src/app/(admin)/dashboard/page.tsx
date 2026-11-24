@@ -1,5 +1,6 @@
 'use client'
 
+import { useAskPageContext } from '@/lib/ask-context'
 import React, { useEffect, useState } from 'react'
 import { useSession } from 'next-auth/react'
 import Link from 'next/link'
@@ -217,6 +218,7 @@ type DashboardCache = {
 type DuePolicy = { policy_id: string; name: string; last_reviewed_at: string; next_review_due: string; days_overdue: number }
 
 export default function DashboardPage() {
+  useAskPageContext({ page: 'dashboard', label: 'the dashboard' })
   const { data: session } = useSession()
   const router = useRouter()
   const userId = session?.user?.email ?? 'guest'

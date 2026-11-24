@@ -3,6 +3,7 @@
 // Notifications: an administrator writes a message and sends it to all staff or chosen staff. Each person gets an email and, at their next sign in,
 // an overlay in their hub; they open it and press Mark as read, and this page shows who has read it.
 
+import { useAskPageContext } from '@/lib/ask-context'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useSession } from 'next-auth/react'
 import { Bell, Check, ChevronLeft, Loader2, Mail, Search, Send } from 'lucide-react'
@@ -28,6 +29,7 @@ function Progress({ read, total }: { read: number; total: number }) {
 }
 
 export default function NotificationsPage() {
+  useAskPageContext({ page: 'notifications', label: 'the notifications page' })
   const { data: session } = useSession()
   const token = session?.accessToken
   const me = session?.user?.name ?? 'You'

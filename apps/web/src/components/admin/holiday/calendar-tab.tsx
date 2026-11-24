@@ -3,6 +3,7 @@
 // Who is off, by month, in the same style as the face to face training calendar (Monday first, today ringed). Approved holiday only. Each row ends with a
 // summary for that week (a week is 7 days, Monday to Sunday). Bank holidays are marked with their pay multiplier. "This week" lists the week in full.
 
+import { useAskPageContext } from '@/lib/ask-context'
 import { StaffAvatar } from '@/components/admin/staff-avatar'
 import { useEffect, useMemo, useState } from 'react'
 import { ChevronLeft, ChevronRight, Download, FileText, Loader2, Printer } from 'lucide-react'
@@ -19,6 +20,7 @@ export function CalendarTab({ token, reloadKey = 0 }: { token: string; reloadKey
   const now = new Date()
   const [y, setY] = useState(now.getFullYear())
   const [m, setM] = useState(now.getMonth())   // 0 based
+  useAskPageContext({ page: 'holiday-calendar', label: `the holiday calendar for ${String(m + 1).padStart(2, '0')}/${y}`, month: `${y}-${String(m + 1).padStart(2, '0')}` })
   const [data, setData] = useState<CalendarData | null>(null)
   const [error, setError] = useState('')
   const [view, setView] = useState<'month' | 'week'>('month')

@@ -1,5 +1,6 @@
 'use client'
 
+import { useAskPageContext } from '@/lib/ask-context'
 import { useEffect, useState, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
@@ -194,6 +195,7 @@ export default function StaffRecordPage() {
   const [note,     setNote]     = useState('')
   const [busy,     setBusy]     = useState<string | null>(null)
   const [certItem, setCertItem] = useState<any>(null)
+  useAskPageContext(id ? { page: 'staff-member', label: rec?.user?.name ? `${rec.user.name}'s staff page` : 'a staff member\'s page', staffUserId: id, staffName: rec?.user?.name } : null)
   const [practicalModal, setPracticalModal] = useState<{ enrollmentId: string; moduleName: string; note: string } | null>(null)
 
   const load = useCallback(() => {

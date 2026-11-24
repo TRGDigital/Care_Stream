@@ -1,5 +1,6 @@
 'use client'
 
+import { useAskPageContext } from '@/lib/ask-context'
 import { useEffect, useRef, useState } from 'react'
 import { useSearchIntent } from '@/lib/admin-search/intents'
 import dynamic from 'next/dynamic'
@@ -216,6 +217,7 @@ const isArchivedAddress = (email: string) => ARCHIVED_ADDRESS.test(email)
 const shownEmail = (email: string) => { const m = ARCHIVED_ADDRESS.exec(email); return m ? `${m[1]}${m[2]}` : email }
 
 export default function StaffPage() {
+  useAskPageContext({ page: 'staff-list', label: 'the staff list' })
   const { data: session }              = useSession()
   const userId = session?.user?.email ?? 'guest'
   type StaffSnap = { users: any[]; staffRoles: string[]; specialistRoles: string[]; languages?: { code: string; name: string }[]; catalog?: { code: string; name: string }[] }

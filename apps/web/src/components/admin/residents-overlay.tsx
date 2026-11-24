@@ -1,6 +1,7 @@
 'use client'
 
 // "This is me" resident profiles: the admin overlay opened from the Knowledge base page.
+import { useAskPageContext } from '@/lib/ask-context'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchIntent } from '@/lib/admin-search/intents'
 import Link from 'next/link'
@@ -29,6 +30,8 @@ export function ResidentsOverlay({ token, userId, onClose, initialResidentId = n
   const dialogRef = useRef<HTMLDivElement>(null)
   const [scope, setScope] = useState<'current' | 'archived'>('current')
   const [selected, setSelected] = useState<string | 'new' | null>(initialResidentId)
+  // A resident's id only (never a name, funding or any detail): the panel can offer fee and income questions without learning who it is.
+  useAskPageContext({ page: 'residents', label: selected && selected !== 'new' ? 'a resident record' : 'the residents screen', ...(selected && selected !== 'new' ? { residentId: selected } : {}) })
   const [tab, setTab] = useState<Tab>(initialTab ?? 'profile')
   const [search, setSearch] = useState('')
   const [statusFor, setStatusFor] = useState<Resident | null>(null)

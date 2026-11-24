@@ -88,7 +88,7 @@ export function SupportChatWidget() {
     <>
       {open && (
         <div ref={panel} role="dialog" aria-label="Chat with CareStream"
-          className="fixed inset-x-0 bottom-0 z-40 flex h-[85vh] max-h-[640px] flex-col overflow-hidden rounded-t-2xl border border-gray-200 bg-white shadow-2xl sm:inset-x-auto sm:bottom-5 sm:right-5 sm:h-[560px] sm:w-[380px] sm:rounded-2xl">
+          className="fixed inset-x-0 bottom-0 z-40 flex h-[85vh] max-h-[640px] flex-col overflow-hidden rounded-t-2xl border border-gray-200 bg-white shadow-2xl sm:inset-x-auto sm:bottom-5 sm:right-[calc(var(--ask-dock,0px)+1.25rem)] sm:h-[560px] sm:w-[380px] sm:rounded-2xl">
           <ChatPanel c={chat} widget headerExtra={
             <>
               <button type="button" onClick={toggleSound} aria-pressed={sound} aria-label={sound ? 'Turn the message sound off' : 'Turn the message sound on'}
@@ -106,7 +106,7 @@ export function SupportChatWidget() {
       )}
       {!open && (
         <button ref={bubble} type="button" onClick={() => { setOpen(true); if (!chat.chat) void chat.load() }} aria-label={chat.unread > 0 ? `Open chat, ${chat.unread} new ${chat.unread === 1 ? 'message' : 'messages'}` : 'Open chat with CareStream'}
-          className="fixed bottom-5 right-5 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-teal text-white shadow-lg hover:bg-teal-dark focus:outline-none focus-visible:ring-4 focus-visible:ring-teal/30">
+          className="fixed bottom-5 right-[calc(var(--ask-dock,0px)+1.25rem)] z-40 flex h-14 w-14 items-center justify-center rounded-full bg-teal text-white shadow-lg hover:bg-teal-dark focus:outline-none focus-visible:ring-4 focus-visible:ring-teal/30">
           <MessageCircle size={26} aria-hidden="true" />
           {chat.unread > 0 && <span className="absolute -right-1 -top-1 flex h-6 min-w-[24px] items-center justify-center rounded-full bg-red-600 px-1.5 text-xs font-bold text-white">{chat.unread > 9 ? '9+' : chat.unread}</span>}
         </button>

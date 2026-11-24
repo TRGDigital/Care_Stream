@@ -7,9 +7,12 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useSession } from 'next-auth/react'
 import type { LucideIcon } from 'lucide-react'
-import { AlertTriangle, ArrowLeft, Award, BarChart3, Bell, BookOpen, CalendarDays, Check, ClipboardCheck, Copy, FileText, GraduationCap, Library, Loader2, Lock, Newspaper, PoundSterling, Send, Shield, Sparkles, Trash2, UserPlus, Users, Wallet, X, Pencil, ShieldCheck, BadgeCheck, FileBarChart } from 'lucide-react'
+import { AlertTriangle, ArrowLeft, Award, BarChart3, Bell, BookOpen, CalendarDays, Check, ClipboardCheck, Copy, FileText, GraduationCap, Library, Loader2, Lock, Newspaper, PoundSterling, Send, Shield, Sparkles, Trash2, UserPlus, Users, Wallet, X, Pencil, ShieldCheck, BadgeCheck, FileBarChart, Maximize2, Minimize2 } from 'lucide-react'
 import { ask, AskError, parseNotificationDraft, withoutDraftBlock, notificationsLink, type AskAgent, type AskConversation, type AskDocument, type AskMessage, type AskSource } from '@/lib/ask-client'
 import { MarkdownLite } from '@/components/ask/markdown-lite'
+import { type AskPageContext, agentForPage, clampWidth, contextStarters, layoutFor, toWireContext, MAX_W, MIN_W, type PanelLayout } from '@/lib/ask-panel-state'
+import { useAskContext } from '@/lib/ask-context'
+import { closeAsk, initAskUi, openAsk, registerAskTrigger, setAskEnabled, setAskExpanded, setAskWidth, toggleAsk, useAskUi } from '@/lib/ask-ui-store'
 import { DocumentPanel } from '@/components/ask/document-panel'
 
 export const OPEN_ASK_EVENT = 'cs:open-ask'
@@ -25,31 +28,48 @@ export function AskButton() {
   const { data: session } = useSession()
   const token = session?.accessToken
   const isAdmin = (session?.user as any)?.role === 'admin'
-  const [enabled, setEnabled] = useState(false)
-  const [open, setOpen] = useState(false)
+  const who = String(session?.user?.email ?? '')
+  const ui = useAskUi()
   const btn = useRef<HTMLButtonElement>(null)
 
+  useEffect(() => { if (who) initAskUi(who) }, [who])
   useEffect(() => {
     if (!token || !isAdmin) return
     let live = true
-    ask.meta(token).then(m => { if (live) setEnabled(!!m.enabled) }).catch(() => { if (live) setEnabled(false) })   // a 404 means not in the pilot: nothing shows
+    ask.meta(token).then(m => { if (live) setAskEnabled(!!m.enabled) }).catch(() => { if (live) setAskEnabled(false) })   // a 404 means not in the pilot: nothing shows
     return () => { live = false }
   }, [token, isAdmin])
+  useEffect(() => { registerAskTrigger(btn.current); return () => registerAskTrigger(null) }, [ui.enabled])
   useEffect(() => {
-    const on = () => setOpen(true)
+    const on = () => openAsk()
     window.addEventListener(OPEN_ASK_EVENT, on)
     return () => window.removeEventListener(OPEN_ASK_EVENT, on)
   }, [])
-  if (!enabled || !token) return null
+  if (!ui.enabled || !token) return null
   return (
-    <>
-      <button ref={btn} type="button" onClick={() => setOpen(true)} aria-haspopup="dialog" aria-label="Ask CareStream" title="Ask CareStream"
-        className="inline-flex items-center gap-1.5 rounded-full border border-teal/40 bg-teal/5 px-3 py-1.5 text-sm font-semibold text-teal hover:bg-teal/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal/40">
-        <Sparkles size={16} aria-hidden="true" /> <span className="hidden sm:inline">Ask CareStream</span>
-      </button>
-      {open && <AskOverlay token={token} onClose={() => { setOpen(false); btn.current?.focus() }} />}
-    </>
+    <button ref={btn} type="button" onClick={toggleAsk} aria-expanded={ui.open} aria-controls="ask-panel" aria-label="Ask CareStream" title="Ask CareStream"
+      className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-semibold focus:outline-none focus-visible:ring-2 focus-visible:ring-teal/40 ${ui.open ? 'border-teal bg-teal text-white hover:bg-teal-dark' : 'border-teal/40 bg-teal/5 text-teal hover:bg-teal/10'}`}>
+      <Sparkles size={16} aria-hidden="true" /> <span className="hidden sm:inline">Ask CareStream</span>
+    </button>
   )
+}
+
+/** Mounted ONCE in the admin shell, beside the page, so a conversation (and what is half typed) survives moving between pages. */
+export function AskPanelHost() {
+  const { data: session } = useSession()
+  const token = session?.accessToken
+  const ui = useAskUi()
+  const [vw, setVw] = useState(1440)
+  useEffect(() => {
+    const on = () => setVw(window.innerWidth); on()
+    window.addEventListener('resize', on); return () => window.removeEventListener('resize', on)
+  }, [])
+  const layout = layoutFor(vw)
+  const dock = ui.enabled && ui.open && !ui.expanded && layout === 'wide' ? clampWidth(ui.width, vw) : 0
+  // The support chat bubble moves out of the way of a docked panel (it reads this).
+  useEffect(() => { document.documentElement.style.setProperty('--ask-dock', `${dock}px`); return () => { document.documentElement.style.removeProperty('--ask-dock') } }, [dock])
+  if (!ui.enabled || !ui.open || !token) return null
+  return <AskPanel token={token} layout={layout} expanded={ui.expanded} width={clampWidth(ui.width, vw)} onClose={closeAsk} />
 }
 
 const timeAgo = (iso: string | null) => (iso ? new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '')
@@ -95,7 +115,34 @@ function AnswerActions({ m, token, agentId }: { m: AskMessage; token: string; ag
   )
 }
 
-export function AskOverlay({ token, onClose }: { token: string; onClose: () => void }) {
+function ContextChip({ ctx, onDismiss }: { ctx: AskPageContext; onDismiss: () => void }) {
+  return (
+    <p className="mb-3 inline-flex max-w-full items-center gap-1.5 rounded-full border border-sky-200 bg-sky-50 py-1 pl-3 pr-1 text-xs text-sky-900">
+      <span className="truncate">You are looking at: <strong className="font-semibold">{ctx.label}</strong></span>
+      <button type="button" onClick={onDismiss} aria-label="Stop using what I am looking at" className="rounded-full p-1 text-sky-700 hover:bg-sky-100"><X size={12} /></button>
+    </p>
+  )
+}
+
+/** On the picker: what the admin is looking at, the agent that suits it, and a few questions that fit. Click one and it asks straight away. */
+function ContextCard({ ctx, agents, onDismiss, onAsk }: { ctx: AskPageContext; agents: AskAgent[] | null; onDismiss: () => void; onAsk: (a: AskAgent, q: string) => void }) {
+  const id = agentForPage(ctx.page)
+  const a = id ? agents?.find(x => x.id === id && x.status === 'ready') : undefined
+  const qs = contextStarters(ctx)
+  return (
+    <div className="mb-4 rounded-xl border border-sky-200 bg-sky-50/70 p-3">
+      <ContextChip ctx={ctx} onDismiss={onDismiss} />
+      {a && qs.length > 0 ? (
+        <>
+          <p className="text-sm font-semibold text-neutral-dark">Suggested: the {a.name} agent</p>
+          <ul className="mt-2 space-y-1.5">{qs.map(q => <li key={q}><button type="button" onClick={() => onAsk(a, q)} className="w-full rounded-lg border border-sky-200 bg-white px-3 py-2 text-left text-sm font-medium text-neutral-dark hover:border-teal hover:bg-teal/5">{q}</button></li>)}</ul>
+        </>
+      ) : <p className="text-sm text-neutral-mid">Pick an agent below and it will know where you are.</p>}
+    </div>
+  )
+}
+
+export function AskPanel({ token, layout, expanded, width, onClose }: { token: string; layout: PanelLayout; expanded: boolean; width: number; onClose: () => void }) {
   const [view, setView] = useState<View>('picker')
   const [agents, setAgents] = useState<AskAgent[] | null>(null)
   const [ready, setReady] = useState(true)
@@ -110,15 +157,30 @@ export function AskOverlay({ token, onClose }: { token: string; onClose: () => v
   const [docFilter, setDocFilter] = useState<'all' | 'waiting'>('all')
   const dlg = useRef<HTMLDivElement>(null)
   const end = useRef<HTMLDivElement>(null)
+  const pageCtx = useAskContext()
+  const [chipOff, setChipOff] = useState<string | null>(null)       // the context the admin dismissed (so a different page brings the chip back)
+  const ctxKey = pageCtx ? JSON.stringify(pageCtx) : ''
+  const chipOn = !!pageCtx && chipOff !== ctxKey
+  const [expandHint, setExpandHint] = useState<string | null>(null)   // a document id whose 'try the larger view' note was dismissed
+  const compact = !expanded
+  const modal = expanded || layout === 'phone'
 
   useEffect(() => { ask.meta(token).then(m => { setAgents(m.agents); setReady(m.ready) }).catch(e => setError(e.message)) }, [token])
-  useEffect(() => { dlg.current?.focus() }, [])
+  useEffect(() => { (document.getElementById('ask-input') ?? dlg.current)?.focus() }, [])
+  useEffect(() => { if (view === 'chat') document.getElementById('ask-input')?.focus() }, [view, agent?.id])
   useEffect(() => { end.current?.scrollIntoView({ block: 'end' }) }, [messages, busy])
   useEffect(() => {
-    const prev = document.body.style.overflow; document.body.style.overflow = 'hidden'
+    const prev = document.body.style.overflow
+    if (modal) document.body.style.overflow = 'hidden'
     const key = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') { e.preventDefault(); if (docId) setDocId(null); else onClose(); return }
-      if (e.key !== 'Tab' || !dlg.current) return
+      if (e.key === 'Escape') {
+        // Collapse the large view first, then close a document, then (docked) close the panel only when focus is inside it.
+        if (expanded) { e.preventDefault(); setAskExpanded(false); return }
+        if (docId) { e.preventDefault(); setDocId(null); return }
+        if (layout === 'phone' || dlg.current?.contains(document.activeElement)) { e.preventDefault(); onClose() }
+        return
+      }
+      if (e.key !== 'Tab' || !dlg.current || !modal) return
       const f = Array.from(dlg.current.querySelectorAll<HTMLElement>('button:not([disabled]), a[href], textarea, input, [tabindex]:not([tabindex="-1"])')).filter(x => x.offsetParent !== null)
       if (!f.length) return
       const first = f[0], last = f[f.length - 1]
@@ -126,16 +188,18 @@ export function AskOverlay({ token, onClose }: { token: string; onClose: () => v
     }
     document.addEventListener('keydown', key)
     return () => { document.removeEventListener('keydown', key); document.body.style.overflow = prev }
-  }, [onClose, docId])
+  }, [onClose, docId, expanded, modal, layout])
 
   const pick = (a: AskAgent) => { if (a.status === 'soon') return; setAgent(a); setConvId(null); setMessages([]); setError(''); setText(''); setView('chat') }
-  async function send(q?: string) {
+  const pickAndAsk = (a: AskAgent, q: string) => { pick(a); void send(q, a) }
+  async function send(q?: string, forAgent?: AskAgent) {
+    const ag = forAgent ?? agent
     const msg = (q ?? text).trim()
-    if (!msg || !agent || busy || agent.status !== 'ready') return
+    if (!msg || !ag || busy || ag.status !== 'ready') return
     setBusy(true); setError(''); setText('')
     setMessages(m => [...m, { id: `tmp-${Date.now()}`, role: 'user', content: msg }])
     try {
-      const r = await ask.chat(token, { agent_id: agent.id, conversation_id: convId, message: msg })
+      const r = await ask.chat(token, { agent_id: ag.id, conversation_id: forAgent ? null : convId, message: msg, context: chipOn ? toWireContext(pageCtx) : undefined })
       setConvId(r.conversation_id); setMessages(m => [...m, r.message])
     } catch (e) { setError(e instanceof AskError ? e.message : 'Something went wrong. Please try again.') } finally { setBusy(false) }
   }
@@ -153,17 +217,41 @@ export function AskOverlay({ token, onClose }: { token: string; onClose: () => v
   async function removeDoc(d: AskDocument) { if (window.confirm('Delete this saved item? This cannot be undone.')) { await ask.removeDocument(token, d.id).catch(() => undefined); setDocId(null); loadLib() } }
 
   const grouped = useMemo(() => agents ?? [], [agents])
+  // One root element whose classes change with the mode, so the conversation and anything half typed survive docking, expanding and moving between pages.
+  const rootCls = expanded ? 'fixed inset-0 z-[75] flex items-center justify-center bg-black/40 p-2 sm:p-6' : layout === 'wide' ? 'relative h-full flex-shrink-0 transition-[width] duration-200 motion-reduce:transition-none' : 'contents'
+  const boxCls = expanded
+    ? 'flex h-[92vh] w-full max-w-[1400px] flex-col overflow-hidden rounded-2xl bg-white shadow-2xl outline-none sm:w-[90vw]'
+    : layout === 'phone' ? 'fixed inset-0 z-[75] flex flex-col overflow-hidden bg-white outline-none'
+    : layout === 'narrow' ? 'fixed bottom-0 right-0 top-14 z-[45] flex max-w-full flex-col overflow-hidden border-l border-gray-200 bg-white shadow-2xl outline-none'
+    : 'relative flex h-full flex-col overflow-hidden border-l border-gray-200 bg-white outline-none'
+  const boxStyle = !expanded && layout !== 'phone' ? { width } : undefined
+  const startResize = (e: React.PointerEvent) => {
+    e.preventDefault()
+    const x0 = e.clientX, w0 = width
+    const move = (ev: PointerEvent) => setAskWidth(w0 + (x0 - ev.clientX))
+    const up = () => { window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', up) }
+    window.addEventListener('pointermove', move); window.addEventListener('pointerup', up)
+  }
+  const resizeKey = (e: React.KeyboardEvent) => {
+    const step = e.shiftKey ? 60 : 20
+    if (e.key === 'ArrowLeft') { e.preventDefault(); setAskWidth(width + step) } else if (e.key === 'ArrowRight') { e.preventDefault(); setAskWidth(width - step) }
+  }
   return (
-    <div className="fixed inset-0 z-[75] flex items-center justify-center bg-black/40 p-2 sm:p-6" onMouseDown={e => { if (e.target === e.currentTarget) onClose() }}>
-      <div ref={dlg} tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby="ask-title" className="flex h-[92vh] w-full max-w-[1400px] flex-col overflow-hidden rounded-2xl bg-white shadow-2xl outline-none sm:w-[90vw]">
-        <header className="flex items-center justify-between gap-3 border-b border-gray-200 px-4 py-3 sm:px-6">
+    <div className={rootCls} style={!expanded && layout === 'wide' ? { width } : undefined} onMouseDown={e => { if (expanded && e.target === e.currentTarget) setAskExpanded(false) }}>
+      <div ref={dlg} id="ask-panel" tabIndex={-1} role={modal ? 'dialog' : 'complementary'} aria-modal={modal ? true : undefined} aria-labelledby="ask-title" className={boxCls} style={boxStyle}>
+        {!expanded && layout !== 'phone' && (
+          <div role="separator" aria-orientation="vertical" aria-label="Resize Ask CareStream. Use the left and right arrow keys." aria-valuemin={MIN_W} aria-valuemax={MAX_W} aria-valuenow={width} tabIndex={0}
+            onPointerDown={startResize} onKeyDown={resizeKey} className="absolute left-0 top-0 z-20 h-full w-1.5 cursor-col-resize bg-transparent hover:bg-teal/30 focus:bg-teal/40 focus:outline-none" />
+        )}
+        <header className={`flex flex-shrink-0 items-center justify-between gap-2 border-b border-gray-200 px-4 py-3 ${expanded ? 'sm:px-6' : ''}`}>
           <div className="flex min-w-0 items-center gap-3">
             {view !== 'picker' && <button type="button" onClick={() => setView('picker')} className="inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-sm font-medium text-neutral-mid hover:bg-neutral-light" aria-label="Back to the agents"><ArrowLeft size={16} /> Agents</button>}
             <Sparkles size={20} className="shrink-0 text-teal" aria-hidden="true" />
             <h2 id="ask-title" className="truncate text-lg font-bold text-neutral-dark">{view === 'chat' && agent ? `Ask CareStream: ${agent.name}` : view === 'library' ? 'Your library' : 'Ask CareStream'}</h2>
           </div>
           <div className="flex items-center gap-2">
-            <button type="button" onClick={() => setView(view === 'library' ? 'picker' : 'library')} className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-1.5 text-sm font-medium text-neutral-dark hover:bg-neutral-light"><Library size={15} aria-hidden="true" /> Library</button>
+            <button type="button" onClick={() => setView(view === 'library' ? 'picker' : 'library')} className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 px-2.5 py-1.5 text-sm font-medium text-neutral-dark hover:bg-neutral-light"><Library size={15} aria-hidden="true" /> Library</button>
+            {layout !== 'phone' && <button type="button" onClick={() => setAskExpanded(!expanded)} aria-pressed={expanded} aria-label={expanded ? 'Back to the side panel' : 'Expand to a larger view'} title={expanded ? 'Back to the side panel' : 'Expand'} className="rounded-lg p-1.5 text-neutral-mid hover:bg-neutral-light">{expanded ? <Minimize2 size={18} /> : <Maximize2 size={18} />}</button>}
             <button type="button" onClick={onClose} aria-label="Close" className="rounded-lg p-1.5 text-neutral-mid hover:bg-neutral-light"><X size={20} /></button>
           </div>
         </header>
@@ -171,10 +259,11 @@ export function AskOverlay({ token, onClose }: { token: string; onClose: () => v
         {!ready && <p className="border-b border-amber-200 bg-amber-50 px-6 py-2 text-sm text-amber-900">Saving chats is not switched on yet, so questions cannot be answered until it is.</p>}
 
         {view === 'picker' && (
-          <div className="flex-1 overflow-y-auto px-4 py-5 sm:px-6">
+          <div className={`min-h-0 flex-1 overflow-y-auto px-4 py-5 ${expanded ? 'sm:px-6' : ''}`}>
+            {chipOn && pageCtx && <ContextCard ctx={pageCtx} agents={agents} onDismiss={() => setChipOff(ctxKey)} onAsk={pickAndAsk} />}
             <p className="mb-4 max-w-3xl text-sm text-neutral-mid">Choose an agent, then ask it anything about that part of your service. It reads your CareStream records and official figures, shows its working and where each figure comes from, and never sends or changes anything without you.</p>
             {!agents ? <p className="flex items-center gap-2 text-sm text-neutral-mid"><Loader2 size={16} className="animate-spin" /> Loading</p> : (
-              <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              <ul className={`grid gap-3 ${expanded ? 'sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' : 'grid-cols-1'}`}>
                 {grouped.map(a => {
                   const off = a.status === 'soon'
                   return (
@@ -196,15 +285,16 @@ export function AskOverlay({ token, onClose }: { token: string; onClose: () => v
 
         {view === 'chat' && agent && (
           <div className="flex min-h-0 flex-1 flex-col">
-            <div className="flex-1 overflow-y-auto px-4 py-5 sm:px-6">
-              <div className="mx-auto max-w-3xl space-y-5">
+            <div className={`min-h-0 flex-1 overflow-y-auto px-4 py-5 ${expanded ? 'sm:px-6' : ''}`}>
+              <div className="mx-auto min-w-0 max-w-3xl space-y-5">
                 {agent.status === 'shell' ? (
                   <div className="rounded-xl border border-sky-200 bg-sky-50 p-5 text-sm leading-relaxed text-sky-900"><p className="font-semibold">{agent.name} is coming next</p><p className="mt-1">{agent.shell_message}</p></div>
                 ) : messages.length === 0 && (
                   <div>
+                    {chipOn && pageCtx && <ContextChip ctx={pageCtx} onDismiss={() => setChipOff(ctxKey)} />}
                     <p className="text-sm text-neutral-mid">{agent.blurb} Try one of these, or ask your own question.</p>
-                    <div className="mt-3 grid gap-2 sm:grid-cols-2">
-                      {agent.starters.map(s => <button key={s} type="button" onClick={() => send(s)} disabled={busy} className="rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-left text-sm font-medium text-neutral-dark hover:border-teal hover:bg-teal/5 disabled:opacity-60">{s}</button>)}
+                    <div className={`mt-3 grid gap-2 ${expanded ? 'sm:grid-cols-2' : 'grid-cols-1'}`}>
+                      {[...(chipOn && pageCtx && agentForPage(pageCtx.page) === agent.id ? contextStarters(pageCtx) : []), ...agent.starters].filter((q, i, a) => a.indexOf(q) === i).slice(0, expanded ? 8 : 6).map(s => <button key={s} type="button" onClick={() => send(s)} disabled={busy} className="rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-left text-sm font-medium text-neutral-dark hover:border-teal hover:bg-teal/5 disabled:opacity-60">{s}</button>)}
                     </div>
                   </div>
                 )}
@@ -224,7 +314,7 @@ export function AskOverlay({ token, onClose }: { token: string; onClose: () => v
               </div>
             </div>
             {agent.status === 'ready' && (
-              <form className="border-t border-gray-200 bg-neutral-light/50 px-4 py-3 sm:px-6" onSubmit={e => { e.preventDefault(); send() }}>
+              <form className={`flex-shrink-0 border-t border-gray-200 bg-neutral-light/50 px-4 py-3 ${expanded ? 'sm:px-6' : ''}`} onSubmit={e => { e.preventDefault(); send() }}>
                 <div className="mx-auto flex max-w-3xl items-end gap-2">
                   <label htmlFor="ask-input" className="sr-only">Your question</label>
                   <textarea id="ask-input" rows={2} value={text} onChange={e => setText(e.target.value)} onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send() } }} placeholder={`Ask the ${agent.name} agent...`} maxLength={2000} className="min-h-[52px] flex-1 resize-none rounded-xl border border-gray-300 bg-white px-3 py-2 text-[15px] outline-none focus:border-teal focus:ring-2 focus:ring-teal/20" />
@@ -237,7 +327,7 @@ export function AskOverlay({ token, onClose }: { token: string; onClose: () => v
         )}
 
         {view === 'library' && (
-          <div className="flex-1 overflow-y-auto px-4 py-5 sm:px-6">
+          <div className={`min-h-0 flex-1 overflow-y-auto px-4 py-5 ${expanded ? 'sm:px-6' : ''}`}>
             <div className="mx-auto max-w-3xl">
               <div role="tablist" className="mb-4 flex gap-1 rounded-lg bg-neutral-light p-1 text-sm">
                 {([['chats', 'Past chats'], ['docs', 'Saved items']] as const).map(([k, l]) => <button key={k} role="tab" aria-selected={lib.tab === k} type="button" onClick={() => setLib(s => ({ ...s, tab: k }))} className={`flex-1 rounded-md px-3 py-1.5 font-medium ${lib.tab === k ? 'bg-white text-teal shadow-sm' : 'text-neutral-mid'}`}>{l}</button>)}
@@ -267,6 +357,15 @@ export function AskOverlay({ token, onClose }: { token: string; onClose: () => v
           </div>
         )}
 
+        {docId && !expanded && layout !== 'phone' && expandHint !== docId && (
+          <div className="absolute inset-x-0 top-0 z-20 flex items-center justify-between gap-2 border-b border-teal/30 bg-teal/10 px-4 py-2 text-xs text-neutral-dark" role="status">
+            <span>This is easier to read and edit in the larger view.</span>
+            <span className="flex items-center gap-2">
+              <button type="button" onClick={() => setAskExpanded(true)} className="rounded-md bg-teal px-2.5 py-1 font-semibold text-white hover:bg-teal-dark">Expand</button>
+              <button type="button" onClick={() => setExpandHint(docId)} className="font-medium text-neutral-mid hover:text-neutral-dark">Not now</button>
+            </span>
+          </div>
+        )}
         {docId && <DocumentPanel token={token} id={docId} onClose={() => setDocId(null)} onChanged={loadLib} />}
       </div>
     </div>

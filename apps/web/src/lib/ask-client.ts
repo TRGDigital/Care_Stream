@@ -27,7 +27,7 @@ export interface AskApproval { id: string; type: string; title: string; staff_na
 
 export const ask = {
   meta: (t: string) => call<{ enabled: boolean; ready: boolean; agents: AskAgent[] }>('/ask/meta', t),
-  chat: (t: string, b: { agent_id: string; conversation_id?: string | null; message: string }) =>
+  chat: (t: string, b: { agent_id: string; conversation_id?: string | null; message: string; context?: { page: string; staffUserId?: string; residentId?: string; year?: number; month?: string } }) =>
     call<{ conversation_id: string; message: AskMessage; tools_used: string[] }>('/ask/chat', t, { method: 'POST', body: JSON.stringify(b) }),
   conversations: (t: string) => call<{ conversations: AskConversation[] }>('/ask/conversations', t),
   conversation: (t: string, id: string) => call<{ conversation: AskConversation; messages: AskMessage[] }>(`/ask/conversations/${encodeURIComponent(id)}`, t),

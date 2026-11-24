@@ -26,7 +26,7 @@ import { TRAINING_ONLY_NAV, POLICIES_ONLY_NAV, FREE_NAV, NOT_FOR_SHOP_TIERS } fr
 import { AdminSearch } from '@/components/admin/admin-search'
 import { SupportMenu } from '@/components/admin/support-menu'
 import { ReleasesButton } from '@/components/admin/releases-overlay'
-import { AskButton } from '@/components/ask/ask-overlay'
+import { AskButton, AskPanelHost } from '@/components/ask/ask-overlay'
 import { useHolidayMeta } from '@/lib/holiday-client'
 import { SupportChatWidget } from '@/components/support/chat-widget'
 
@@ -334,9 +334,13 @@ export function AdminShell({ userName, tenantName, children }: AdminShellProps) 
         </header>
 
         {/* Page content */}
-        <main className="flex-1 overflow-y-auto p-4 md:p-6">
-          {children}
-        </main>
+        <div className="flex min-h-0 flex-1 overflow-hidden">
+          <main className="min-w-0 flex-1 overflow-y-auto p-4 md:p-6">
+            {children}
+          </main>
+          {/* Ask CareStream: docked beside the page (pushes it across on wide screens), mounted once so a conversation survives page changes. */}
+          <AskPanelHost />
+        </div>
       </div>
 
       <SupportChatWidget />

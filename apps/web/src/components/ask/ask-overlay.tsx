@@ -10,6 +10,7 @@ import type { LucideIcon } from 'lucide-react'
 import { AlertTriangle, ArrowLeft, Award, BarChart3, Bell, BookOpen, CalendarDays, Check, ClipboardCheck, Copy, FileText, GraduationCap, Library, Loader2, Lock, Newspaper, PoundSterling, Send, Shield, Sparkles, Trash2, UserPlus, Users, Wallet, X, Pencil, ShieldCheck, BadgeCheck, FileBarChart } from 'lucide-react'
 import { ask, AskError, parseNotificationDraft, withoutDraftBlock, notificationsLink, type AskAgent, type AskConversation, type AskDocument, type AskMessage, type AskSource } from '@/lib/ask-client'
 import { MarkdownLite } from '@/components/ask/markdown-lite'
+import { DocumentPanel } from '@/components/ask/document-panel'
 
 export const OPEN_ASK_EVENT = 'cs:open-ask'
 const ICONS: Record<string, LucideIcon> = {
@@ -105,7 +106,8 @@ export function AskOverlay({ token, onClose }: { token: string; onClose: () => v
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const [lib, setLib] = useState<{ tab: 'chats' | 'docs'; chats: AskConversation[] | null; docs: AskDocument[] | null }>({ tab: 'chats', chats: null, docs: null })
-  const [doc, setDoc] = useState<{ id: string; title: string; body: string } | null>(null)
+  const [docId, setDocId] = useState<string | null>(null)
+  const [docFilter, setDocFilter] = useState<'all' | 'waiting'>('all')
   const dlg = useRef<HTMLDivElement>(null)
   const end = useRef<HTMLDivElement>(null)
 
@@ -115,7 +117,7 @@ export function AskOverlay({ token, onClose }: { token: string; onClose: () => v
   useEffect(() => {
     const prev = document.body.style.overflow; document.body.style.overflow = 'hidden'
     const key = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') { e.preventDefault(); if (doc) setDoc(null); else onClose(); return }
+      if (e.key === 'Escape') { e.preventDefault(); if (docId) setDocId(null); else onClose(); return }
       if (e.key !== 'Tab' || !dlg.current) return
       const f = Array.from(dlg.current.querySelectorAll<HTMLElement>('button:not([disabled]), a[href], textarea, input, [tabindex]:not([tabindex="-1"])')).filter(x => x.offsetParent !== null)
       if (!f.length) return
@@ -124,7 +126,7 @@ export function AskOverlay({ token, onClose }: { token: string; onClose: () => v
     }
     document.addEventListener('keydown', key)
     return () => { document.removeEventListener('keydown', key); document.body.style.overflow = prev }
-  }, [onClose, doc])
+  }, [onClose, docId])
 
   const pick = (a: AskAgent) => { if (a.status === 'soon') return; setAgent(a); setConvId(null); setMessages([]); setError(''); setText(''); setView('chat') }
   async function send(q?: string) {
@@ -147,8 +149,8 @@ export function AskOverlay({ token, onClose }: { token: string; onClose: () => v
   }
   async function renameChat(c: AskConversation) { const t = window.prompt('Name this chat', c.title); if (t && t.trim()) { await ask.rename(token, c.id, t.trim()).catch(() => undefined); loadLib() } }
   async function removeChat(c: AskConversation) { if (window.confirm('Delete this chat and its answers? This cannot be undone.')) { await ask.remove(token, c.id).catch(() => undefined); loadLib() } }
-  async function openDoc(d: AskDocument) { try { const r = await ask.document(token, d.id); setDoc({ id: d.id, title: r.document.title, body: r.document.body }) } catch { /* ignore */ } }
-  async function removeDoc(d: AskDocument) { if (window.confirm('Delete this saved item? This cannot be undone.')) { await ask.removeDocument(token, d.id).catch(() => undefined); setDoc(null); loadLib() } }
+  function openDoc(d: AskDocument) { setDocId(d.id) }
+  async function removeDoc(d: AskDocument) { if (window.confirm('Delete this saved item? This cannot be undone.')) { await ask.removeDocument(token, d.id).catch(() => undefined); setDocId(null); loadLib() } }
 
   const grouped = useMemo(() => agents ?? [], [agents])
   return (
@@ -253,25 +255,19 @@ export function AskOverlay({ token, onClose }: { token: string; onClose: () => v
               ) : (
                 lib.docs === null ? <p className="flex items-center gap-2 text-sm text-neutral-mid"><Loader2 size={16} className="animate-spin" /> Loading</p>
                 : lib.docs.length === 0 ? <p className="rounded-xl bg-neutral-light px-4 py-8 text-center text-sm text-neutral-mid">Nothing saved yet. Use Save to library under any answer.</p>
-                : <ul className="divide-y divide-gray-100 rounded-xl border border-gray-200 bg-white">{lib.docs.map(d => (
+                : <>
+                  <div className="mb-2 flex gap-1.5 text-xs">{([['all', 'All'], ['waiting', 'Waiting for approval']] as const).map(([k, l]) => <button key={k} type="button" onClick={() => setDocFilter(k)} className={`rounded-full px-3 py-1 font-semibold ${docFilter === k ? 'bg-teal text-white' : 'border border-gray-200 text-neutral-dark hover:bg-neutral-light'}`}>{l}{k === 'waiting' && (lib.docs ?? []).filter(d => d.status === 'pending').length > 0 ? ` (${(lib.docs ?? []).filter(d => d.status === 'pending').length})` : ''}</button>)}</div>
+                  <ul className="divide-y divide-gray-100 rounded-xl border border-gray-200 bg-white">{lib.docs.filter(d => docFilter === 'all' || d.status === 'pending').map(d => (
                   <li key={d.id} className="flex items-center justify-between gap-2 px-4 py-3">
-                    <button type="button" onClick={() => openDoc(d)} className="min-w-0 flex-1 text-left"><span className="block truncate text-sm font-semibold text-neutral-dark">{d.title}</span><span className="text-xs text-neutral-mid">{d.type} · {d.status} · {timeAgo(d.updated_at)}</span></button>
-                    <button type="button" onClick={() => removeDoc(d)} aria-label={`Delete ${d.title}`} className="rounded p-1.5 text-neutral-mid hover:bg-red-50 hover:text-red-700"><Trash2 size={14} /></button>
-                  </li>))}</ul>
+                    <button type="button" onClick={() => openDoc(d)} className="min-w-0 flex-1 text-left"><span className="block truncate text-sm font-semibold text-neutral-dark">{d.title}</span><span className="text-xs text-neutral-mid">{d.type === 'letter' ? 'Letter' : d.type === 'newsletter' ? 'Staff newsletter' : 'Saved answer'}{d.staff_name ? `, for ${d.staff_name}` : ''} · <span className={d.status === 'pending' ? 'font-semibold text-amber-800' : d.status === 'approved' ? 'font-semibold text-green-700' : ''}>{d.status === 'pending' ? 'Waiting for approval' : d.status === 'approved' ? 'Approved' : d.status === 'shared' ? 'Shared' : 'Draft'}</span> · {timeAgo(d.updated_at)}{d.mine === false ? ' · written by a colleague' : ''}</span></button>
+                    {(d.mine !== false) && (d.type === 'answer' || d.status === 'draft') && <button type="button" onClick={() => removeDoc(d)} aria-label={`Delete ${d.title}`} className="rounded p-1.5 text-neutral-mid hover:bg-red-50 hover:text-red-700"><Trash2 size={14} /></button>}
+                  </li>))}</ul></>
               )}
             </div>
           </div>
         )}
 
-        {doc && (
-          <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/30 p-4" onMouseDown={e => { if (e.target === e.currentTarget) setDoc(null) }}>
-            <div role="dialog" aria-modal="true" aria-label={doc.title} className="flex max-h-[85vh] w-full max-w-2xl flex-col rounded-2xl bg-white p-5 shadow-xl">
-              <div className="mb-3 flex items-start justify-between gap-3"><h3 className="text-base font-bold text-neutral-dark">{doc.title}</h3><button type="button" onClick={() => setDoc(null)} aria-label="Close" className="rounded p-1 text-neutral-mid hover:bg-neutral-light"><X size={18} /></button></div>
-              <div className="min-h-0 flex-1 overflow-y-auto"><MarkdownLite text={doc.body} /></div>
-              <div className="mt-3 flex justify-end gap-2"><button type="button" onClick={() => navigator.clipboard?.writeText(doc.body).catch(() => undefined)} className="inline-flex items-center gap-1 rounded-lg border border-gray-200 px-3 py-1.5 text-sm font-medium hover:bg-neutral-light"><Copy size={14} /> Copy</button></div>
-            </div>
-          </div>
-        )}
+        {docId && <DocumentPanel token={token} id={docId} onClose={() => setDocId(null)} onChanged={loadLib} />}
       </div>
     </div>
   )

@@ -15,7 +15,15 @@ export interface AskAgent { id: string; name: string; blurb: string; icon: strin
 export interface AskSource { label: string; as_of: string | null; warning?: string | null; url?: string | null }
 export interface AskMessage { id: string; role: 'user' | 'assistant'; content: string; sources?: AskSource[]; created_at?: string | null }
 export interface AskConversation { id: string; agent_id: string; title: string; updated_at: string | null }
-export interface AskDocument { id: string; type: string; title: string; status: string; updated_at: string | null }
+export interface AskDocument { id: string; type: string; title: string; status: string; mine?: boolean; staff_name?: string | null; updated_at: string | null }
+export interface AskDocActions { needs_approval: boolean; edit: boolean; submit: boolean; approve: boolean; return: boolean; reopen: boolean; share: Array<'pdf' | 'email' | 'notification'> }
+export interface AskDocField { key: string; label: string; type: string; required: boolean; choices: Array<{ value: string; label: string }> | null }
+export interface AskDocFull {
+  id: string; type: string; title: string; body: string; status: string; version: number; updated_at: string | null; mine: boolean; created_by: string
+  staff_name: string | null; checklist: string[]; references: Array<{ label: string; url: string }>; shared: Array<{ method: string; at: string }>
+  values?: Record<string, string | number>; fields?: AskDocField[]; actions: AskDocActions; data?: { review_note?: { note: string; at: string } } | null
+}
+export interface AskApproval { id: string; type: string; title: string; staff_name: string | null; mine: boolean; updated_at: string | null }
 
 export const ask = {
   meta: (t: string) => call<{ enabled: boolean; ready: boolean; agents: AskAgent[] }>('/ask/meta', t),
@@ -26,7 +34,20 @@ export const ask = {
   rename: (t: string, id: string, title: string) => call<{ renamed: boolean }>(`/ask/conversations/${encodeURIComponent(id)}`, t, { method: 'PATCH', body: JSON.stringify({ title }) }),
   remove: (t: string, id: string) => call<{ deleted: boolean }>(`/ask/conversations/${encodeURIComponent(id)}`, t, { method: 'DELETE' }),
   documents: (t: string) => call<{ documents: AskDocument[] }>('/ask/documents', t),
-  document: (t: string, id: string) => call<{ document: { id: string; type: string; title: string; body: string; status: string; version: number; updated_at: string | null } }>(`/ask/documents/${encodeURIComponent(id)}`, t),
+  document: (t: string, id: string) => call<{ document: AskDocFull }>(`/ask/documents/${encodeURIComponent(id)}`, t),
+  approvals: (t: string) => call<{ approvals: AskApproval[] }>('/ask/approvals', t),
+  editDocument: (t: string, id: string, b: { title?: string; body?: string; values?: Record<string, string | number> }) => call<{ saved: boolean; missing?: string[]; unreadable?: string[]; body?: string }>(`/ask/documents/${encodeURIComponent(id)}`, t, { method: 'PATCH', body: JSON.stringify(b) }),
+  submit: (t: string, id: string) => call<{ status: string }>(`/ask/documents/${encodeURIComponent(id)}/submit`, t, { method: 'POST', body: '{}' }),
+  approve: (t: string, id: string, checklist_confirmed: boolean) => call<{ status: string }>(`/ask/documents/${encodeURIComponent(id)}/approve`, t, { method: 'POST', body: JSON.stringify({ checklist_confirmed }) }),
+  returnToDraft: (t: string, id: string, note?: string) => call<{ status: string }>(`/ask/documents/${encodeURIComponent(id)}/return`, t, { method: 'POST', body: JSON.stringify({ note }) }),
+  reopen: (t: string, id: string) => call<{ status: string }>(`/ask/documents/${encodeURIComponent(id)}/reopen`, t, { method: 'POST', body: '{}' }),
+  share: (t: string, id: string, b: { method: 'email' | 'notification'; audience?: 'all' | 'selected'; user_ids?: string[] }) => call<{ shared: boolean; method: string }>(`/ask/documents/${encodeURIComponent(id)}/share`, t, { method: 'POST', body: JSON.stringify(b) }),
+  /** Downloads the finished PDF (an approved document only) and saves it in the browser. */
+  downloadPdf: async (t: string, id: string, fallbackName: string) => {
+    const res = await fetch(`${API_URL}/ask/documents/${encodeURIComponent(id)}/pdf`, { headers: { Authorization: `Bearer ${t}` } })
+    if (!res.ok) { let m = 'The PDF could not be made just now.'; try { m = (await res.json())?.error?.message ?? m } catch { /* not json */ } throw new AskError('PDF_FAILED', m, res.status) }
+    const url = URL.createObjectURL(await res.blob()); const a = document.createElement('a'); a.href = url; a.download = `${fallbackName.replace(/[^a-zA-Z0-9 _-]/g, '').trim().replace(/\s+/g, '-') || 'document'}.pdf`; a.click(); URL.revokeObjectURL(url)
+  },
   save: (t: string, b: { type?: string; title: string; body: string; sources?: AskSource[] }) => call<{ id: string }>('/ask/documents', t, { method: 'POST', body: JSON.stringify(b) }),
   updateDocument: (t: string, id: string, b: { title?: string; body?: string }) => call<{ saved: boolean }>(`/ask/documents/${encodeURIComponent(id)}`, t, { method: 'PATCH', body: JSON.stringify(b) }),
   removeDocument: (t: string, id: string) => call<{ deleted: boolean }>(`/ask/documents/${encodeURIComponent(id)}`, t, { method: 'DELETE' }),

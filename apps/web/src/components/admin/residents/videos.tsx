@@ -6,7 +6,7 @@
 // run out the player asks for a fresh set once.
 
 import { useEffect, useRef, useState } from 'react'
-import { Check, Clapperboard, Languages, Loader2, Pencil, Play, Trash2, Upload, X } from 'lucide-react'
+import { Check, Clapperboard, Languages, Loader2, Mic, Pencil, Play, Trash2, Upload, X } from 'lucide-react'
 import { photoSrc, type ResidentDetail, type ResidentVideo, type VideoTranscript } from '@/lib/residents-api'
 import { fmtDuration, uploadVideoInChunks } from '@/lib/video-upload'
 import { ErrorBox, Field, inputCls, btnPrimary, btnSecondary, btnDangerOutline, errMsg, fmtDate } from './ui'
@@ -157,8 +157,12 @@ export function VideoApprovals({ client, resident, onChanged }: { client: Client
       {error && <div className="p-3"><ErrorBox>{error}</ErrorBox></div>}
       <ul className="divide-y divide-amber-100">
         {pending.map(v => (
-          <li key={v.id} className="flex flex-col gap-3 px-4 py-3 md:flex-row">
-            <Player video={v} onExpired={onChanged} className="aspect-video w-full shrink-0 rounded-lg border border-gray-200 md:w-72" />
+          <li key={v.id} className={`flex flex-col gap-3 px-4 py-3 ${v.media_kind === 'audio' ? '' : 'md:flex-row'}`}>
+            {/* A voice note is just a player, so it sits on its own line above the details; a video keeps its picture beside them. */}
+            <div className={v.media_kind === 'audio' ? 'w-full' : 'w-full shrink-0 md:w-72'}>
+              {v.media_kind === 'audio' && <p className="mb-1.5 inline-flex items-center gap-1.5 rounded-full bg-purple-50 px-2.5 py-0.5 text-xs font-semibold text-purple-700"><Mic size={12} aria-hidden="true" /> Voice note</p>}
+              <Player video={v} onExpired={onChanged} className="aspect-video w-full rounded-lg border border-gray-200" />
+            </div>
             <div className="min-w-0 flex-1 space-y-2">
               <p className="text-xs text-neutral-mid">{sender(v)}, {fmtDate(v.submitted_at)}{v.duration_seconds ? `, ${fmtDuration(v.duration_seconds)}` : ''}</p>
               <Field label="Title (you can edit it before approving)" htmlFor={`vt-${v.id}`}>

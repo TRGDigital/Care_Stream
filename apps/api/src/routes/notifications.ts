@@ -72,6 +72,29 @@ async function sendTo(opts: { notification: any; people: Array<{ id: string; nam
   return { emailed, failed }
 }
 
+
+/** Creates a notification for the chosen staff, attaches the (already uploaded, still unsent) documents, records who it went to and emails them. Used by the Notifications page and by
+ *  Ask CareStream when an approved letter or newsletter is shared. The caller has already checked the title, body and documents. */
+export async function createAndSendNotification(o: { tenantId: string; userId: string; title: string; body: string; audience: unknown; userIds?: unknown; files: any[] }):
+  Promise<{ ok: true; id: string; recipients: number; emailed: number; email_failed: number; dropped: number } | { ok: false; code: string; message: string; status: number }> {
+  const { tenantId } = o
+  const sentToday = await p().staffNotification.count({ where: { tenant_id: tenantId, created_at: { gte: new Date(Date.now() - 24 * 3600_000) } } })
+  if (sentToday >= MAX_SENDS_PER_DAY) return { ok: false, code: 'LIMIT', message: `You can send up to ${MAX_SENDS_PER_DAY} notifications a day. Please try again tomorrow.`, status: 429 }
+  const eligible = (await p().user.findMany({ where: ELIGIBLE_WHERE(tenantId), select: { id: true, name: true, email: true, job_role: true, role: true } })).filter((u: any) => u.email)
+  const r = resolveAudience({ audience: o.audience, user_ids: o.userIds }, eligible)
+  if ('error' in r) return { ok: false, code: 'INVALID', message: r.error, status: 400 }
+  const [sender, tenant] = await Promise.all([
+    p().user.findUnique({ where: { id: o.userId }, select: { name: true } }),
+    p().tenant.findUnique({ where: { id: tenantId }, select: { name: true } }),
+  ])
+  const n = await p().staffNotification.create({ data: { tenant_id: tenantId, title: o.title, body: o.body, created_by: o.userId, created_by_name: sender?.name ?? 'An administrator', audience: r.audience } })
+  if (o.files.length) await p().staffNotificationFile.updateMany({ where: { id: { in: o.files.map((f: any) => f.id) }, tenant_id: tenantId, notification_id: null }, data: { notification_id: n.id } })
+  await p().staffNotificationRecipient.createMany({ data: r.people.map(x => ({ notification_id: n.id, tenant_id: tenantId, user_id: x.id })), skipDuplicates: true })
+  void writeAuditLog({ tenant_id: tenantId, user_id: o.userId, event_type: 'staff_notification_sent', entity_type: 'staff_notification', entity_id: n.id, metadata: { audience: r.audience, recipients: r.people.length } })
+  const sent = await sendTo({ notification: n, people: r.people, orgName: tenant?.name ?? 'Your service', kind: 'new', attachments: o.files.length })
+  return { ok: true, id: n.id, recipients: r.people.length, emailed: sent.emailed, email_failed: sent.failed, dropped: r.dropped }
+}
+
 // ── Admin ────────────────────────────────────────────────────────────────────
 export const notificationsAdminRouter = Router()
 notificationsAdminRouter.use(requireAdmin)
@@ -179,21 +202,9 @@ notificationsAdminRouter.post('/', async (req: Request, res: Response) => {
       if (files.length !== fileIds.length) { err(res, 'INVALID', 'One of the documents is missing. Please add it again.', 400); return }
       const tooMuch = checkTotals(files); if (tooMuch) { err(res, 'INVALID', tooMuch, 400); return }
     }
-    const sentToday = await p().staffNotification.count({ where: { tenant_id: tenantId, created_at: { gte: new Date(Date.now() - 24 * 3600_000) } } })
-    if (sentToday >= MAX_SENDS_PER_DAY) { err(res, 'LIMIT', `You can send up to ${MAX_SENDS_PER_DAY} notifications a day. Please try again tomorrow.`, 429); return }
-    const eligible = (await p().user.findMany({ where: ELIGIBLE_WHERE(tenantId), select: { id: true, name: true, email: true, job_role: true, role: true } })).filter((u: any) => u.email)
-    const r = resolveAudience({ audience: req.body?.audience, user_ids: req.body?.user_ids }, eligible)
-    if ('error' in r) { err(res, 'INVALID', r.error, 400); return }
-    const [sender, tenant] = await Promise.all([
-      p().user.findUnique({ where: { id: userOf(req) }, select: { name: true } }),
-      p().tenant.findUnique({ where: { id: tenantId }, select: { name: true } }),
-    ])
-    const n = await p().staffNotification.create({ data: { tenant_id: tenantId, title, body, created_by: userOf(req), created_by_name: sender?.name ?? 'An administrator', audience: r.audience } })
-    if (files.length) await p().staffNotificationFile.updateMany({ where: { id: { in: files.map(f => f.id) }, tenant_id: tenantId, notification_id: null }, data: { notification_id: n.id } })
-    await p().staffNotificationRecipient.createMany({ data: r.people.map(x => ({ notification_id: n.id, tenant_id: tenantId, user_id: x.id })), skipDuplicates: true })
-    void writeAuditLog({ tenant_id: tenantId, user_id: userOf(req), event_type: 'staff_notification_sent', entity_type: 'staff_notification', entity_id: n.id, metadata: { audience: r.audience, recipients: r.people.length } })
-    const sent = await sendTo({ notification: n, people: r.people, orgName: tenant?.name ?? 'Your service', kind: 'new', attachments: files.length })
-    ok(res, { id: n.id, recipients: r.people.length, emailed: sent.emailed, email_failed: sent.failed, dropped: r.dropped }, 201)
+    const made = await createAndSendNotification({ tenantId, userId: userOf(req), title, body, audience: req.body?.audience, userIds: req.body?.user_ids, files })
+    if (!made.ok) { err(res, made.code, made.message, made.status); return }
+    ok(res, { id: made.id, recipients: made.recipients, emailed: made.emailed, email_failed: made.email_failed, dropped: made.dropped }, 201)
   } catch (e) { isMissingTable(e) ? notReady(res) : err(res, 'ERROR', 'Could not send the notification.', 500) }
 })
 

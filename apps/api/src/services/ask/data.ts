@@ -68,3 +68,33 @@ export { bankHolidaysWithPay, ukToday, eachDay, addDays }
 export async function facilityOf(tenantId: string): Promise<string> {
   try { return String((await db.tenant.findUnique({ where: { id: tenantId }, select: { facility_type: true } }))?.facility_type ?? '') } catch { return '' }
 }
+
+// ── Staff newsletter facts (counts and first names only: never pay, sickness, or anything negative about a named person) ─────────────────────────────────────────────
+/** People who started in the last N days: name, job role and start date, for a welcome. */
+export async function loadNewStarters(tenantId: string, withinDays: number, today = ukToday()) {
+  const from = addDays(today, -Math.max(1, Math.min(180, withinDays)))
+  return (await loadStaff(tenantId, today)).filter(s => s.start_date && s.start_date >= from && s.start_date <= today).map(s => ({ name: s.name, job_role: s.job_role, start_date: s.start_date! }))
+}
+/** Birthdays this month: first name and day of the month only (no age, no year). Only when the account has the staff birthday greeting switched on, which is how an account says it is happy to mark birthdays. */
+export async function loadBirthdaysThisMonth(tenantId: string, today = ukToday()): Promise<{ enabled: boolean; people: Array<{ first_name: string; day: number }> }> {
+  let on = true
+  try { const t = await db.tenant.findUnique({ where: { id: tenantId }, select: { email_preferences: true } }); const prefs = (t?.email_preferences as Record<string, boolean> | null) ?? {}; on = typeof prefs.staff_birthday_emails === 'boolean' ? prefs.staff_birthday_emails : true } catch { on = false }
+  if (!on) return { enabled: false, people: [] }
+  const roster = await loadRoster(tenantId)
+  let det: any[] = []
+  try { det = await db.staffDetail.findMany({ where: { tenant_id: tenantId, user_id: { in: roster.map(r => r.id) }, date_of_birth: { not: null } }, select: { user_id: true, date_of_birth: true } }) } catch { det = [] }
+  const month = today.slice(5, 7), names = new Map(roster.map(r => [r.id, r.name]))
+  const people = det.map(d => ({ id: d.user_id, iso: day(d.date_of_birth)! })).filter(x => x.iso && x.iso.slice(5, 7) === month).map(x => ({ first_name: (names.get(x.id) ?? '').split(/\s+/)[0], day: Number(x.iso.slice(8, 10)) })).filter(p => p.first_name).sort((a, b) => a.day - b.day)
+  return { enabled: true, people }
+}
+/** Training completed in the last N days: how many, and which courses (counts only, no names). */
+export async function loadTrainingCompletions(tenantId: string, withinDays: number, today = ukToday()) {
+  const since = new Date(addDays(today, -Math.max(1, Math.min(180, withinDays))) + 'T00:00:00Z')
+  let rows: any[] = []
+  try { rows = await db.trainingEnrollment.groupBy({ by: ['module_id'], where: { tenant_id: tenantId, completed_at: { gte: since } }, _count: { _all: true } }) } catch { return { total: 0, courses: [] as Array<{ course: string; completed: number }> } }
+  let mods: any[] = []
+  try { mods = await db.trainingModule.findMany({ where: { id: { in: rows.map(r => r.module_id) } }, select: { id: true, name: true } }) } catch { mods = [] }
+  const name = new Map(mods.map(m => [m.id, String(m.name)]))
+  const courses = rows.map(r => ({ course: name.get(r.module_id) ?? 'A course', completed: Number(r._count?._all ?? 0) })).sort((a, b) => b.completed - a.completed).slice(0, 8)
+  return { total: courses.reduce((s, c) => s + c.completed, 0), courses }
+}

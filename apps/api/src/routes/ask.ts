@@ -14,6 +14,11 @@ import { runAgent } from '../services/ask/runner'
 import { DOCUMENT_TYPES, documentType } from '../services/ask/document-types'
 import * as store from '../services/ask/store'
 import { ukToday } from '../lib/holiday-math'
+import { writeAuditLog } from '../lib/audit'
+import { render as renderLetter, validate as validateLetter, getTemplate as letterTemplate } from '../services/letters'
+import { needsApproval, canEdit, canSubmit, canApprove, canReturn, canReopen, canShare, sharesFor, SHARE_METHODS, type ShareMethod } from '../services/ask-docs/workflow'
+import { pdfFor, emailLetter, shareAsNotification } from '../services/ask-docs/share'
+import { lintNewsletter } from '../services/ask-docs/newsletter-templates'
 
 export const askRouter = Router()
 const notFound = (res: Response) => err(res, 'NOT_FOUND', 'Not found.', 404)
@@ -93,10 +98,124 @@ askRouter.post('/documents', wrap(async (req, res) => {
   if (!body) { err(res, 'INVALID', 'There is nothing to save.', 400); return }
   ok(res, { id: await store.saveDocument(getTenantId(), req.user!.sub, { type, title, body, data: req.body?.sources ? { sources: req.body.sources } : undefined }) }, 201)
 }))
-askRouter.get('/documents/:id', wrap(async (req, res) => { const d = await store.getDocument(getTenantId(), req.user!.sub, String(req.params.id)); if (!d) { notFound(res); return } ok(res, { document: d }) }))
+// ── The library: saved answers (private) and letters and newsletters (shared between the account's administrators, with an approval step) ─────────────────────────────────────────────
+const audit = (req: Request, event: Parameters<typeof writeAuditLog>[0]['event_type'], id: string, meta: Record<string, unknown> = {}) => void writeAuditLog({ tenant_id: getTenantId(), user_id: req.user!.sub, event_type: event, entity_type: 'ask_document', entity_id: id, metadata: meta })
+
+async function actionsFor(d: NonNullable<Awaited<ReturnType<typeof store.getDocumentFor>>>, actor: string) {
+  if (!needsApproval(d.type)) return { edit: true, submit: false, approve: false, return: false, reopen: false, share: [] as ShareMethod[], needs_approval: false }
+  const admins = await store.countActiveAdmins(getTenantId())
+  return {
+    needs_approval: true,
+    edit: canEdit(d, actor).ok, submit: canSubmit(d, actor).ok && (d.type !== 'letter' || validateLetter(String(d.data?.template_id ?? ''), d.data?.values ?? {}).ok),
+    approve: canApprove(d, actor, admins, true).ok, return: canReturn(d, actor, admins).ok, reopen: canReopen(d).ok,
+    share: canShare(d).ok ? sharesFor(d.type) : ([] as ShareMethod[]),
+  }
+}
+
+askRouter.get('/approvals', wrap(async (req, res) => { ok(res, { approvals: (await store.listPendingApprovals(getTenantId())).map(x => ({ ...x, mine: x.created_by === req.user!.sub })) }) }))
+
+askRouter.get('/documents/:id', wrap(async (req, res) => {
+  const d = await store.getDocumentFor(getTenantId(), req.user!.sub, String(req.params.id)); if (!d) { notFound(res); return }
+  const checklist = d.type === 'letter' ? (d.data?.before_you_send ?? []) : d.type === 'newsletter' ? (d.data?.checklist ?? []) : []
+  ok(res, { document: { ...d, mine: d.created_by === req.user!.sub, checklist, references: d.data?.references ?? [], shared: d.data?.shared ?? [], staff_name: d.data?.staff_name ?? null, values: d.type === 'letter' ? d.data?.values ?? {} : undefined, fields: d.type === 'letter' ? letterTemplate(String(d.data?.template_id ?? ''))?.fields.map(f => ({ key: f.key, label: f.label, type: f.type, required: f.required, choices: f.choices ?? null })) : undefined, actions: await actionsFor(d, req.user!.sub) } })
+}))
+
 askRouter.patch('/documents/:id', wrap(async (req, res) => {
-  const title = req.body?.title != null ? String(req.body.title).trim() : undefined, body = req.body?.body != null ? String(req.body.body) : undefined
-  if (!(await store.updateDocument(getTenantId(), req.user!.sub, String(req.params.id), { title, body }))) { notFound(res); return }
+  const t = getTenantId(), u = req.user!.sub, id = String(req.params.id)
+  const d = await store.getDocumentFor(t, u, id); if (!d) { notFound(res); return }
+  const title = req.body?.title != null ? String(req.body.title).trim() : undefined
+  if (!needsApproval(d.type)) {
+    const body = req.body?.body != null ? String(req.body.body) : undefined
+    if (!(await store.updateDocument(t, u, id, { title, body }))) { notFound(res); return }
+    ok(res, { saved: true }); return
+  }
+  const v = canEdit(d, u); if (!v.ok) { err(res, 'NOT_ALLOWED', v.reason, 409); return }
+  if (d.type === 'letter' && req.body?.values && typeof req.body.values === 'object') {
+    const tpl = String(d.data?.template_id ?? '')
+    const values: Record<string, unknown> = { ...(d.data?.values ?? {}) }
+    for (const [k, x] of Object.entries(req.body.values as Record<string, unknown>)) if (/^[a-z0-9_]{1,60}$/i.test(k) && (typeof x === 'string' || typeof x === 'number')) values[k] = x
+    const r = renderLetter(tpl, values)
+    await store.updateDocumentContent(t, id, { title, body: r.text, data: { ...d.data, values } })
+    audit(req, 'ask_document_edited', id, { type: d.type })
+    ok(res, { saved: true, missing: r.missing, unreadable: r.invalid.map(i => i.label), body: r.text }); return
+  }
+  const body = req.body?.body != null ? String(req.body.body) : undefined
+  if (d.type === 'newsletter' && (body || title)) { const problems = lintNewsletter(`${title ?? d.title}\n${body ?? d.body}`); if (problems.length) { err(res, 'RULES', `Not saved. ${problems.join(' ')}`, 400); return } }
+  await store.updateDocumentContent(t, id, { title, body })
+  audit(req, 'ask_document_edited', id, { type: d.type })
   ok(res, { saved: true })
 }))
-askRouter.delete('/documents/:id', wrap(async (req, res) => { if (!(await store.deleteDocument(getTenantId(), req.user!.sub, String(req.params.id)))) { notFound(res); return } ok(res, { deleted: true }) }))
+
+askRouter.post('/documents/:id/submit', wrap(async (req, res) => {
+  const t = getTenantId(), u = req.user!.sub, id = String(req.params.id)
+  const d = await store.getDocumentFor(t, u, id); if (!d) { notFound(res); return }
+  const v = canSubmit(d, u); if (!v.ok) { err(res, 'NOT_ALLOWED', v.reason, 409); return }
+  if (d.type === 'letter') { const c = validateLetter(String(d.data?.template_id ?? ''), d.data?.values ?? {}); if (!c.ok) { err(res, 'INCOMPLETE', `The letter is not finished: ${[...c.missing, ...c.invalid.map(i => i.label)].join(', ')}.`, 409); return } }
+  if (!(await store.setDocumentStatus(t, id, ['draft'], 'pending'))) { err(res, 'NOT_ALLOWED', 'It has already been submitted.', 409); return }
+  audit(req, 'ask_document_submitted', id, { type: d.type }); ok(res, { status: 'pending' })
+}))
+
+askRouter.post('/documents/:id/approve', wrap(async (req, res) => {
+  const t = getTenantId(), u = req.user!.sub, id = String(req.params.id)
+  const d = await store.getDocumentFor(t, u, id); if (!d) { notFound(res); return }
+  const v = canApprove(d, u, await store.countActiveAdmins(t), req.body?.checklist_confirmed === true); if (!v.ok) { err(res, 'NOT_ALLOWED', v.reason, 409); return }
+  if (!(await store.setDocumentStatus(t, id, ['pending'], 'approved', u))) { err(res, 'NOT_ALLOWED', 'It is no longer waiting for approval.', 409); return }
+  audit(req, 'ask_document_approved', id, { type: d.type, by_author: d.created_by === u }); ok(res, { status: 'approved' })
+}))
+
+askRouter.post('/documents/:id/return', wrap(async (req, res) => {
+  const t = getTenantId(), u = req.user!.sub, id = String(req.params.id)
+  const d = await store.getDocumentFor(t, u, id); if (!d) { notFound(res); return }
+  const v = canReturn(d, u, await store.countActiveAdmins(t)); if (!v.ok) { err(res, 'NOT_ALLOWED', v.reason, 409); return }
+  if (!(await store.setDocumentStatus(t, id, ['pending'], 'draft'))) { err(res, 'NOT_ALLOWED', 'It is no longer waiting for approval.', 409); return }
+  const note = String(req.body?.note ?? '').trim().slice(0, 300)
+  if (note) await store.updateDocumentContent(t, id, { data: { ...d.data, review_note: { note, by: u, at: new Date().toISOString() } } })
+  audit(req, 'ask_document_returned', id, { type: d.type }); ok(res, { status: 'draft' })
+}))
+
+askRouter.post('/documents/:id/reopen', wrap(async (req, res) => {
+  const t = getTenantId(), u = req.user!.sub, id = String(req.params.id)
+  const d = await store.getDocumentFor(t, u, id); if (!d) { notFound(res); return }
+  const v = canReopen(d); if (!v.ok) { err(res, 'NOT_ALLOWED', v.reason, 409); return }
+  if (!(await store.setDocumentStatus(t, id, ['approved', 'shared'], 'draft'))) { err(res, 'NOT_ALLOWED', 'It cannot be re-opened.', 409); return }
+  audit(req, 'ask_document_reopened', id, { type: d.type }); ok(res, { status: 'draft' })
+}))
+
+askRouter.get('/documents/:id/pdf', wrap(async (req, res) => {
+  const t = getTenantId(), d = await store.getDocumentFor(t, req.user!.sub, String(req.params.id)); if (!d) { notFound(res); return }
+  const v = canShare(d); if (!v.ok) { err(res, 'NOT_ALLOWED', v.reason, 409); return }
+  try {
+    const { buffer, filename } = await pdfFor(t, d)
+    audit(req, 'ask_document_pdf_downloaded', d.id, { type: d.type })
+    await store.appendShareRecord(t, d.id, { method: 'pdf', by: req.user!.sub, at: new Date().toISOString() }); await store.setDocumentStatus(t, d.id, ['approved'], 'shared')
+    res.setHeader('Content-Type', 'application/pdf'); res.setHeader('Cache-Control', 'private, no-store'); res.setHeader('X-Content-Type-Options', 'nosniff')
+    res.setHeader('Content-Disposition', `attachment; filename="${filename.replace(/[^a-zA-Z0-9._-]/g, '_')}"`)
+    res.send(buffer)
+  } catch (e: any) { err(res, 'PDF_FAILED', 'The PDF could not be made just now. Please try again.', 500) }
+}))
+
+askRouter.post('/documents/:id/share', wrap(async (req, res) => {
+  const t = getTenantId(), u = req.user!.sub, id = String(req.params.id)
+  const d = await store.getDocumentFor(t, u, id); if (!d) { notFound(res); return }
+  const v = canShare(d); if (!v.ok) { err(res, 'NOT_ALLOWED', v.reason, 409); return }
+  const method = String(req.body?.method ?? '') as ShareMethod
+  if (!SHARE_METHODS.includes(method) || method === 'pdf' || !sharesFor(d.type).includes(method)) { err(res, 'INVALID', 'Choose email or notification.', 400); return }
+  try {
+    if (method === 'email') {
+      const r = await emailLetter({ tenantId: t, actorId: u, doc: d })
+      if (!r.sent) { err(res, 'NOT_SENT', r.reason ?? 'It could not be emailed.', 409); return }
+    } else {
+      const r = await shareAsNotification({ tenantId: t, actorId: u, doc: d, audience: req.body?.audience, userIds: req.body?.user_ids })
+      if (!r.ok) { err(res, r.code, r.message, r.status); return }
+    }
+    await store.appendShareRecord(t, id, { method, by: u, at: new Date().toISOString() }); await store.setDocumentStatus(t, id, ['approved'], 'shared')
+    audit(req, method === 'email' ? 'ask_document_shared_email' : 'ask_document_shared_notification', id, { type: d.type }); ok(res, { shared: true, method })
+  } catch (e: any) { console.error('[ask] share failed:', String(e?.message ?? e).slice(0, 160)); err(res, 'SHARE_FAILED', 'It could not be shared just now. Please try again.', 500) }
+}))
+
+askRouter.delete('/documents/:id', wrap(async (req, res) => {
+  const t = getTenantId(), u = req.user!.sub, d = await store.getDocumentFor(t, u, String(req.params.id)); if (!d) { notFound(res); return }
+  if (needsApproval(d.type) && (d.status !== 'draft' || d.created_by !== u)) { err(res, 'NOT_ALLOWED', 'Only the author can delete a draft. Submitted, approved and shared documents are kept as a record.', 409); return }
+  if (!(await store.deleteDocument(t, u, d.id))) { notFound(res); return }
+  ok(res, { deleted: true })
+}))

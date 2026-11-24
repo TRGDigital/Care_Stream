@@ -91,7 +91,7 @@ test('a notification is never sent with a missing document, and drafts are the s
   const send = routes.slice(routes.indexOf("notificationsAdminRouter.post('/', async"), routes.indexOf("notificationsAdminRouter.post('/:id/remind'"))
   assert.match(send, /created_by: userOf\(req\), notification_id: null/)
   assert.match(send, /files\.length !== fileIds\.length/)
-  assert.ok(send.indexOf('files.length !== fileIds.length') < send.indexOf('staffNotification.create'), 'checked before anything is created or sent')
+  assert.ok(send.indexOf('files.length !== fileIds.length') < send.indexOf('createAndSendNotification('), 'checked before anything is created or sent')
   assert.match(routes, /notificationFileUploadMiddleware/)
   assert.match(routes, /scanBuffer/)
 })

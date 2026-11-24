@@ -42,8 +42,9 @@ export async function saveDocument(tenantId: string, userId: string, d: { type: 
   return String(r[0].id)
 }
 export async function listDocuments(tenantId: string, userId: string) {
-  const r: any[] = await q().$queryRawUnsafe('select id, type, title, status, updated_at from public.ask_documents where tenant_id = $1 and created_by = $2 order by updated_at desc limit 100', tenantId, userId)
-  return r.map(x => ({ id: String(x.id), type: String(x.type), title: String(x.title), status: String(x.status), updated_at: iso(x.updated_at) }))
+  // A person's own saved items, plus every letter and newsletter in the account (administrators approve each other's).
+  const r: any[] = await q().$queryRawUnsafe("select id, type, title, status, created_by, data, updated_at from public.ask_documents where tenant_id = $1 and (created_by = $2 or type in ('letter','newsletter')) order by updated_at desc limit 150", tenantId, userId)
+  return r.map(x => ({ id: String(x.id), type: String(x.type), title: String(x.title), status: String(x.status), mine: String(x.created_by) === userId, staff_name: x.data?.staff_name ?? null, updated_at: iso(x.updated_at) }))
 }
 export async function getDocument(tenantId: string, userId: string, id: string) {
   const r: any[] = await q().$queryRawUnsafe('select id, type, title, body, data, status, version, created_at, updated_at from public.ask_documents where id = $1 and tenant_id = $2 and created_by = $3', id, tenantId, userId)
@@ -54,4 +55,33 @@ export async function updateDocument(tenantId: string, userId: string, id: strin
 }
 export async function deleteDocument(tenantId: string, userId: string, id: string) {
   return Number(await q().$executeRawUnsafe('delete from public.ask_documents where id = $1 and tenant_id = $2 and created_by = $3', id, tenantId, userId)) > 0
+}
+
+// ── Letters and newsletters: the approval workflow (see services/ask-docs/workflow.ts for the rules) ─────────────────────────────────────────────────────────────────
+export const SHARED_TYPES = ['letter', 'newsletter']
+/** One document in this account by id, whoever wrote it, when it is a letter or newsletter (administrators approve each other's); a saved answer stays private to its author. */
+export async function getDocumentFor(tenantId: string, userId: string, id: string) {
+  const r: any[] = await q().$queryRawUnsafe("select id, type, title, body, data, status, version, created_by, approved_by, approved_at, created_at, updated_at from public.ask_documents where id = $1 and tenant_id = $2 and (created_by = $3 or type in ('letter','newsletter'))", id, tenantId, userId)
+  const x = r[0]
+  return x ? { id: String(x.id), type: String(x.type), title: String(x.title), body: String(x.body), data: x.data ?? null, status: String(x.status), version: Number(x.version), created_by: String(x.created_by), approved_by: x.approved_by ? String(x.approved_by) : null, approved_at: iso(x.approved_at), created_at: iso(x.created_at), updated_at: iso(x.updated_at) } : null
+}
+export async function listPendingApprovals(tenantId: string) {
+  const r: any[] = await q().$queryRawUnsafe("select id, type, title, created_by, data, updated_at from public.ask_documents where tenant_id = $1 and status = 'pending' and type in ('letter','newsletter') order by updated_at asc limit 100", tenantId)
+  return r.map(x => ({ id: String(x.id), type: String(x.type), title: String(x.title), created_by: String(x.created_by), staff_name: x.data?.staff_name ?? null, updated_at: iso(x.updated_at) }))
+}
+export async function updateDocumentContent(tenantId: string, id: string, p: { title?: string; body?: string; data?: unknown }) {
+  return Number(await q().$executeRawUnsafe('update public.ask_documents set title = coalesce($3, title), body = coalesce($4, body), data = coalesce($5::jsonb, data), version = version + 1, updated_at = now() where id = $1 and tenant_id = $2', id, tenantId, p.title?.slice(0, 160) ?? null, p.body?.slice(0, 60000) ?? null, p.data === undefined ? null : JSON.stringify(p.data)))
+}
+/** Move a document to a new status, but only if it is currently in one of the allowed statuses (so two people cannot both approve it). */
+export async function setDocumentStatus(tenantId: string, id: string, from: string[], to: string, approvedBy?: string | null) {
+  if (to === 'approved') {
+    return Number(await q().$executeRawUnsafe("update public.ask_documents set status = 'approved', approved_by = $4, approved_at = now(), updated_at = now() where id = $1 and tenant_id = $2 and status = any($3::text[])", id, tenantId, from, approvedBy ?? null)) > 0
+  }
+  return Number(await q().$executeRawUnsafe("update public.ask_documents set status = $4, approved_by = case when $4 = 'draft' then null else approved_by end, approved_at = case when $4 = 'draft' then null else approved_at end, updated_at = now() where id = $1 and tenant_id = $2 and status = any($3::text[])", id, tenantId, from, to)) > 0
+}
+export async function appendShareRecord(tenantId: string, id: string, entry: { method: string; by: string; at: string; note?: string }) {
+  await q().$executeRawUnsafe("update public.ask_documents set data = jsonb_set(coalesce(data, '{}'::jsonb), '{shared}', coalesce(data->'shared', '[]'::jsonb) || $3::jsonb), updated_at = now() where id = $1 and tenant_id = $2", id, tenantId, JSON.stringify([entry]))
+}
+export async function countActiveAdmins(tenantId: string): Promise<number> {
+  return await q().user.count({ where: { tenant_id: tenantId, role: 'admin', is_active: true, is_shared: false } })
 }

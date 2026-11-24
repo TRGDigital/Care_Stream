@@ -44,3 +44,10 @@ test('the dashboard greeting changes at noon and at six', async () => {
   assert.equal(greetingFor(12), 'Good afternoon'); assert.equal(greetingFor(17), 'Good afternoon')
   assert.equal(greetingFor(18), 'Good evening'); assert.equal(greetingFor(23), 'Good evening')
 })
+
+test('the dashboard setting icon uses the same rules as the API for every facility type', async () => {
+  const { settingFromFacilityType } = await web('care-setting-icon')
+  const { facilityTypeToSetting } = await import('./care-setting')
+  for (const t of ['care home', 'Nursing home', 'Domiciliary care agency', 'home care', 'Live-in care', 'live in', 'Dental practice', 'GP surgery', 'Hospice', 'Independent hospital', 'Clinic', 'Substance misuse rehab', 'Shared Lives', 'Complex care', 'Residential', 'Supported living', '', 'something else'])
+    assert.equal(settingFromFacilityType(t), facilityTypeToSetting(t), t)
+})

@@ -227,7 +227,7 @@ askRouter.get('/documents/:id/pdf', wrap(async (req, res) => {
   const t = getTenantId(), d = await store.getDocumentFor(t, req.user!.sub, String(req.params.id)); if (!d) { notFound(res); return }
   const v = canShare(d); if (!v.ok) { err(res, 'NOT_ALLOWED', v.reason, 409); return }
   try {
-    const { buffer, filename } = await pdfFor(t, d)
+    const { buffer, filename } = await pdfFor(t, d, req.query.sign === '1' ? req.user!.sub : null)   // MY signature only when I ask for it
     audit(req, 'ask_document_pdf_downloaded', d.id, { type: d.type })
     await store.appendShareRecord(t, d.id, { method: 'pdf', by: req.user!.sub, at: new Date().toISOString() }); await store.setDocumentStatus(t, d.id, ['approved'], 'shared')
     res.setHeader('Content-Type', 'application/pdf'); res.setHeader('Cache-Control', 'private, no-store'); res.setHeader('X-Content-Type-Options', 'nosniff')
@@ -244,10 +244,10 @@ askRouter.post('/documents/:id/share', wrap(async (req, res) => {
   if (!SHARE_METHODS.includes(method) || method === 'pdf' || !sharesFor(d.type, d.data).includes(method)) { err(res, 'INVALID', 'Choose email or notification.', 400); return }
   try {
     if (method === 'email') {
-      const r = d.type === 'report' ? await emailReportToAdmins({ tenantId: t, actorId: u, doc: d }) : await emailLetter({ tenantId: t, actorId: u, doc: d })
+      const r = d.type === 'report' ? await emailReportToAdmins({ tenantId: t, actorId: u, doc: d }) : await emailLetter({ tenantId: t, actorId: u, doc: d, signerUserId: req.body?.sign === true ? u : null })
       if (!(d.type === 'report' ? (r as any).sent > 0 : (r as any).sent)) { err(res, 'NOT_SENT', (r as any).reason ?? 'It could not be emailed.', 409); return }
     } else {
-      const r = await shareAsNotification({ tenantId: t, actorId: u, doc: d, audience: req.body?.audience, userIds: req.body?.user_ids })
+      const r = await shareAsNotification({ tenantId: t, actorId: u, doc: d, audience: req.body?.audience, userIds: req.body?.user_ids, signerUserId: req.body?.sign === true ? u : null })
       if (!r.ok) { err(res, r.code, r.message, r.status); return }
     }
     await store.appendShareRecord(t, id, { method, by: u, at: new Date().toISOString() }); await store.setDocumentStatus(t, id, ['approved'], 'shared')

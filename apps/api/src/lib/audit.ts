@@ -45,9 +45,10 @@ type AuditEventType =
   | 'ask_run' | 'ask_funding_named_viewed'
   | 'ask_action_proposed' | 'ask_action_confirmed' | 'ask_action_cancelled' | 'ask_action_failed' | 'ask_settings_changed' | 'staff_notification_withdrawn'   // Ask CareStream actions: a proposal, a confirmation, its result (counts and type only, never the message), and a withdrawn notification
   | 'ask_document_edited' | 'ask_document_submitted' | 'ask_document_approved' | 'ask_document_returned' | 'ask_document_reopened' | 'ask_document_pdf_downloaded' | 'ask_document_shared_email' | 'ask_document_shared_notification'   // Ask CareStream: an agent was run (agent and tool names only, never content); a named person's funding figures were read at the admin's request
+  | 'letterhead_updated' | 'signature_saved' | 'signature_deleted' | 'signature_removed_by_admin' | 'ask_document_docx_downloaded'   // letterhead details, personal signatures and Word downloads
   | 'platform_viewed_staff_chats'      // TRG opened a staff member's chats (full text) in the platform console   // TRG looked at a staff member's activity record from the platform console
 
-type AuditEntityType = 'policy' | 'user' | 'tenant' | 'query' | 'resident' | 'audit_run' | 'shared_device' | 'staff_notification' | 'staff_notification_file' | 'holiday_request' | 'sick_spell' | 'ask_conversation' | 'ask_document' | 'ask_action'
+type AuditEntityType = 'policy' | 'user' | 'tenant' | 'query' | 'resident' | 'audit_run' | 'shared_device' | 'staff_notification' | 'staff_notification_file' | 'holiday_request' | 'sick_spell' | 'ask_conversation' | 'ask_document' | 'ask_action' | 'letterhead' | 'signature'
 
 interface AuditParams {
   tenant_id?: string | null

@@ -185,97 +185,36 @@ export function renderLetter(t: LetterTemplate, values: Values): RenderedLetter 
   }
 }
 
-// ── The PDF ──────────────────────────────────────────────────────────────────────────────────────
-export interface Letterhead { name: string; address?: string | null; logoDataUrl?: string | null }
+// ── The formal document: PDF, Word and the on screen preview all come from one layout ──────────────
+import type { Letterhead } from './letterhead'
+import type { LayoutDoc, SignatureImage } from './layout'
+export type { Letterhead }
 
-/** pdfkit's standard fonts cover Latin text. Anything outside it (emoji and the like) would print as a gap, so it is dropped. Curly quotes, the pound sign and the euro sign are kept. */
-function pdfSafe(s: string): string {
-  return s.normalize('NFC').replace(/[‘’]/g, '’').replace(/[^\u0009\u000A -~ -ÿ’“”…•€]/g, '')
+export interface Signer { name: string; role?: string; signature?: SignatureImage | null }
+
+/** The letter as a layout: the rendered text on the organisation's letterhead. When a signer is given, their printed name and job title replace the sign off, and their signature
+ *  picture is shown only when it was passed in (the caller passes it only for the person who chose to sign with their own signature). */
+export function letterLayout(t: LetterTemplate, values: Values, head: Letterhead, signer?: Signer | null): LayoutDoc {
+  const r = renderLetter(t, values)
+  return {
+    kind: 'letter', head, date: r.date, confidential: true,
+    recipient: { name: r.recipient.name, role: r.recipient.role || undefined },
+    subject: r.subject,
+    blocks: r.blocks.map(b => ({ t: b.t, text: b.text })),
+    closing: r.closing,
+    signer: signer?.name ? { name: signer.name, role: signer.role, signature: signer.signature ?? null } : { name: r.signOff.name, role: r.signOff.role || undefined, signature: null },
+    acknowledgement: r.acknowledgement,
+  }
 }
 
 /** The letter as a PDF on the service's letterhead. pdfkit and the policy PDF helpers are loaded when this is called, so everything else in this module works without them. */
-export async function renderLetterPdf(t: LetterTemplate, values: Values, head: Letterhead): Promise<Buffer> {
-  const r = renderLetter(t, values)
-  const [{ default: PDFDocument }, { logoForPdf }] = await Promise.all([import('pdfkit'), import('../policy/policy-pdf')])
-  const logo = await logoForPdf(head.logoDataUrl ?? null)
-  const M = 56, W = 595.28, H = 841.89
-  const width = W - M * 2
-  const INK = '#1A1530', MID = '#5E4D70', LINE = '#d9d4e0'
-  const doc = new PDFDocument({ size: 'A4', margin: M, bufferPages: true, info: { Title: pdfSafe(r.subject), Author: pdfSafe(head.name) } })
-  const chunks: Buffer[] = []
-  doc.on('data', (c: Buffer) => chunks.push(c))
-  const done = new Promise<Buffer>(resolve => doc.on('end', () => resolve(Buffer.concat(chunks))))
-  const bottom = H - M - 20
-  const ensure = (h: number) => { if (doc.y + h > bottom) doc.addPage() }
+export async function renderLetterPdf(t: LetterTemplate, values: Values, head: Letterhead, signer?: Signer | null): Promise<Buffer> {
+  const { renderLayoutPdf } = await import('./layout-pdf')
+  return renderLayoutPdf(letterLayout(t, values, head, signer))
+}
 
-  // Letterhead: logo on the left, the service's name and address on the right, then a thin rule.
-  const top = doc.y
-  if (logo) { try { doc.image(logo, M, top, { fit: [150, 48] }) } catch { /* no logo */ } }
-  doc.fillColor(INK).font('Helvetica-Bold').fontSize(12).text(pdfSafe(head.name), M, top + 2, { width, align: 'right' })
-  if (head.address) doc.fillColor(MID).font('Helvetica').fontSize(9).text(pdfSafe(head.address), M, doc.y + 1, { width, align: 'right' })
-  doc.y = Math.max(doc.y, top + 54)
-  doc.moveTo(M, doc.y).lineTo(W - M, doc.y).lineWidth(0.7).strokeColor(LINE).stroke()
-  doc.moveDown(1)
-
-  doc.fillColor(MID).font('Helvetica').fontSize(10).text(pdfSafe(r.date), M, doc.y, { width })
-  doc.moveDown(0.8)
-  doc.fillColor(MID).font('Helvetica-Bold').fontSize(8.5).text('PRIVATE AND CONFIDENTIAL', M, doc.y, { width, characterSpacing: 0.6 })
-  doc.moveDown(0.3)
-  doc.fillColor(INK).font('Helvetica-Bold').fontSize(10.5).text(pdfSafe(r.recipient.name), M, doc.y, { width })
-  if (r.recipient.role) doc.fillColor(MID).font('Helvetica').fontSize(10).text(pdfSafe(r.recipient.role), M, doc.y, { width })
-  doc.moveDown(1)
-  doc.fillColor(INK).font('Helvetica-Bold').fontSize(11.5).text(pdfSafe(r.subject), M, doc.y, { width })
-  doc.moveDown(0.8)
-
-  let prev: string | null = null
-  for (const b of r.blocks) {
-    if (prev === 'li' && b.t !== 'li') doc.moveDown(0.45)   // a little air after a list
-    prev = b.t
-    if (b.t === 'li') {
-      ensure(16)
-      const y = doc.y
-      doc.fillColor(INK).font('Helvetica').fontSize(10.5).text('•', M + 6, y, { width: 12, lineBreak: false })
-      doc.text(pdfSafe(b.text), M + 20, y, { width: width - 20, lineGap: 2 })
-      doc.moveDown(0.25)
-    } else if (b.t === 'h') {
-      ensure(40); doc.moveDown(0.3); doc.fillColor(INK).font('Helvetica-Bold').fontSize(11).text(pdfSafe(b.text), M, doc.y, { width }); doc.moveDown(0.3)
-    } else {
-      ensure(30)
-      doc.fillColor(INK).font('Helvetica').fontSize(10.5).text(pdfSafe(b.text), M, doc.y, { width, lineGap: 2.5, align: 'left' })
-      doc.moveDown(0.7)
-    }
-  }
-
-  ensure(90)
-  doc.moveDown(0.3)
-  doc.fillColor(INK).font('Helvetica').fontSize(10.5).text(pdfSafe(r.closing), M, doc.y, { width })
-  doc.moveDown(2.4)
-  doc.fillColor(INK).font('Helvetica-Bold').fontSize(10.5).text(pdfSafe(r.signOff.name), M, doc.y, { width })
-  if (r.signOff.role) doc.fillColor(MID).font('Helvetica').fontSize(10).text(pdfSafe(r.signOff.role), M, doc.y, { width })
-
-  if (r.acknowledgement) {
-    ensure(130)
-    doc.moveDown(1.6)
-    const y = doc.y
-    doc.rect(M, y, width, 108).lineWidth(0.7).strokeColor(LINE).stroke()
-    doc.fillColor(INK).font('Helvetica').fontSize(10).text(pdfSafe(r.acknowledgement), M + 12, y + 10, { width: width - 24, lineGap: 2 })
-    const ly = y + 80
-    doc.moveTo(M + 12, ly).lineTo(M + 12 + 240, ly).lineWidth(0.6).strokeColor(MID).stroke()
-    doc.moveTo(M + 280, ly).lineTo(M + width - 12, ly).stroke()
-    doc.fillColor(MID).font('Helvetica').fontSize(8.5).text('Signed', M + 12, ly + 3, { lineBreak: false })
-    doc.text('Date', M + 280, ly + 3, { lineBreak: false })
-    doc.y = y + 116
-  }
-
-  // Page numbers when the letter runs to more than one page.
-  const range = doc.bufferedPageRange()
-  if (range.count > 1) {
-    for (let i = 0; i < range.count; i++) {
-      doc.switchToPage(range.start + i)
-      doc.page.margins.bottom = 0
-      doc.fillColor(MID).font('Helvetica').fontSize(8).text(`Page ${i + 1} of ${range.count}`, M, H - 32, { width, align: 'center', lineBreak: false })
-    }
-  }
-  doc.end()
-  return done
+/** The same letter as a Word document. */
+export async function renderLetterDocx(t: LetterTemplate, values: Values, head: Letterhead, signer?: Signer | null): Promise<Buffer> {
+  const { renderLayoutDocx } = await import('./layout-docx')
+  return renderLayoutDocx(letterLayout(t, values, head, signer))
 }

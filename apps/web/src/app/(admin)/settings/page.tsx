@@ -15,12 +15,15 @@ import { useFundingMeta } from '@/lib/funding-client'
 import { FinanceSettingsBody } from '@/components/admin/residents/finance-settings'
 import { AskSettingsBody } from '@/components/ask/ask-settings'
 import { ask as askApi } from '@/lib/ask-client'
+import { LetterheadSettingsBody } from '@/components/admin/settings/letterhead-settings'
+import { SignatureSettingsBody } from '@/components/admin/settings/signature-settings'
+import { useLetterheadAvailable } from '@/lib/letterhead-client'
 import {
   AlertTriangle, Bell, BedDouble, BookLock, Building2, Check, ChevronDown, ChevronUp, ClipboardList, Copy, Loader2,
   Mail, Plus, Search, ShieldCheck, SlidersHorizontal, Tablet, Trash2, Upload, UserRound, X,
   // `Lock` unaliased resolves to the DOM Web Locks API type, not the icon.
   Lock as LockIcon,
-  CalendarDays, Sparkles,
+  CalendarDays, Sparkles, FileText, PenLine,
 } from 'lucide-react'
 
 // Active search query, shared with every SettingSection so non-matching
@@ -206,6 +209,7 @@ export default function SettingsPage() {
   const fundingMeta                 = useFundingMeta()   // finance pilot (CS-1001, administrators only)
   const [askOn, setAskOn]           = useState(false)    // Ask CareStream pilot: the section only shows on pilot accounts
   useEffect(() => { if (session?.accessToken && (session.user as any)?.role === 'admin') askApi.meta(session.accessToken).then(m => setAskOn(!!m.enabled)).catch(() => setAskOn(false)) }, [session?.accessToken]) // eslint-disable-line react-hooks/exhaustive-deps
+  const letterheadOn                = useLetterheadAvailable()   // letterhead and signatures (pilot, CS-1001)
   const policiesOnly                = (session?.user as any)?.tier === 'policies_only'
   const [lockedSetting, setLockedSetting] = useState<string | null>(null)
   const { features: planFeatures }  = usePlanFeatures()
@@ -1455,6 +1459,18 @@ export default function SettingsPage() {
         {askOn && session?.accessToken && (
           <SettingSection icon={Sparkles} title="Ask CareStream" description="What Ask CareStream may do for you, always with a Confirm button. Off by default.">
             <AskSettingsBody token={session.accessToken} />
+          </SettingSection>
+        )}
+
+        {/* Letterhead and signatures (pilot, CS-1001): how formal letters, reports and newsletters look, and my own signature. */}
+        {letterheadOn && session?.accessToken && (
+          <SettingSection icon={FileText} title="Letterhead and company details" description="The logo, name, address and registration details printed on formal letters, reports and newsletters.">
+            <LetterheadSettingsBody token={session.accessToken} />
+          </SettingSection>
+        )}
+        {letterheadOn && session?.accessToken && (
+          <SettingSection icon={PenLine} title="My signature" description="Add your signature to use on letters and reports you approve or send.">
+            <SignatureSettingsBody token={session.accessToken} />
           </SettingSection>
         )}
 

@@ -61,13 +61,23 @@ export const ask = {
   approve: (t: string, id: string, checklist_confirmed: boolean) => call<{ status: string }>(`/ask/documents/${encodeURIComponent(id)}/approve`, t, { method: 'POST', body: JSON.stringify({ checklist_confirmed }) }),
   returnToDraft: (t: string, id: string, note?: string) => call<{ status: string }>(`/ask/documents/${encodeURIComponent(id)}/return`, t, { method: 'POST', body: JSON.stringify({ note }) }),
   reopen: (t: string, id: string) => call<{ status: string }>(`/ask/documents/${encodeURIComponent(id)}/reopen`, t, { method: 'POST', body: '{}' }),
-  share: (t: string, id: string, b: { method: 'email' | 'notification'; audience?: 'all' | 'selected'; user_ids?: string[] }) => call<{ shared: boolean; method: string }>(`/ask/documents/${encodeURIComponent(id)}/share`, t, { method: 'POST', body: JSON.stringify(b) }),
+  share: (t: string, id: string, b: { method: 'email' | 'notification'; audience?: 'all' | 'selected'; user_ids?: string[]; sign?: boolean }) => call<{ shared: boolean; method: string }>(`/ask/documents/${encodeURIComponent(id)}/share`, t, { method: 'POST', body: JSON.stringify(b) }),
   /** Downloads the finished PDF (an approved document only) and saves it in the browser. */
-  downloadPdf: async (t: string, id: string, fallbackName: string) => {
-    const res = await fetch(`${API_URL}/ask/documents/${encodeURIComponent(id)}/pdf`, { headers: { Authorization: `Bearer ${t}` } })
+  downloadPdf: async (t: string, id: string, fallbackName: string, sign = false) => {
+    const res = await fetch(`${API_URL}/ask/documents/${encodeURIComponent(id)}/pdf${sign ? '?sign=1' : ''}`, { headers: { Authorization: `Bearer ${t}` } })
     if (!res.ok) { let m = 'The PDF could not be made just now.'; try { m = (await res.json())?.error?.message ?? m } catch { /* not json */ } throw new AskError('PDF_FAILED', m, res.status) }
     const url = URL.createObjectURL(await res.blob()); const a = document.createElement('a'); a.href = url; a.download = `${fallbackName.replace(/[^a-zA-Z0-9 _-]/g, '').trim().replace(/\s+/g, '-') || 'document'}.pdf`; a.click(); URL.revokeObjectURL(url)
   },
+  /** The finished Word document (.docx), on the organisation's letterhead. `sign` adds MY signature (only mine, only when I ask). */
+  downloadDocx: async (t: string, id: string, fallbackName: string, sign = false) => {
+    const res = await fetch(`${API_URL}/ask-docs/${encodeURIComponent(id)}/docx${sign ? '?sign=1' : ''}`, { headers: { Authorization: `Bearer ${t}` } })
+    if (!res.ok) { let m = 'The Word document could not be made just now.'; try { m = (await res.json())?.error?.message ?? m } catch { /* not json */ } throw new AskError('DOCX_FAILED', m, res.status) }
+    const url = URL.createObjectURL(await res.blob()); const a = document.createElement('a'); a.href = url; a.download = `${fallbackName.replace(/[^a-zA-Z0-9 _-]/g, '').trim().replace(/\s+/g, '-') || 'document'}.docx`; a.click(); URL.revokeObjectURL(url)
+  },
+  /** Is the letterhead set up, what is missing, and do I have a signature (never the picture). */
+  docStatus: (t: string) => call<{ letterhead_ready: boolean; trading_name: string; missing: string[]; signature: boolean }>('/ask-docs/status', t),
+  /** The headed page as HTML (made by the server with the same layout as the PDF and Word), for the on screen preview. */
+  preview: (t: string, id: string, sign = false) => call<{ html: string; css: string }>(`/ask-docs/${encodeURIComponent(id)}/preview${sign ? '?sign=1' : ''}`, t),
   save: (t: string, b: { type?: string; title: string; body: string; sources?: AskSource[] }) => call<{ id: string }>('/ask/documents', t, { method: 'POST', body: JSON.stringify(b) }),
   updateDocument: (t: string, id: string, b: { title?: string; body?: string }) => call<{ saved: boolean }>(`/ask/documents/${encodeURIComponent(id)}`, t, { method: 'PATCH', body: JSON.stringify(b) }),
   removeDocument: (t: string, id: string) => call<{ deleted: boolean }>(`/ask/documents/${encodeURIComponent(id)}`, t, { method: 'DELETE' }),

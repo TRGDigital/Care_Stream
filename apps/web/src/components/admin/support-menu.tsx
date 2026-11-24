@@ -10,10 +10,9 @@ import { usePathname } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import { Bug, CircleHelp, Info, LifeBuoy, Lightbulb, Loader2, Mail, MessageCircle, Phone, X } from 'lucide-react'
 import { createApiClient } from '@/lib/api-client'
-import { SUPPORT_PHONE, isPaidTier, mailtoSupport, hasUnreadRelease } from '@/lib/support'
-import { NEWEST_RELEASE_ID } from '@/data/releases'
+import { SUPPORT_PHONE, isPaidTier, mailtoSupport } from '@/lib/support'
+import { OPEN_RELEASES_EVENT } from '@/components/admin/releases-overlay'
 
-const SEEN_KEY = 'cs-release-seen'
 type FormKind = 'bug' | 'feature' | null
 
 function Item({ icon, title, hint, href, onClick }: { icon: React.ReactNode; title: string; hint: string; href?: string; onClick?: () => void }) {
@@ -110,16 +109,11 @@ export function SupportMenu() {
   const pathname = usePathname()
   const [open, setOpen] = useState(false)
   const [form, setForm] = useState<FormKind>(null)
-  const [unread, setUnread] = useState(false)
   const [ref, setRef] = useState<string | null>(null)
   const btn = useRef<HTMLButtonElement>(null)
   const panel = useRef<HTMLDivElement>(null)
   const token = session?.accessToken
   const paid = isPaidTier((session?.user as any)?.tier)
-
-  useEffect(() => {
-    try { setUnread(hasUnreadRelease(NEWEST_RELEASE_ID, window.localStorage.getItem(SEEN_KEY))) } catch { setUnread(false) }
-  }, [pathname])
 
   // The customer reference (the account number) is read the first time the menu opens.
   useEffect(() => {
@@ -137,10 +131,7 @@ export function SupportMenu() {
     return () => { document.removeEventListener('keydown', key); document.removeEventListener('mousedown', click) }
   }, [open, close])
 
-  function openReleases() {
-    try { if (NEWEST_RELEASE_ID) window.localStorage.setItem(SEEN_KEY, NEWEST_RELEASE_ID) } catch { /* storage blocked */ }
-    setUnread(false); setOpen(false)
-  }
+  function openReleases() { setOpen(false); window.dispatchEvent(new Event(OPEN_RELEASES_EVENT)) }
   function openForm(k: 'bug' | 'feature') { setOpen(false); setForm(k) }
 
   return (
@@ -148,14 +139,13 @@ export function SupportMenu() {
       <button ref={btn} type="button" onClick={() => setOpen(v => !v)} aria-expanded={open} aria-haspopup="menu" aria-label="Support and help" title="Support and help"
         className="relative rounded-full p-2 text-neutral-mid hover:bg-neutral-light hover:text-neutral-dark focus:outline-none focus-visible:ring-2 focus-visible:ring-teal/40">
         <LifeBuoy size={20} />
-        {unread && <span className="absolute right-1 top-1 h-2.5 w-2.5 rounded-full border-2 border-white bg-teal" aria-label="New release notes" />}
       </button>
 
       {open && (
         <div ref={panel} role="menu" aria-label="Support" className="absolute right-0 top-full z-[60] mt-2 w-[min(92vw,380px)] overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-xl">
           <div className="max-h-[calc(100vh-9rem)] overflow-y-auto p-2">
             <Item icon={<CircleHelp size={20} />} title="Help Centre" hint="Read our dedicated help articles" href="/guides" onClick={() => setOpen(false)} />
-            <Item icon={<Info size={20} />} title="Releases and Announcements" hint="View our latest releases and announcements" href="/releases" onClick={openReleases} />
+            <Item icon={<Info size={20} />} title="Releases and Announcements" hint="View our latest releases and announcements" onClick={openReleases} />
             <Item icon={<Bug size={20} />} title="Report a Bug" hint="Describe a bug you have spotted" onClick={() => openForm('bug')} />
             <Item icon={<Lightbulb size={20} />} title="Request Feature" hint="Suggest a new feature to add" onClick={() => openForm('feature')} />
 

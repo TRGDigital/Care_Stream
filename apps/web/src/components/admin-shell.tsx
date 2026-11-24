@@ -25,6 +25,7 @@ import { pageCache, persistentCache } from '@/lib/page-cache'
 import { TRAINING_ONLY_NAV, POLICIES_ONLY_NAV, FREE_NAV, NOT_FOR_SHOP_TIERS } from '@/lib/admin-search/access'
 import { AdminSearch } from '@/components/admin/admin-search'
 import { SupportMenu } from '@/components/admin/support-menu'
+import { ReleasesButton } from '@/components/admin/releases-overlay'
 import { SupportChatWidget } from '@/components/support/chat-widget'
 
 const NAV_SECTIONS = [
@@ -316,6 +317,7 @@ export function AdminShell({ userName, tenantName, children }: AdminShellProps) 
           </div>
 
           <div className="flex flex-shrink-0 items-center gap-4 md:gap-5">
+            <ReleasesButton />
             <SupportMenu />
             <span className="hidden text-sm text-neutral-mid sm:inline">{userName}</span>
             <button

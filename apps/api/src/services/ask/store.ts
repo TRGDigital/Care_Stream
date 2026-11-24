@@ -43,7 +43,7 @@ export async function saveDocument(tenantId: string, userId: string, d: { type: 
 }
 export async function listDocuments(tenantId: string, userId: string) {
   // A person's own saved items, plus every letter and newsletter in the account (administrators approve each other's).
-  const r: any[] = await q().$queryRawUnsafe("select id, type, title, status, created_by, data, updated_at from public.ask_documents where tenant_id = $1 and (created_by = $2 or type in ('letter','newsletter')) order by updated_at desc limit 150", tenantId, userId)
+  const r: any[] = await q().$queryRawUnsafe("select id, type, title, status, created_by, data, updated_at from public.ask_documents where tenant_id = $1 and (created_by = $2 or type in ('letter','newsletter','report')) order by updated_at desc limit 150", tenantId, userId)
   return r.map(x => ({ id: String(x.id), type: String(x.type), title: String(x.title), status: String(x.status), mine: String(x.created_by) === userId, staff_name: x.data?.staff_name ?? null, updated_at: iso(x.updated_at) }))
 }
 export async function getDocument(tenantId: string, userId: string, id: string) {
@@ -58,15 +58,15 @@ export async function deleteDocument(tenantId: string, userId: string, id: strin
 }
 
 // ── Letters and newsletters: the approval workflow (see services/ask-docs/workflow.ts for the rules) ─────────────────────────────────────────────────────────────────
-export const SHARED_TYPES = ['letter', 'newsletter']
+export const SHARED_TYPES = ['letter', 'newsletter', 'report']
 /** One document in this account by id, whoever wrote it, when it is a letter or newsletter (administrators approve each other's); a saved answer stays private to its author. */
 export async function getDocumentFor(tenantId: string, userId: string, id: string) {
-  const r: any[] = await q().$queryRawUnsafe("select id, type, title, body, data, status, version, created_by, approved_by, approved_at, created_at, updated_at from public.ask_documents where id = $1 and tenant_id = $2 and (created_by = $3 or type in ('letter','newsletter'))", id, tenantId, userId)
+  const r: any[] = await q().$queryRawUnsafe("select id, type, title, body, data, status, version, created_by, approved_by, approved_at, created_at, updated_at from public.ask_documents where id = $1 and tenant_id = $2 and (created_by = $3 or type in ('letter','newsletter','report'))", id, tenantId, userId)
   const x = r[0]
   return x ? { id: String(x.id), type: String(x.type), title: String(x.title), body: String(x.body), data: x.data ?? null, status: String(x.status), version: Number(x.version), created_by: String(x.created_by), approved_by: x.approved_by ? String(x.approved_by) : null, approved_at: iso(x.approved_at), created_at: iso(x.created_at), updated_at: iso(x.updated_at) } : null
 }
 export async function listPendingApprovals(tenantId: string) {
-  const r: any[] = await q().$queryRawUnsafe("select id, type, title, created_by, data, updated_at from public.ask_documents where tenant_id = $1 and status = 'pending' and type in ('letter','newsletter') order by updated_at asc limit 100", tenantId)
+  const r: any[] = await q().$queryRawUnsafe("select id, type, title, created_by, data, updated_at from public.ask_documents where tenant_id = $1 and status = 'pending' and type in ('letter','newsletter','report') order by updated_at asc limit 100", tenantId)
   return r.map(x => ({ id: String(x.id), type: String(x.type), title: String(x.title), created_by: String(x.created_by), staff_name: x.data?.staff_name ?? null, updated_at: iso(x.updated_at) }))
 }
 export async function updateDocumentContent(tenantId: string, id: string, p: { title?: string; body?: string; data?: unknown }) {

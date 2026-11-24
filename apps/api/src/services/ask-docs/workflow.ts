@@ -4,7 +4,7 @@
 export type DocStatus = 'draft' | 'pending' | 'approved' | 'shared'
 export interface DocLike { type: string; status: string; created_by: string }
 export type Verdict = { ok: true } | { ok: false; reason: string }
-const NEEDS_APPROVAL = new Set(['letter', 'newsletter'])
+const NEEDS_APPROVAL = new Set(['letter', 'newsletter', 'report'])
 export const needsApproval = (type: string) => NEEDS_APPROVAL.has(type)
 
 export const canEdit = (d: DocLike, actor: string): Verdict =>
@@ -32,4 +32,9 @@ export const canShare = (d: DocLike): Verdict => (!needsApproval(d.type) ? { ok:
 export const SHARE_METHODS = ['pdf', 'email', 'notification'] as const
 export type ShareMethod = (typeof SHARE_METHODS)[number]
 /** Which ways each kind of document can be shared. A letter is for one person; a newsletter is for staff. */
-export const sharesFor = (type: string): ShareMethod[] => (type === 'letter' ? ['pdf', 'email', 'notification'] : type === 'newsletter' ? ['pdf', 'notification'] : [])
+export const sharesFor = (type: string, data?: { internal_only?: boolean } | null): ShareMethod[] =>
+  type === 'letter' ? ['pdf', 'email', 'notification']
+  : type === 'newsletter' ? ['pdf', 'notification']
+  // A governance report can be downloaded, emailed to the account's administrators, or sent to staff as a notification, EXCEPT an internal only report (it may name people), which can never go to staff.
+  : type === 'report' ? (data?.internal_only === true ? ['pdf', 'email'] : ['pdf', 'email', 'notification'])
+  : []

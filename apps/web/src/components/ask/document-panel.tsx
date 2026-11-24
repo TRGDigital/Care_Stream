@@ -23,13 +23,14 @@ export function DocumentPanel({ token, id, onClose, onChanged }: { token: string
   const [ticked, setTicked] = useState(false)
   const [editing, setEditing] = useState(false)
   const [title, setTitle] = useState(''), [body, setBody] = useState('')
+  const [internal, setInternal] = useState(false)   // a governance report marked internal only (it may name people and can never be sent to staff)
   const [values, setValues] = useState<Record<string, string | number>>({})
   const [note, setNote] = useState('')
   const [staff, setStaff] = useState<StaffOption[] | null>(null)
   const [picking, setPicking] = useState(false), [audience, setAudience] = useState<'all' | 'selected'>('all'), [chosen, setChosen] = useState<Set<string>>(new Set()), [q, setQ] = useState('')
 
   const load = useCallback(async () => {
-    try { const r = await ask.document(token, id); setD(r.document); setTitle(r.document.title); setBody(r.document.body); setValues(r.document.values ?? {}); setTicked(false); setError('') }
+    try { const r = await ask.document(token, id); setD(r.document); setTitle(r.document.title); setBody(r.document.body); setValues(r.document.values ?? {}); setInternal(r.document.internal_only === true); setTicked(false); setError('') }
     catch (e) { setError(e instanceof Error ? e.message : 'Could not open it.') }
   }, [token, id])
   useEffect(() => { load() }, [load])
@@ -38,14 +39,14 @@ export function DocumentPanel({ token, id, onClose, onChanged }: { token: string
     setBusy(name); setError(''); setInfo('')
     try { await fn(); if (done) setInfo(done); await load(); onChanged() } catch (e) { setError(msg(e)) } finally { setBusy('') }
   }
-  const letter = d?.type === 'letter', news = d?.type === 'newsletter', flow = !!d?.actions.needs_approval
+  const letter = d?.type === 'letter', report = d?.type === 'report', news = d?.type === 'newsletter' || report, flow = !!d?.actions.needs_approval
   const st = d ? STATUS[d.status] ?? STATUS.draft : null
   const people = useMemo(() => (staff ?? []).filter(s => !q || s.name.toLowerCase().includes(q.toLowerCase())), [staff, q])
 
   async function save() {
     if (!d) return
     await run('save', async () => {
-      const r = await ask.editDocument(token, d.id, letter ? { title, values } : { title, body })
+      const r = await ask.editDocument(token, d.id, letter ? { title, values } : report ? { title, body, internal_only: internal } : { title, body })
       setEditing(false)
       if (r.missing?.length) setInfo(`Saved. Still missing: ${r.missing.join(', ')}.`)
     })
@@ -59,7 +60,7 @@ export function DocumentPanel({ token, id, onClose, onChanged }: { token: string
           <div className="mb-3 flex items-start justify-between gap-3">
             <div className="min-w-0">
               <h3 className="truncate text-base font-bold text-neutral-dark">{d.title}</h3>
-              <p className="mt-1 flex flex-wrap items-center gap-2 text-xs text-neutral-mid">{st && <span className={`rounded-full px-2 py-0.5 font-semibold ${st.cls}`}>{st.label}</span>}{flow ? (letter ? 'Letter' : 'Staff newsletter') : 'Saved answer'}{d.staff_name ? `, for ${d.staff_name}` : ''}</p>
+              <p className="mt-1 flex flex-wrap items-center gap-2 text-xs text-neutral-mid">{st && <span className={`rounded-full px-2 py-0.5 font-semibold ${st.cls}`}>{st.label}</span>}{report && d.internal_only && <span className="rounded-full bg-red-100 px-2 py-0.5 font-semibold text-red-800">Internal only</span>}{flow ? (letter ? 'Letter' : report ? 'Governance report' : 'Staff newsletter') : 'Saved answer'}{d.staff_name ? `, for ${d.staff_name}` : ''}</p>
             </div>
             <button type="button" onClick={onClose} aria-label="Close" className="rounded p-1 text-neutral-mid hover:bg-neutral-light"><X size={18} /></button>
           </div>
@@ -81,7 +82,11 @@ export function DocumentPanel({ token, id, onClose, onChanged }: { token: string
             ) : editing && news ? (
               <div className="space-y-3">
                 <div><label className="mb-1 block text-xs font-semibold text-neutral-mid" htmlFor="ask-doc-title">Title</label><input id="ask-doc-title" className={input} value={title} onChange={e => setTitle(e.target.value)} maxLength={160} /></div>
-                <div><label className="mb-1 block text-xs font-semibold text-neutral-mid" htmlFor="ask-doc-body">Newsletter (## for a heading, - for a bullet)</label><textarea id="ask-doc-body" rows={16} className={`no-scrollbar ${input} font-mono`} value={body} onChange={e => setBody(e.target.value)} /></div>
+                <div><label className="mb-1 block text-xs font-semibold text-neutral-mid" htmlFor="ask-doc-body">{report ? 'Report' : 'Newsletter'} (## for a heading, - for a bullet)</label><textarea id="ask-doc-body" rows={16} className={`no-scrollbar ${input} font-mono`} value={body} onChange={e => setBody(e.target.value)} /></div>
+                {report && (
+                  <label className="flex items-start gap-2 rounded-lg border border-gray-200 bg-neutral-light/60 p-3 text-sm text-neutral-dark"><input type="checkbox" className="mt-0.5 h-4 w-4" checked={internal} onChange={e => setInternal(e.target.checked)} />
+                    <span><span className="font-semibold">Internal only.</span> It may name people and quote pay. It can be downloaded or emailed to the administrators, and can never be sent to staff. Leave this off for a report you may share: it then uses roles and counts only.</span></label>
+                )}
               </div>
             ) : letter ? <pre className="whitespace-pre-wrap rounded-lg border border-gray-200 bg-neutral-light/50 p-4 font-sans text-sm leading-relaxed text-neutral-dark">{d.body}</pre>
               : <MarkdownLite text={d.body} />}
@@ -101,7 +106,7 @@ export function DocumentPanel({ token, id, onClose, onChanged }: { token: string
 
             {picking && (
               <div className="rounded-lg border border-gray-200 p-3">
-                <p className="mb-2 text-sm font-semibold text-neutral-dark">Send the newsletter to</p>
+                <p className="mb-2 text-sm font-semibold text-neutral-dark">Send the {report ? 'report' : 'newsletter'} to</p>
                 <div className="mb-2 flex gap-4 text-sm">
                   <label className="flex items-center gap-1.5"><input type="radio" name="aud" checked={audience === 'all'} onChange={() => setAudience('all')} /> All staff</label>
                   <label className="flex items-center gap-1.5"><input type="radio" name="aud" checked={audience === 'selected'} onChange={() => setAudience('selected')} /> Choose staff</label>
@@ -123,7 +128,7 @@ export function DocumentPanel({ token, id, onClose, onChanged }: { token: string
           <div className="mt-3 flex flex-wrap items-center justify-end gap-2 border-t border-gray-100 pt-3">
             {editing ? (<>
               <button type="button" disabled={!!busy} className={`${btn} bg-teal text-white hover:bg-teal-dark`} onClick={save}>{busy === 'save' ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />} Save changes</button>
-              <button type="button" className={`${btn} text-neutral-mid`} onClick={() => { setEditing(false); setTitle(d.title); setBody(d.body); setValues(d.values ?? {}) }}>Cancel</button>
+              <button type="button" className={`${btn} text-neutral-mid`} onClick={() => { setEditing(false); setTitle(d.title); setBody(d.body); setValues(d.values ?? {}); setInternal(d.internal_only === true) }}>Cancel</button>
             </>) : (<>
               <button type="button" onClick={() => navigator.clipboard?.writeText(d.body).catch(() => undefined)} className={`${btn} border border-gray-200 text-neutral-dark hover:bg-neutral-light`}><Copy size={14} /> Copy</button>
               {d.actions.edit && flow && <button type="button" onClick={() => setEditing(true)} className={`${btn} border border-gray-200 text-neutral-dark hover:bg-neutral-light`}><Pencil size={14} /> Edit</button>}
@@ -134,7 +139,7 @@ export function DocumentPanel({ token, id, onClose, onChanged }: { token: string
               {d.status === 'pending' && d.actions.return && <button type="button" disabled={!!busy} onClick={() => { const n = window.prompt('Why is it going back? (optional)', note); if (n !== null) { setNote(n); run('return', () => ask.returnToDraft(token, d.id, n.trim() || undefined), 'Sent back to draft.') } }} className={`${btn} border border-gray-200 text-neutral-dark hover:bg-neutral-light`}><RotateCcw size={14} /> Send back</button>}
               {d.actions.reopen && <button type="button" disabled={!!busy} onClick={() => run('reopen', () => ask.reopen(token, d.id), 'Back to draft. It needs approving again.')} className={`${btn} border border-gray-200 text-neutral-dark hover:bg-neutral-light`}><RotateCcw size={14} /> Re-open</button>}
               {d.actions.share.includes('pdf') && <button type="button" disabled={!!busy} onClick={() => run('pdf', () => ask.downloadPdf(token, d.id, d.title), 'The PDF has been downloaded.')} className={`${btn} border border-teal text-teal hover:bg-teal/5`}>{busy === 'pdf' ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />} Download PDF</button>}
-              {d.actions.share.includes('email') && <button type="button" disabled={!!busy} onClick={() => { if (window.confirm(`Email this letter to ${d.staff_name ?? 'the person'} now?`)) run('email', () => ask.share(token, d.id, { method: 'email' }), 'Emailed with the PDF attached.') }} className={`${btn} border border-teal text-teal hover:bg-teal/5`}>{busy === 'email' ? <Loader2 size={14} className="animate-spin" /> : <Mail size={14} />} Email it</button>}
+              {d.actions.share.includes('email') && <button type="button" disabled={!!busy} onClick={() => { if (window.confirm(report ? 'Email this report to all the administrators now?' : `Email this letter to ${d.staff_name ?? 'the person'} now?`)) run('email', () => ask.share(token, d.id, { method: 'email' }), report ? 'Emailed to the administrators with the PDF attached.' : 'Emailed with the PDF attached.') }} className={`${btn} border border-teal text-teal hover:bg-teal/5`}>{busy === 'email' ? <Loader2 size={14} className="animate-spin" /> : <Mail size={14} />} {report ? 'Email to administrators' : 'Email it'}</button>}
               {d.actions.share.includes('notification') && (letter
                 ? <button type="button" disabled={!!busy} onClick={() => { if (window.confirm(`Send this letter to ${d.staff_name ?? 'the person'} as a notification in their hub?`)) run('note', () => ask.share(token, d.id, { method: 'notification' }), 'Sent to their hub as a notification with the PDF attached.') }} className={`${btn} border border-teal text-teal hover:bg-teal/5`}><Bell size={14} /> Send as notification</button>
                 : <button type="button" disabled={!!busy} onClick={openPicker} className={`${btn} bg-teal text-white hover:bg-teal-dark`}><Bell size={14} /> Share with staff</button>)}

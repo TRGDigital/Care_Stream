@@ -3,13 +3,20 @@
 // This file is on the funding safeguard test's short allow list; nothing else under services/ask may mention funding fields.
 import { prisma } from '../../db/client'
 import { writeAuditLog } from '../../lib/audit'
-import { askAggregates, getFunding, fundingTablesReady } from '../../lib/resident-funding'
+import { askAggregates, askReviewStats, getFunding, fundingTablesReady } from '../../lib/resident-funding'
 
 const db = prisma as any
+export { reviewStats } from '../../lib/resident-funding'   // pure, for the tests
 
 export async function fundingAggregate(tenantId: string, today: string) {
   if (!(await fundingTablesReady())) return { ready: false as const }
   return { ready: true as const, ...(await askAggregates(tenantId, today)) }
+}
+
+/** Fee review dates, time since the last fee increase and weekly income by funding type: counts and totals only, no names, no individual figures. */
+export async function fundingReviewFigures(tenantId: string, today: string) {
+  if (!(await fundingTablesReady())) return { ready: false as const }
+  return { ready: true as const, ...(await askReviewStats(tenantId, today)) }
 }
 
 export async function fundingForNamedPerson(o: { tenantId: string; userId: string; name: string }) {

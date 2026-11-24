@@ -3,10 +3,11 @@
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { clsx } from 'clsx'
-import { clearPlatformToken } from '@/lib/platform-api'
+import { useEffect, useState } from 'react'
+import { clearPlatformToken, createPlatformClient, getPlatformToken } from '@/lib/platform-api'
 import {
   LayoutDashboard, MousePointerClick, Building2, BarChart2, BookOpen, FileText, LogOut, Sparkles, PoundSterling, Newspaper, ShieldCheck, ClipboardCheck, LineChart, UserPlus, GraduationCap, Mail, Lightbulb, Award, Languages, MessageSquareText, SearchCheck, ListChecks, LifeBuoy, ShoppingCart, Milestone,
-  Scale, ImageIcon, FileCheck2,
+  Scale, ImageIcon, FileCheck2, MessagesSquare,
 } from 'lucide-react'
 
 // Grouped so related tools sit together: business first, then the training shop,
@@ -16,6 +17,7 @@ const NAV_GROUPS: Array<{ title: string | null; items: Array<{ href: string; lab
     title: null,
     items: [
       { href: '/platform/dashboard',       label: 'Dashboard',        Icon: LayoutDashboard },
+      { href: '/platform/live-chat',       label: 'Live Chat',        Icon: MessagesSquare  },
       { href: '/platform/site-activity',   label: 'Site activity',    Icon: MousePointerClick },
     ],
   },
@@ -88,6 +90,20 @@ export function PlatformShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const router   = useRouter()
 
+  // Live chat: how many customers are waiting on an answer, checked every 20 seconds (a small count only).
+  const [chatUnread, setChatUnread] = useState(0)
+  useEffect(() => {
+    let live = true
+    const tick = () => {
+      const t = typeof window !== 'undefined' ? getPlatformToken() : null
+      if (!t || document.visibilityState === 'hidden') return
+      createPlatformClient(t).liveChat.unread().then(r => { if (live) setChatUnread(r.unread) }).catch(() => undefined)
+    }
+    tick()
+    const id = window.setInterval(tick, 20_000)
+    return () => { live = false; window.clearInterval(id) }
+  }, [])
+
   function handleSignOut() {
     clearPlatformToken()
     router.push('/platform/login')
@@ -126,6 +142,9 @@ export function PlatformShell({ children }: { children: React.ReactNode }) {
                   >
                     <Icon size={15} />
                     {label}
+                    {href === '/platform/live-chat' && chatUnread > 0 && (
+                      <span className="ml-auto rounded-full bg-red-500 px-1.5 py-0.5 text-[10px] font-bold leading-none text-white" aria-label={`${chatUnread} waiting`}>{chatUnread}</span>
+                    )}
                   </Link>
                 )
               })}

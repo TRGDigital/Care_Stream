@@ -736,6 +736,13 @@ export type SuperUserDetail = {
 }
 export type SuperUserCard = { super_user: SuperUserDetail | null; voucher: { status: 'due' | 'sent'; eligible_at: string; sent_at: string | null; sent_by: string | null; note: string | null } | null; thresholds: { window_days: number; active_days: number; passed_training: number } }
 
+export interface LiveChatMessage { id: string; sender: 'customer' | 'agent' | 'system'; sender_name: string; body: string; created_at: string }
+export interface LiveChatSummary {
+  id: string; tenant_id: string; status: 'open' | 'waiting' | 'answered' | 'closed'; mode: 'live' | 'offline'; customer_name: string; customer_email: string; customer_reference: string
+  home_name: string; plan: string; created_at: string; last_message_at: string; last_customer_message_at: string | null; closed_at: string | null
+}
+export interface LiveChatList { online: boolean; in_hours: boolean; hours_text: string; chats: Array<LiveChatSummary & { unread: number }> }
+
 export function createPlatformClient(token: string) {
   return {
     siteActivity: (days: number) => adminFetch<SiteActivityData>(`/site-activity?days=${days}`, token),
@@ -750,6 +757,17 @@ export function createPlatformClient(token: string) {
     searchMisses: {
       list: (days = 30) => adminFetch<{ days: number; misses: Array<{ query: string; searches: number; accounts: number; last_seen: string; tiers: string[] }> }>(`/search-misses?days=${days}`, token),
     },
+    // Live support chat inbox (see apps/api/src/routes/support-chat.ts).
+    liveChat: {
+      list: (filter?: string) => adminFetch<LiveChatList>(`/support-chat${filter ? `?filter=${encodeURIComponent(filter)}` : ''}`, token),
+      unread: () => adminFetch<{ unread: number }>('/support-chat/unread', token),
+      get: (id: string, after?: string) => adminFetch<{ chat: LiveChatSummary; messages: LiveChatMessage[] }>(`/support-chat/${id}${after ? `?after=${encodeURIComponent(after)}` : ''}`, token),
+      reply: (id: string, body: string, agentName: string) => adminFetch<{ message: LiveChatMessage; emailed: boolean }>(`/support-chat/${id}/reply`, token, { method: 'POST', body: JSON.stringify({ body, agent_name: agentName }) }),
+      close: (id: string) => adminFetch<{ chat: LiveChatSummary }>(`/support-chat/${id}/close`, token, { method: 'POST' }),
+      heartbeat: (agentKey: string, agentName: string, online?: boolean) =>
+        adminFetch<{ online: boolean; team_online: boolean; in_hours: boolean }>('/support-chat/heartbeat', token, { method: 'POST', body: JSON.stringify({ agent_key: agentKey, agent_name: agentName, ...(online === undefined ? {} : { online }) }) }),
+    },
+
     featureRequests: {
       list: () => adminFetch<{
         requests: Array<{ id: string; tenant_id: string; tenant_name: string | null; submitter_name: string | null; submitter_email: string | null; title: string; details: string; status: string; created_at: string; kind?: 'feature' | 'bug'; page_url?: string | null }>

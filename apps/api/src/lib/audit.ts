@@ -42,7 +42,7 @@ type AuditEventType =
   | 'supervision_training_shared'   // the training detail for a supervision was printed or emailed
   | 'admin_view_as_started' | 'admin_view_as_ended' | 'admin_view_as_action'   // an admin looked at a staff member's hub (view or act mode)
   | 'platform_pushed_policy_gaps'      // TRG pushed missing policies to a client's /policies page
-  | 'ask_run' | 'ask_funding_named_viewed'
+  | 'ask_run' | 'ask_funding_named_viewed' | 'ask_resident_profile_viewed'
   | 'ask_action_proposed' | 'ask_action_confirmed' | 'ask_action_cancelled' | 'ask_action_failed' | 'ask_settings_changed' | 'staff_notification_withdrawn'   // Ask CareStream actions: a proposal, a confirmation, its result (counts and type only, never the message), and a withdrawn notification
   | 'ask_document_edited' | 'ask_document_submitted' | 'ask_document_approved' | 'ask_document_returned' | 'ask_document_reopened' | 'ask_document_pdf_downloaded' | 'ask_document_shared_email' | 'ask_document_shared_notification'   // Ask CareStream: an agent was run (agent and tool names only, never content); a named person's funding figures were read at the admin's request
   | 'letterhead_updated' | 'signature_saved' | 'signature_deleted' | 'signature_removed_by_admin' | 'ask_document_docx_downloaded'   // letterhead details, personal signatures and Word downloads

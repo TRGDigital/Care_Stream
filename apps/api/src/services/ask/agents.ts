@@ -3,6 +3,7 @@
 import { LOCKED_RULES } from './safety'
 import { QUALITY_AGENTS } from './agents-quality'
 import { registerFinanceAgents } from './agents-finance'
+import { registerKnowledgeAgents } from './agents-knowledge'
 
 export type AgentStatus = 'ready' | 'shell' | 'soon'
 export interface AgentDef {
@@ -67,6 +68,7 @@ ACCURACY AND TONE: British English; short paragraphs; no dashes in sentences; no
 ]
 for (const q of QUALITY_AGENTS) { const i = AGENTS.findIndex(x => x.id === q.id); if (i >= 0) AGENTS[i] = q; else AGENTS.push(q) }   // quality agents replace their coming soon entries in place
 registerFinanceAgents(AGENTS)   // Finance and pay, Complaints and incidents (agents-finance.ts)
+registerKnowledgeAgents(AGENTS)   // the Knowledge and Residents agents (agents-knowledge.ts)
 export const agentById = (id: string) => AGENTS.find(a => a.id === id)
 export const publicAgent = (a: AgentDef) => ({ id: a.id, name: a.name, blurb: a.blurb, icon: a.icon, status: a.status, starters: a.starters, shell_message: a.shell_message ?? null })
 

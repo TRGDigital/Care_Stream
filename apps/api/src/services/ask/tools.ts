@@ -11,6 +11,7 @@ import { NEWSLETTER_TOOLS } from './newsletter-tools'
 import { QUALITY_TOOLS } from './tools-quality'
 import { FINANCE_TOOLS } from './tools-finance'
 import { ACTION_TOOLS } from './actions/tools-actions'
+import { KNOWLEDGE_TOOLS } from './tools-knowledge'
 
 export interface ToolContext { tenantId: string; userId: string; today: string; conversationId?: string | null; collectProposal?: (id: string) => void; role?: 'admin' | 'manager'; moneyOk?: boolean }
 export interface ToolResult { data: unknown; method?: string; sources: AskSource[] }
@@ -299,6 +300,7 @@ export const TOOLS: AskTool[] = [
   ...QUALITY_TOOLS,
   ...FINANCE_TOOLS,   // Finance and pay, Complaints and incidents (tools-finance.ts, tools-incidents.ts)
   ...ACTION_TOOLS,
+  ...KNOWLEDGE_TOOLS,
   {
     name: 'care_setting',
     description: 'The type of service this account runs (the Facility Type), to word answers correctly.',

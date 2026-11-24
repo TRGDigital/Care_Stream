@@ -7,6 +7,7 @@ import { prisma } from '../../db/client'
 import { AGENTS, HOUSE_RULES, type AgentDef } from './agents'
 import { LOCKED_RULES } from './safety'
 import { DEFAULT_ACTIONS_RULES, ACTION_TOOL_NAMES } from './actions/prompts'
+import { KNOWLEDGE_PROMPTS } from './agents-knowledge'
 
 export const ASK_GROUP = 'Ask CareStream'
 export const ASK_PROMPT_MAX = 8000
@@ -60,6 +61,7 @@ export const ASK_PROMPTS: AskPromptMeta[] = [
     note: 'Used for the Complaints and incidents agent: it reads audit results and actions (CareStream holds no complaints register), and themes in text the administrator pastes after removing names.' },
   { usage: 'ask_actions_rules', label: 'Ask CareStream: how agents use actions', default: DEFAULT_ACTIONS_RULES,
     note: 'Added for any agent that can propose actions (notifications, reminders, training): how to propose, the personalised placeholders, and what to do when asked for something it cannot do. Nothing it proposes happens until the administrator presses Confirm; that and the privacy rules are locked in code.' },
+  ...KNOWLEDGE_PROMPTS,
   { usage: 'ask_page_context', label: 'Ask CareStream: page context line', default: DEFAULT_PAGE_CONTEXT,
     note: 'One line added when the administrator is looking at a page. Placeholders: {{label}} (what they are looking at) and {{who}} (the staff member on screen, if any, already written as a sentence).' },
 ]

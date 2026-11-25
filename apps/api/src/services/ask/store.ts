@@ -90,3 +90,23 @@ export async function countActiveAdmins(tenantId: string): Promise<number> {
 export async function setShareIntent(tenantId: string, id: string, intent: { hub: boolean; email: boolean; print_only: boolean }) {
   return Number(await q().$executeRawUnsafe("update public.ask_documents set data = jsonb_set(coalesce(data, '{}'::jsonb), '{share_intent}', $3::jsonb), updated_at = now() where id = $1 and tenant_id = $2 and type = 'letter' and status in ('draft','pending','approved','shared')", id, tenantId, JSON.stringify(intent))) > 0
 }
+
+// ── Approver notifications (see services/ask-docs/approver-notify.ts): the times live in the document's own data, so there is no new table ─────────────────────────
+/** Merges times into data.approval ({ submitted_at, notified_at, reminded_at }). Does not change the version or the approval. */
+export async function setApprovalMeta(tenantId: string, id: string, patch: Record<string, string | null>) {
+  await q().$executeRawUnsafe("update public.ask_documents set data = jsonb_set(coalesce(data, '{}'::jsonb), '{approval}', coalesce(data->'approval', '{}'::jsonb) || $3::jsonb) where id = $1 and tenant_id = $2", id, tenantId, JSON.stringify(patch))
+}
+/** Every pending letter, newsletter or report that has waited at least `days`, across accounts (for the daily reminder). Times only, never content. */
+export async function listPendingOlderThan(days: number, limit = 500) {
+  const r: any[] = await q().$queryRawUnsafe("select id, tenant_id, created_by, updated_at, data->'approval' as approval from public.ask_documents where status = 'pending' and type in ('letter','newsletter','report') and coalesce(nullif(data->'approval'->>'submitted_at','')::timestamptz, updated_at) <= now() - ($1::int * interval '1 day') and coalesce(data->'approval'->>'reminded_at','') = '' order by updated_at asc limit $2", days, limit)
+  return r.map(x => ({ id: String(x.id), tenant_id: String(x.tenant_id), created_by: String(x.created_by), updated_at: iso(x.updated_at), approval: x.approval ?? null }))
+}
+/** Active administrators of an account (id and name), for the people who may approve. */
+export async function activeAdmins(tenantId: string): Promise<Array<{ id: string; name: string }>> {
+  const r: any[] = await q().user.findMany({ where: { tenant_id: tenantId, role: 'admin', is_active: true, is_shared: false }, select: { id: true, name: true } })
+  return r.map(x => ({ id: String(x.id), name: String(x.name ?? '') }))
+}
+export async function userName(tenantId: string, userId: string): Promise<string> {
+  const u: any = await q().user.findFirst({ where: { id: userId, tenant_id: tenantId }, select: { name: true } })
+  return String(u?.name ?? '')
+}

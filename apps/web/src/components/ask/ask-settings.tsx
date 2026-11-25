@@ -44,6 +44,7 @@ export function AskSettingsBody({ token }: { token: string }) {
           <span className="mt-0.5 block text-xs text-neutral-mid">The shortest gap between two confirmed actions by the same person. Default 2.</span></label>
       </div>
       {sw('managers_can_use', 'Let managers use Ask CareStream.', 'Care managers and registered managers can use Ask CareStream, with a safe set of tools: no pay rates, no resident funding and no one else\'s holiday balance (unless you have also switched on "Let managers see funding" under Finance). They can act on the staff of this account.')}
+      {sw('approver_emails', 'Email approvers as well.', 'When a letter, newsletter or report is waiting for approval, or has been approved or sent back, the people involved always get a message in their hub. Switch this on to email them as well. The message names the kind of document and who wrote it, never its content. Default on.')}
       {up && (
         <fieldset className="space-y-2 border-t border-gray-100 pt-4">
           <legend className="text-sm font-semibold text-neutral-dark">Files attached to a chat</legend>

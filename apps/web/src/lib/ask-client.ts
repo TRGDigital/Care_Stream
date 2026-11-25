@@ -24,7 +24,7 @@ export interface AskActionCard {
   notification_title?: string; courses?: string[]; due_date?: string | null; skipped?: Array<{ user_id: string; name: string; course: string; reason: string }>
   scope?: string; within_days?: number; items?: Array<{ user_id: string; name: string; courses: string[] }>
 }
-export interface AskSettingsView { actions_enabled: boolean; notifications_enabled: boolean; training_enabled: boolean; emails_enabled: boolean; max_recipients: number; min_gap_minutes: number; managers_can_use: boolean }
+export interface AskSettingsView { actions_enabled: boolean; notifications_enabled: boolean; training_enabled: boolean; emails_enabled: boolean; max_recipients: number; min_gap_minutes: number; managers_can_use: boolean; approver_emails?: boolean }
 export interface AskConversation { id: string; agent_id: string; title: string; updated_at: string | null }
 export interface AskDocument { id: string; type: string; title: string; status: string; mine?: boolean; staff_name?: string | null; updated_at: string | null }
 export interface AskDocActions { needs_approval: boolean; edit: boolean; submit: boolean; approve: boolean; return: boolean; reopen: boolean; share: Array<'pdf' | 'email' | 'notification' | 'hub'> }
@@ -45,7 +45,7 @@ export interface AskUpload {
   text_totals?: Array<{ label: string; amount: number }>; created_at: string | null; expires_at: string | null; retention_note: string
   match: null | { confirmed: boolean; matched: number; ambiguous: number; unmatched: number; total: number; rows: MatchRowView[]; staff: Array<{ id: string; name: string }> }
 }
-export interface AskApproval { id: string; type: string; title: string; staff_name: string | null; mine: boolean; updated_at: string | null }
+export interface AskApproval { id: string; type: string; title: string; staff_name: string | null; mine: boolean; can_approve?: boolean; updated_at: string | null }
 
 export interface NewsletterLibrary {
   categories: Array<{ id: string; title: string; blurb: string; types: Array<{ type: string; title: string; purpose: string; layouts: Array<{ id: string; layout: 'short' | 'standard' | 'detailed'; sections: number }> }> }>
@@ -87,7 +87,7 @@ export const ask = {
   newsletterTemplates: (t: string) => call<NewsletterLibrary>('/ask/newsletter-templates', t),
   documents: (t: string) => call<{ documents: AskDocument[] }>('/ask/documents', t),
   document: (t: string, id: string) => call<{ document: AskDocFull }>(`/ask/documents/${encodeURIComponent(id)}`, t),
-  approvals: (t: string) => call<{ approvals: AskApproval[] }>('/ask/approvals', t),
+  approvals: (t: string) => call<{ approvals: AskApproval[]; waiting_for_me?: number }>('/ask/approvals', t),
   editDocument: (t: string, id: string, b: { title?: string; body?: string; internal_only?: boolean; values?: Record<string, string | number> }) => call<{ saved: boolean; missing?: string[]; unreadable?: string[]; body?: string }>(`/ask/documents/${encodeURIComponent(id)}`, t, { method: 'PATCH', body: JSON.stringify(b) }),
   submit: (t: string, id: string) => call<{ status: string }>(`/ask/documents/${encodeURIComponent(id)}/submit`, t, { method: 'POST', body: '{}' }),
   approve: (t: string, id: string, checklist_confirmed: boolean) => call<{ status: string }>(`/ask/documents/${encodeURIComponent(id)}/approve`, t, { method: 'POST', body: JSON.stringify({ checklist_confirmed }) }),

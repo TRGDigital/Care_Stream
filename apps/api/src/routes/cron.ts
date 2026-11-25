@@ -205,6 +205,27 @@ cronRouter.get('/check-data-sources', (req, res) =>
 cronRouter.get('/sweep-ask-uploads', (req, res) =>
   job('sweep-ask-uploads', req, res, async () => ({ deleted: await sweepAskUploads(Math.min(200, Number(req.query.limit) || 100)) })))
 
+// Once a day: the ONE reminder for any letter, newsletter or report that has waited 3 days for approval (the pilot account only). Safe to run more often: a document is stamped before
+// anything is sent, so it can never be reminded twice. dry=1 only counts.
+cronRouter.get('/ask-approval-reminders', (req, res) =>
+  job('ask-approval-reminders', req, res, async () => {
+    const { listPendingOlderThan } = await import('../services/ask/store')
+    const { sendReminders } = await import('../services/ask-docs/approver-notify')
+    const { realDeps } = await import('../services/ask-docs/approver-deps')
+    const { askPilotEnabled } = await import('../lib/ask-pilot')
+    const rows = await listPendingOlderThan(3)
+    const byTenant = new Map<string, typeof rows>(); for (const r of rows) byTenant.set(r.tenant_id, [...(byTenant.get(r.tenant_id) ?? []), r])
+    if (req.query.dry === '1') return { dry_run: true, documents: rows.length, accounts: byTenant.size }
+    let docs = 0, messages = 0
+    for (const [tenantId, pending] of byTenant) {
+      if (!(await askPilotEnabled(tenantId))) continue
+      const r = await sendReminders(realDeps, { tenantId, pending })
+      docs += r.reminded_docs; messages += r.messages
+      if (r.reminded_docs) void (await import('../lib/audit')).writeAuditLog({ tenant_id: tenantId, user_id: pending[0].created_by, event_type: 'ask_approval_reminded', entity_type: 'tenant', entity_id: tenantId, metadata: { documents: r.reminded_docs, messages: r.messages } })
+    }
+    return { documents: docs, messages }
+  }))
+
 // Makes the hero pictures for the blog drafts listed in data/blog-hero-scenes.ts that have none (limit=N, at most 4 a call; dry=1 only lists).
 cronRouter.get('/generate-blog-heroes', (req, res) =>
   job('generate-blog-heroes', req, res, () => generateBlogHeroes(Number(req.query.limit) || 2, req.query.dry === '1')))

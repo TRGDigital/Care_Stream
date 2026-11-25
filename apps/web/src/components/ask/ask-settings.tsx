@@ -43,7 +43,7 @@ export function AskSettingsBody({ token }: { token: string }) {
           <input type="number" min={0} max={60} value={s?.min_gap_minutes ?? 2} disabled={!s} onChange={e => s && setS({ ...s, min_gap_minutes: Number(e.target.value) })} onBlur={e => change({ min_gap_minutes: Number(e.target.value) })} className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
           <span className="mt-0.5 block text-xs text-neutral-mid">The shortest gap between two confirmed actions by the same person. Default 2.</span></label>
       </div>
-      {sw('managers_can_use', 'Let managers use Ask CareStream.', 'Care managers and registered managers get an Ask button in their hub, with a safe set of tools: no pay rates, no resident funding and no one else\'s holiday balance (unless you have also switched on "Let managers see funding" under Finance). They can act on the staff of this account.')}
+      {sw('managers_can_use', 'Let managers use Ask CareStream.', 'Care managers and registered managers can use Ask CareStream, with a safe set of tools: no pay rates, no resident funding and no one else\'s holiday balance (unless you have also switched on "Let managers see funding" under Finance). They can act on the staff of this account.')}
       {up && (
         <fieldset className="space-y-2 border-t border-gray-100 pt-4">
           <legend className="text-sm font-semibold text-neutral-dark">Files attached to a chat</legend>

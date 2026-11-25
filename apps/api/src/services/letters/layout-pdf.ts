@@ -66,12 +66,12 @@ export async function renderLayoutPdf(d: LayoutDoc, opts: { compress?: boolean; 
 
   const sizeOf = (t: string) => (t === 'h' ? (d.kind === 'letter' ? 11 : 13) : 10.5)
   /** One block. `next` is the block after it (a heading is kept with the start of that one); `extra` is more that must stay with this block on the same page (the sign-off after the last paragraph). */
-  const body = (b: { t: string; text: string }, prev: { v: string | null }, next?: { t: string; text: string } | null, extra = 0) => {
+  const body = (b: { t: string; text: string }, prev: { v: string | null }, next?: { t: string; text: string } | null, extra = 0, nextExtra = 0) => {
     if (prev.v === 'li' && b.t !== 'li') doc.moveDown(0.45)
     prev.v = b.t
-    const start = pageNow()
+    let start = pageNow()
     if (b.t === 'li') {
-      keepTogether(hOf(b.text, 10.5, width - 20, 2) + 8 + extra)
+      keepTogether(hOf(b.text, 10.5, width - 20, 2) + 8 + extra); start = pageNow()
       const y = doc.y
       doc.fillColor(INK).font('Helvetica').fontSize(10.5).text('•', M + 6, y, { width: 12, lineBreak: false })
       doc.text(printable(b.text), M + 20, y, { width: width - 20, lineGap: 2 })
@@ -79,11 +79,13 @@ export async function renderLayoutPdf(d: LayoutDoc, opts: { compress?: boolean; 
     } else if (b.t === 'h') {
       // a heading never ends a page: it travels with the first lines of what follows (the whole next paragraph when it is short)
       const own = hOf(b.text, sizeOf('h'), width, 0, 'Helvetica-Bold') + 14
-      const follow = next ? (next.t === 'p' ? Math.min(hOf(next.text, 10.5, width, 2.5), lineH(10.5, 2.5) * 3) : hOf(next.text, 10.5, width - 20, 2)) + 8 : 0
-      keepTogether(own + follow)
+      // the next paragraph never splits (it moves whole), so the heading must travel with the WHOLE of it (and the sign-off, if it is the last one); only a paragraph longer than a page may be split after its first lines
+      const nextH = next ? (next.t === 'p' ? hOf(next.text, 10.5, width, 2.5) + 9 : hOf(next.text, 10.5, width - 20, 2) + 8) + nextExtra : 0
+      const follow = nextH > room - own ? Math.min(nextH, lineH(10.5, 2.5) * 3) : nextH
+      keepTogether(own + follow); start = pageNow()
       doc.moveDown(0.4); doc.fillColor(BRAND ?? (d.kind === 'letter' ? INK : TEAL)).font('Helvetica-Bold').fontSize(sizeOf('h')).text(printable(b.text), M, doc.y, { width }); doc.moveDown(0.3)
     } else {
-      keepTogether(hOf(b.text, 10.5, width, 2.5) + 9 + extra)
+      keepTogether(hOf(b.text, 10.5, width, 2.5) + 9 + extra); start = pageNow()
       doc.fillColor(INK).font('Helvetica').fontSize(10.5).text(printable(b.text), M, doc.y, { width, lineGap: 2.5, align: 'left' })
       doc.moveDown(0.7)
     }
@@ -104,7 +106,7 @@ export async function renderLayoutPdf(d: LayoutDoc, opts: { compress?: boolean; 
     const sig0 = d.signer?.signature ?? null
     const signOffH = 48 + (sig0 ? Math.min(51, (sig0.height * Math.min(170 / sig0.width, 51 / sig0.height)) || 51) : 40) + 40 + 14
     const lastIdx = (() => { for (let k = d.blocks.length - 1; k >= 0; k--) if (d.blocks[k].t !== 'h') return k; return -1 })()
-    d.blocks.forEach((b, k) => body(b, prev, d.blocks[k + 1] ?? null, k === lastIdx ? signOffH : 0))   // the sign-off stays with at least the last paragraph
+    d.blocks.forEach((b, k) => body(b, prev, d.blocks[k + 1] ?? null, k === lastIdx ? signOffH : 0, k + 1 === lastIdx ? signOffH : 0))   // the sign-off stays with at least the last paragraph
 
     // ── Sign off: the closing, the signature (or room for a signature by hand), then the printed name and job title ──
     const sig = d.signer?.signature ?? null

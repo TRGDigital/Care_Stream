@@ -83,7 +83,7 @@ test('GIFT: the picture is checked on its real bytes (png, jpg, webp, 1 MB), kep
 test('FEATURED AND GIFT: the agent tool refuses a person without their own yes, takes several people and an optional gift, and the design reads them', () => {
   const tool = fs.readFileSync(path.resolve(__dirname, '../ask/newsletter-tools.ts'), 'utf8')
   for (const k of ['featured', 'Each featured person needs their own yes', 'gift_text', 'gift_image_id', 'lintGift', 'giftAllowedFor', 'photos.length ? { photos, photo: photos[0] }', 'MAX_FEATURED']) assert.ok(tool.includes(k), k)
-  const doc = fs.readFileSync(path.resolve(__dirname, 'newsletter-design-doc.ts'), 'utf8'); assert.match(doc, /featuredOf\(doc\.data\)/); assert.match(doc, /giftFor\(/); assert.match(doc, /renderNewsletterPdf\(o\.stamp \? \{ \.\.\.input, stamp: o\.stamp \} : input, logoPng, photoPngs, giftPng\)/)
+  const doc = fs.readFileSync(path.resolve(__dirname, 'newsletter-design-doc.ts'), 'utf8'); assert.match(doc, /featuredOf\(doc\.data\)/); assert.match(doc, /giftFor\(/); assert.match(doc, /renderNewsletterPdfFit\(full, logoPng, photoPngs, giftPng/)
   const agents = fs.readFileSync(path.resolve(__dirname, '../ask/agents.ts'), 'utf8'); assert.match(agents, /Is there a gift for them\?/); assert.match(agents, /do not paste the draft text again/)
 })
 

@@ -116,7 +116,8 @@ test('the Word file is a valid .docx with the header, footer, text and images', 
   const zip = await JSZip.loadAsync(buf)
   const names = Object.keys(zip.files)
   assert.ok(names.includes('word/document.xml'))
-  const header = names.find(n => /^word\/header\d*\.xml$/.test(n)); const footer = names.find(n => /^word\/footer\d*\.xml$/.test(n))
+  const headerNames = names.filter(n => /^word\/header\d*\.xml$/.test(n)); let header: string | undefined; for (const n of headerNames) if ((await zip.file(n)!.async('string')).includes('1 Orchard Lane')) header = n   // the full letterhead is the first page header; later pages have a small running header
+  const footer = names.find(n => /^word\/footer\d*\.xml$/.test(n))
   assert.ok(header && footer, 'a header and a footer part')
   const hx = await zip.file(header!)!.async('string'), fx = await zip.file(footer!)!.async('string'), dx = await zip.file('word/document.xml')!.async('string')
   assert.ok(hx.includes('Ferndale Nursing Home') && hx.includes('1 Orchard Lane'), 'the header has the name and address')

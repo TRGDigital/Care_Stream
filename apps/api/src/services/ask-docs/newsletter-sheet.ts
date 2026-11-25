@@ -13,7 +13,7 @@ export const PAGE_MM: Record<Orientation, { w: number; h: number }> = { portrait
 export const FIT_STEPS = [1, 0.97, 0.94, 0.91, 0.88, 0.85, 0.82, 0.8]
 export const MIN_SCALE = FIT_STEPS[FIT_STEPS.length - 1]
 /** Space kept clear at the bottom of the page for the draft or sample note and the margin. */
-export const BOTTOM_RESERVE_PX = 24
+export const BOTTOM_RESERVE_PX = 16
 export interface FitInfo { mode: PagesMode; fits: boolean; scale: number; contentHeight: number; pageHeight: number; pages: number }
 
 export const orientationOf = (v: unknown): Orientation => (v === 'landscape' ? 'landscape' : 'portrait')

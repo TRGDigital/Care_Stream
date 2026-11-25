@@ -153,7 +153,7 @@ export function readSections(body: string, tpl: NewsletterTemplate | null): { in
   const { intro, sections } = parseSections(body)
   const ids = sectionIds(sections.map(x => x.title))
   const secs: Sec[] = sections.map((s, i) => {
-    const match = tpl ? (tpl.sections.find(t => norm(t.title) === norm(s.title)) ?? (tpl.sections.length === sections.length ? tpl.sections[i] : null)) : null
+    const match = tpl ? (tpl.sections.find(t => norm(t.title) === norm(s.title)) ?? (tpl.sections.length === sections.length ? tpl.sections[i] : null) ?? (i === 0 && ['who', 'story'].includes(tpl.sections[0]?.key) ? tpl.sections[0] : null)) : null
     const role = roleFor(match ?? null, s.title)
     const allBullets = s.blocks.length > 0 && s.blocks.every(b => b.t === 'li')
     const r: Role = role === 'plain' && allBullets ? 'list' : role
@@ -551,14 +551,14 @@ async function drawNewsletterPdf(input: DesignInput, logoPng: Buffer | null | un
   if (logoPng) { try { doc.image(logoPng, M, y, { fit: [140, 40] }) } catch { /* no logo */ } }
   else doc.fillColor(d.pal.dark).font('Helvetica-Bold').fontSize(15).text(pdfSafe(d.brand.name), M, y + 8, { width: CW * 0.6 })
   doc.fillColor(MUTED).font('Helvetica').fontSize(9).text(pdfSafe(logoPng ? `${d.brand.name}\nStaff newsletter` : 'Staff newsletter'), M, y + 4, { width: CW, align: 'right' })
-  y += 52
-  const titleH = textH(d.title, CW - 20, 24, 'Helvetica-Bold', 1)
-  const bh = 22 + 12 + titleH + 22
+  y += landscape ? 42 : 52
+  const titleH = textH(d.title, CW - 20, landscape ? 20 : 24, 'Helvetica-Bold', 1)
+  const bh = (landscape ? 16 : 22) + 12 + titleH + (landscape ? 14 : 22)
   doc.save(); doc.rect(M - 6, y, CW + 12, bh).fillColor(d.pal.tint2).fill(); doc.restore()
   doc.fillColor(d.pal.dark).font('Helvetica-Bold').fontSize(8).text(pdfSafe(d.kicker.toUpperCase() + (d.sample ? '   SAMPLE' : '')), M + 10, y + 12, { width: CW - 20, characterSpacing: 0.8 })
-  doc.fillColor(d.pal.dark).font('Helvetica-Bold').fontSize(24).text(pdfSafe(d.title), M + 10, y + 26, { width: CW - 20, lineGap: 1 })
+  doc.fillColor(d.pal.dark).font('Helvetica-Bold').fontSize(landscape ? 20 : 24).text(pdfSafe(d.title), M + 10, y + 26, { width: CW - 20, lineGap: 1 })
   doc.fillColor(MUTED).font('Helvetica').fontSize(10).text(pdfSafe(d.month), M + 10, y + 26 + titleH + 4, { width: CW - 20 })
-  y += bh + 14
+  y += bh + (landscape ? 8 : 14)
   if (d.intro.length) { const t = d.intro.map(b => b.text).join(' '); doc.fillColor(INK).font('Helvetica').fontSize(11.5).text(pdfSafe(t), M, y, { width: CW, lineGap: 3 }); y += textH(t, CW, 11.5, 'Helvetica', 3) + 12 }
 
   const cardInner = (s: Sec, w: number, big: boolean) => ({ size: big ? 11.5 : 10.5, hw: w - 28, titleSize: big ? 14 : 12.5 })

@@ -21,19 +21,33 @@ export interface DesignInput {
   /** An optional gift for the featured people: words, and a picture only on the screen, PDF and hub (never in email, which shows the gift icon and the words). */
   gift?: { text: string; dataUrl?: string | null } | null
   /** Where a button may point (the staff hub); without one the call to action is a plain panel, never a button that goes nowhere. */
-  links?: { holiday?: string | null }
+  links?: { holiday?: string | null; hub?: string | null }
+  /** Per block look, keyed by block id (see sectionIds and the custom block ids). */
+  styles?: Record<string, string>
+  /** Blocks the tenant added, in order, each placed after another block (or at the top when `after` is empty). */
+  custom?: CustomIn[]
+  /** Pictures for picture blocks, by block id (screen and PDF only; email shows the words and a note). */
+  customImages?: Record<string, CustomImage>
   sample?: boolean
   /** Printed at the top of every PDF page when the copy is not final (a draft or a sample). */
   stamp?: string
 }
 export interface Block { t: 'p' | 'li'; text: string }
-export interface Sec { key: string | null; title: string; role: Role; icon: IconName; blocks: Block[]; first?: boolean }
-export interface Row { kind: 'hero' | 'full' | 'pair' | 'quote' | 'cta' | 'footer' | 'gift'; cells: Sec[] }
+/** The kinds of block a tenant can add themselves (content is checked in newsletter-edit.ts before it is ever stored). */
+export type CustomKind = 'text' | 'picture_text' | 'quote' | 'callout' | 'button' | 'numbers' | 'list' | 'dates'
+export interface CustomIn { id: string; type: CustomKind; after?: string | null; content: any }
+export interface CustomImage { dataUrl: string; buffer?: Buffer | null }
+/** The look a block can be given: soft tint, bold (the accent colour with white words), white with an outline, or none (plain). Anything else means "as the design has it". */
+export const BLOCK_STYLES = ['soft', 'bold', 'outline', 'none'] as const
+export type BlockStyle = (typeof BLOCK_STYLES)[number]
+export interface Sec { id: string; key: string | null; title: string; role: Role; icon: IconName; blocks: Block[]; first?: boolean; custom?: CustomIn }
+export interface Row { kind: 'hero' | 'full' | 'pair' | 'quote' | 'cta' | 'footer' | 'gift' | 'custom'; cells: Sec[] }
 export interface Look { id: string; label: string; accent: string; accent2: string | null; radius: number; headFont: string; cardStyle: 'soft' | 'rule' | 'plain' | 'outline'; iconShape: 'circle' | 'square' }
 
 const esc = (s: unknown) => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c] as string))
 const SANS = "-apple-system,'Segoe UI',Helvetica,Arial,sans-serif"
 const INK = '#1F2937', MUTED = '#4B5563', LINE = '#E5E7EB', PAGE = '#F3F4F6'
+const WHITE = '#FFFFFF'
 
 // ── colour helpers ────────────────────────────────────────────────────────────────────
 const hex = (h: string) => { const m = /^#([0-9a-f]{6})$/i.exec(h.trim()); return m ? [parseInt(m[1].slice(0, 2), 16), parseInt(m[1].slice(2, 4), 16), parseInt(m[1].slice(4, 6), 16)] : null }
@@ -99,6 +113,15 @@ const KEY_ICON: Record<string, IconName> = {
 const ROLE_ICON: Record<Role, IconName> = { hero: 'megaphone', person: 'star', quote: 'quote', cta: 'arrow', dates: 'calendar', chips: 'gift', thanks: 'heart', list: 'check', plain: 'book' }
 const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9 ]/g, ' ').replace(/\s+/g, ' ').trim()
 
+/** A steady id for each section: the title in lower case with dashes, made unique. The same title always gives the same id, so styles survive moving a section. */
+export function sectionIds(titles: string[]): string[] {
+  const seen = new Map<string, number>()
+  return titles.map(t => {
+    const base = 's-' + (String(t).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 32) || 'section')
+    const n = (seen.get(base) ?? 0) + 1; seen.set(base, n)
+    return n === 1 ? base : `${base}-${n}`
+  })
+}
 export function parseSections(body: string): { intro: Block[]; sections: Array<{ title: string; blocks: Block[] }> } {
   const intro: Block[] = [], sections: Array<{ title: string; blocks: Block[] }> = []
   let cur: { title: string; blocks: Block[] } | null = null, para: string[] = []
@@ -126,12 +149,13 @@ function roleFor(sec: NewsletterSection | null, title: string): Role {
 /** Matches each section the draft has to the template's sections (by title, then by position) and works out its role and icon. */
 export function readSections(body: string, tpl: NewsletterTemplate | null): { intro: Block[]; secs: Sec[] } {
   const { intro, sections } = parseSections(body)
+  const ids = sectionIds(sections.map(x => x.title))
   const secs: Sec[] = sections.map((s, i) => {
     const match = tpl ? (tpl.sections.find(t => norm(t.title) === norm(s.title)) ?? (tpl.sections.length === sections.length ? tpl.sections[i] : null)) : null
     const role = roleFor(match ?? null, s.title)
     const allBullets = s.blocks.length > 0 && s.blocks.every(b => b.t === 'li')
     const r: Role = role === 'plain' && allBullets ? 'list' : role
-    return { key: match?.key ?? null, title: s.title, role: r, icon: (match && KEY_ICON[match.key]) || ROLE_ICON[r], blocks: s.blocks, first: i === 0 }
+    return { id: ids[i], key: match?.key ?? null, title: s.title, role: r, icon: (match && KEY_ICON[match.key]) || ROLE_ICON[r], blocks: s.blocks, first: i === 0 }
   })
   return { intro, secs }
 }
@@ -164,6 +188,49 @@ export function arrange(secs: Sec[], layout: 'short' | 'standard' | 'detailed'):
 export interface Design {
   tpl: NewsletterTemplate | null; look: Look; pal: Palette; layout: 'short' | 'standard' | 'detailed'; title: string; month: string; kicker: string
   intro: Block[]; rows: Row[]; brand: Brand; sentBy: string; photo: DesignInput['photo']; people: NonNullable<DesignInput['people']>; gift: DesignInput['gift']; links: NonNullable<DesignInput['links']>; sample: boolean
+  /** The colour of the words on the page and of the quieter words (white in a bold block). */
+  ink: string; muted: string
+  styles: Record<string, BlockStyle>; customImages: Record<string, CustomImage>
+}
+/** A bold block: the accent colour behind white words. The accent already reads on white (4.5 to 1 or better), so white words on it always read too. */
+export function boldDesign(d: Design): Design {
+  return { ...d, ink: WHITE, muted: mix(d.pal.accent, WHITE, 0.82), pal: { ...d.pal, accent: WHITE, dark: WHITE, tint: d.pal.accent, tint2: mix(d.pal.accent, '#000000', 0.22) } }
+}
+/** Puts the tenant's own blocks into the rows: each one after the block it follows (a blocks after one that follows another stays in order), the ones with no place at the top, and any whose block has been deleted at the end. */
+export function placeCustom(rows: Row[], custom: CustomIn[]): Row[] {
+  if (!custom.length) return rows
+  const ids = new Set<string>(rows.flatMap(r => r.cells.map(c => c.id)))
+  const byAfter = new Map<string, CustomIn[]>()
+  const head: CustomIn[] = [], orphans: CustomIn[] = []
+  for (const c of custom) {
+    const a = c.after || null
+    if (!a) head.push(c)
+    else if (ids.has(a) || custom.some(x => x.id === a)) byAfter.set(a, [...(byAfter.get(a) ?? []), c])
+    else orphans.push(c)
+  }
+  const out: Row[] = []
+  const seen = new Set<string>()
+  const emit = (c: CustomIn) => { if (seen.has(c.id)) return; seen.add(c.id); out.push(customRow(c)); for (const k of byAfter.get(c.id) ?? []) emit(k) }
+  head.forEach(emit)
+  for (const r of rows) {
+    if (r.kind === 'footer') { orphans.forEach(emit) }
+    out.push(r)
+    for (const cell of r.cells) for (const k of byAfter.get(cell.id) ?? []) emit(k)
+  }
+  orphans.forEach(emit)
+  return out
+}
+const CUSTOM_ICON: Record<CustomKind, IconName> = { text: 'book', picture_text: 'star', quote: 'quote', callout: 'megaphone', button: 'arrow', numbers: 'star', list: 'check', dates: 'calendar' }
+function customRow(c: CustomIn): Row {
+  const x = c.content ?? {}
+  const title = String(x.heading ?? x.title ?? '')
+  const blocks: Block[] = c.type === 'list' ? (Array.isArray(x.items) ? x.items : []).map((t: string) => ({ t: 'li' as const, text: String(t) }))
+    : c.type === 'dates' ? (Array.isArray(x.rows) ? x.rows : []).map((r: any) => ({ t: 'li' as const, text: `${r.date}: ${r.what}` }))
+    : c.type === 'numbers' ? (Array.isArray(x.items) ? x.items : []).map((r: any) => ({ t: 'li' as const, text: `${r.n} ${r.label}` }))
+    : c.type === 'quote' ? [{ t: 'p' as const, text: String(x.text ?? '') }]
+    : [{ t: 'p' as const, text: String(x.text ?? x.label ?? '') }]
+  const icon = (c.type === 'callout' && x.icon && x.icon in ICONS ? x.icon : CUSTOM_ICON[c.type]) as IconName
+  return { kind: 'custom', cells: [{ id: c.id, key: null, title, role: c.type === 'quote' ? 'quote' : c.type === 'dates' ? 'dates' : c.type === 'list' ? 'list' : 'plain', icon, blocks, custom: c }] }
 }
 /** More than one featured person: the wording turns plural ("Employees of the month"). One person leaves it as written. */
 export function pluralise(text: string, n: number): string {
@@ -179,10 +246,12 @@ export function buildDesign(input: DesignInput): Design {
   const kicker = tpl ? (NEWSLETTER_CATEGORIES.find(c => c.id === tpl.category)?.title ?? look.label) : 'Staff newsletter'
   const people = input.people ?? (input.photo ? [input.photo] : [])
   const n = people.length
-  const rows = arrange(secs, layout).map(r => ({ ...r, cells: r.cells.map(c => ({ ...c, title: pluralise(c.title, n) })) }))
+  const rows0 = arrange(secs, layout).map(r => ({ ...r, cells: r.cells.map(c => ({ ...c, title: pluralise(c.title, n) })) }))
+  const rows = placeCustom(rows0, (input.custom ?? []).slice(0, 12))
   const giftOn = !!(input.gift && (input.gift.text.trim() || input.gift.dataUrl)) || (!!input.sample && !!tpl && /^(employee-of-the-month|staff-stories|recognition)/.test(tpl.id))
-  if (giftOn) { const at = rows.length && rows[rows.length - 1].kind === 'footer' ? rows.length - 1 : rows.length; rows.splice(at, 0, { kind: 'gift', cells: [{ key: 'gift', title: n > 1 ? 'Their gifts' : 'Their gift', role: 'plain', icon: 'gift', blocks: [{ t: 'p', text: input.gift?.text?.trim() || '[What the gift is, for example a voucher or an extra day off]' }] }] }) }
-  return { tpl, look, pal: paletteFor(look, input.brand.accent), layout, title: pluralise(String(input.title || tpl?.type_title || 'Staff newsletter'), n).slice(0, 140), month: input.monthText || monthNow(), kicker, intro, rows, brand: input.brand, sentBy: input.sentBy ?? '', photo: input.photo ?? people[0] ?? null, people, gift: input.gift ?? null, links: input.links ?? {}, sample: !!input.sample }
+  if (giftOn) { const at = rows.length && rows[rows.length - 1].kind === 'footer' ? rows.length - 1 : rows.length; rows.splice(at, 0, { kind: 'gift', cells: [{ id: 'gift', key: 'gift', title: n > 1 ? 'Their gifts' : 'Their gift', role: 'plain', icon: 'gift', blocks: [{ t: 'p', text: input.gift?.text?.trim() || '[What the gift is, for example a voucher or an extra day off]' }] }] }) }
+  return { tpl, look, pal: paletteFor(look, input.brand.accent), layout, title: pluralise(String(input.title || tpl?.type_title || 'Staff newsletter'), n).slice(0, 140), month: input.monthText || monthNow(), kicker, intro, rows, brand: input.brand, sentBy: input.sentBy ?? '', photo: input.photo ?? people[0] ?? null, people, gift: input.gift ?? null, links: input.links ?? {}, sample: !!input.sample, ink: INK, muted: MUTED,
+    styles: Object.fromEntries(Object.entries(input.styles ?? {}).filter(([, v]) => (BLOCK_STYLES as readonly string[]).includes(v))) as Record<string, BlockStyle>, customImages: input.customImages ?? {} }
 }
 
 /** Example copy for a template, built from its own section titles and hints, so the layouts can be shown before anything is written. Always shown marked as a sample. */
@@ -211,7 +280,7 @@ function iconBubble(d: Design, name: IconName, t: Target, size = 36): string {
 function bullets(d: Design, blocks: Block[], size = 15): string {
   const items = blocks.filter(b => b.t === 'li')
   if (!items.length) return ''
-  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">${items.map(b => `<tr><td width="20" valign="top" style="padding:3px 0;color:${d.pal.accent};font-size:${size}px;line-height:1.5;font-weight:700">&#10003;</td><td valign="top" style="padding:3px 0;font-size:${size}px;line-height:1.5;color:${INK}">${esc(b.text)}</td></tr>`).join('')}</table>`
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">${items.map(b => `<tr><td width="20" valign="top" style="padding:3px 0;color:${d.pal.accent};font-size:${size}px;line-height:1.5;font-weight:700">&#10003;</td><td valign="top" style="padding:3px 0;font-size:${size}px;line-height:1.5;color:${d.ink}">${esc(b.text)}</td></tr>`).join('')}</table>`
 }
 function paras(blocks: Block[], size = 15, color = INK): string {
   return blocks.filter(b => b.t === 'p').map(b => `<p style="margin:0 0 10px;font-size:${size}px;line-height:1.6;color:${color}">${esc(b.text)}</p>`).join('')
@@ -219,16 +288,19 @@ function paras(blocks: Block[], size = 15, color = INK): string {
 function statTiles(d: Design, blocks: Block[]): string | null {
   const items = blocks.filter(b => b.t === 'li').map(b => /^(\d{1,4})\s+(.{2,60})$/.exec(b.text)).filter(Boolean) as RegExpExecArray[]
   if (items.length < 2 || items.length !== blocks.filter(b => b.t === 'li').length || items.length > 4) return null
-  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>${items.map(m => `<td align="center" valign="top" style="padding:4px"><div style="background:${d.pal.tint};border-radius:${Math.min(d.look.radius, 14)}px;padding:12px 6px"><div style="font-size:30px;line-height:1.1;font-weight:700;color:${d.pal.accent};font-family:${d.look.headFont}">${esc(m[1])}</div><div style="font-size:13px;line-height:1.4;color:${MUTED};padding-top:4px">${esc(m[2])}</div></div></td>`).join('')}</tr></table>`
+  return tilesHtml(d, items.map(m => ({ n: m[1], label: m[2] })))
+}
+function tilesHtml(d: Design, items: Array<{ n: string; label: string }>): string {
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>${items.map(m => `<td align="center" valign="top" style="padding:4px"><div style="background:${d.pal.tint};border-radius:${Math.min(d.look.radius, 14)}px;padding:12px 6px"><div style="font-size:30px;line-height:1.1;font-weight:700;color:${d.pal.accent};font-family:${d.look.headFont}">${esc(m.n)}</div><div style="font-size:13px;line-height:1.4;color:${d.muted};padding-top:4px">${esc(m.label)}</div></div></td>`).join('')}</tr></table>`
 }
 function chips(d: Design, blocks: Block[]): string {
-  return `<div style="line-height:2.2">${blocks.map(b => `<span style="display:inline-block;margin:0 6px 6px 0;padding:4px 12px;background:${d.pal.tint};border:1px solid ${d.pal.tint2};border-radius:999px;font-size:14px;color:${INK}">${esc(b.text)}</span>`).join('')}</div>`
+  return `<div style="line-height:2.2">${blocks.map(b => `<span style="display:inline-block;margin:0 6px 6px 0;padding:4px 12px;background:${d.pal.tint};border:1px solid ${d.pal.tint2};border-radius:999px;font-size:14px;color:${d.ink}">${esc(b.text)}</span>`).join('')}</div>`
 }
 function dateRows(d: Design, blocks: Block[]): string {
   return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">${blocks.map(b => {
     const m = /^([^:]{3,28}):\s*(.+)$/.exec(b.text)
-    return m ? `<tr><td valign="top" width="38%" style="padding:5px 10px 5px 0;font-size:14px;font-weight:700;color:${d.pal.dark};border-bottom:1px solid ${LINE}">${esc(m[1])}</td><td valign="top" style="padding:5px 0;font-size:14px;color:${INK};border-bottom:1px solid ${LINE}">${esc(m[2])}</td></tr>`
-      : `<tr><td colspan="2" style="padding:5px 0;font-size:14px;color:${INK};border-bottom:1px solid ${LINE}">${esc(b.text)}</td></tr>`
+    return m ? `<tr><td valign="top" width="38%" style="padding:5px 10px 5px 0;font-size:14px;font-weight:700;color:${d.pal.dark};border-bottom:1px solid ${LINE}">${esc(m[1])}</td><td valign="top" style="padding:5px 0;font-size:14px;color:${d.ink};border-bottom:1px solid ${LINE}">${esc(m[2])}</td></tr>`
+      : `<tr><td colspan="2" style="padding:5px 0;font-size:14px;color:${d.ink};border-bottom:1px solid ${LINE}">${esc(b.text)}</td></tr>`
   }).join('')}</table>`
 }
 /** A neutral silhouette for SAMPLE previews: never a real person. */
@@ -241,7 +313,7 @@ function photoSlot(d: Design, t: Target, size: number, who: { dataUrl: string; n
   if (d.sample && t === 'web' && !who?.dataUrl) return silhouette(d, size)
   if (t === 'web' && who?.dataUrl) return `<img src="${esc(who.dataUrl)}" alt="${esc(name ? `Photo of ${name}` : 'Photo')}" width="${size}" height="${size}" style="display:block;width:${size}px;height:${size}px;border-radius:50%;object-fit:cover;border:3px solid ${d.pal.tint2}">`
   const ini = initials(name)
-  const note = t === 'email' && who?.inHub && d.people.length <= 1 ? `<div style="font-size:11px;line-height:1.35;color:${MUTED};text-align:center;padding-top:6px;max-width:${size + 20}px">Their photo is in the hub and the PDF</div>` : ''
+  const note = t === 'email' && who?.inHub && d.people.length <= 1 ? `<div style="font-size:11px;line-height:1.35;color:${d.muted};text-align:center;padding-top:6px;max-width:${size + 20}px">Their photo is in the hub and the PDF</div>` : ''
   return `<table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr><td width="${size}" height="${size}" align="center" valign="middle" style="width:${size}px;height:${size}px;border-radius:50%;background:${d.pal.tint2};border:3px solid ${d.pal.tint};font-size:${Math.round(size / 3)}px;font-weight:700;color:${d.pal.dark};text-align:center" role="img" aria-label="${esc(name ? `Picture slot for ${name}` : 'Picture slot')}">${ini ? esc(ini) : '&#9733;'}</td></tr></table>${note}`
 }
 /** One round picture, or two to four side by side with first names, or a tidy wrapped grid beyond that. */
@@ -249,22 +321,30 @@ function photoCluster(d: Design, t: Target): string {
   const list = d.people.length ? d.people : [null as any]
   if (list.length === 1) return photoSlot(d, t, 140, list[0])
   const size = list.length === 2 ? 104 : list.length <= 4 ? 84 : 68
-  const cells = list.map((p: any) => `<td align="center" valign="top" style="padding:0 6px 8px">${photoSlot(d, t, size, p)}<div style="font-size:12px;line-height:1.3;color:${INK};padding-top:4px;max-width:${size + 12}px;text-align:center">${esc(String(p?.name ?? '').split(' ')[0])}</div></td>`)
+  const cells = list.map((p: any) => `<td align="center" valign="top" style="padding:0 6px 8px">${photoSlot(d, t, size, p)}<div style="font-size:12px;line-height:1.3;color:${d.ink};padding-top:4px;max-width:${size + 12}px;text-align:center">${esc(String(p?.name ?? '').split(' ')[0])}</div></td>`)
   const per = list.length <= 4 ? list.length : 4
   const rows: string[] = []; for (let i = 0; i < cells.length; i += per) rows.push(`<tr>${cells.slice(i, i + per).join('')}</tr>`)
-  return `<table role="presentation" cellpadding="0" cellspacing="0" border="0" align="right">${rows.join('')}</table>${t === 'email' && list.some((p: any) => p?.inHub) ? `<div style="clear:both;font-size:11px;line-height:1.35;color:${MUTED};text-align:right;padding-top:4px">Their photos are in the hub and the PDF</div>` : ''}`
+  return `<table role="presentation" cellpadding="0" cellspacing="0" border="0" align="right">${rows.join('')}</table>${t === 'email' && list.some((p: any) => p?.inHub) ? `<div style="clear:both;font-size:11px;line-height:1.35;color:${d.muted};text-align:right;padding-top:4px">Their photos are in the hub and the PDF</div>` : ''}`
 }
+/** Box colours for a block: the look the tenant chose for it, or the design's own for that kind of block. A bold block also gives back the design to draw its words with (white on the accent). */
+type Box = { bg: string; border: string }
+const cardDefault = (d: Design, tinted: boolean): Box => ({ bg: tinted || d.look.cardStyle === 'soft' ? d.pal.tint : WHITE, border: d.look.cardStyle === 'outline' ? `2px solid ${d.pal.tint2}` : d.look.cardStyle === 'rule' ? `1px solid ${LINE};border-left:5px solid ${d.pal.accent}` : `1px solid ${LINE}` })
+function boxFor(d: Design, id: string, dflt: Box): Box & { dd: Design } {
+  const st = d.styles[id]
+  if (st === 'bold') return { dd: boldDesign(d), bg: d.pal.accent, border: `1px solid ${d.pal.accent}` }
+  if (st === 'outline') return { dd: d, bg: WHITE, border: `2px solid ${d.pal.accent}` }
+  if (st === 'none') return { dd: d, bg: WHITE, border: '0' }
+  if (st === 'soft') return { dd: d, bg: d.pal.tint, border: `1px solid ${d.pal.tint2}` }
+  return { dd: d, ...dflt }
+}
+const shell = (d: Design, bx: Box, inner: string, pad = '16px 18px', extra = '') => `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${bx.bg};border:${bx.border};border-radius:${d.look.radius}px;${extra}"><tr><td style="padding:${pad}">${inner}</td></tr></table>`
+
 /** The optional gift card: the picture (screen, PDF and hub) or a gift icon, and the words. Email shows the icon and the words, never an uploaded picture. */
-function giftCard(d: Design, s: Sec, t: Target): string {
+function giftCard(d0: Design, s: Sec, t: Target): string {
+  const box = boxFor(d0, 'gift', { bg: d0.pal.tint, border: `2px solid ${d0.pal.tint2}` }), d = box.dd
   const img = t === 'web' && d.gift?.dataUrl ? `<img src="${esc(d.gift.dataUrl)}" alt="The gift" width="96" height="96" style="display:block;width:96px;height:96px;border-radius:${Math.min(d.look.radius, 16)}px;object-fit:cover;border:3px solid ${d.pal.tint2}">` : ''
   const lead = img || iconBubble(d, 'gift', t, 52)
-  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${d.pal.tint};border:2px solid ${d.pal.tint2};border-radius:${d.look.radius}px"><tr><td style="padding:16px 18px"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td valign="middle" width="${img ? 110 : 66}" style="padding-right:14px">${lead}</td><td valign="middle"><h2 style="margin:0 0 4px;font-family:${d.look.headFont};font-size:18px;line-height:1.25;color:${d.pal.dark}">${esc(s.title)}</h2>${paras(s.blocks, 15)}</td></tr></table></td></tr></table>`
-}
-function cardShell(d: Design, inner: string, tinted = false, extra = ''): string {
-  const r = d.look.radius
-  const border = d.look.cardStyle === 'outline' ? `2px solid ${d.pal.tint2}` : d.look.cardStyle === 'rule' ? `1px solid ${LINE};border-left:5px solid ${d.pal.accent}` : `1px solid ${LINE}`
-  const bg = tinted || d.look.cardStyle === 'soft' ? d.pal.tint : '#FFFFFF'
-  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${bg};border:${border};border-radius:${r}px;${extra}"><tr><td style="padding:16px 18px">${inner}</td></tr></table>`
+  return shell(d0, box, `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td valign="middle" width="${img ? 110 : 66}" style="padding-right:14px">${lead}</td><td valign="middle"><h2 style="margin:0 0 4px;font-family:${d.look.headFont};font-size:18px;line-height:1.25;color:${d.pal.dark}">${esc(s.title)}</h2>${paras(s.blocks, 15, d.ink)}</td></tr></table>`)
 }
 function head(d: Design, s: Sec, t: Target, big = false): string {
   return `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 10px"><tr><td valign="middle" style="padding-right:10px">${iconBubble(d, s.icon, t, big ? 40 : 34)}</td><td valign="middle"><h2 style="margin:0;font-family:${d.look.headFont};font-size:${big ? 21 : 17}px;line-height:1.25;color:${d.pal.dark}">${esc(s.title)}</h2></td></tr></table>`
@@ -274,13 +354,15 @@ function body(d: Design, s: Sec, big = false): string {
   if (stat) return stat
   const size = big ? 16 : 15
   if (s.role === 'chips') return chips(d, s.blocks)
-  if (s.role === 'quote') return s.blocks.map(b => `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 8px"><tr><td width="26" valign="top" style="font-family:Georgia,serif;font-size:34px;line-height:28px;color:${d.pal.accent}">&#8220;</td><td valign="top" style="font-family:${d.look.headFont};font-size:${size}px;line-height:1.5;font-style:italic;color:${INK}">${esc(unquote(b.text))}</td></tr></table>`).join('')
-  if (s.role === 'dates' && s.blocks.some(b => b.t === 'li')) return paras(s.blocks, size) + dateRows(d, s.blocks.filter(b => b.t === 'li'))
-  return paras(s.blocks, size) + bullets(d, s.blocks, size)
+  if (s.role === 'quote') return s.blocks.map(b => `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 8px"><tr><td width="26" valign="top" style="font-family:Georgia,serif;font-size:34px;line-height:28px;color:${d.pal.accent}">&#8220;</td><td valign="top" style="font-family:${d.look.headFont};font-size:${size}px;line-height:1.5;font-style:italic;color:${d.ink}">${esc(unquote(b.text))}</td></tr></table>`).join('')
+  if (s.role === 'dates' && s.blocks.some(b => b.t === 'li')) return paras(s.blocks, size, d.ink) + dateRows(d, s.blocks.filter(b => b.t === 'li'))
+  return paras(s.blocks, size, d.ink) + bullets(d, s.blocks, size)
 }
 
-function cell(d: Design, s: Sec, t: Target, kind: Row['kind']): string {
+function cell(d0: Design, s: Sec, t: Target, kind: Row['kind']): string {
+  if (kind === 'custom') return customCell(d0, s, t)
   if (kind === 'hero') {
+    const box = boxFor(d0, s.id, cardDefault(d0, true)), d = box.dd
     const person = s.role === 'person' && (d.people.length > 0 || !!d.photo || (d.sample && (s.key === 'who' || s.key === 'story')))
     const left = `${head(d, s, t, true)}${body(d, s, true)}`
     const n = Math.max(1, d.people.length)
@@ -288,25 +370,70 @@ function cell(d: Design, s: Sec, t: Target, kind: Row['kind']): string {
       ? (n >= 3 ? `${left}<div style="padding-top:6px">${photoCluster(d, t)}</div><div style="clear:both"></div>`
         : `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td valign="top">${left}</td><td valign="top" align="right" width="${n === 2 ? 240 : 156}" style="padding-left:14px">${photoCluster(d, t)}</td></tr></table>`)
       : left
-    return cardShell(d, inner, true)
+    return shell(d0, box, inner)
   }
   if (kind === 'quote') {
+    const box = boxFor(d0, s.id, { bg: d0.pal.tint2, border: '0' }), d = box.dd
     const qs = s.blocks.map(b => unquote(b.text)).filter(Boolean)
-    return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${d.pal.tint2};border-radius:${d.look.radius}px"><tr><td style="padding:20px 22px"><div style="font-family:${d.look.headFont};font-size:15px;font-weight:700;color:${d.pal.dark};padding-bottom:12px;letter-spacing:.3px">${esc(s.title)}</div>${qs.map(q => `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 10px"><tr><td width="34" valign="top" style="font-family:Georgia,serif;font-size:42px;line-height:34px;color:${d.pal.accent}">&#8220;</td><td valign="top" style="font-family:${d.look.headFont};font-size:17px;line-height:1.5;font-style:italic;color:${INK}">${esc(q)}</td></tr></table>`).join('')}</td></tr></table>`
+    return shell(d0, box, `<div style="font-family:${d.look.headFont};font-size:15px;font-weight:700;color:${d.pal.dark};padding-bottom:12px;letter-spacing:.3px">${esc(s.title)}</div>${qs.map(q => `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 10px"><tr><td width="34" valign="top" style="font-family:Georgia,serif;font-size:42px;line-height:34px;color:${d.pal.accent}">&#8220;</td><td valign="top" style="font-family:${d.look.headFont};font-size:17px;line-height:1.5;font-style:italic;color:${d.ink}">${esc(q)}</td></tr></table>`).join('')}`, '20px 22px')
   }
   if (kind === 'cta') {
-    const line = first(s.blocks)
-    const href = /holiday|book|time off/i.test(s.title) ? d.links.holiday : null
+    const box = boxFor(d0, s.id, cardDefault(d0, true)), d = box.dd
+    const href = /holiday|book|time off/i.test(s.title) ? d0.links.holiday : null
     const label = /nominate/i.test(s.title) ? 'How to nominate' : /book/i.test(s.title) ? 'Book your holiday' : s.title
+    const onAccent = d === d0 ? WHITE : d0.pal.accent
     const btn = href
-      ? `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin-top:6px"><tr><td style="background:${d.pal.accent};border-radius:${Math.min(d.look.radius, 12)}px"><a href="${esc(href)}" style="display:inline-block;padding:13px 26px;font-size:16px;font-weight:700;color:#FFFFFF;text-decoration:none">${esc(label)}</a></td></tr></table>`
-      : `<div style="margin-top:6px"><span style="display:inline-block;padding:7px 16px;background:#FFFFFF;border:2px solid ${d.pal.accent};border-radius:${Math.min(d.look.radius, 12)}px;font-size:14px;font-weight:700;color:${d.pal.dark}">${esc(label)}</span></div>`   // a label, not a button: it goes nowhere
-    return cardShell(d, `${head(d, s, t, true)}${line ? '' : ''}${body(d, s, true)}${btn}`, true)
+      ? `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin-top:6px"><tr><td style="background:${d0.pal.accent === d.pal.accent ? d.pal.accent : WHITE};border-radius:${Math.min(d.look.radius, 12)}px"><a href="${esc(href)}" style="display:inline-block;padding:13px 26px;font-size:16px;font-weight:700;color:${onAccent};text-decoration:none">${esc(label)}</a></td></tr></table>`
+      : `<div style="margin-top:6px"><span style="display:inline-block;padding:7px 16px;background:#FFFFFF;border:2px solid ${d0.pal.accent};border-radius:${Math.min(d.look.radius, 12)}px;font-size:14px;font-weight:700;color:${d0.pal.dark}">${esc(label)}</span></div>`   // a label, not a button: it goes nowhere
+    return shell(d0, box, `${head(d, s, t, true)}${body(d, s, true)}${btn}`)
   }
   if (kind === 'footer') {
-    return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${d.pal.tint};border:1px solid ${d.pal.tint2};border-radius:${d.look.radius}px"><tr><td style="padding:16px 20px">${head(d, s, t)}${body(d, s)}</td></tr></table>`
+    const box = boxFor(d0, s.id, { bg: d0.pal.tint, border: `1px solid ${d0.pal.tint2}` }), d = box.dd
+    return shell(d0, box, `${head(d, s, t)}${body(d, s)}`, '16px 20px')
   }
-  return cardShell(d, `${head(d, s, t)}${body(d, s)}`, s.role === 'thanks')
+  const box = boxFor(d0, s.id, cardDefault(d0, s.role === 'thanks')), d = box.dd
+  return shell(d0, box, `${head(d, s, t)}${body(d, s)}`)
+}
+
+// ── blocks the tenant adds ──────────────────────────────────────────────────────────────
+const paraBlocks = (text: unknown): Block[] => String(text ?? '').split(/\n{2,}/).map(x => x.replace(/\s*\n\s*/g, ' ').trim()).filter(Boolean).map(text => ({ t: 'p' as const, text }))
+const safeHttps = (u: unknown): string | null => { const x = String(u ?? '').trim(); return /^https:\/\/[^\s"'<>]+$/i.test(x) && x.length <= 300 ? x : null }
+function listHtml(d: Design, items: string[], ticks: boolean): string {
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">${items.map(t => `<tr><td width="20" valign="top" style="padding:3px 0;color:${d.pal.accent};font-size:15px;line-height:1.5;font-weight:700">${ticks ? '&#10003;' : '&#8226;'}</td><td valign="top" style="padding:3px 0;font-size:15px;line-height:1.5;color:${d.ink}">${esc(t)}</td></tr>`).join('')}</table>`
+}
+function datesHtml(d: Design, rows: Array<{ date: string; what: string }>): string {
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">${rows.map(r => `<tr><td valign="top" width="38%" style="padding:5px 10px 5px 0;font-size:14px;font-weight:700;color:${d.pal.dark};border-bottom:1px solid ${LINE}">${esc(r.date)}</td><td valign="top" style="padding:5px 0;font-size:14px;color:${d.ink};border-bottom:1px solid ${LINE}">${esc(r.what)}</td></tr>`).join('')}</table>`
+}
+function customCell(d0: Design, s: Sec, t: Target): string {
+  const c = s.custom!, x = c.content ?? {}
+  const dflt: Box = c.type === 'quote' ? { bg: d0.pal.tint2, border: '0' } : c.type === 'callout' ? { bg: d0.pal.tint, border: `2px solid ${d0.pal.tint2}` } : c.type === 'button' ? { bg: WHITE, border: '0' } : cardDefault(d0, false)
+  const box = boxFor(d0, s.id, dflt), d = box.dd
+  const title = s.title ? `<h2 style="margin:0 0 8px;font-family:${d.look.headFont};font-size:17px;line-height:1.25;color:${d.pal.dark}">${esc(s.title)}</h2>` : ''
+  const img = d0.customImages[s.id]
+  switch (c.type) {
+    case 'text': return shell(d0, box, `${title}${paras(paraBlocks(x.text), 15, d.ink)}`)
+    case 'picture_text': {
+      const text = `${title}${paras(paraBlocks(x.text), 15, d.ink)}`
+      if (t !== 'web' || !img?.dataUrl) return shell(d0, box, `${text}<div style="font-size:12px;line-height:1.4;color:${d.muted}">The picture is in the hub and the PDF.</div>`)
+      const pic = `<td class="nl-col" valign="top" width="190" style="width:190px;padding:${x.side === 'right' ? '0 0 0 14px' : '0 14px 0 0'}"><img src="${esc(img.dataUrl)}" alt="${esc(x.alt)}" width="190" style="display:block;width:100%;max-width:190px;height:auto;border-radius:${Math.min(d.look.radius, 14)}px;border:0"></td>`
+      const txt = `<td class="nl-col" valign="top">${text}</td>`
+      return shell(d0, box, `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>${x.side === 'right' ? txt + pic : pic + txt}</tr></table>`)
+    }
+    case 'quote': return shell(d0, box, `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td width="34" valign="top" style="font-family:Georgia,serif;font-size:42px;line-height:34px;color:${d.pal.accent}">&#8220;</td><td valign="top" style="font-family:${d.look.headFont};font-size:17px;line-height:1.5;font-style:italic;color:${d.ink}">${esc(unquote(String(x.text ?? '')))}${x.who ? `<div style="font-family:${SANS};font-style:normal;font-size:13px;color:${d.muted};padding-top:6px">${esc(x.who)}</div>` : ''}</td></tr></table>`, '20px 22px')
+    case 'callout': return shell(d0, box, `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td valign="top" width="58" style="padding-right:12px">${iconBubble(d, s.icon, t, 46)}</td><td valign="top">${title}${paras(paraBlocks(x.text), 15, d.ink)}</td></tr></table>`)
+    case 'button': {
+      const href = x.kind === 'hub' ? safeHttps(d0.links.hub) : safeHttps(x.url)
+      const label = esc(x.label)
+      const onAccent = d === d0 ? WHITE : d0.pal.accent, fill = d === d0 ? d0.pal.accent : WHITE
+      return shell(d0, box, href
+        ? `<table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr><td style="background:${fill};border-radius:${Math.min(d.look.radius, 12)}px"><a href="${esc(href)}" style="display:inline-block;padding:13px 26px;font-size:16px;font-weight:700;color:${onAccent};text-decoration:none">${label}</a></td></tr></table>`
+        : `<span style="display:inline-block;padding:7px 16px;background:#FFFFFF;border:2px solid ${d0.pal.accent};border-radius:${Math.min(d.look.radius, 12)}px;font-size:14px;font-weight:700;color:${d0.pal.dark}">${label}</span>`, '8px 4px')
+    }
+    case 'numbers': return shell(d0, box, `${title}${tilesHtml(d, (Array.isArray(x.items) ? x.items : []).slice(0, 4))}`)
+    case 'list': return shell(d0, box, `${title}${listHtml(d, (Array.isArray(x.items) ? x.items : []).map(String), x.style === 'ticks')}`)
+    case 'dates': return shell(d0, box, `${title}${datesHtml(d, Array.isArray(x.rows) ? x.rows : [])}`)
+  }
+  return ''
 }
 
 function rowHtml(d: Design, r: Row, t: Target): string {
@@ -342,7 +469,8 @@ export const htmlToText = (html: string) => html.replace(/<style[\s\S]*?<\/style
 const pdfSafe = (s: string) => String(s ?? '').normalize('NFC').replace(/[‘’]/g, '’').replace(/[^\u0009\u000A -~ -ÿ’“”…•€]/g, '')
 export async function renderNewsletterPdf(input: DesignInput, logoPng?: Buffer | null, photoPngs?: Buffer | null | Array<Buffer | null>, giftPng?: Buffer | null): Promise<Buffer> {
   const { default: PDFDocument } = await import('pdfkit')
-  const d = buildDesign(input)
+  const d0 = buildDesign(input)
+  let d = d0   // swapped for a bold block while it is drawn, so its words come out white on the accent
   const photos: Array<Buffer | null> = Array.isArray(photoPngs) ? photoPngs : photoPngs ? [photoPngs] : []
   const photoPng = photos[0] ?? null
   const multi = d.people.length > 1
@@ -364,6 +492,10 @@ export async function renderNewsletterPdf(input: DesignInput, logoPng?: Buffer |
     if (d.look.iconShape === 'circle') doc.circle(x + size / 2, yy + size / 2, size / 2).fill(); else doc.roundedRect(x, yy, size, size, 6).fill()
     doc.restore(); icon(name, x + size * 0.22, yy + size * 0.22, size * 0.56, d.pal.accent)
   }
+  const styleOf = (id: string) => d0.styles[id]
+  type PBox = { bg: string; stroke?: string; left?: string }
+  const boxPdf = (id: string, dflt: PBox): PBox => { const st = styleOf(id); if (st === 'bold') return { bg: d0.pal.accent, stroke: d0.pal.accent }; if (st === 'outline') return { bg: '#FFFFFF', stroke: d0.pal.accent }; if (st === 'none') return { bg: '#FFFFFF' }; if (st === 'soft') return { bg: d0.pal.tint, stroke: d0.pal.tint2 }; return dflt }
+  const tonedFor = (id: string) => (styleOf(id) === 'bold' ? boldDesign(d0) : d0)
   const textH = (text: string, w: number, size: number, font = 'Helvetica', gap = 2.5) => { doc.font(font).fontSize(size); return doc.heightOfString(pdfSafe(text), { width: w, lineGap: gap }) }
   const bodyH = (s: Sec, w: number, size: number) => {
     let h = 0
@@ -373,9 +505,9 @@ export async function renderNewsletterPdf(input: DesignInput, logoPng?: Buffer |
   const drawBody = (s: Sec, x: number, yy: number, w: number, size: number) => {
     let cy = yy
     for (const b of s.blocks) {
-      if (s.role === 'quote') { const q = unquote(b.text); doc.fillColor(d.pal.accent).font('Times-Bold').fontSize(size + 8).text('\u201C', x, cy - 4, { width: 14, lineBreak: false }); doc.fillColor(INK).font('Helvetica-Oblique').fontSize(size).text(pdfSafe(q), x + 18, cy, { width: w - 18, lineGap: 2.5 }); cy += textH(q, w - 18, size, 'Helvetica-Oblique') + 6; continue }
-      if (b.t === 'p') { doc.fillColor(INK).font('Helvetica').fontSize(size).text(pdfSafe(b.text), x, cy, { width: w, lineGap: 2.5 }); cy += textH(b.text, w, size) + 6 }
-      else { icon('check', x, cy - 0.5, size + 1, d.pal.accent); doc.fillColor(INK).font('Helvetica').fontSize(size).text(pdfSafe(b.text), x + 16, cy, { width: w - 16, lineGap: 2.5 }); cy += textH(b.text, w - 16, size) + 4 }
+      if (s.role === 'quote') { const q = unquote(b.text); doc.fillColor(d.pal.accent).font('Times-Bold').fontSize(size + 8).text('\u201C', x, cy - 4, { width: 14, lineBreak: false }); doc.fillColor(d.ink).font('Helvetica-Oblique').fontSize(size).text(pdfSafe(q), x + 18, cy, { width: w - 18, lineGap: 2.5 }); cy += textH(q, w - 18, size, 'Helvetica-Oblique') + 6; continue }
+      if (b.t === 'p') { doc.fillColor(d.ink).font('Helvetica').fontSize(size).text(pdfSafe(b.text), x, cy, { width: w, lineGap: 2.5 }); cy += textH(b.text, w, size) + 6 }
+      else { icon('check', x, cy - 0.5, size + 1, d.pal.accent); doc.fillColor(d.ink).font('Helvetica').fontSize(size).text(pdfSafe(b.text), x + 16, cy, { width: w - 16, lineGap: 2.5 }); cy += textH(b.text, w - 16, size) + 4 }
     }
     return cy
   }
@@ -409,15 +541,15 @@ export async function renderNewsletterPdf(input: DesignInput, logoPng?: Buffer |
     return withPhoto ? (multi ? h + 104 : Math.max(h, 150)) : h   // room for the round picture, or a row of them
   }
   const drawCard = (s: Sec, x: number, yy: number, w: number, h: number, big: boolean, tinted: boolean, withPhoto = false) => {
-    const bg = tinted || d.look.cardStyle === 'soft' ? d.pal.tint : '#FFFFFF'
-    fillBox(x, yy, w, h, bg, d.look.cardStyle === 'outline' ? d.pal.tint2 : LINE, d.look.cardStyle === 'rule' ? d.pal.accent : undefined)
+    const bx = boxPdf(s.id, { bg: tinted || d0.look.cardStyle === 'soft' ? d0.pal.tint : '#FFFFFF', stroke: d0.look.cardStyle === 'outline' ? d0.pal.tint2 : LINE, left: d0.look.cardStyle === 'rule' ? d0.pal.accent : undefined })
+    fillBox(x, yy, w, h, bx.bg, bx.stroke, bx.left)
     const c = cardInner(s, w, big); const px = x + 14
     bubble(s.icon, px, yy + 12, 28)
     doc.fillColor(d.pal.dark).font('Helvetica-Bold').fontSize(c.titleSize).text(pdfSafe(s.title), px + 38, yy + 12 + (28 - c.titleSize) / 2 - 1, { width: c.hw - 38 - (withPhoto && !multi ? 112 : 0), lineBreak: false, ellipsis: true })
     const stat = statValues(s)
     if (stat) {
       const cw = (c.hw - (stat.length - 1) * 6) / stat.length
-      stat.forEach((st, i) => { const sx = px + i * (cw + 6); doc.save(); doc.roundedRect(sx, yy + 50, cw, 52, 8).fillColor(d.pal.tint).fill(); doc.restore(); doc.fillColor(d.pal.accent).font('Helvetica-Bold').fontSize(22).text(st.n, sx, yy + 56, { width: cw, align: 'center' }); doc.fillColor(MUTED).font('Helvetica').fontSize(8.5).text(pdfSafe(st.label), sx + 4, yy + 84, { width: cw - 8, align: 'center' }) })
+      stat.forEach((st, i) => { const sx = px + i * (cw + 6); doc.save(); doc.roundedRect(sx, yy + 50, cw, 52, 8).fillColor(d.pal.tint).fill(); doc.restore(); doc.fillColor(d.pal.accent).font('Helvetica-Bold').fontSize(22).text(st.n, sx, yy + 56, { width: cw, align: 'center' }); doc.fillColor(d.muted).font('Helvetica').fontSize(8.5).text(pdfSafe(st.label), sx + 4, yy + 84, { width: cw - 8, align: 'center' }) })
     } else drawBody(s, px, yy + 50, withPhoto && !multi ? c.hw - 120 : c.hw, c.size)
     if (withPhoto && multi) {
       // two or more featured people: a row of round pictures (or initials) with first names, along the bottom of the card, wrapping if there are many
@@ -428,7 +560,7 @@ export async function renderNewsletterPdf(input: DesignInput, logoPng?: Buffer |
         if (buf && buf.length) { try { doc.save(); doc.circle(cx + D / 2, cy + D / 2, D / 2).clip(); doc.image(buf, cx, cy, { cover: [D, D], align: 'center', valign: 'center' }); doc.restore() } catch { /* no photo */ } doc.save(); doc.circle(cx + D / 2, cy + D / 2, D / 2).lineWidth(2).strokeColor(d.pal.tint2).stroke(); doc.restore() }
         else if (d.sample && !pp.name) { doc.save(); doc.circle(cx + D / 2, cy + D / 2, D / 2).fillColor(d.pal.tint2).fill(); doc.restore() }
         else { doc.save(); doc.circle(cx + D / 2, cy + D / 2, D / 2).fillColor(d.pal.tint2).fill(); doc.restore(); doc.fillColor(d.pal.dark).font('Helvetica-Bold').fontSize(18).text(initials(pp.name ?? '') || '*', cx, cy + D / 2 - 10, { width: D, align: 'center', lineBreak: false }) }
-        doc.fillColor(INK).font('Helvetica').fontSize(8.5).text(pdfSafe(String(pp.name ?? '').split(' ')[0]), cx - 6, cy + D + 3, { width: D + 12, align: 'center', lineBreak: false, ellipsis: true })
+        doc.fillColor(d.ink).font('Helvetica').fontSize(8.5).text(pdfSafe(String(pp.name ?? '').split(' ')[0]), cx - 6, cy + D + 3, { width: D + 12, align: 'center', lineBreak: false, ellipsis: true })
       })
     }
     if (withPhoto && !multi) {
@@ -442,23 +574,85 @@ export async function renderNewsletterPdf(input: DesignInput, logoPng?: Buffer |
     }
   }
   function statValues(s: Sec): Array<{ n: string; label: string }> | null {
+    if (s.custom?.type === 'numbers') { const it = Array.isArray(s.custom.content?.items) ? s.custom.content.items : []; return it.length >= 2 ? it.slice(0, 4).map((r: any) => ({ n: String(r.n), label: String(r.label) })) : null }
     const li = s.blocks.filter(b => b.t === 'li'); const m = li.map(b => /^(\d{1,4})\s+(.{2,60})$/.exec(b.text)).filter(Boolean) as RegExpExecArray[]
     return m.length >= 2 && m.length === li.length && m.length <= 4 ? m.map(x => ({ n: x[1], label: x[2] })) : null
   }
+  /** One block the tenant added: the same design as on screen, drawn with the page's own measures. */
+  const drawCustom = (s: Sec) => {
+    const c = s.custom!, x = c.content ?? {}
+    const bx = boxPdf(s.id, c.type === 'quote' ? { bg: d0.pal.tint2 } : c.type === 'callout' ? { bg: d0.pal.tint, stroke: d0.pal.tint2 } : c.type === 'button' ? { bg: '#FFFFFF' } : { bg: d0.look.cardStyle === 'soft' ? d0.pal.tint : '#FFFFFF', stroke: LINE })
+    const pad = 14, iw = CW - pad * 2
+    const para = (v: unknown) => String(v ?? '').split(/\n{2,}/).map(t => t.replace(/\s*\n\s*/g, ' ').trim()).filter(Boolean)
+    const titleH = s.title ? 24 : 0
+    const drawTitle = (yy: number, xx = M + pad, w = iw) => { if (s.title) doc.fillColor(d.pal.dark).font('Helvetica-Bold').fontSize(12.5).text(pdfSafe(s.title), xx, yy, { width: w, lineBreak: false, ellipsis: true }) }
+    const paras = (list: string[], xx: number, yy: number, w: number, size = 11) => { let cy = yy; for (const t of list) { doc.fillColor(d.ink).font('Helvetica').fontSize(size).text(pdfSafe(t), xx, cy, { width: w, lineGap: 2.5 }); cy += textH(t, w, size) + 6 } return cy }
+    const parasH = (list: string[], w: number, size = 11) => list.reduce((a, t) => a + textH(t, w, size) + 6, 0)
+    const items: string[] = c.type === 'list' ? (Array.isArray(x.items) ? x.items.map(String) : []) : []
+    const rowsD: Array<{ date: string; what: string }> = c.type === 'dates' ? (Array.isArray(x.rows) ? x.rows : []) : []
+    const img = d0.customImages[s.id]?.buffer ?? null
+    const picW = 150
+    let h = 0
+    if (c.type === 'text') h = pad + titleH + parasH(para(x.text), iw) + 8
+    else if (c.type === 'picture_text') h = pad + titleH + Math.max(parasH(para(x.text), iw - (img ? picW + 14 : 0)), img ? 110 : 0) + 8
+    else if (c.type === 'quote') h = 20 + textH(unquote(String(x.text ?? '')), iw - 34, 13, 'Helvetica-Oblique') + (x.who ? 18 : 0) + 16
+    else if (c.type === 'callout') h = pad + Math.max(40, titleH + parasH(para(x.text), iw - 52)) + 8
+    else if (c.type === 'button') h = 44
+    else if (c.type === 'numbers') h = pad + titleH + 56 + 10
+    else if (c.type === 'list') h = pad + titleH + items.reduce((a, t) => a + textH(t, iw - 16, 11) + 4, 0) + 8
+    else h = pad + titleH + rowsD.reduce((a, r) => a + Math.max(textH(r.date, iw * 0.38 - 8, 10.5), textH(r.what, iw * 0.62, 10.5)) + 7, 0) + 8
+    need(h + G)
+    d = tonedFor(s.id)
+    if (c.type !== 'button' || styleOf(s.id)) fillBox(M, y, CW, h, bx.bg, bx.stroke, bx.left)
+    const x0 = M + pad
+    if (c.type === 'text') { drawTitle(y + pad - 2); paras(para(x.text), x0, y + pad + titleH - 4, iw) }
+    else if (c.type === 'picture_text') {
+      const left = x.side !== 'right', tw = iw - (img ? picW + 14 : 0), tx = img && left ? x0 + picW + 14 : x0
+      drawTitle(y + pad - 2, tx, tw); paras(para(x.text), tx, y + pad + titleH - 4, tw)
+      if (img) { try { doc.save(); doc.roundedRect(left ? x0 : x0 + tw + 14, y + pad, picW, 110, 8).clip(); doc.image(img, left ? x0 : x0 + tw + 14, y + pad, { cover: [picW, 110], align: 'center', valign: 'center' }); doc.restore() } catch { /* no picture */ } }
+    } else if (c.type === 'quote') {
+      doc.fillColor(d.pal.accent).font('Times-Bold').fontSize(34).text('\u201C', x0, y + 12, { width: 26, lineBreak: false })
+      const q = unquote(String(x.text ?? '')); doc.fillColor(d.ink).font('Helvetica-Oblique').fontSize(13).text(pdfSafe(q), x0 + 34, y + 18, { width: iw - 34, lineGap: 2.5 })
+      if (x.who) doc.fillColor(d.muted).font('Helvetica').fontSize(10).text(pdfSafe(String(x.who)), x0 + 34, y + 18 + textH(q, iw - 34, 13, 'Helvetica-Oblique') + 4, { width: iw - 34, lineBreak: false })
+    } else if (c.type === 'callout') {
+      bubble(s.icon, x0, y + pad, 36); drawTitle(y + pad - 1, x0 + 48, iw - 48); paras(para(x.text), x0 + 48, y + pad + titleH - 3, iw - 48)
+    } else if (c.type === 'button') {
+      const label = pdfSafe(String(x.label ?? '')), href = x.kind === 'hub' ? d0.links.hub : /^https:\/\/\S+$/i.test(String(x.url ?? '')) ? String(x.url) : null
+      const bw = Math.min(CW, doc.font('Helvetica-Bold').fontSize(12).widthOfString(label) + 40)
+      doc.save(); doc.roundedRect(M + 4, y + 8, bw, 28, 8)
+      if (href) doc.fillColor(d === d0 ? d0.pal.accent : '#FFFFFF').fill(); else doc.fillColor('#FFFFFF').fill().roundedRect(M + 4, y + 8, bw, 28, 8).lineWidth(1.6).strokeColor(d0.pal.accent).stroke()
+      doc.restore()
+      doc.fillColor(href ? (d === d0 ? '#FFFFFF' : d0.pal.accent) : d0.pal.dark).font('Helvetica-Bold').fontSize(12).text(label, M + 4, y + 16, { width: bw, align: 'center', lineBreak: false })
+      if (href) { try { doc.link(M + 4, y + 8, bw, 28, href) } catch { /* no link */ } }
+    } else if (c.type === 'numbers') {
+      drawTitle(y + pad - 2); const st = statValues(s) ?? [], cw = (iw - (st.length - 1) * 6) / Math.max(1, st.length), ty = y + pad + titleH
+      st.forEach((t, i) => { const sx = x0 + i * (cw + 6); doc.save(); doc.roundedRect(sx, ty, cw, 52, 8).fillColor(d.pal.tint2 === d.pal.tint ? d.pal.tint : (styleOf(s.id) === 'bold' ? d.pal.tint2 : d.pal.tint)).fill(); doc.restore(); doc.fillColor(d.pal.accent).font('Helvetica-Bold').fontSize(22).text(pdfSafe(t.n), sx, ty + 6, { width: cw, align: 'center', lineBreak: false }); doc.fillColor(d.muted).font('Helvetica').fontSize(8.5).text(pdfSafe(t.label), sx + 4, ty + 34, { width: cw - 8, align: 'center', lineBreak: false, ellipsis: true }) })
+    } else if (c.type === 'list') {
+      drawTitle(y + pad - 2); let cy = y + pad + titleH - 2
+      for (const t of items) { if (x.style === 'ticks') icon('check', x0, cy - 0.5, 12, d.pal.accent); else { doc.save(); doc.circle(x0 + 4, cy + 5.5, 2.2).fillColor(d.pal.accent).fill(); doc.restore() } doc.fillColor(d.ink).font('Helvetica').fontSize(11).text(pdfSafe(t), x0 + 16, cy, { width: iw - 16, lineGap: 2.5 }); cy += textH(t, iw - 16, 11) + 4 }
+    } else {
+      drawTitle(y + pad - 2); let cy = y + pad + titleH - 2
+      for (const r of rowsD) { const rh = Math.max(textH(r.date, iw * 0.38 - 8, 10.5), textH(r.what, iw * 0.62, 10.5)); doc.fillColor(d.pal.dark).font('Helvetica-Bold').fontSize(10.5).text(pdfSafe(r.date), x0, cy, { width: iw * 0.38 - 8 }); doc.fillColor(d.ink).font('Helvetica').fontSize(10.5).text(pdfSafe(r.what), x0 + iw * 0.38, cy, { width: iw * 0.62 }); cy += rh + 3; doc.moveTo(x0, cy).lineTo(x0 + iw, cy).lineWidth(0.5).strokeColor(LINE).stroke(); cy += 4 }
+    }
+    y += h + G
+  }
   const personHero = (s: Sec) => s.role === 'person' && (d.people.length > 0 || !!d.photo || (d.sample && (s.key === 'who' || s.key === 'story')))
   const need = (h: number) => { if (y + h > BOTTOM) newPage() }
-  for (const r of d.rows) {
+  for (const r of d0.rows) {
+    d = tonedFor(r.cells[0]?.id ?? '')
     if (r.kind === 'pair') {
       const w = (CW - G) / 2
       const h = Math.max(...r.cells.map(c => (statValues(c) ? 112 : cardHeight(c, w, false))))
-      need(h + G); r.cells.forEach((c, i) => drawCard(c, M + i * (w + G), y, w, h, false, c.role === 'thanks')); y += h + G
+      need(h + G); r.cells.forEach((c, i) => { d = tonedFor(c.id); drawCard(c, M + i * (w + G), y, w, h, false, c.role === 'thanks') }); y += h + G
+    } else if (r.kind === 'custom') {
+      drawCustom(r.cells[0])
     } else if (r.kind === 'quote') {
       const s = r.cells[0], qs = s.blocks.map(b => unquote(b.text)).filter(Boolean)
       const h = 34 + qs.reduce((a, q) => a + textH(q, CW - 76, 12.5, 'Helvetica-Oblique') + 10, 0) + 10
-      need(h + G); fillBox(M, y, CW, h, d.pal.tint2)
+      { const bq = boxPdf(s.id, { bg: d0.pal.tint2 }); need(h + G); fillBox(M, y, CW, h, bq.bg, bq.stroke) }
       doc.fillColor(d.pal.dark).font('Helvetica-Bold').fontSize(12).text(pdfSafe(s.title), M + 18, y + 14, { width: CW - 36, lineBreak: false })
       let qy = y + 36
-      for (const q of qs) { doc.fillColor(d.pal.accent).font('Times-Bold').fontSize(34).text('“', M + 18, qy - 8, { width: 26, lineBreak: false }); doc.fillColor(INK).font('Helvetica-Oblique').fontSize(12.5).text(pdfSafe(q), M + 52, qy, { width: CW - 76, lineGap: 2.5 }); qy += textH(q, CW - 76, 12.5, 'Helvetica-Oblique') + 10 }
+      for (const q of qs) { doc.fillColor(d.pal.accent).font('Times-Bold').fontSize(34).text('“', M + 18, qy - 8, { width: 26, lineBreak: false }); doc.fillColor(d.ink).font('Helvetica-Oblique').fontSize(12.5).text(pdfSafe(q), M + 52, qy, { width: CW - 76, lineGap: 2.5 }); qy += textH(q, CW - 76, 12.5, 'Helvetica-Oblique') + 10 }
       y += h + G
     } else if (r.kind === 'cta') {
       const s = r.cells[0]; const label = /nominate/i.test(s.title) ? 'How to nominate' : /book/i.test(s.title) ? 'Book your holiday' : s.title
@@ -467,26 +661,27 @@ export async function renderNewsletterPdf(input: DesignInput, logoPng?: Buffer |
       const bw = Math.min(CW - 28, doc.font('Helvetica-Bold').fontSize(12).widthOfString(pdfSafe(label)) + 36)
       const linked = !!(/holiday|book|time off/i.test(s.title) && d.links.holiday)
       doc.save(); doc.roundedRect(M + 14, y + h - 40, bw, 28, 8)
-      if (linked) doc.fillColor(d.pal.accent).fill(); else doc.fillColor('#FFFFFF').fill().roundedRect(M + 14, y + h - 40, bw, 28, 8).lineWidth(1.6).strokeColor(d.pal.accent).stroke()
+      if (linked) doc.fillColor(d === d0 ? d0.pal.accent : '#FFFFFF').fill(); else doc.fillColor('#FFFFFF').fill().roundedRect(M + 14, y + h - 40, bw, 28, 8).lineWidth(1.6).strokeColor(d0.pal.accent).stroke()
       doc.restore()
-      doc.fillColor(linked ? '#FFFFFF' : d.pal.dark).font('Helvetica-Bold').fontSize(12).text(pdfSafe(label), M + 14, y + h - 32, { width: bw, align: 'center', lineBreak: false })
+      doc.fillColor(linked ? (d === d0 ? '#FFFFFF' : d0.pal.accent) : d0.pal.dark).font('Helvetica-Bold').fontSize(12).text(pdfSafe(label), M + 14, y + h - 32, { width: bw, align: 'center', lineBreak: false })
       y += h + G
     } else if (r.kind === 'gift') {
       const s = r.cells[0], txt = s.blocks.map(b => b.text).join(' '), lead = giftPng ? 74 : 62
       const h = Math.max(82, 40 + textH(txt, CW - 28 - lead, 11.5))
-      need(h + G); fillBox(M, y, CW, h, d.pal.tint, d.pal.tint2)
+      d = tonedFor('gift'); { const bg = boxPdf('gift', { bg: d0.pal.tint, stroke: d0.pal.tint2 }); need(h + G); fillBox(M, y, CW, h, bg.bg, bg.stroke) }
       if (giftPng) { try { doc.save(); doc.roundedRect(M + 14, y + 12, 58, 58, 8).clip(); doc.image(giftPng, M + 14, y + 12, { cover: [58, 58], align: 'center', valign: 'center' }); doc.restore() } catch { bubble('gift', M + 14, y + 14, 44) } } else bubble('gift', M + 14, y + 14, 44)
       doc.fillColor(d.pal.dark).font('Helvetica-Bold').fontSize(14).text(pdfSafe(s.title), M + 14 + lead, y + 14, { width: CW - 28 - lead, lineBreak: false })
-      doc.fillColor(INK).font('Helvetica').fontSize(11.5).text(pdfSafe(txt), M + 14 + lead, y + 36, { width: CW - 28 - lead, lineGap: 2.5 })
+      doc.fillColor(d.ink).font('Helvetica').fontSize(11.5).text(pdfSafe(txt), M + 14 + lead, y + 36, { width: CW - 28 - lead, lineGap: 2.5 })
       y += h + G
     } else if (r.kind === 'footer') {
       const s = r.cells[0]; const h = cardHeight(s, CW, false)
-      need(h + G); fillBox(M, y, CW, h, d.pal.tint);       bubble(s.icon, M + 14, y + 12, 28); doc.fillColor(d.pal.dark).font('Helvetica-Bold').fontSize(12.5).text(pdfSafe(s.title), M + 52, y + 19, { width: CW - 70, lineBreak: false }); drawBody(s, M + 14, y + 50, CW - 28, 10.5); y += h + G
+      { const bf = boxPdf(s.id, { bg: d0.pal.tint }); need(h + G); fillBox(M, y, CW, h, bf.bg, bf.stroke) }; bubble(s.icon, M + 14, y + 12, 28); doc.fillColor(d.pal.dark).font('Helvetica-Bold').fontSize(12.5).text(pdfSafe(s.title), M + 52, y + 19, { width: CW - 70, lineBreak: false }); drawBody(s, M + 14, y + 50, CW - 28, 10.5); y += h + G
     } else {
       const s = r.cells[0], big = r.kind === 'hero', ph = big && personHero(s)
       const h = Math.max(cardHeight(s, CW, big, ph), ph ? 118 : 0, statValues(s) ? 112 : 0)
       need(h + G); drawCard(s, M, y, CW, h, big, big || s.role === 'thanks', ph); y += h + G
     }
+    d = d0
   }
   // footer on every page
   const range = doc.bufferedPageRange()

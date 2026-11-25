@@ -10,6 +10,7 @@ import { StaffPicker, useStaff } from '@/components/ask/staff-picker'
 import { DocumentActions } from '@/components/ask/document-actions'
 import { SharePanel } from '@/components/ask/share-panel'
 import { GiftBox } from '@/components/ask/gift-box'
+import { NewsletterEditor } from '@/components/ask/newsletter-editor'
 import { ExpandViewer, Expandable, useExpandViewer, type ViewerItem } from './expand-viewer'
 import { FitHtml } from './fit-html'
 
@@ -20,7 +21,7 @@ const STATUS: Record<string, { label: string; cls: string }> = {
 const input = 'w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-neutral-dark outline-none focus:border-teal focus:ring-2 focus:ring-teal/20'
 const btn = 'inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-semibold disabled:opacity-50'
 
-export function DocumentPanel({ token, id, onClose, onChanged }: { token: string; id: string; onClose: () => void; onChanged: () => void }) {
+export function DocumentPanel({ token, id, onClose, onChanged, focus }: { token: string; id: string; onClose: () => void; onChanged: () => void; focus?: 'colours' | 'blocks' | null }) {
   const [d, setD] = useState<AskDocFull | null>(null)
   const [error, setError] = useState('')
   const [info, setInfo] = useState('')
@@ -166,6 +167,7 @@ export function DocumentPanel({ token, id, onClose, onChanged }: { token: string
                 )}
               </div>
             )}
+            {d.type === 'newsletter' && d.actions.edit && !editing && <NewsletterEditor token={token} docId={d.id} version={d.updated_at ?? ''} focus={focus} onChanged={() => { void load(); onChanged() }} />}
             {d.type === 'newsletter' && d.actions.edit && /^(employee-of-the-month|staff-stories|recognition)/.test(String(d.data?.template_id ?? '')) && <GiftBox token={token} docId={d.id} gift={d.data?.gift} onSaved={() => { void load(); onChanged() }} />}
             {flow && d.checklist.length > 0 && (d.status === 'draft' || d.status === 'pending') && (
               <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-950">

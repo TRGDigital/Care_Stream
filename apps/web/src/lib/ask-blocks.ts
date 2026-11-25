@@ -78,7 +78,7 @@ export const withoutOptionsBlock = (text: string) => withoutBlock(text, 'options
 // After an agent has produced anything it ends with a next_steps block: 3 to 5 buttons for the next stage, the most likely first (the primary button). An `ask` button sends a structured choice
 // back to the agent (no typing), an `action` button runs a screen action (save, print, share, edit...) and a `link` opens a page. A "Something else" box is always there too.
 export type NextKind = 'action' | 'ask' | 'link'
-export const NEXT_ACTIONS = ['save_library', 'save_pdf', 'print', 'preview', 'edit', 'share', 'choose_who', 'send', 'back_to_layouts', 'show_working'] as const
+export const NEXT_ACTIONS = ['save_library', 'save_pdf', 'print', 'preview', 'edit', 'share', 'choose_who', 'send', 'back_to_layouts', 'show_working', 'colours', 'add_block'] as const
 export type NextAction = (typeof NEXT_ACTIONS)[number]
 export interface NextStep { id: string; label: string; kind: NextKind; payload: string | null }
 export interface NextSteps { steps: NextStep[] }

@@ -170,6 +170,7 @@ export function AskPanel({ token, layout, expanded, width, onClose }: { token: s
   const [uploads, setUploads] = useState<AskUpload[]>([])   // files attached to this chat (agents that take files)
   const [lib, setLib] = useState<{ tab: 'chats' | 'docs'; chats: AskConversation[] | null; docs: AskDocument[] | null }>({ tab: 'chats', chats: null, docs: null })
   const [docId, setDocId] = useState<string | null>(null)
+  const [docFocus, setDocFocus] = useState<'colours' | 'blocks' | null>(null)
   const [viewDocId, setViewDocId] = useState<string | null>(null)   // the designed version of a draft, in the large viewer
   const [savedMsg, setSavedMsg] = useState<string | null>(null)
   const [libView, setLibView] = useState<{ title: string; items: ViewerItem[]; doc: AskDocument } | null>(null)   // a library item shown large
@@ -239,6 +240,7 @@ export function AskPanel({ token, layout, expanded, width, onClose }: { token: s
     const doc = (m.sources ?? []).find(x => x.document_id)?.document_id ?? null
     const ask_ = () => send(formatNext(step))
     try {
+      if (action === 'colours' || action === 'add_block') { if (doc) { setDocFocus(action === 'colours' ? 'colours' : 'blocks'); setDocId(doc) } else ask_(); return }
       if (action === 'edit' || action === 'share' || action === 'choose_who' || action === 'send') { if (doc) setDocId(doc); else ask_(); return }
       if (action === 'preview') { if (doc) setViewDocId(doc); else ask_(); return }
       if (action === 'save_pdf' || action === 'print') {
@@ -446,7 +448,7 @@ export function AskPanel({ token, layout, expanded, width, onClose }: { token: s
           </div>
         )}
         {viewDocId && token && <DocViewer token={token} id={viewDocId} onClose={() => setViewDocId(null)} />}
-        {docId && <DocumentPanel token={token} id={docId} onClose={() => setDocId(null)} onChanged={loadLib} />}
+        {docId && <DocumentPanel token={token} id={docId} focus={docFocus} onClose={() => { setDocId(null); setDocFocus(null) }} onChanged={loadLib} />}
         {libView && token && <ExpandViewer open onClose={() => setLibView(null)} title={libView.title} items={libView.items}
           pdf={['letter', 'newsletter', 'report'].includes(libView.doc.type) ? (() => { const draft = !(libView.doc.status === 'approved' || libView.doc.status === 'shared'); return { getPdf: () => ask.documentBlob(token, libView.doc.id, 'pdf', { draft }), getDocx: () => ask.documentBlob(token, libView.doc.id, 'docx', { draft }), draft } })() : undefined} />}
       </div>

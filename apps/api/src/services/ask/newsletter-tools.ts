@@ -5,7 +5,10 @@ import { ownSource, figuresFor } from './sources'
 import { loadNewStarters, loadBirthdaysThisMonth, loadAnniversariesThisMonth, loadTrainingCompletions, whoIsOff, weekOf, addDays } from './data'
 import { loadEnrolments } from './tools-people'
 import { dueAndOverdue } from './people-calc'
-import { saveDocument } from './store'
+import { saveDocument, getDocumentFor, updateDocumentContent } from './store'
+import { canEdit } from '../ask-docs/workflow'
+import { applyOp, listItems, PALETTES, BLOCK_TYPES, type Op } from '../ask-docs/newsletter-edit'
+import { writeAuditLog } from '../../lib/audit'
 import { photoAllowedFor, photoChoice, resolvePerson, staffHasPicture, CONSENT_QUESTION, MAX_FEATURED, giftAllowedFor, lintGift, giftKey, GIFT_IMAGE_ID } from '../ask-docs/newsletter-photo'
 import { downloadFile } from '../storage/s3'
 import { NEWSLETTER_TEMPLATES, NEWSLETTER_CHECKLIST, NEWSLETTER_CATEGORIES, newsletterTemplate, newsletterMenu, matchNewsletterTypes, lintNewsletter, lintOptionsFor } from '../ask-docs/newsletter-templates'
@@ -107,6 +110,44 @@ export const NEWSLETTER_TOOLS: AskTool[] = [
       }
       const id = await saveDocument(ctx.tenantId, ctx.userId, { type: 'newsletter', title, body, data: { template_id: tpl?.id ?? null, checklist: NEWSLETTER_CHECKLIST, ...(photos.length ? { photos, photo: photos[0] } : {}), ...(gift ? { gift } : {}) } })
       return { data: { saved: true, document_id: id, status: 'draft', ...(photoInfo ? { photo: photoInfo } : {}), next: 'Open it in the library to review, edit, submit for approval and then share it with your staff.' }, sources: [] }
+    },
+  },
+  {
+    name: 'set_newsletter_style',
+    description: 'Change the COLOURS of a newsletter DRAFT the administrator already has (use the document id from save_newsletter_draft). accent: the colour of the whole newsletter, either a palette id (teal, ocean, forest, plum, berry, terracotta, bronze, slate) or a hex such as #1D4E89, or "default" to go back to the brand or category colour; pale colours that cannot be read on white are refused. block_id with block_style (soft, bold, outline or none, or "default") changes ONE block; reset_block_styles true puts every block back. Words such as "make it blue" mean you pick the nearest palette (blue is ocean, green is forest, purple is plum, pink is berry, orange is terracotta, yellow or gold is bronze, grey is slate) and say which one you chose. Administrators only; never changes the words. After it, give next step buttons including "Change colours".',
+    input_schema: { type: 'object', properties: { document_id: { type: 'string' }, accent: { type: 'string' }, block_id: { type: 'string' }, block_style: { type: 'string', enum: ['soft', 'bold', 'outline', 'none', 'default'] }, reset_block_styles: { type: 'boolean' } }, required: ['document_id'] },
+    async run(ctx, input) {
+      const d = await getDocumentFor(ctx.tenantId, ctx.userId, String(input?.document_id ?? ''))
+      if (!d || d.type !== 'newsletter') return { data: { saved: false, message: 'That newsletter was not found.' }, sources: [] }
+      const ed = canEdit(d as any, ctx.userId); if (!ed.ok) return { data: { saved: false, message: ed.reason }, sources: [] }
+      let state = { body: d.body as string, data: d.data ?? {} }
+      const ops: Op[] = []
+      if (typeof input?.accent === 'string' && input.accent.trim()) { const a = input.accent.trim(); const pal = PALETTES.find(x => x.id === a.toLowerCase()); ops.push({ op: 'accent', accent: a.toLowerCase() === 'default' ? null : pal ? pal.accent : a }) }
+      if (input?.reset_block_styles === true) ops.push({ op: 'reset_styles' })
+      if (input?.block_id) ops.push({ op: 'style', id: String(input.block_id), style: input?.block_style === 'default' ? null : String(input?.block_style ?? '') })
+      if (!ops.length) return { data: { saved: false, message: 'Say what to change: the overall colour, or a block and its look.', palettes: PALETTES, blocks: listItems(state.body, state.data).map(i => ({ id: i.id, title: i.title, style: i.style })) }, sources: [] }
+      for (const op of ops) { const r = applyOp(state, op); if (!r.ok) return { data: { saved: false, message: r.message }, sources: [] }; state = r.state }
+      await updateDocumentContent(ctx.tenantId, d.id, { data: state.data })
+      void writeAuditLog({ tenant_id: ctx.tenantId, user_id: ctx.userId, event_type: 'ask_newsletter_edited', entity_type: 'ask_document', entity_id: d.id, metadata: { op: 'style', by: 'agent' } })
+      return { data: { saved: true, accent: state.data?.accent ?? null, next_steps_required: true, next: 'The designed newsletter shows the new colours. Say in one line what you changed, then give next step buttons.' }, sources: [] }
+    },
+  },
+  {
+    name: 'add_newsletter_block',
+    description: 'Add a block of the administrator\'s own to a newsletter DRAFT (use the document id from save_newsletter_draft). type: text (heading, text), quote (text, who), callout (title, text, icon), button (label, and either kind hub or kind url with an https address), numbers (items: 2 to 4 of {n, label}), list (heading, style bullets or ticks, items), dates (heading, rows of {date, what}). Pictures cannot be added from the chat: tell them to use Add a block, Picture and text in the document panel. after_id is the id of the block it follows (leave empty for the very top). The words go through the newsletter house rules and are refused with the reason if they break them. Administrators only. After it, give next step buttons.',
+    input_schema: { type: 'object', properties: { document_id: { type: 'string' }, type: { type: 'string', enum: ['text', 'quote', 'callout', 'button', 'numbers', 'list', 'dates'] }, content: { type: 'object' }, after_id: { type: 'string' } }, required: ['document_id', 'type', 'content'] },
+    async run(ctx, input) {
+      const d = await getDocumentFor(ctx.tenantId, ctx.userId, String(input?.document_id ?? ''))
+      if (!d || d.type !== 'newsletter') return { data: { saved: false, message: 'That newsletter was not found.' }, sources: [] }
+      const ed = canEdit(d as any, ctx.userId); if (!ed.ok) return { data: { saved: false, message: ed.reason }, sources: [] }
+      if (String(input?.type) === 'picture_text') return { data: { saved: false, message: 'A picture cannot be added from the chat. Ask the administrator to open the newsletter and use Add a block, then Picture and text.' }, sources: [] }
+      const r = applyOp({ body: d.body as string, data: d.data ?? {} }, { op: 'add', type: String(input?.type ?? ''), content: input?.content ?? {}, after: input?.after_id ? String(input.after_id) : null })
+      if (!r.ok) return { data: { saved: false, message: r.message, block_types: BLOCK_TYPES.map(b => b.id) }, sources: [] }
+      const problems = await lintForTemplate(r.texts.filter(Boolean).join('\n'), String(d.data?.template_id ?? ''))
+      if (problems.length) return { data: { saved: false, problems, message: 'Not added. Fix these and try again.' }, sources: [] }
+      await updateDocumentContent(ctx.tenantId, d.id, { ...(r.state.body !== d.body ? { body: r.state.body } : {}), data: r.state.data })
+      void writeAuditLog({ tenant_id: ctx.tenantId, user_id: ctx.userId, event_type: 'ask_newsletter_edited', entity_type: 'ask_document', entity_id: d.id, metadata: { op: 'add', type: String(input?.type), by: 'agent' } })
+      return { data: { saved: true, block_id: r.id, next_steps_required: true, next: 'The block is in the designed newsletter. Say in one line what you added, then give next step buttons (edit it, change colours, move on).' }, sources: [] }
     },
   },
   {

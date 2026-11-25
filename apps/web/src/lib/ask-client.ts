@@ -32,11 +32,23 @@ export interface AskDocActions { needs_approval: boolean; edit: boolean; submit:
 export interface ShareIntent { hub: boolean; email: boolean; print_only: boolean }
 export interface HubShare { id: string; person: string; shared_at: string | null; read_at: string | null; needs_acknowledgement: boolean; acknowledged_at: string | null; withdrawn_at: string | null; signed: boolean }
 export interface AskDocField { key: string; label: string; type: string; required: boolean; choices: Array<{ value: string; label: string }> | null }
+export interface NewsletterEditItem { id: string; kind: 'section' | 'custom'; type: string; title: string; summary: string; style: string | null; can_edit: boolean }
+export interface NewsletterEditState {
+  can_edit: boolean; items: NewsletterEditItem[]; accent: string | null; brand_colour: string | null; category_colour: string
+  palettes: Array<{ id: string; label: string; accent: string }>; block_types: Array<{ id: string; label: string; hint: string }>; callout_icons: string[]; styles: string[]; max_custom: number
+}
+export type NewsletterOp =
+  | { op: 'add'; type: string; content: unknown; after?: string | null }
+  | { op: 'update'; id: string; content: unknown }
+  | { op: 'update_section'; id: string; title?: string; text?: string }
+  | { op: 'delete'; id: string } | { op: 'duplicate'; id: string } | { op: 'move'; id: string; dir: 'up' | 'down' }
+  | { op: 'style'; id: string; style: string | null } | { op: 'reset_styles' } | { op: 'accent'; accent: string | null }
+
 export interface AskDocFull {
   id: string; type: string; title: string; body: string; status: string; version: number; updated_at: string | null; mine: boolean; created_by: string
   staff_name: string | null; internal_only?: boolean; checklist: string[]; references: Array<{ label: string; url: string }>; shared: Array<{ method: string; at: string }>
   share_intent?: ShareIntent | null; share_intent_text?: string; ack_default?: boolean; hub_shares?: HubShare[]
-  values?: Record<string, string | number>; fields?: AskDocField[]; actions: AskDocActions; data?: { review_note?: { note: string; at: string }; photo?: { user_id: string; include: boolean } | null; photos?: Array<{ user_id: string; include: boolean }>; gift?: { text?: string; image_id?: string | null } | null; template_id?: string | null } | null
+  values?: Record<string, string | number>; fields?: AskDocField[]; actions: AskDocActions; data?: { custom_blocks?: Array<{ id: string; type: string; content: Record<string, any> }>; review_note?: { note: string; at: string }; photo?: { user_id: string; include: boolean } | null; photos?: Array<{ user_id: string; include: boolean }>; gift?: { text?: string; image_id?: string | null } | null; template_id?: string | null } | null
 }
 export type UploadRetention = 'chat_end' | '30d' | 'keep'
 export interface MatchRowView { row: number; file_name: string; status: 'matched' | 'ambiguous' | 'unmatched'; staff_id: string | null; candidates: Array<{ id: string; name: string }>; chosen?: string | null }
@@ -105,6 +117,17 @@ export const ask = {
     return body.data
   },
   setGift: (t: string, id: string, b: { text: string; image_id: string | null }) => call<{ saved: boolean; gift: { text: string; image_id: string | null } | null }>(`/ask-docs/${encodeURIComponent(id)}/gift`, t, { method: 'PUT', body: JSON.stringify(b) }),
+  /** Changing a newsletter in the panel: colours (overall and per block) and the blocks a tenant adds, moves, copies or deletes. */
+  newsletterEdit: (t: string, id: string) => call<NewsletterEditState>(`/ask-docs/${encodeURIComponent(id)}/newsletter-edit`, t),
+  newsletterOp: (t: string, id: string, op: NewsletterOp) => call<{ saved: boolean; id: string | null; items: NewsletterEditItem[]; accent: string | null }>(`/ask-docs/${encodeURIComponent(id)}/newsletter-edit`, t, { method: 'POST', body: JSON.stringify(op) }),
+  /** The picture of a picture block (png, jpg or webp, up to 1 MB): kept privately for this account; returns the id to use. */
+  blockImage: async (t: string, file: File): Promise<{ image_id: string }> => {
+    const fd = new FormData(); fd.append('file', file)
+    const res = await fetch(`${API_URL}/ask-docs/block-image`, { method: 'POST', headers: { Authorization: `Bearer ${t}` }, body: fd })
+    let body: any = null; try { body = await res.json() } catch { /* not json */ }
+    if (!res.ok || !body?.success) throw new AskError(body?.error?.code ?? 'ERROR', body?.error?.message ?? `That picture could not be added (${res.status}).`, res.status)
+    return body.data
+  },
   newsletterPhotoStatus: (t: string, id: string) => call<{ chosen: boolean; name?: string | null; consent?: boolean; has_picture?: boolean }>(`/ask-docs/${encodeURIComponent(id)}/newsletter-photo`, t),
   documents: (t: string) => call<{ documents: AskDocument[] }>('/ask/documents', t),
   document: (t: string, id: string) => call<{ document: AskDocFull }>(`/ask/documents/${encodeURIComponent(id)}`, t),

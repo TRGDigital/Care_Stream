@@ -7,6 +7,8 @@ import { siteUrl } from '../../lib/urls'
 import { renderNewsletterHtml, renderNewsletterPdf, sampleBody, type DesignInput, type Target } from './newsletter-design'
 import { newsletterTemplate } from './newsletter-templates'
 import { staffHasPicture, featuredOf, giftKey, GIFT_IMAGE_ID } from './newsletter-photo'
+import { cleanContent, blockImageKey, BLOCK_IMAGE_ID } from './newsletter-edit'
+import type { CustomIn, CustomImage } from './newsletter-design'
 
 const p = () => prisma as any
 export interface Doc { id: string; type: string; title: string; body: string; data: any }
@@ -41,12 +43,35 @@ async function giftFor(tenantId: string, doc: Doc, withPicture: boolean): Promis
   return text || dataUrl ? { text, dataUrl, buffer } : null
 }
 
+/** The blocks the tenant added, checked again as they are read (a stored block that no longer passes is left out, never drawn). */
+export function customBlocksOf(data: any): CustomIn[] {
+  const out: CustomIn[] = []
+  for (const c of Array.isArray(data?.custom_blocks) ? data.custom_blocks.slice(0, 12) : []) {
+    if (!c || typeof c.id !== 'string' || !/^c\d+$/.test(c.id)) continue
+    const k = cleanContent(String(c.type), c.content)
+    if (k.ok) out.push({ id: c.id, type: c.type, after: typeof c.after === 'string' ? c.after : null, content: k.content })
+  }
+  return out
+}
+/** The pictures of picture blocks, for the screen, the PDF and the hub (email shows the words and a note). A picture that has gone leaves the words. */
+async function imagesFor(tenantId: string, custom: CustomIn[]): Promise<Record<string, CustomImage>> {
+  const out: Record<string, CustomImage> = {}
+  for (const c of custom) {
+    const id = c.type === 'picture_text' ? String(c.content?.image_id ?? '') : ''
+    if (!BLOCK_IMAGE_ID.test(id)) continue
+    try { const buffer = await downloadFile(blockImageKey(tenantId, id)); const ext = id.split('.').pop(); out[c.id] = { dataUrl: `data:image/${ext === 'jpg' ? 'jpeg' : ext};base64,${buffer.toString('base64')}`, buffer } } catch { /* the picture is gone */ }
+  }
+  return out
+}
+
 /** Everything the designer needs for one saved newsletter. `target` "email" gets a logo address and no photo; "web" and the PDF get the logo and the photo inline. */
 export async function designInputFor(o: { tenantId: string; doc: Doc; target: Target; sentBy?: string | null; draft?: { title?: string; body?: string } }): Promise<{ input: DesignInput; logoPng: Buffer | null; photoPng: Buffer | null; photoPngs: Array<Buffer | null>; giftPng: Buffer | null }> {
   const l = await loadLetterhead(o.tenantId)
   const web = o.target === 'web'
   const people = await peopleFor(o.tenantId, o.doc, web)   // email gets the names only, for the initials
   const gift = await giftFor(o.tenantId, o.doc, web)
+  const custom = customBlocksOf(o.doc.data)
+  const customImages = web ? await imagesFor(o.tenantId, custom) : {}
   let logo: string | null = l.head.logoDataUrl ?? null
   if (o.target === 'email') logo = null   // the staff email wrapper already shows the organisation's logo, so it is not repeated
   let sentBy = o.sentBy ?? ''
@@ -54,7 +79,8 @@ export async function designInputFor(o: { tenantId: string; doc: Doc; target: Ta
   const input: DesignInput = {
     templateId: o.doc.data?.template_id ?? null, title: o.draft?.title ?? o.doc.title, body: o.draft?.body ?? o.doc.body,
     brand: { name: l.head.name, accent: typeof o.doc.data?.accent === 'string' && o.doc.data.accent ? o.doc.data.accent : (l.head.brandColour ?? null), logo, contact: (l.head.contactLines ?? []).slice(0, 3) },
-    sentBy, people: people.map(x => ({ dataUrl: x.dataUrl, name: x.name, ...(web ? {} : { inHub: true }) })), gift: gift ? { text: gift.text, dataUrl: gift.dataUrl } : null, links: { holiday: `${siteUrl()}/chat` },
+    sentBy, people: people.map(x => ({ dataUrl: x.dataUrl, name: x.name, ...(web ? {} : { inHub: true }) })), gift: gift ? { text: gift.text, dataUrl: gift.dataUrl } : null, links: { holiday: `${siteUrl()}/chat`, hub: `${siteUrl()}/chat` },
+    styles: o.doc.data?.block_styles && typeof o.doc.data.block_styles === 'object' ? o.doc.data.block_styles : undefined, custom, customImages,
   }
   let logoPng: Buffer | null = null
   if (l.head.logoDataUrl) { try { const { logoForPdf } = await import('../policy/policy-pdf'); logoPng = await logoForPdf(l.head.logoDataUrl) } catch { logoPng = null } }

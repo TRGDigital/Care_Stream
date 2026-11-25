@@ -19,7 +19,7 @@ import { LetterheadSettingsBody } from '@/components/admin/settings/letterhead-s
 import { SignatureSettingsBody } from '@/components/admin/settings/signature-settings'
 import { useLetterheadAvailable } from '@/lib/letterhead-client'
 import {
-  AlertTriangle, Bell, BedDouble, BookLock, Building2, Check, ChevronDown, ChevronUp, ClipboardList, Copy, Loader2,
+  AlertTriangle, Bell, BedDouble, BookLock, Building2, Check, ChevronDown, ChevronUp, ClipboardList, Copy, Download, Loader2,
   Mail, Plus, Search, ShieldCheck, SlidersHorizontal, Tablet, Trash2, Upload, UserRound, X,
   // `Lock` unaliased resolves to the DOM Web Locks API type, not the icon.
   Lock as LockIcon,
@@ -452,6 +452,36 @@ export default function SettingsPage() {
     const rh = orgContext.role_holders.find(r => r.key === m.key)
     return !!rh && rh.derived.length === 0 && roleManual(m.key).length === 0
   })
+
+  // "Champions" sheet: every named position with who holds it today, so it can be filled in
+  // offline. A CSV with a byte order mark opens cleanly in Excel. Built in the browser from
+  // what the page already holds, so nothing extra is fetched or stored.
+  function downloadChampions() {
+    const q = (v: string) => `"${v.replace(/"/g, '""')}"`
+    const rows: string[][] = [
+      ['Position', 'Named in your policies', 'Held today (from staff records)', 'Added names', 'Name or names to add (write here)'],
+    ]
+    for (const rh of orgContext.role_holders) {
+      const mention = roleScan?.mentions.find(m => m.key === rh.key)
+      const added = roleManual(rh.key).filter(n => !rh.derived.some(d => d.toLowerCase() === n.toLowerCase()))
+      rows.push([
+        rh.role,
+        mention && mention.policies > 0 ? `In ${mention.policies} ${mention.policies === 1 ? 'policy' : 'policies'}` : '',
+        rh.derived.join('; '),
+        added.join('; '),
+        '',
+      ])
+    }
+    const csv = '\uFEFF' + rows.map(r => r.map(q).join(',')).join('\r\n')
+    const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }))
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'champions.csv'
+    document.body.appendChild(a)
+    a.click()
+    a.remove()
+    URL.revokeObjectURL(url)
+  }
 
   async function loadRoleScan() {
     if (!session?.accessToken) return
@@ -1177,7 +1207,12 @@ export default function SettingsPage() {
               and you can add extras. Same add-and-show-below pattern as Positions. */}
           {orgContext.role_holders.length > 0 && (
             <div className="mt-6">
-              <p className="text-xs font-bold uppercase tracking-wide text-neutral-mid">Role-holders</p>
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <p className="text-xs font-bold uppercase tracking-wide text-neutral-mid">Role-holders</p>
+                <Button onClick={downloadChampions} size="md" variant="secondary">
+                  <Download size={14} className="mr-1.5" />Download champions
+                </Button>
+              </div>
               <p className="mt-1 text-xs text-neutral-mid">Names appear here automatically when you give a staff member the matching position or specialist role (for example a <strong>Care Manager</strong> becomes the registered manager). You can add extra names too. Where a role is shared, you pick which person when you adopt text into a policy.</p>
               {/* Every role stays listed below whether or not a policy mentions it, so anyone
                   can fill in whoever they like. This just marks the ones their own documents

@@ -10,6 +10,12 @@ import { layoutToHtml, parseBlocks, PREVIEW_CSS, type LayoutDoc } from '../lette
 export interface Doc { id: string; type: string; title: string; body: string; data: any }
 export const DOCUMENT_TYPES_WITH_FILES = ['letter', 'newsletter', 'report']
 
+import { prisma } from '../../db/client'
+/** The name of the person sending (for the newsletter footer). */
+export async function nameOf(userId?: string | null): Promise<string | null> {
+  if (!userId) return null
+  try { const u = await (prisma as any).user.findUnique({ where: { id: userId }, select: { name: true } }); return u?.name ?? null } catch { return null }
+}
 const safeName = (s: string) => s.replace(/[^a-zA-Z0-9 _-]/g, '').trim().replace(/\s+/g, '-').slice(0, 60) || 'document'
 const ukDate = (d = new Date()) => d.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/London' })
 
@@ -45,7 +51,7 @@ export async function buildLayout(o: { tenantId: string; doc: Doc; signerUserId?
   throw new Error('That kind of document has no printed version.')
 }
 
-export async function renderDocument(o: { tenantId: string; doc: Doc; format: 'pdf' | 'docx'; signerUserId?: string | null }): Promise<{ buffer: Buffer; filename: string; mime: string }> {
+export async function renderDocument(o: { tenantId: string; doc: Doc; format: 'pdf' | 'docx'; signerUserId?: string | null; sentByUserId?: string | null }): Promise<{ buffer: Buffer; filename: string; mime: string }> {
   const b = await buildLayout(o)
   const ext = o.format
   const mime = o.format === 'pdf' ? 'application/pdf' : 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
@@ -55,13 +61,21 @@ export async function renderDocument(o: { tenantId: string; doc: Doc; format: 'p
     const buffer = await make(String(o.doc.data?.template_id ?? ''), (b.values ?? {}) as any, b.head, signer ? { name: signer.name, role: signer.role, signature: signer.signature ?? null } : null)
     return { buffer, filename: `${b.file}.${ext}`, mime }
   }
+  if (o.format === 'pdf' && o.doc.type === 'newsletter') {   // a newsletter is DESIGNED: the same design as the email and the screen
+    const { designedPdf } = await import('./newsletter-design-doc')
+    return { buffer: await designedPdf({ tenantId: o.tenantId, doc: o.doc, sentBy: await nameOf(o.sentByUserId) }), filename: `${b.file}.pdf`, mime }
+  }
   if (o.format === 'pdf') { const { renderLayoutPdf } = await import('../letters/layout-pdf'); return { buffer: await renderLayoutPdf(b.layout), filename: `${b.file}.pdf`, mime } }
   const { renderLayoutDocx } = await import('../letters/layout-docx')
   return { buffer: await renderLayoutDocx(b.layout), filename: `${b.file}.docx`, mime }
 }
 
 /** The headed page as HTML and its CSS, for the preview in the Ask panel. Works on an unfinished letter (gaps show as [Label]). */
-export async function previewHtml(o: { tenantId: string; doc: Doc; signerUserId?: string | null }): Promise<{ html: string; css: string }> {
+export async function previewHtml(o: { tenantId: string; doc: Doc; signerUserId?: string | null; sentByUserId?: string | null; draft?: { title?: string; body?: string } }): Promise<{ html: string; css: string; designed?: boolean }> {
+  if (o.doc.type === 'newsletter') {
+    const { designedHtml } = await import('./newsletter-design-doc')
+    return { html: await designedHtml({ tenantId: o.tenantId, doc: o.doc, target: 'web', sentBy: await nameOf(o.sentByUserId), draft: o.draft }), css: '', designed: true }
+  }
   const b = await buildLayout(o)
   return { html: layoutToHtml(b.layout, b.logoDataUrl), css: PREVIEW_CSS }
 }

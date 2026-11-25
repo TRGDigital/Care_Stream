@@ -2,7 +2,7 @@
 // ADMIN ONLY: the caller (routes/ask.ts) is admin guarded and has already checked the document is approved.
 import { prisma } from '../../db/client'
 import { randomUUID } from 'crypto'
-import { renderDocument } from './render-doc'
+import { renderDocument, nameOf } from './render-doc'
 import { loadLetterhead } from '../letters/letterhead'
 import { putPrivateObject } from '../storage/s3'
 import { detectNotificationFile } from '../../lib/notification-file'
@@ -19,8 +19,8 @@ const safeName = (s: string) => s.replace(/[^a-zA-Z0-9 _-]/g, '').trim().replace
 const ukDate = (d = new Date()) => d.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/London' })
 
 /** The finished PDF for an approved document, on the organisation's letterhead. A letter refuses to print while anything is missing. The signature is added only for `signerUserId`. */
-export async function pdfFor(tenantId: string, doc: Doc, signerUserId?: string | null): Promise<{ buffer: Buffer; filename: string }> {
-  const r = await renderDocument({ tenantId, doc, format: 'pdf', signerUserId })
+export async function pdfFor(tenantId: string, doc: Doc, signerUserId?: string | null, sentByUserId?: string | null): Promise<{ buffer: Buffer; filename: string }> {
+  const r = await renderDocument({ tenantId, doc, format: 'pdf', signerUserId, sentByUserId })
   return { buffer: r.buffer, filename: r.filename }
 }
 
@@ -56,7 +56,7 @@ export async function emailReportToAdmins(o: { tenantId: string; actorId: string
 export async function shareAsNotification(o: { tenantId: string; actorId: string; doc: Doc; audience?: unknown; userIds?: unknown; signerUserId?: string | null }) {
   // An internal only report may name people and can NEVER go to staff, whatever the caller asked for.
   if (o.doc.type === 'report' && o.doc.data?.internal_only === true) throw new Error('An internal only report cannot be sent to staff.')
-  const { buffer, filename } = await pdfFor(o.tenantId, o.doc, o.signerUserId)
+  const { buffer, filename } = await pdfFor(o.tenantId, o.doc, o.signerUserId, o.actorId)
   const found = detectNotificationFile(buffer, filename)
   if (!found.ok) throw new Error(found.reason)
   const id = randomUUID(), key = `tenants/${o.tenantId}/notification-files/${id}.${found.ext}`
@@ -66,7 +66,16 @@ export async function shareAsNotification(o: { tenantId: string; actorId: string
   const title = cleanTitle(isLetter ? `A letter for you: ${String(o.doc.data?.template_id ? o.doc.title.replace(/:.*$/, '') : o.doc.title)}` : o.doc.title, 120)
   const body = cleanBody(isLetter ? 'Your letter is attached. Please open it and keep it with your records.' : (o.doc.type === 'report' ? 'The report is attached as a PDF.' : o.doc.body.length <= 1900 ? o.doc.body : 'This month\'s staff newsletter is attached as a PDF.'), 2000)
   const userIds = isLetter ? [String(o.doc.data?.staff_user_id ?? '')] : o.userIds
-  return createAndSendNotification({ tenantId: o.tenantId, userId: o.actorId, title, body, audience: isLetter ? 'selected' : (o.audience === 'selected' ? 'selected' : 'all'), userIds, files: [file] })
+  // A newsletter goes out DESIGNED: the email carries the designed newsletter, and the hub shows it too (the plain text stays as the notification text).
+  let emailHtml: string | undefined, hubHtml: string | undefined
+  if (o.doc.type === 'newsletter') {
+    try {
+      const { designedHtml } = await import('./newsletter-design-doc')
+      const sentBy = await nameOf(o.actorId)
+      ;[emailHtml, hubHtml] = await Promise.all([designedHtml({ tenantId: o.tenantId, doc: o.doc, target: 'email', sentBy }), designedHtml({ tenantId: o.tenantId, doc: o.doc, target: 'web', sentBy })])
+    } catch { emailHtml = undefined; hubHtml = undefined }   // the plain notification and the PDF still go
+  }
+  return createAndSendNotification({ tenantId: o.tenantId, userId: o.actorId, title, body, audience: isLetter ? 'selected' : (o.audience === 'selected' ? 'selected' : 'all'), userIds, files: [file], emailHtml, hubHtml })
 }
 
 /**

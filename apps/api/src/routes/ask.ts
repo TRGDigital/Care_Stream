@@ -236,7 +236,7 @@ askRouter.get('/documents/:id/pdf', wrap(async (req, res) => {
   const t = getTenantId(), d = await store.getDocumentFor(t, req.user!.sub, String(req.params.id)); if (!d) { notFound(res); return }
   const v = canShare(d); if (!v.ok) { err(res, 'NOT_ALLOWED', v.reason, 409); return }
   try {
-    const { buffer, filename } = await pdfFor(t, d, req.query.sign === '1' ? req.user!.sub : null)   // MY signature only when I ask for it
+    const { buffer, filename } = await pdfFor(t, d, req.query.sign === '1' ? req.user!.sub : null, req.user!.sub)   // MY signature only when I ask for it
     audit(req, 'ask_document_pdf_downloaded', d.id, { type: d.type })
     await store.appendShareRecord(t, d.id, { method: 'pdf', by: req.user!.sub, at: new Date().toISOString() }); await store.setDocumentStatus(t, d.id, ['approved'], 'shared')
     res.setHeader('Content-Type', 'application/pdf'); res.setHeader('Cache-Control', 'private, no-store'); res.setHeader('X-Content-Type-Options', 'nosniff')

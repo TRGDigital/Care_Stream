@@ -5,6 +5,7 @@
 import { useEffect, useState } from 'react'
 import { ChevronDown, ChevronRight, Database, Loader2, Users } from 'lucide-react'
 import { ask, type NewsletterLibrary } from '@/lib/ask-client'
+import { LayoutThumbs } from '@/components/ask/layout-thumbs'
 
 const LAYOUT: Record<string, string> = { short: 'Short', standard: 'Standard', detailed: 'Detailed' }
 
@@ -47,7 +48,8 @@ export function NewsletterPicker({ token, onChoose, disabled }: { token: string;
                     <span className="font-semibold text-neutral-dark">{chosenType.title}</span>
                     {chosenType.layouts.map(l => <button key={l.id} type="button" onClick={() => setLayout(l.layout)} aria-pressed={layout === l.layout} className={`rounded-full border px-2.5 py-1 text-xs font-semibold ${layout === l.layout ? 'border-teal bg-teal text-white' : 'border-gray-300 bg-white text-neutral-dark'}`}>{LAYOUT[l.layout]} ({l.sections})</button>)}
                   </div>
-                  <ol className="mt-2 space-y-1 text-xs text-neutral-dark">
+                  <LayoutThumbs token={token} type={chosenType.type} selected={layout} disabled={disabled} onPick={d => setLayout(d.layout)} />
+                  <ol className="mt-3 space-y-1 text-xs text-neutral-dark">
                     {template.sections.map(s => <li key={s.key} className="flex items-center gap-1.5"><span>{s.title}</span>{s.from_data && <span className="inline-flex items-center gap-1 rounded-full bg-white px-1.5 py-0.5 text-[11px] text-neutral-mid" title="Filled from your own records"><Database size={10} aria-hidden="true" />from your records</span>}{s.needs_ticks && <span className="inline-flex items-center gap-1 rounded-full bg-white px-1.5 py-0.5 text-[11px] text-neutral-mid" title="You choose who is named"><Users size={10} aria-hidden="true" />you choose who</span>}</li>)}
                   </ol>
                   {template.heads_up && <p className="mt-2 text-xs text-neutral-mid">{template.heads_up}</p>}

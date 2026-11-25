@@ -3,10 +3,12 @@
 // One saved item in the library. A saved answer is just text. A LETTER or NEWSLETTER goes draft -> waiting for approval -> approved -> shared: this panel shows the status, lets the
 // author edit and submit, lets another administrator tick the "before you send" checklist and approve, and then shares it (PDF, email to the person, or a staff notification with the PDF).
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { AlertTriangle, Check, Copy, Download, FileText, Loader2, Mail, Bell, Pencil, Printer, RotateCcw, Send, Trash2, X } from 'lucide-react'
+import { AlertTriangle, Check, Copy, Download, FileText, Loader2, Mail, Maximize2, Bell, Pencil, Printer, RotateCcw, Send, Trash2, X } from 'lucide-react'
 import { ask, AskError, type AskDocFull, type ShareIntent } from '@/lib/ask-client'
 import { adminNotifications, type StaffOption } from '@/lib/notifications-client'
 import { MarkdownLite } from './markdown-lite'
+import { ExpandViewer, Expandable, useExpandViewer, type ViewerItem } from './expand-viewer'
+import { FitHtml } from './fit-html'
 
 const STATUS: Record<string, { label: string; cls: string }> = {
   draft: { label: 'Draft', cls: 'bg-gray-100 text-neutral-dark' }, pending: { label: 'Waiting for approval', cls: 'bg-amber-100 text-amber-900' },
@@ -32,6 +34,9 @@ export function DocumentPanel({ token, id, onClose, onChanged }: { token: string
   const [docStatus, setDocStatus] = useState<{ letterhead_ready: boolean; trading_name: string; missing: string[]; signature: boolean } | null>(null)
   const [paper, setPaper] = useState<{ html: string; css: string } | null>(null)
   const [showPaper, setShowPaper] = useState(false)
+  const [live, setLive] = useState<string | null>(null)   // the designed newsletter for the text being edited
+  const [photoStaff, setPhotoStaff] = useState<StaffOption[] | null>(null)
+  const viewer = useExpandViewer()
   const [picking, setPicking] = useState(false), [audience, setAudience] = useState<'all' | 'selected'>('all'), [chosen, setChosen] = useState<Set<string>>(new Set()), [q, setQ] = useState('')
 
   const load = useCallback(async () => {
@@ -45,6 +50,13 @@ export function DocumentPanel({ token, id, onClose, onChanged }: { token: string
     try { setPaper(await ask.preview(token, id, sign)) } catch { setPaper(null) }
   }, [token, id, sign])
   useEffect(() => { if (showPaper) loadPaper() }, [showPaper, loadPaper, d?.updated_at])
+  // A newsletter opens on its DESIGNED version; and while editing, the designed preview follows the text as it is typed.
+  useEffect(() => { if (d?.type === 'newsletter') setShowPaper(true) }, [d?.id, d?.type])
+  useEffect(() => {
+    if (!editing || d?.type !== 'newsletter') { setLive(null); return }
+    const t = setTimeout(() => { ask.previewDraft(token, id, { title, body }).then(r => setLive(r.html)).catch(() => undefined) }, 500)
+    return () => clearTimeout(t)
+  }, [editing, d?.type, token, id, title, body])
   const msg = (e: unknown) => (e instanceof AskError || e instanceof Error ? e.message : 'Something went wrong. Please try again.')
   async function run(name: string, fn: () => Promise<unknown>, done?: string) {
     setBusy(name); setError(''); setInfo('')
@@ -85,6 +97,9 @@ export function DocumentPanel({ token, id, onClose, onChanged }: { token: string
       if (r.missing?.length) setInfo(`Saved. Still missing: ${r.missing.join(', ')}.`)
     })
   }
+  async function openViewer() { if (d && (letter || news) && showPaper && !paper) await loadPaper(); viewer.show() }
+  const viewerItems: ViewerItem[] = !d ? [] : (letter || news) && showPaper && paper ? [{ kind: 'html', html: paper.html, css: paper.css }]
+    : [{ kind: 'node', node: <div className="w-[680px] max-w-full p-8 text-neutral-dark">{letter ? <pre className="whitespace-pre-wrap font-sans text-sm leading-relaxed">{d.body}</pre> : <MarkdownLite text={d.body} />}</div> }]
   async function openPicker() { setPicking(true); if (!staff) { try { setStaff((await adminNotifications.staff(token)).staff) } catch (e) { setError(msg(e)) } } }
 
   return (
@@ -116,15 +131,15 @@ export function DocumentPanel({ token, id, onClose, onChanged }: { token: string
             ) : editing && news ? (
               <div className="space-y-3">
                 <div><label className="mb-1 block text-xs font-semibold text-neutral-mid" htmlFor="ask-doc-title">Title</label><input id="ask-doc-title" className={input} value={title} onChange={e => setTitle(e.target.value)} maxLength={160} /></div>
-                <div><label className="mb-1 block text-xs font-semibold text-neutral-mid" htmlFor="ask-doc-body">{report ? 'Report' : 'Newsletter'} (## for a heading, - for a bullet)</label><textarea id="ask-doc-body" rows={16} className={`no-scrollbar ${input} font-mono`} value={body} onChange={e => setBody(e.target.value)} /></div>
+                <div><label className="mb-1 block text-xs font-semibold text-neutral-mid" htmlFor="ask-doc-body">{report ? 'Report' : 'Newsletter'} (## for a heading, - for a bullet)</label><div className={d.type === 'newsletter' ? 'grid gap-3 md:grid-cols-2' : ''}><textarea id="ask-doc-body" rows={16} className={`no-scrollbar ${input} font-mono`} value={body} onChange={e => setBody(e.target.value)} />{d.type === 'newsletter' && <div><p className="mb-1 text-xs font-semibold text-neutral-mid">Designed preview (follows what you type)</p>{live ? <FitHtml html={live} className="rounded-lg border border-gray-200" /> : <p className="flex items-center gap-2 text-xs text-neutral-mid"><Loader2 size={12} className="animate-spin" aria-hidden="true" />Making the preview</p>}</div>}</div></div>
                 {report && (
                   <label className="flex items-start gap-2 rounded-lg border border-gray-200 bg-neutral-light/60 p-3 text-sm text-neutral-dark"><input type="checkbox" className="mt-0.5 h-4 w-4" checked={internal} onChange={e => setInternal(e.target.checked)} />
                     <span><span className="font-semibold">Internal only.</span> It may name people and quote pay. It can be downloaded or emailed to the administrators, and can never be sent to staff. Leave this off for a report you may share: it then uses roles and counts only.</span></label>
                 )}
               </div>
-            ) : showPaper && (letter || news) ? (paper ? <div className="no-scrollbar overflow-x-auto rounded-xl bg-neutral-light p-3"><style>{paper.css}</style><div dangerouslySetInnerHTML={{ __html: paper.html }} /></div> : <p className="flex items-center gap-2 text-sm text-neutral-mid"><Loader2 size={14} className="animate-spin" /> Preparing the preview</p>)
-            : letter ? <pre className="whitespace-pre-wrap rounded-lg border border-gray-200 bg-neutral-light/50 p-4 font-sans text-sm leading-relaxed text-neutral-dark">{d.body}</pre>
-              : <MarkdownLite text={d.body} />}
+            ) : showPaper && (letter || news) ? (paper ? <Expandable label={d.type === 'newsletter' ? 'The designed newsletter' : 'The document on letterhead'} onOpen={openViewer}>{d.type === 'newsletter' ? <FitHtml html={paper.html} className="rounded-xl border border-gray-200" /> : <div className="no-scrollbar overflow-x-auto rounded-xl bg-neutral-light p-3"><style>{paper.css}</style><div dangerouslySetInnerHTML={{ __html: paper.html }} /></div>}</Expandable> : <p className="flex items-center gap-2 text-sm text-neutral-mid"><Loader2 size={14} className="animate-spin" /> Preparing the preview</p>)
+            : <Expandable label="The text" onOpen={openViewer}>{letter ? <pre className="whitespace-pre-wrap rounded-lg border border-gray-200 bg-neutral-light/50 p-4 font-sans text-sm leading-relaxed text-neutral-dark">{d.body}</pre>
+              : <MarkdownLite text={d.body} />}</Expandable>}
 
             {flow && docStatus && !docStatus.letterhead_ready && (
               <p className="rounded-lg border border-gray-200 bg-neutral-light/60 px-3 py-2 text-xs text-neutral-dark">To make this look like a complete company letter, finish your <strong>Letterhead and company details</strong> in Settings{docStatus.missing.length ? ` (${docStatus.missing.slice(0, 3).join(', ')}${docStatus.missing.length > 3 ? ' and more' : ''})` : ''}.</p>
@@ -132,6 +147,18 @@ export function DocumentPanel({ token, id, onClose, onChanged }: { token: string
             {flow && letter && (d.status === 'pending' || d.status === 'approved' || d.status === 'shared') && (
               <label className="flex items-start gap-2 text-sm text-neutral-dark"><input type="checkbox" className="mt-0.5 h-4 w-4" checked={sign} onChange={e => setSign(e.target.checked)} disabled={!docStatus?.signature} />
                 <span><strong className="font-medium">Sign with my signature.</strong> {docStatus?.signature ? 'Your signature and your printed name and job title go at the end of the letter.' : 'You have not added a signature yet. Add one in Settings under My signature (or in the hub). Your printed name will still be used.'}</span></label>
+            )}
+            {d.type === 'newsletter' && d.actions.edit && (
+              <div className="rounded-lg border border-gray-200 p-3 text-sm text-neutral-dark">
+                <label htmlFor="ask-nl-photo" className="font-semibold">Photo of one person (optional)</label>
+                <p className="mt-0.5 text-xs text-neutral-mid">For employee of the month and similar. Only their staff picture is used, and only if they agree. It shows in the preview, the hub and the PDF. Email never carries a photo.</p>
+                <select id="ask-nl-photo" className={`${input} mt-2`} value={d.data?.photo?.user_id ?? ''} onFocus={async () => { if (!photoStaff) { try { setPhotoStaff((await adminNotifications.staff(token)).staff) } catch { /* the list stays empty */ } } }}
+                  onChange={e => run('photo', () => ask.newsletterPhoto(token, d.id, e.target.value || null), e.target.value ? 'The photo is included.' : 'No photo.')}>
+                  <option value="">No photo</option>
+                  {d.data?.photo?.user_id && !(photoStaff ?? []).some(s => s.id === d.data?.photo?.user_id) && <option value={d.data.photo.user_id}>The chosen person</option>}
+                  {(photoStaff ?? []).map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                </select>
+              </div>
             )}
             {flow && d.checklist.length > 0 && (d.status === 'draft' || d.status === 'pending') && (
               <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-950">
@@ -202,7 +229,9 @@ export function DocumentPanel({ token, id, onClose, onChanged }: { token: string
               <button type="button" disabled={!!busy} className={`${btn} bg-teal text-white hover:bg-teal-dark`} onClick={save}>{busy === 'save' ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />} Save changes</button>
               <button type="button" className={`${btn} text-neutral-mid`} onClick={() => { setEditing(false); setTitle(d.title); setBody(d.body); setValues(d.values ?? {}); setInternal(d.internal_only === true) }}>Cancel</button>
             </>) : (<>
-              {flow && (letter || news) && <button type="button" onClick={() => setShowPaper(v => !v)} className={`${btn} border border-gray-200 text-neutral-dark hover:bg-neutral-light`}><FileText size={14} /> {showPaper ? 'Show the text' : 'Preview on letterhead'}</button>}
+              {d.type === 'newsletter' && <div role="group" aria-label="View the newsletter" className="inline-flex overflow-hidden rounded-lg border border-gray-200 text-sm font-semibold">{[['designed', 'Designed'], ['text', 'Text']].map(([k, l]) => <button key={k} type="button" aria-pressed={(k === 'designed') === showPaper} onClick={() => setShowPaper(k === 'designed')} className={`px-3 py-2 ${(k === 'designed') === showPaper ? 'bg-teal text-white' : 'bg-white text-neutral-dark hover:bg-neutral-light'}`}>{l}</button>)}</div>}
+              <button type="button" onClick={openViewer} className={`${btn} border border-gray-200 text-neutral-dark hover:bg-neutral-light`}><Maximize2 size={14} aria-hidden="true" /> Expand</button>
+              {flow && (letter || report) && <button type="button" onClick={() => setShowPaper(v => !v)} className={`${btn} border border-gray-200 text-neutral-dark hover:bg-neutral-light`}><FileText size={14} /> {showPaper ? 'Show the text' : 'Preview on letterhead'}</button>}
               <button type="button" onClick={() => navigator.clipboard?.writeText(d.body).catch(() => undefined)} className={`${btn} border border-gray-200 text-neutral-dark hover:bg-neutral-light`}><Copy size={14} /> Copy</button>
               {d.actions.edit && flow && <button type="button" onClick={() => setEditing(true)} className={`${btn} border border-gray-200 text-neutral-dark hover:bg-neutral-light`}><Pencil size={14} /> Edit</button>}
               {d.actions.submit && <button type="button" disabled={!!busy} onClick={() => run('submit', () => ask.submit(token, d.id), 'Submitted. It is now waiting for approval.')} className={`${btn} bg-teal text-white hover:bg-teal-dark`}>{busy === 'submit' ? <Loader2 size={14} className="animate-spin" /> : <FileText size={14} />} Submit for approval</button>}
@@ -229,6 +258,9 @@ export function DocumentPanel({ token, id, onClose, onChanged }: { token: string
           </div>
         </>)}
       </div>
+      {d && <ExpandViewer open={viewer.open} onClose={viewer.close} title={d.title} items={viewerItems}
+        switcher={d.type === 'newsletter' ? { value: showPaper ? 'designed' : 'text', options: [{ id: 'designed', label: 'Designed' }, { id: 'text', label: 'Text' }], onChange: k => setShowPaper(k === 'designed') } : undefined}
+        downloads={d.actions.share.includes('pdf') ? [{ label: 'PDF', onClick: () => run('pdf', () => ask.downloadPdf(token, d.id, d.title, sign && letter), 'The PDF has been downloaded.') }, { label: 'Word', onClick: () => run('docx', () => ask.downloadDocx(token, d.id, d.title, sign && letter), 'The Word document has been downloaded.') }] : undefined} />}
     </div>
   )
 }

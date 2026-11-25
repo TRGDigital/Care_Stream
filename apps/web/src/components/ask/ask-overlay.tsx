@@ -8,13 +8,15 @@ import Link from 'next/link'
 import { useSession } from 'next-auth/react'
 import type { LucideIcon } from 'lucide-react'
 import { AlertTriangle, ArrowLeft, Award, BarChart3, Bell, BookOpen, CalendarDays, Check, ClipboardCheck, Copy, FileText, GraduationCap, Library, Loader2, Lock, Newspaper, PoundSterling, Send, Shield, Sparkles, Trash2, UserPlus, Users, Wallet, X, Pencil, ShieldCheck, BadgeCheck, FileBarChart, Maximize2, Minimize2, Heart } from 'lucide-react'
-import { ask, AskError, parseNotificationDraft, withoutDraftBlock, notificationsLink, type AskAgent, type AskConversation, type AskDocument, type AskMessage, type AskSource, type AskActionCard } from '@/lib/ask-client'
+import { ask, AskError, parseNotificationDraft, withoutDraftBlock, notificationsLink, parseNewsletterLayouts, withoutLayoutsBlock, type AskAgent, type AskConversation, type AskDocument, type AskMessage, type AskSource, type AskActionCard } from '@/lib/ask-client'
 import { MarkdownLite } from '@/components/ask/markdown-lite'
 import { type AskPageContext, agentForPage, clampWidth, contextStarters, layoutFor, toWireContext, MAX_W, MIN_W, type PanelLayout } from '@/lib/ask-panel-state'
 import { useAskContext } from '@/lib/ask-context'
 import { closeAsk, initAskUi, openAsk, registerAskTrigger, setAskEnabled, setAskExpanded, setAskWidth, toggleAsk, useAskUi } from '@/lib/ask-ui-store'
 import { DocumentPanel } from '@/components/ask/document-panel'
 import { ActionCard } from '@/components/ask/action-card'
+import { LayoutThumbs } from '@/components/ask/layout-thumbs'
+import { ExpandViewer, type ViewerItem } from '@/components/ask/expand-viewer'
 import { NewsletterPicker } from '@/components/ask/newsletter-picker'
 
 export const OPEN_ASK_EVENT = 'cs:open-ask'
@@ -160,6 +162,7 @@ export function AskPanel({ token, layout, expanded, width, onClose }: { token: s
   const [error, setError] = useState('')
   const [lib, setLib] = useState<{ tab: 'chats' | 'docs'; chats: AskConversation[] | null; docs: AskDocument[] | null }>({ tab: 'chats', chats: null, docs: null })
   const [docId, setDocId] = useState<string | null>(null)
+  const [libView, setLibView] = useState<{ title: string; items: ViewerItem[]; doc: AskDocument } | null>(null)   // a library item shown large
   const [docFilter, setDocFilter] = useState<'all' | 'waiting'>('all')
   const dlg = useRef<HTMLDivElement>(null)
   const end = useRef<HTMLDivElement>(null)
@@ -220,6 +223,13 @@ export function AskPanel({ token, layout, expanded, width, onClose }: { token: s
   async function renameChat(c: AskConversation) { const t = window.prompt('Name this chat', c.title); if (t && t.trim()) { await ask.rename(token, c.id, t.trim()).catch(() => undefined); loadLib() } }
   async function removeChat(c: AskConversation) { if (window.confirm('Delete this chat and its answers? This cannot be undone.')) { await ask.remove(token, c.id).catch(() => undefined); loadLib() } }
   function openDoc(d: AskDocument) { setDocId(d.id) }
+  async function expandDoc(d: AskDocument) {
+    if (!token) return
+    try {
+      if (d.type === 'answer') { const r = await ask.document(token, d.id); setLibView({ title: d.title, doc: d, items: [{ kind: 'node', node: <div className="w-[680px] max-w-full p-8 text-neutral-dark"><MarkdownLite text={r.document.body} /></div> }] }) }
+      else { const p = await ask.preview(token, d.id); setLibView({ title: d.title, doc: d, items: [{ kind: 'html', html: p.html, css: p.css }] }) }
+    } catch { /* it can still be opened normally */ }
+  }
   async function removeDoc(d: AskDocument) { if (window.confirm('Delete this saved item? This cannot be undone.')) { await ask.removeDocument(token, d.id).catch(() => undefined); setDocId(null); loadLib() } }
 
   const grouped = useMemo(() => agents ?? [], [agents])
@@ -308,7 +318,8 @@ export function AskPanel({ token, layout, expanded, width, onClose }: { token: s
                   <div key={m.id} className="ml-auto max-w-[85%] rounded-2xl rounded-br-sm bg-teal px-4 py-2.5 text-[15px] text-white">{m.content}</div>
                 ) : (
                   <div key={m.id} className="max-w-full rounded-2xl rounded-bl-sm border border-gray-200 bg-white px-4 py-3 shadow-sm">
-                    <MarkdownLite text={agent.id === 'notifications' ? withoutDraftBlock(m.content) : m.content} />
+                    <MarkdownLite text={agent.id === 'notifications' ? withoutDraftBlock(m.content) : agent.id === 'newsletter' ? withoutLayoutsBlock(m.content) : m.content} />
+                    {agent.id === 'newsletter' && token && parseNewsletterLayouts(m.content) && <LayoutThumbs token={token} type={parseNewsletterLayouts(m.content)!} disabled={busy} onPick={d => send(`I would like the ${d.layout} layout (${d.id}).`)} />}
                     {agent.id === 'notifications' && parseNotificationDraft(m.content) && (() => { const d = parseNotificationDraft(m.content)!; return <div className="mt-3 rounded-lg border border-teal/30 bg-teal/5 p-3 text-sm"><p className="font-semibold text-neutral-dark">{d.title}</p><p className="mt-1 whitespace-pre-line text-neutral-dark">{d.body}</p></div> })()}
                     {(cards[m.id] ?? []).map(c => <ActionCard key={c.id} token={token} card={c} />)}
                     <SourcesFooter sources={m.sources ?? []} />
@@ -357,6 +368,7 @@ export function AskPanel({ token, layout, expanded, width, onClose }: { token: s
                   <ul className="divide-y divide-gray-100 rounded-xl border border-gray-200 bg-white">{lib.docs.filter(d => docFilter === 'all' || d.status === 'pending').map(d => (
                   <li key={d.id} className="flex items-center justify-between gap-2 px-4 py-3">
                     <button type="button" onClick={() => openDoc(d)} className="min-w-0 flex-1 text-left"><span className="block truncate text-sm font-semibold text-neutral-dark">{d.title}</span><span className="text-xs text-neutral-mid">{d.type === 'letter' ? 'Letter' : d.type === 'newsletter' ? 'Staff newsletter' : d.type === 'report' ? 'Governance report' : 'Saved answer'}{d.staff_name ? `, for ${d.staff_name}` : ''} · <span className={d.status === 'pending' ? 'font-semibold text-amber-800' : d.status === 'approved' ? 'font-semibold text-green-700' : ''}>{d.status === 'pending' ? 'Waiting for approval' : d.status === 'approved' ? 'Approved' : d.status === 'shared' ? 'Shared' : 'Draft'}</span> · {timeAgo(d.updated_at)}{d.mine === false ? ' · written by a colleague' : ''}</span></button>
+                    <button type="button" onClick={() => expandDoc(d)} aria-label={`Expand ${d.title}`} title="Click to enlarge" className="rounded p-1.5 text-neutral-mid hover:bg-neutral-light hover:text-neutral-dark focus:outline-none focus-visible:ring-2 focus-visible:ring-teal"><Maximize2 size={14} aria-hidden="true" /></button>
                     {(d.mine !== false) && (d.type === 'answer' || d.status === 'draft') && <button type="button" onClick={() => removeDoc(d)} aria-label={`Delete ${d.title}`} className="rounded p-1.5 text-neutral-mid hover:bg-red-50 hover:text-red-700"><Trash2 size={14} /></button>}
                   </li>))}</ul></>
               )}
@@ -374,6 +386,8 @@ export function AskPanel({ token, layout, expanded, width, onClose }: { token: s
           </div>
         )}
         {docId && <DocumentPanel token={token} id={docId} onClose={() => setDocId(null)} onChanged={loadLib} />}
+        {libView && token && <ExpandViewer open onClose={() => setLibView(null)} title={libView.title} items={libView.items}
+          downloads={(libView.doc.status === 'approved' || libView.doc.status === 'shared') && libView.doc.type !== 'answer' ? [{ label: 'PDF', onClick: () => ask.downloadPdf(token, libView.doc.id, libView.doc.title) }, { label: 'Word', onClick: () => ask.downloadDocx(token, libView.doc.id, libView.doc.title) }] : undefined} />}
       </div>
     </div>
   )

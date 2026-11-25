@@ -11,10 +11,12 @@ import { ok, err } from '../lib/response'
 import { writeAuditLog } from '../lib/audit'
 import { askPilotEnabled } from '../lib/ask-pilot'
 import * as store from '../services/ask/store'
-import { canShare } from '../services/ask-docs/workflow'
+import { canShare, canEdit } from '../services/ask-docs/workflow'
 import { docxFor } from '../services/ask-docs/share'
 import { previewHtml } from '../services/ask-docs/render-doc'
 import { loadLetterhead } from '../services/letters/letterhead'
+import { prisma } from '../db/client'
+import { sampleDesignsFor } from '../services/ask-docs/newsletter-design-doc'
 import { getMeta } from '../services/letters/signatures'
 
 export const askDocsRouter = Router()
@@ -38,10 +40,45 @@ askDocsRouter.get('/:id/preview', async (req: Request, res: Response) => {
   const t = getTenantId(), u = req.user!.sub
   const d = await store.getDocumentFor(t, u, String(req.params.id)); if (!d) { notFound(res); return }
   try {
-    const { html, css } = await previewHtml({ tenantId: t, doc: d, signerUserId: wantsSignature(req) ? u : null })
+    const { html, css } = await previewHtml({ tenantId: t, doc: d, signerUserId: wantsSignature(req) ? u : null, sentByUserId: u })
     res.setHeader('Cache-Control', 'private, no-store')
     ok(res, { html, css })
   } catch (e: any) { err(res, 'PREVIEW_FAILED', 'The preview could not be made just now.', 500) }
+})
+
+// The designed newsletter for text that has not been saved yet, so the preview follows the edits as they are typed. Nothing is stored.
+askDocsRouter.post('/:id/preview-draft', async (req: Request, res: Response) => {
+  const t = getTenantId(), u = req.user!.sub
+  const d = await store.getDocumentFor(t, u, String(req.params.id)); if (!d || d.type !== 'newsletter') { notFound(res); return }
+  try {
+    const draft = { title: typeof req.body?.title === 'string' ? req.body.title.slice(0, 160) : undefined, body: typeof req.body?.body === 'string' ? req.body.body.slice(0, 20000) : undefined }
+    const { html } = await previewHtml({ tenantId: t, doc: d, sentByUserId: u, draft })
+    res.setHeader('Cache-Control', 'private, no-store')
+    ok(res, { html })
+  } catch (e: any) { err(res, 'PREVIEW_FAILED', 'The preview could not be made just now.', 500) }
+})
+
+// A photo of one person in the newsletter (employee of the month and so on): only when the administrator chooses a person here, and only their staff picture.
+// user_id null removes it. Email never carries a photo, only the hub, the preview and the PDF.
+askDocsRouter.post('/:id/newsletter-photo', async (req: Request, res: Response) => {
+  const t = getTenantId(), u = req.user!.sub
+  const d = await store.getDocumentFor(t, u, String(req.params.id)); if (!d || d.type !== 'newsletter') { notFound(res); return }
+  const ed = canEdit(d, u); if (!ed.ok) { err(res, 'NOT_ALLOWED', ed.reason, 409); return }
+  const uid = req.body?.user_id == null || req.body.user_id === '' ? null : String(req.body.user_id)
+  if (uid) {
+    const person = await (prisma as any).user.findFirst({ where: { id: uid, tenant_id: t, is_active: true, is_shared: false }, select: { id: true } })
+    if (!person) { err(res, 'INVALID', 'That person was not found.', 400); return }
+  }
+  const data = { ...(d.data ?? {}), photo: uid ? { user_id: uid, include: true } : null }
+  await store.updateDocumentContent(t, d.id, { data })
+  void writeAuditLog({ tenant_id: t, user_id: u, event_type: 'ask_newsletter_photo_set', entity_type: 'ask_document', entity_id: d.id, metadata: { included: !!uid } })
+  ok(res, { saved: true, photo_user_id: uid })
+})
+
+// Sample designs (marked SAMPLE) of every layout of one newsletter type, for the thumbnails when choosing a layout.
+askDocsRouter.get('/newsletter-samples/:type', async (req: Request, res: Response) => {
+  const type = String(req.params.type).replace(/[^a-z0-9-]/g, '').slice(0, 60)
+  try { res.setHeader('Cache-Control', 'private, max-age=300'); ok(res, { designs: await sampleDesignsFor(getTenantId(), type) }) } catch { err(res, 'PREVIEW_FAILED', 'The samples could not be made just now.', 500) }
 })
 
 askDocsRouter.get('/:id/docx', async (req: Request, res: Response) => {

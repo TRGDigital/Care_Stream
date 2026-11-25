@@ -53,6 +53,8 @@ export const myNotifications = {
   list: (t: string) => call<{ notifications: MyItem[] }>('/me/notifications', t),
   get: (t: string, id: string) => call<{ notification: MyItem & { body: string } }>(`/me/notifications/${encodeURIComponent(id)}`, t),
   markRead: (t: string, id: string) => call<{ read_at: string }>(`/me/notifications/${encodeURIComponent(id)}/read`, t, { method: 'POST' }),
+  /** The designed newsletter behind a notification, when it has one (it rejects when it does not). */
+  designed: (t: string, id: string) => call<{ html: string }>(`/me/notifications/${encodeURIComponent(id)}/designed`, t),
 }
 
 export const TITLE_MAX = 120

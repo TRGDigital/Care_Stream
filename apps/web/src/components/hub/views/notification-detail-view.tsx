@@ -7,6 +7,8 @@ import { Check, ChevronLeft, Loader2 } from 'lucide-react'
 import { AttachmentList } from '@/components/notifications/attachments'
 import { myNotifications, fmtWhen } from '@/lib/notifications-client'
 import { myLetters, type MyLetter } from '@/lib/letters-client'
+import { ExpandViewer, Expandable, useExpandViewer } from '@/components/ask/expand-viewer'
+import { FitHtml } from '@/components/ask/fit-html'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
 const initials = (n: string) => n.split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0]!.toUpperCase()).join('') || '?'
@@ -19,8 +21,11 @@ export function NotificationDetailView({ id, onBack, onOpenLetter }: { id: strin
   const [missing, setMissing] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
+  const [designed, setDesigned] = useState<string | null>(null)   // a newsletter sent designed: shown as it was designed
+  const viewer = useExpandViewer()
   const [letter, setLetter] = useState<MyLetter | null>(null)   // when this notification is about a letter shared in my hub
   useEffect(() => { if (token && id) myLetters.byNotification(token, id).then(r => setLetter(r.letter)).catch(() => setLetter(null)) }, [token, id])
+  useEffect(() => { setDesigned(null); if (token && id) myNotifications.designed(token, id).then(r => setDesigned(r.html)).catch(() => setDesigned(null)) }, [token, id])
   useEffect(() => { if (token && id) myNotifications.get(token, id).then(r => setN(r.notification)).catch(() => setMissing(true)) }, [token, id])
 
   async function markRead() {
@@ -46,9 +51,16 @@ export function NotificationDetailView({ id, onBack, onOpenLetter }: { id: strin
                 <div><p className="text-sm font-semibold text-neutral-dark">{n.sender_name}</p><p className="text-xs text-neutral-mid">{fmtWhen(n.created_at)}</p></div>
               </div>
               <h1 className="mt-4 text-xl font-bold leading-snug text-neutral-dark">{n.title}</h1>
+              {designed ? (
+                <div className="mt-3">
+                  <Expandable label="The newsletter" onOpen={viewer.show}><FitHtml html={designed} className="rounded-xl border border-gray-200" /></Expandable>
+                  <ExpandViewer open={viewer.open} onClose={viewer.close} title={n.title} items={[{ kind: 'html', html: designed }]} />
+                </div>
+              ) : (
               <div className="mt-3 space-y-3 text-base leading-relaxed text-neutral-dark">
                 {n.body.split(/\n{2,}/).filter(p => p.trim()).map((p, i) => <p key={i} className="whitespace-pre-line">{p}</p>)}
               </div>
+              )}
               {letter && onOpenLetter && (
                 <button type="button" onClick={() => onOpenLetter(letter.id)} className="mt-4 inline-flex min-h-[48px] items-center gap-2 rounded-xl bg-teal px-5 py-2.5 text-base font-semibold text-white hover:bg-teal-dark">Open the letter</button>
               )}

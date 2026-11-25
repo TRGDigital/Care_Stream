@@ -35,10 +35,11 @@ export interface AskDocFull {
   id: string; type: string; title: string; body: string; status: string; version: number; updated_at: string | null; mine: boolean; created_by: string
   staff_name: string | null; internal_only?: boolean; checklist: string[]; references: Array<{ label: string; url: string }>; shared: Array<{ method: string; at: string }>
   share_intent?: ShareIntent | null; share_intent_text?: string; ack_default?: boolean; hub_shares?: HubShare[]
-  values?: Record<string, string | number>; fields?: AskDocField[]; actions: AskDocActions; data?: { review_note?: { note: string; at: string } } | null
+  values?: Record<string, string | number>; fields?: AskDocField[]; actions: AskDocActions; data?: { review_note?: { note: string; at: string }; photo?: { user_id: string; include: boolean } | null; template_id?: string | null } | null
 }
 export interface AskApproval { id: string; type: string; title: string; staff_name: string | null; mine: boolean; updated_at: string | null }
 
+export interface NewsletterSample { id: string; layout: 'short' | 'standard' | 'detailed' | string; title: string; html: string }
 export interface NewsletterLibrary {
   categories: Array<{ id: string; title: string; blurb: string; types: Array<{ type: string; title: string; purpose: string; layouts: Array<{ id: string; layout: 'short' | 'standard' | 'detailed'; sections: number }> }> }>
   templates: Array<{ id: string; type: string; layout: string; title: string; heads_up: string | null; sections: Array<{ key: string; title: string; from_data: boolean; needs_ticks: boolean }> }>
@@ -62,6 +63,12 @@ export const ask = {
     cancel: (t: string, id: string) => call<{ cancelled: boolean }>(`/ask/actions/${encodeURIComponent(id)}/cancel`, t, { method: 'POST', body: '{}' }),
   },
   newsletterTemplates: (t: string) => call<NewsletterLibrary>('/ask/newsletter-templates', t),
+  /** Sample designs (marked SAMPLE) of every layout of one newsletter type, for choosing a layout by its looks. */
+  newsletterSamples: (t: string, type: string) => call<{ designs: NewsletterSample[] }>(`/ask-docs/newsletter-samples/${encodeURIComponent(type)}`, t),
+  /** The designed newsletter for text that is being edited and is not saved yet. */
+  previewDraft: (t: string, id: string, b: { title?: string; body?: string }) => call<{ html: string }>(`/ask-docs/${encodeURIComponent(id)}/preview-draft`, t, { method: 'POST', body: JSON.stringify(b) }),
+  /** Include one person's staff photo in the newsletter (null removes it). */
+  newsletterPhoto: (t: string, id: string, userId: string | null) => call<{ saved: boolean; photo_user_id: string | null }>(`/ask-docs/${encodeURIComponent(id)}/newsletter-photo`, t, { method: 'POST', body: JSON.stringify({ user_id: userId }) }),
   documents: (t: string) => call<{ documents: AskDocument[] }>('/ask/documents', t),
   document: (t: string, id: string) => call<{ document: AskDocFull }>(`/ask/documents/${encodeURIComponent(id)}`, t),
   approvals: (t: string) => call<{ approvals: AskApproval[] }>('/ask/approvals', t),
@@ -112,3 +119,11 @@ export function parseNotificationDraft(text: string): { title: string; body: str
 }
 export const withoutDraftBlock = (text: string) => text.replace(/```notification[\s\S]*?```/gi, '').trim()
 export const notificationsLink = (d: { title: string; body: string }) => `/notifications?title=${encodeURIComponent(d.title)}&body=${encodeURIComponent(d.body)}`
+
+/** The agent offers layouts with a fenced block (type: employee-of-the-month): pulled out so the screen can show a small picture of each layout. */
+export function parseNewsletterLayouts(text: string): string | null {
+  const m = /```newsletter-layouts\s*\n([\s\S]*?)```/i.exec(text)
+  const t = m ? /^type:\s*([a-z0-9-]{3,60})\s*$/im.exec(m[1]) : null
+  return t ? t[1] : null
+}
+export const withoutLayoutsBlock = (text: string) => text.replace(/```newsletter-layouts[\s\S]*?```/gi, '').trim()

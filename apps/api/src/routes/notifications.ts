@@ -57,13 +57,13 @@ async function sendFile(res: Response, f: any) {
   res.send(buf)
 }
 
-async function sendTo(opts: { notification: any; people: Array<{ id: string; name: string; email: string }>; orgName: string; kind: 'new' | 'reminder'; attachments?: number }): Promise<{ emailed: number; failed: number }> {
+async function sendTo(opts: { notification: any; people: Array<{ id: string; name: string; email: string }>; orgName: string; kind: 'new' | 'reminder'; attachments?: number; designedHtml?: string }): Promise<{ emailed: number; failed: number }> {
   let emailed = 0, failed = 0
   const queue = [...opts.people]
   const worker = async () => {
     for (let person = queue.shift(); person; person = queue.shift()) {
       try {
-        await sendStaffNotificationEmail({ to: person.email, name: person.name, orgName: opts.orgName, title: opts.notification.title, body: opts.notification.body, notificationId: opts.notification.id, actorUserId: opts.notification.created_by, kind: opts.kind , attachments: opts.attachments ?? 0})
+        await sendStaffNotificationEmail({ to: person.email, name: person.name, orgName: opts.orgName, title: opts.notification.title, body: opts.notification.body, notificationId: opts.notification.id, actorUserId: opts.notification.created_by, kind: opts.kind , attachments: opts.attachments ?? 0, designedHtml: opts.designedHtml })
         await p().staffNotificationRecipient.updateMany({ where: { notification_id: opts.notification.id, tenant_id: opts.notification.tenant_id, user_id: person.id }, data: { email_sent_at: new Date() } })
         emailed++
       } catch (e: any) { failed++; console.error('[notifications] email failed:', String(e?.message ?? e).slice(0, 120)) }   // the notification still shows in their hub
@@ -76,7 +76,7 @@ async function sendTo(opts: { notification: any; people: Array<{ id: string; nam
 
 /** Creates a notification for the chosen staff, attaches the (already uploaded, still unsent) documents, records who it went to and emails them. Used by the Notifications page and by
  *  Ask CareStream when an approved letter or newsletter is shared. The caller has already checked the title, body and documents. */
-export async function createAndSendNotification(o: { tenantId: string; userId: string; title: string; body: string; audience: unknown; userIds?: unknown; files: any[]; email?: boolean; skipDailyLimit?: boolean; via?: string }):
+export async function createAndSendNotification(o: { tenantId: string; userId: string; title: string; body: string; audience: unknown; userIds?: unknown; files: any[]; email?: boolean; skipDailyLimit?: boolean; via?: string; emailHtml?: string; hubHtml?: string }):
   Promise<{ ok: true; id: string; recipients: number; emailed: number; email_failed: number; dropped: number } | { ok: false; code: string; message: string; status: number }> {
   const { tenantId } = o
   const sentToday = o.skipDailyLimit ? 0 : await p().staffNotification.count({ where: { tenant_id: tenantId, created_at: { gte: new Date(Date.now() - 24 * 3600_000) } } })
@@ -92,8 +92,10 @@ export async function createAndSendNotification(o: { tenantId: string; userId: s
   if (o.files.length) await p().staffNotificationFile.updateMany({ where: { id: { in: o.files.map((f: any) => f.id) }, tenant_id: tenantId, notification_id: null }, data: { notification_id: n.id } })
   await p().staffNotificationRecipient.createMany({ data: r.people.map(x => ({ notification_id: n.id, tenant_id: tenantId, user_id: x.id })), skipDuplicates: true })
   void writeAuditLog({ tenant_id: tenantId, user_id: o.userId, event_type: 'staff_notification_sent', entity_type: 'staff_notification', entity_id: n.id, metadata: { audience: r.audience, recipients: r.people.length, ...(o.via ? { via: o.via } : {}) } })
+  // A designed newsletter: the hub copy is kept privately (only the people it was sent to, and the administrators, can read it).
+  if (o.hubHtml) { try { await putPrivateObject(`tenants/${tenantId}/newsletters/${n.id}.html`, Buffer.from(o.hubHtml, 'utf8'), 'text/html') } catch { /* the hub still shows the text */ } }
   // Ask CareStream can send a hub only notification (email off); every other caller keeps the usual hub message plus email.
-  const sent = o.email === false ? { emailed: 0, failed: 0 } : await sendTo({ notification: n, people: r.people, orgName: tenant?.name ?? 'Your service', kind: 'new', attachments: o.files.length })
+  const sent = o.email === false ? { emailed: 0, failed: 0 } : await sendTo({ notification: n, people: r.people, orgName: tenant?.name ?? 'Your service', kind: 'new', attachments: o.files.length, designedHtml: o.emailHtml })
   return { ok: true, id: n.id, recipients: r.people.length, emailed: sent.emailed, email_failed: sent.failed, dropped: r.dropped }
 }
 
@@ -289,6 +291,18 @@ meNotificationsRouter.get('/:id', async (req: Request, res: Response) => {
     const files = (await filesFor(tenantOf(req), [n.id])).get(n.id) ?? []
     ok(res, { notification: { ...rest, body: _body, files: files.map(fileDto) } })
   } catch (e) { isMissingTable(e) ? notReady(res) : err(res, 'ERROR', 'Could not load that notification.', 500) }
+})
+
+// The designed newsletter behind a notification, for the people it was sent to. 404 when the notification has no designed version (most do not).
+meNotificationsRouter.get('/:id/designed', async (req: Request, res: Response) => {
+  try {
+    const [n] = await mine(tenantOf(req), userOf(req), { notification_id: String(req.params.id) })   // the same check as reading it: it must be theirs and not withdrawn
+    if (!n) { err(res, 'NOT_FOUND', 'Not found.', 404); return }
+    let html: string
+    try { html = (await downloadFile(`tenants/${tenantOf(req)}/newsletters/${n.id}.html`)).toString('utf8') } catch { err(res, 'NOT_FOUND', 'Not found.', 404); return }
+    res.setHeader('Cache-Control', 'private, no-store')
+    ok(res, { html })
+  } catch (e) { err(res, 'ERROR', 'Could not load that newsletter.', 500) }
 })
 
 // A person the notification was sent to downloads one of its documents. Nobody else can, even in the same account.

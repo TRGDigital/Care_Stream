@@ -1,5 +1,6 @@
 // A small, safe renderer for agent answers: paragraphs, bullet and numbered lists, tables, **bold** and nothing else. It builds React elements only
 // (never inserts HTML), so nothing in an answer can run as a script or a link.
+import { ExpandViewer, Expandable, useExpandViewer } from './expand-viewer'
 import React from 'react'
 
 function inline(text: string, key: string): React.ReactNode {
@@ -24,6 +25,17 @@ export function parseBlocks(src: string): Array<{ kind: 'p' | 'ul' | 'ol' | 'tab
   return out
 }
 
+/** A table in an answer: click it (or press Enter or Space) to see it large in the shared viewer. */
+function TableBlock({ table }: { table: React.ReactNode }) {
+  const viewer = useExpandViewer()
+  return (
+    <>
+      <Expandable label="A table" onOpen={viewer.show}><div className="overflow-x-auto no-scrollbar rounded-lg border border-gray-200">{table}</div></Expandable>
+      <ExpandViewer open={viewer.open} onClose={viewer.close} title="Table" items={[{ kind: 'node', node: <div className="min-w-[480px] p-6 text-base text-neutral-dark">{table}</div> }]} />
+    </>
+  )
+}
+
 export function MarkdownLite({ text }: { text: string }) {
   return (
     <div className="space-y-3 text-[15px] leading-relaxed text-neutral-dark">
@@ -35,14 +47,13 @@ export function MarkdownLite({ text }: { text: string }) {
           const rows = b.lines.filter(l => l.replace(/[|:\s-]/g, '') !== '')   // drop the ---|--- separator row
           const cells = rows.map(l => l.trim().replace(/^\||\|$/g, '').split('|').map(c => c.trim()))
           const [head, ...body] = cells
-          return (
-            <div key={i} className="overflow-x-auto no-scrollbar rounded-lg border border-gray-200">
-              <table className="min-w-full text-sm">
-                {head && <thead className="bg-neutral-light"><tr>{head.map((c, j) => <th key={j} className="px-3 py-1.5 text-left font-semibold">{inline(c, `th${i}${j}`)}</th>)}</tr></thead>}
-                <tbody>{body.map((r, j) => <tr key={j} className="border-t border-gray-100">{r.map((c, k) => <td key={k} className="px-3 py-1.5">{inline(c, `td${i}${j}${k}`)}</td>)}</tr>)}</tbody>
-              </table>
-            </div>
+          const table = (
+            <table className="min-w-full text-sm">
+              {head && <thead className="bg-neutral-light"><tr>{head.map((c, j) => <th key={j} className="px-3 py-1.5 text-left font-semibold">{inline(c, `th${i}${j}`)}</th>)}</tr></thead>}
+              <tbody>{body.map((r, j) => <tr key={j} className="border-t border-gray-100">{r.map((c, k) => <td key={k} className="px-3 py-1.5">{inline(c, `td${i}${j}${k}`)}</td>)}</tr>)}</tbody>
+            </table>
           )
+          return <TableBlock key={i} table={table} />
         }
         return <p key={i}>{b.lines.map((l, j) => <React.Fragment key={j}>{j > 0 && <br />}{inline(l, `p${i}${j}`)}</React.Fragment>)}</p>
       })}

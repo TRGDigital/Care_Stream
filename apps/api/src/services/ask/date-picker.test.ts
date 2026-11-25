@@ -95,3 +95,9 @@ test('APPROVAL STEP: the Share panel carries the submit, approve and send back c
   assert.match(dp, /id="ask-approval-step"/); assert.match(dp, /\{approvalNode\}/); assert.match(dp, /\(!flow \|\| isFinal\) && <SharePanel/)
   assert.match(dp, /Submit for approval/); assert.match(dp, /Send back to edit/); assert.match(dp, /Another administrator needs to approve it/)
 })
+
+test('SHARE SHEET: sharing opens as its own sheet over the document with the Send button pinned in a footer, so a long staff list can never push Send off the screen', () => {
+  const sp = web('components/ask/share-panel.tsx')
+  assert.match(sp, /role="dialog" aria-modal="true" aria-label="Share this" className="absolute inset-0 z-30 flex flex-col/)
+  assert.match(sp, /<footer className="flex-shrink-0[^>]*>[^]*Send<\/button>/); assert.match(sp, /aria-label="Close sharing"/)
+})

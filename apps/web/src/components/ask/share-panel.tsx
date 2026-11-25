@@ -4,7 +4,7 @@
 // or all staff), with a summary of exactly what will happen before anything is sent. The summary comes from the server (counts, names for ten or fewer, the Ask settings limits, the
 // approval rule). Nothing is sent until the administrator presses Send and then confirms it once more. A letter goes to one person at a time and a print only letter is never sent.
 import { useEffect, useRef, useState, type ReactNode } from 'react'
-import { Check, Eye, Loader2, Send } from 'lucide-react'
+import { Check, Eye, Loader2, Send, X } from 'lucide-react'
 import { ask, AskError, type SharePlan } from '@/lib/ask-client'
 import { StaffPicker, useStaff } from '@/components/ask/staff-picker'
 
@@ -61,8 +61,14 @@ export function SharePanel({ token, doc, sign, needsAck, onPreview, onSent, appr
         <span className="text-xs text-neutral-mid">Nothing goes until you press Send.</span>
         {done && <span role="status" className="inline-flex items-center gap-1 text-xs font-semibold text-green-800"><Check size={12} aria-hidden="true" />{done}</span>}
       </div>
+      {/* Sharing opens as its own sheet over the document, with the Send button pinned at the bottom, so it is never pushed off the screen by a long list of staff. */}
       {open && (
-        <div className="mt-3 space-y-3">
+        <div role="dialog" aria-modal="true" aria-label="Share this" className="absolute inset-0 z-30 flex flex-col bg-white text-sm text-neutral-dark">
+          <header className="flex flex-shrink-0 items-center justify-between gap-3 border-b border-gray-200 px-4 py-3">
+            <h3 className="text-base font-bold">Share this</h3>
+            <button type="button" onClick={() => setOpen(false)} aria-label="Close sharing" className="rounded p-1 text-neutral-mid hover:bg-neutral-light"><X size={18} aria-hidden="true" /></button>
+          </header>
+          <div className="min-h-0 flex-1 space-y-3 overflow-y-auto no-scrollbar px-4 py-3">
           {approval}
           <fieldset><legend className="text-xs font-semibold uppercase tracking-wide text-neutral-mid">How</legend>
             <div className="mt-1 space-y-1">
@@ -102,6 +108,8 @@ export function SharePanel({ token, doc, sign, needsAck, onPreview, onSent, appr
             })()}
             {onPreview && <button type="button" onClick={onPreview} className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-teal underline"><Eye size={12} aria-hidden="true" /> Preview what they will get</button>}
           </div>
+          </div>
+          <footer className="flex-shrink-0 space-y-2 border-t border-gray-200 bg-white px-4 py-3">
           {error && <p role="alert" className="text-xs font-medium text-red-700">{error}</p>}
           <div className="flex flex-wrap items-center gap-2">
             {!confirming
@@ -110,6 +118,7 @@ export function SharePanel({ token, doc, sign, needsAck, onPreview, onSent, appr
                 <button type="button" disabled={busy} onClick={() => setConfirming(false)} className="text-sm font-medium text-neutral-mid hover:text-neutral-dark">Not yet</button></>}
             {confirming && <span className="text-xs text-neutral-mid">It cannot be taken back once sent{letter ? ', but a letter in the hub can be withdrawn' : ''}.</span>}
           </div>
+          </footer>
         </div>
       )}
     </div>

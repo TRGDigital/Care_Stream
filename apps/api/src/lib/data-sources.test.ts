@@ -4,6 +4,8 @@ import fs from 'fs'
 import path from 'path'
 import {
   fuelCsvUrl, parseFuel, validateFuel,
+  taxYearOf, ratesPageSlug, parseStatutoryPay, validateStatutoryPay, parseEmployerNi, validateEmployerNi, employerNi, parsePensionAe, validatePensionAe, pensionEmployerMinimum,
+  parseDbsFees, validateDbsFees, parseEarningsGrowth, validateEarningsGrowth, parseBankRate, validateBankRate, parseHolidayRules, validateHolidayRules,
   parseNlw, validateNlw, parseOnsRate, validateRate, parseBankHolidays, validateBankHolidays, parseSsp, validateSsp, parseMileage, validateMileage,
   validateRealLivingWage, applyCheck, applyManual, checkAll, toFigure, isStale, asOfText, sameFigure, sourceByKey, SOURCES, type Row, type Db, type RunDeps,
 } from './data-sources'
@@ -168,6 +170,13 @@ const PAGES = () => ({
   'https://www.gov.uk/bank-holidays.json': fx('gov-bank-holidays.json'),
   'https://www.gov.uk/api/content/statutory-sick-pay': fx('gov-ssp.json'),
   'https://www.gov.uk/api/content/government/statistics/weekly-road-fuel-prices': fx('gov-fuel.json'),
+  'https://www.gov.uk/api/content/guidance/rates-and-thresholds-for-employers-2026-to-2027': fx('gov-rates-thresholds.json'),
+  'https://www.gov.uk/api/content/workplace-pensions': fx('gov-workplace-pensions.json'),
+  'https://www.gov.uk/api/content/dbs-check-applicant-criminal-record': fx('gov-dbs.json'),
+  'https://www.ons.gov.uk/employmentandlabourmarket/peopleinwork/earningsandworkinghours/timeseries/kai9/lms/data': fx('ons-kai9.json'),
+  'https://www.ons.gov.uk/employmentandlabourmarket/peopleinwork/earningsandworkinghours/timeseries/kab9/lms/data': fx('ons-kab9.json'),
+  'https://www.bankofengland.co.uk/boeapps/database/Bank-Rate.asp': fxText('boe-bank-rate.html'),
+  'https://www.gov.uk/api/content/holiday-entitlement-rights': fx('gov-holiday-rights.json'),
   'https://assets.publishing.service.gov.uk/media/x/CSV__2018_-__.csv': fxText('fuel.csv'),
   'https://www.gov.uk/api/content/expenses-and-benefits-business-travel-mileage': fx('gov-mileage.json'),
 })
@@ -240,4 +249,82 @@ test('HOME CARE: three manual hourly figures are checked', () => {
     assert.match(d.validate({ hourly_gbp: 3, basis: 'median' })!, /outside/)
     assert.match(d.validate({ hourly_gbp: 31 })!, /basis/)
   }
+})
+
+import { STATUTORY_WEEKS, STATUTORY_CAP_DAYS, IRREGULAR_HOURS_RATE } from './holiday-entitlement'
+test('PAYROLL: the tax year changes on 6 April, and the page slug follows it', () => {
+  assert.equal(taxYearOf('2027-04-05'), 2026); assert.equal(taxYearOf('2027-04-06'), 2027); assert.equal(taxYearOf('2026-11-24'), 2026); assert.equal(taxYearOf('2027-01-01'), 2026); assert.equal(taxYearOf('2026-04-05'), 2025)
+  assert.equal(ratesPageSlug(2026), 'rates-and-thresholds-for-employers-2026-to-2027')
+})
+test('PAYROLL: statutory pay is read from the rates page, and each type is checked', () => {
+  const f = parseStatutoryPay(fx('gov-rates-thresholds.json'))
+  assert.equal(f.effective_from, '2026-04-06'); assert.equal(f.value.tax_year, '2026 to 2027'); assert.equal(f.value.weekly_rate_gbp, 194.32); assert.equal(f.value.earnings_share_pct, 90)
+  for (const k of ['smp', 'spp', 'sap', 'shpp']) assert.equal(f.value.rates[k].weekly_gbp, 194.32, k)
+  assert.equal(f.value.rates.smp.first_six_weeks_pct, 90); assert.equal(f.value.smp_applies_from, '2026-04-05')
+  assert.equal(validateStatutoryPay(f.value), null)
+  assert.match(validateStatutoryPay({ ...f.value, rates: { ...f.value.rates, spp: { weekly_gbp: 19.4, earnings_share_pct: 90 } } })!, /SPP/)
+})
+test('PAYROLL: employer National Insurance reads the rate and thresholds, refuses a rate that differs by band, and the helper works the cost out', () => {
+  const f = parseEmployerNi(fx('gov-rates-thresholds.json'))
+  assert.equal(f.value.secondary_rate_pct, 15); assert.deepEqual(f.value.thresholds.secondary_threshold, { week: 96, month: 417, year: 5000 })
+  assert.equal(f.value.thresholds.lower_earnings_limit.year, 6708); assert.equal(f.value.thresholds.upper_earnings_limit.month, 4189); assert.equal(validateEmployerNi(f.value), null)
+  assert.equal(employerNi(f.value, 2000, 'month').employer_ni, 237.45)       // (2000 - 417) x 15%
+  assert.equal(employerNi(f.value, 24000, 'year').employer_ni, 2850)          // (24000 - 5000) x 15%
+  assert.equal(employerNi(f.value, 300, 'week').employer_ni, 30.6)            // (300 - 96) x 15%
+  assert.equal(employerNi(f.value, 400, 'month').employer_ni, 0)
+  assert.equal(employerNi(f.value, 3000, 'month', 'under_21').employer_ni, 0)   // nothing up to the upper limit
+  assert.equal(employerNi(f.value, 5000, 'month', 'apprentice_under_25').employer_ni, 121.65)   // (5000 - 4189) x 15%
+  const odd = fx('gov-rates-thresholds.json'); odd.details.body = odd.details.body.replace('<td>A</td>\n      <td>15%</td>', '<td>A</td>\n      <td>13.8%</td>')
+  assert.throws(() => parseEmployerNi(odd), /different rates/)
+  assert.match(validateEmployerNi({ ...f.value, secondary_rate_pct: 1.5 })!, /outside/)
+})
+test('PAYROLL: the rates page is asked for by tax year, and next year is shown as upcoming only when it exists', async () => {
+  const d = sourceByKey('employer_ni')!
+  const asked: string[] = []
+  const cur = fx('gov-rates-thresholds.json')
+  const mk = (pages: Record<string, any>) => async (u: string) => { asked.push(u); if (!(u in pages)) throw new Error('HTTP 404'); return pages[u] }
+  const u26 = 'https://www.gov.uk/api/content/guidance/rates-and-thresholds-for-employers-2026-to-2027', u27 = 'https://www.gov.uk/api/content/guidance/rates-and-thresholds-for-employers-2027-to-2028'
+  const a = await d.fetch!(mk({ [u26]: cur }), '2027-04-05')
+  assert.equal(asked[0], u26); assert.equal(a.value.upcoming, null)
+  const next = JSON.parse(JSON.stringify(cur)); next.base_path = '/guidance/rates-and-thresholds-for-employers-2027-to-2028'; next.title = 'Rates and thresholds for employers 2027 to 2028'
+  const b = await d.fetch!(mk({ [u26]: cur, [u27]: next }), '2027-04-05')
+  assert.equal(b.value.upcoming.tax_year, '2027 to 2028'); assert.equal(b.value.upcoming.effective_from, '2027-04-06')
+  asked.length = 0
+  await d.fetch!(mk({ [u27]: next }), '2027-04-06')
+  assert.equal(asked[0], u27)                                                    // from 6 April the new year's page is the one that counts
+})
+test('PAYROLL: pension auto enrolment thresholds and the employer minimum', () => {
+  const f = parsePensionAe(fx('gov-workplace-pensions.json'))
+  assert.equal(f.value.earnings_trigger_gbp, 10000); assert.equal(f.value.qualifying_earnings_lower_gbp, 6240); assert.equal(f.value.qualifying_earnings_upper_gbp, 50270)
+  assert.equal(f.value.minimum_employer_pct, 3); assert.equal(f.value.employee_pct, 5); assert.equal(f.value.minimum_total_pct, 8); assert.equal(f.value.age_from, 22)
+  assert.equal(validatePensionAe(f.value), null)
+  assert.match(validatePensionAe({ ...f.value, minimum_total_pct: 9 })!, /add up/)
+  assert.deepEqual(pensionEmployerMinimum(f.value, 27000), { qualifying_earnings: 20760, employer_minimum: 622.8, employer_pct: 3, enrolled_automatically: true })
+  assert.equal(pensionEmployerMinimum(f.value, 9000).enrolled_automatically, false)
+  assert.throws(() => parsePensionAe({ details: { parts: [{ body: '<p>nothing here</p>' }] } }), /not found/)
+})
+test('PAYROLL: DBS fees, with volunteers free', () => {
+  const f = parseDbsFees(fx('gov-dbs.json'))
+  assert.equal(f.value.basic_gbp, 20); assert.equal(f.value.standard_gbp, 20); assert.equal(f.value.enhanced_gbp, 41); assert.equal(f.value.enhanced_barred_lists_gbp, 41); assert.equal(f.value.volunteers_free, true)
+  assert.equal(validateDbsFees(f.value), null); assert.match(validateDbsFees({ ...f.value, enhanced_gbp: 2 })!, /enhanced/)
+  assert.throws(() => parseDbsFees({ details: { parts: [{ body: '<p>nothing</p>' }] } }), /not found/)
+})
+test('PAYROLL: earnings growth is the ONS headline plus total pay worked out from the levels, and Bank Rate comes from the Bank of England table', () => {
+  const e = parseEarningsGrowth(fx('ons-kai9.json'), fx('ons-kab9.json'))
+  assert.equal(e.value.latest.rate, 3.5); assert.equal(e.value.latest.period, '2026-09'); assert.equal(e.effective_from, '2026-09-01'); assert.equal(e.next_check_due, '2026-12-16')
+  assert.equal(e.value.total_pay.weekly_gbp, 761); assert.ok(e.value.total_pay.growth_3m_pct > 0 && e.value.total_pay.growth_3m_pct < 10); assert.equal(validateEarningsGrowth(e.value), null)
+  assert.throws(() => parseEarningsGrowth(fx('ons-kab9.json'), fx('ons-kab9.json')), /not KAI9|not KAB9/)
+  const b = parseBankRate(fxText('boe-bank-rate.html'))
+  assert.equal(b.value.rate_pct, 4); assert.equal(b.value.changed, '2026-11-05'); assert.equal(b.value.previous.rate, 3.75); assert.equal(b.effective_from, '2026-11-05'); assert.equal(validateBankRate(b.value), null)
+  assert.ok(!b.value.history.some((h: any) => h.changed > '2026-12-31'))      // two digit years from the 1970s on are not read as 2099
+  assert.throws(() => parseBankRate('<html></html>'), /not found/); assert.match(validateBankRate({ rate_pct: 40, changed: '2026-11-05' })!, /outside/)
+})
+test('PAYROLL: the holiday rules agree with the GOV.UK page and with the holiday calculator in this repo', () => {
+  const h = parseHolidayRules(fx('gov-holiday-rights.json'))
+  assert.equal(h.value.statutory_weeks, 5.6); assert.equal(h.value.cap_days_five_day_week, 28); assert.equal(h.value.irregular_hours_pct, 12.07); assert.equal(h.value.starters_accrue_one_twelfth_a_month, true); assert.equal(validateHolidayRules(h.value), null)
+  assert.equal(h.value.statutory_weeks, STATUTORY_WEEKS); assert.equal(h.value.cap_days_five_day_week, STATUTORY_CAP_DAYS); assert.equal(Math.round(h.value.irregular_hours_pct * 100) / 10000, IRREGULAR_HOURS_RATE)
+  assert.throws(() => parseHolidayRules({ details: { parts: [{ body: '<p>holiday</p>' }] } }), /not all found/)
+})
+test('PAYROLL: the new sources are automatic or manual as intended, and none is "routine"', () => {
+  for (const k of ['statutory_pay', 'employer_ni', 'pension_ae', 'dbs_fees', 'earnings_growth', 'bank_rate', 'holiday_rules']) { const d = sourceByKey(k)!; assert.ok(d.fetch, k); assert.ok(!d.routine, k) }
 })

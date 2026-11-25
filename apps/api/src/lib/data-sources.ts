@@ -163,6 +163,212 @@ export function validateHomecareRate(v: any): string | null {
   return null
 }
 
+
+// ── Staff and payroll figures (GOV.UK rates page, pensions, DBS, ONS earnings, Bank of England, holiday rules) ───────────────────────────────
+/** The tax year runs 6 April to 5 April: 5 April 2027 is still 2026 to 2027, 6 April 2027 is 2027 to 2028. */
+export function taxYearOf(today: string): number {
+  const y = Number(today.slice(0, 4)), m = Number(today.slice(5, 7)), d = Number(today.slice(8, 10))
+  return m > 4 || (m === 4 && d >= 6) ? y : y - 1
+}
+export const ratesPageSlug = (startYear: number) => `rates-and-thresholds-for-employers-${startYear}-to-${startYear + 1}`
+const ratesPageUrl = (startYear: number) => `https://www.gov.uk/api/content/guidance/${ratesPageSlug(startYear)}`
+/** All the text in a GOV.UK content item (the body, or every part of a guide), tags removed. */
+export function govText(content: any): string {
+  const d = content?.details ?? {}
+  const bits: string[] = []
+  if (typeof d.body === 'string') bits.push(d.body)
+  for (const p of Array.isArray(d.parts) ? d.parts : []) if (typeof p?.body === 'string') bits.push(p.body)
+  return textOf(bits.join(' '))
+}
+const pageDate = (content: any): string | null => typeof content?.public_updated_at === 'string' ? content.public_updated_at.slice(0, 10) : null
+/** The first table after the heading with this id, as rows of cell texts (a line break inside a cell becomes " | "). */
+function tableAfter(html: string, id: string): string[][] {
+  const at = html.indexOf(`id="${id}"`)
+  if (at < 0) throw new Error(`The "${id}" section was not found on the page.`)
+  const t = /<table[\s\S]*?<\/table>/.exec(html.slice(at))
+  if (!t) throw new Error(`The table under "${id}" was not found.`)
+  return [...t[0].matchAll(/<tr>([\s\S]*?)<\/tr>/g)].map(tr => [...tr[1].matchAll(/<t[dh][^>]*>([\s\S]*?)<\/t[dh]>/g)].map(c => textOf(c[1].replace(/<br\s*\/?>/gi, ' | '))))
+}
+const pounds = (s: string): number | null => { const m = /£\s*([\d,]+(?:\.\d+)?)/.exec(s); return m ? Number(m[1].replace(/,/g, '')) : null }
+const pct = (s: string): number | null => { const m = /(\d+(?:\.\d+)?)\s*%/.exec(s); return m ? Number(m[1]) : null }
+export interface Per { week: number; month: number; year: number }
+function perPeriod(cell: string): Per {
+  const g = (u: string) => { const m = new RegExp(`£\\s*([\\d,]+(?:\\.\\d+)?)\\s*per\\s*${u}`, 'i').exec(cell); if (!m) throw new Error(`A "${u}" figure was missing from "${cell}".`); return Number(m[1].replace(/,/g, '')) }
+  return { week: g('week'), month: g('month'), year: g('year') }
+}
+function pageTaxYear(content: any): { label: string; start: string } {
+  const m = /(\d{4})[-\s]to[-\s](\d{4})/.exec(`${content?.base_path ?? ''} ${content?.title ?? ''}`)
+  if (!m) throw new Error('The tax year could not be read from the page.')
+  return { label: `${m[1]} to ${m[2]}`, start: `${m[1]}-04-06` }
+}
+
+// Statutory maternity, paternity, adoption and shared parental pay
+export function parseStatutoryPay(content: any): Fetched {
+  const html: string = content?.details?.body ?? ''
+  const ty = pageTaxYear(content)
+  const rows = tableAfter(html, 'statutory-maternity-paternity-adoption-shared-parental-parental-bereavement-and-neonatal-care-pay')
+  const rates: Record<string, { weekly_gbp?: number; first_six_weeks_pct?: number; earnings_share_pct?: number }> = {}
+  for (const [label, rate] of rows) {
+    const k = /\b(SMP|SPP|SAP|ShPP)\b/.exec(label ?? '')?.[1]?.toLowerCase()
+    if (!k || !rate) continue
+    const r = (rates[k] ??= {})
+    if (/first 6 weeks/i.test(label)) r.first_six_weeks_pct = pct(rate) ?? undefined
+    else { r.weekly_gbp = pounds(rate) ?? undefined; r.earnings_share_pct = pct(rate.replace(/£\s*[\d,.]+/, '')) ?? undefined }
+  }
+  const from = /Statutory Maternity Pay[^.]*?applies from (\d{1,2}) ([A-Za-z]+) (\d{4})/i.exec(textOf(html))
+  const smpMon = from ? LONG_MONTHS[from[2].toLowerCase()] : undefined
+  const flat = Object.values(rates).map(r => r.weekly_gbp).filter((x): x is number => typeof x === 'number')
+  return { effective_from: ty.start, value: { tax_year: ty.label, weekly_rate_gbp: flat[0] ?? null, earnings_share_pct: Object.values(rates).map(r => r.earnings_share_pct).find(x => x != null) ?? null, rates, smp_applies_from: from && smpMon ? `${from[3]}-${pad(smpMon)}-${pad(Number(from[1]))}` : null, ssp: 'See the Statutory Sick Pay figure.', page_updated: pageDate(content) } }
+}
+export function validateStatutoryPay(v: any): string | null {
+  const r = v?.rates ?? {}
+  for (const k of ['smp', 'spp', 'sap', 'shpp']) {
+    if (!inRange(r[k]?.weekly_gbp, 100, 400)) return `The ${k.toUpperCase()} weekly rate ${r[k]?.weekly_gbp} is outside 100 to 400 pounds.`
+    if (!inRange(r[k]?.earnings_share_pct, 70, 100)) return `The ${k.toUpperCase()} share of earnings ${r[k]?.earnings_share_pct} is outside 70 to 100 percent.`
+  }
+  if (!/^\d{4} to \d{4}$/.test(v?.tax_year ?? '')) return 'The tax year is missing.'
+  return null
+}
+
+// Employer National Insurance
+export function parseEmployerNi(content: any): Fetched {
+  const html: string = content?.details?.body ?? ''
+  const ty = pageTaxYear(content)
+  const th = tableAfter(html, 'class-1-national-insurance-thresholds')
+  const row = (re: RegExp) => { const r = th.find(x => re.test(x[0] ?? '')); if (!r || !r[1]) throw new Error(`The "${re.source}" row was not found.`); return perPeriod(r[1]) }
+  const thresholds = { lower_earnings_limit: row(/^Lower earnings limit/i), secondary_threshold: row(/^Secondary threshold/i), upper_earnings_limit: row(/^Upper earnings limit/i), upper_secondary_threshold_under_21: row(/^Upper secondary threshold \(under 21\)/i) }
+  const sec = tableAfter(html, 'employer-secondary-contribution-rates')
+  const a = sec.find(r => /^A$/.test(r[0] ?? ''))
+  if (!a) throw new Error('Category A was not found in the employer rates table.')
+  const rates = a.slice(1).map(c => pct(c))
+  if (!rates.length || rates.some(x => x == null) || new Set(rates).size !== 1) throw new Error(`Category A pays different rates in different bands (${a.slice(1).join(', ')}): the figure needs a person to read it.`)
+  const m = sec.find(r => /^M\b/.test(r[0] ?? ''))
+  return { effective_from: ty.start, value: { tax_year: ty.label, secondary_rate_pct: rates[0], thresholds, under_21_rate_up_to_upper_limit_pct: m ? pct(m[3] ?? '') : null, page_updated: pageDate(content) } }
+}
+export function validateEmployerNi(v: any): string | null {
+  if (!inRange(v?.secondary_rate_pct, 5, 25)) return `The employer rate ${v?.secondary_rate_pct} is outside 5 to 25 percent.`
+  const t = v?.thresholds ?? {}
+  if (!inRange(t.secondary_threshold?.year, 2000, 20000)) return `The secondary threshold ${t.secondary_threshold?.year} is outside 2,000 to 20,000 a year.`
+  if (!inRange(t.lower_earnings_limit?.year, 3000, 12000)) return `The lower earnings limit ${t.lower_earnings_limit?.year} is outside 3,000 to 12,000 a year.`
+  if (!inRange(t.upper_earnings_limit?.year, 30000, 100000)) return `The upper earnings limit ${t.upper_earnings_limit?.year} is outside 30,000 to 100,000 a year.`
+  if (!(t.secondary_threshold.year < t.upper_earnings_limit.year)) return 'The secondary threshold is not below the upper earnings limit.'
+  return null
+}
+/** Employer National Insurance on a gross pay for one pay period. Category A (standard) pays on everything above the secondary threshold; under 21s, apprentices under 25 and veterans pay nothing up to the upper limit. Employment Allowance is not taken off here. */
+export function employerNi(v: any, grossPay: number, period: 'week' | 'month' | 'year' = 'month', who: 'standard' | 'under_21' | 'apprentice_under_25' | 'veteran' = 'standard') {
+  const t = v?.thresholds
+  if (!t || !(grossPay >= 0)) throw new Error('Employer National Insurance needs the figures and a pay of 0 or more.')
+  const rate = Number(v.secondary_rate_pct) / 100
+  const start = t.secondary_threshold[period] as number
+  const free = who === 'standard' ? start : Math.max(start, t.upper_secondary_threshold_under_21[period] as number)
+  const taxable = Math.max(0, grossPay - free)
+  return { employer_ni: Math.round(taxable * rate * 100) / 100, rate_pct: Number(v.secondary_rate_pct), pay_above_threshold: Math.round(taxable * 100) / 100, threshold_used: free, period, who, note: 'Before any Employment Allowance, and not for other National Insurance categories.' }
+}
+
+// Workplace pension automatic enrolment
+export function parsePensionAe(content: any): Fetched {
+  const t = govText(content)
+  const trigger = /earn at least £\s*([\d,]+)\s*(?:a|per)\s*year/i.exec(t)
+  const band = /between £\s*([\d,]+)\s*and\s*£\s*([\d,]+)\s*(?:a|per)\s*year/i.exec(t)
+  const contrib = /From April 2019\s+(\d+(?:\.\d+)?)%\s+(\d+(?:\.\d+)?)%\s+(\d+(?:\.\d+)?)%/i.exec(t)
+  const age = /aged between (\d+) and (?:the )?State Pension age/i.exec(t)
+  if (!trigger || !band || !contrib) throw new Error('The automatic enrolment thresholds or contributions were not found on the page.')
+  const n = (x: string) => Number(x.replace(/,/g, ''))
+  return { effective_from: null, value: { earnings_trigger_gbp: n(trigger[1]), qualifying_earnings_lower_gbp: n(band[1]), qualifying_earnings_upper_gbp: n(band[2]), minimum_employer_pct: Number(contrib[1]), employee_pct: Number(contrib[2]), minimum_total_pct: Number(contrib[3]), age_from: age ? Number(age[1]) : null, page_updated: pageDate(content) } }
+}
+export function validatePensionAe(v: any): string | null {
+  if (!inRange(v?.earnings_trigger_gbp, 5000, 20000)) return `The earnings trigger ${v?.earnings_trigger_gbp} is outside 5,000 to 20,000.`
+  if (!inRange(v?.qualifying_earnings_lower_gbp, 3000, 15000)) return `The lower qualifying limit ${v?.qualifying_earnings_lower_gbp} is outside 3,000 to 15,000.`
+  if (!inRange(v?.qualifying_earnings_upper_gbp, 30000, 100000)) return `The upper qualifying limit ${v?.qualifying_earnings_upper_gbp} is outside 30,000 to 100,000.`
+  if (!inRange(v?.minimum_total_pct, 4, 25) || !inRange(v?.minimum_employer_pct, 1, 15)) return 'The minimum contributions are outside what is expected.'
+  if (Math.abs(v.minimum_employer_pct + v.employee_pct - v.minimum_total_pct) > 0.01) return 'The employer and employee shares do not add up to the total.'
+  return null
+}
+/** What the employer minimum costs on an annual pay: the employer share of earnings between the qualifying limits. */
+export function pensionEmployerMinimum(v: any, annualPay: number) {
+  const q = Math.max(0, Math.min(annualPay, v.qualifying_earnings_upper_gbp) - v.qualifying_earnings_lower_gbp)
+  return { qualifying_earnings: Math.round(q * 100) / 100, employer_minimum: Math.round(q * v.minimum_employer_pct) / 100, employer_pct: v.minimum_employer_pct, enrolled_automatically: annualPay >= v.earnings_trigger_gbp }
+}
+
+// DBS fees
+export function parseDbsFees(content: any): Fetched {
+  const t = govText(content)
+  const basic = /A basic check costs £\s*(\d+(?:\.\d+)?)/i.exec(t)
+  const std = /Standard\s+£\s*(\d+(?:\.\d+)?)/.exec(t)
+  const enh = /Enhanced\s+£\s*(\d+(?:\.\d+)?)/.exec(t)
+  const bar = /Enhanced with barred lists?\s+£\s*(\d+(?:\.\d+)?)/i.exec(t)
+  if (!basic || !std || !enh || !bar) throw new Error('The DBS fees were not found on the page (basic, standard, enhanced, enhanced with barred lists).')
+  return { effective_from: null, value: { basic_gbp: Number(basic[1]), standard_gbp: Number(std[1]), enhanced_gbp: Number(enh[1]), enhanced_barred_lists_gbp: Number(bar[1]), volunteers_free: /free for volunteers/i.test(t), umbrella_body_admin_fee: /administration fee/i.test(t) ? 'The organisation that processes the check may add an administration fee.' : null, page_updated: pageDate(content) } }
+}
+export function validateDbsFees(v: any): string | null {
+  for (const k of ['basic_gbp', 'standard_gbp', 'enhanced_gbp', 'enhanced_barred_lists_gbp']) if (!inRange(v?.[k], 5, 100)) return `The ${k.replace(/_gbp$/, '').replace(/_/g, ' ')} fee ${v?.[k]} is outside 5 to 100 pounds.`
+  if (v.enhanced_gbp < v.standard_gbp) return 'The enhanced fee is below the standard fee.'
+  return null
+}
+
+// Earnings growth (ONS average weekly earnings): the headline growth (regular pay, whole economy, three month average on a year earlier) and the level of total pay
+const average = (xs: number[]) => xs.reduce((a, b) => a + b, 0) / xs.length
+export function parseEarningsGrowth(growthJson: any, levelJson: any): Fetched {
+  const g = parseOnsRate(growthJson, 'KAI9')
+  const d = levelJson?.description
+  if (!d || String(d.cdid ?? '').toUpperCase() !== 'KAB9') throw new Error('The ONS earnings level series is not KAB9.')
+  const pts = (Array.isArray(levelJson.months) ? levelJson.months : []).map((m: any) => ({ period: onsPeriod(m.date), v: Number(m.value) })).filter((p: any) => p.period && Number.isFinite(p.v)).sort((a: any, b: any) => a.period.localeCompare(b.period))
+  if (pts.length < 15) throw new Error('There are not enough months of earnings to work out growth.')
+  const now = pts.slice(-3).map((p: any) => p.v), before = pts.slice(-15, -12).map((p: any) => p.v)
+  const last = pts[pts.length - 1]
+  return { effective_from: g.effective_from, next_check_due: g.next_check_due ?? null, value: {
+    measure: 'Average weekly earnings, whole economy, regular pay, annual growth (three month average on the same three months a year earlier), seasonally adjusted',
+    latest: g.value.latest, release_date: g.value.release_date, next_release: g.value.next_release, series: g.value.series,
+    total_pay: { period: last.period, weekly_gbp: last.v, growth_3m_pct: Math.round((average(now) / average(before) - 1) * 1000) / 10, note: 'Total pay excluding arrears, seasonally adjusted, worked out from the monthly levels (KAB9).' } } }
+}
+export function validateEarningsGrowth(v: any): string | null {
+  const r = validateRate(v); if (r) return r
+  if (!inRange(v?.total_pay?.weekly_gbp, 300, 2500)) return `Weekly total pay ${v?.total_pay?.weekly_gbp} is outside 300 to 2,500 pounds.`
+  if (!inRange(v?.total_pay?.growth_3m_pct, -10, 25)) return `Total pay growth ${v?.total_pay?.growth_3m_pct} is outside -10 to 25 percent.`
+  return null
+}
+
+// Bank of England Bank Rate
+export function parseBankRate(html: string): Fetched {
+  const rows = [...String(html ?? '').matchAll(/<td[^>]*>\s*(\d{1,2} [A-Za-z]{3} \d{2,4})\s*<\/td>\s*<td[^>]*>\s*(\d+(?:\.\d+)?)\s*<\/td>/g)].map(m => {
+    const [d, mon, y] = m[1].split(' '); const mm = MONTHS[mon.toUpperCase()]
+    const yy = y.length === 2 ? (Number(y) >= 70 ? '19' : '20') + y : y   // the page prints two digit years; its history starts in the 1970s
+    return mm ? { changed: `${yy}-${pad(mm)}-${pad(Number(d))}`, rate: Number(m[2]) } : null
+  }).filter((r): r is { changed: string; rate: number } => !!r).sort((a, b) => b.changed.localeCompare(a.changed))
+  if (!rows.length) throw new Error('The Bank Rate table was not found on the page.')
+  return { effective_from: rows[0].changed, value: { rate_pct: rows[0].rate, changed: rows[0].changed, previous: rows[1] ?? null, history: rows.slice(0, 8) } }
+}
+export function validateBankRate(v: any): string | null {
+  if (!inRange(v?.rate_pct, 0, 15)) return `Bank Rate ${v?.rate_pct} is outside 0 to 15 percent.`
+  if (!isYmd(v?.changed)) return 'The date it last changed is missing.'
+  return null
+}
+
+// Holiday pay rules (GOV.UK holiday entitlement)
+export function parseHolidayRules(content: any): Fetched {
+  const t = govText(content)
+  const weeks = /(\d+(?:\.\d+)?) weeks[’'] paid holiday a year/i.exec(t)
+  const cap = /at least (\d+) days[’']? paid annual leave a year/i.exec(t)
+  const irregular = /entitlement will be (\d+(?:\.\d+)?)% of the hours they worked/i.exec(t)
+  if (!weeks || !cap || !irregular) throw new Error('The holiday rules (5.6 weeks, the day cap and the irregular hours percentage) were not all found on the page.')
+  return { effective_from: null, value: { statutory_weeks: Number(weeks[1]), cap_days_five_day_week: Number(cap[1]), irregular_hours_pct: Number(irregular[1]), irregular_hours_rounding: /rounded up to the nearest hour if the entitlement is 0\.5 of an hour or more/i.test(t) ? 'Round up to the nearest hour if the entitlement is half an hour or more.' : null, starters_accrue_one_twelfth_a_month: /one-twelfth of their leave/i.test(t), page_updated: pageDate(content) } }
+}
+export function validateHolidayRules(v: any): string | null {
+  if (!inRange(v?.statutory_weeks, 4, 8)) return `The statutory weeks ${v?.statutory_weeks} are outside 4 to 8.`
+  if (!inRange(v?.cap_days_five_day_week, 20, 40)) return `The day cap ${v?.cap_days_five_day_week} is outside 20 to 40.`
+  if (!inRange(v?.irregular_hours_pct, 5, 20)) return `The irregular hours percentage ${v?.irregular_hours_pct} is outside 5 to 20.`
+  return null
+}
+
+/** The rates page for this tax year (required) and, once it exists, next year's (shown as "upcoming"). */
+async function fetchRatesPage(get: (url: string) => Promise<any>, today: string, parse: (c: any) => Fetched): Promise<Fetched> {
+  const y = taxYearOf(today)
+  const current = parse(await get(ratesPageUrl(y)))
+  let upcoming: any = null
+  try { const n = parse(await get(ratesPageUrl(y + 1))); upcoming = { effective_from: n.effective_from, ...n.value } } catch { /* next year's page is not published yet */ }
+  return { ...current, value: { ...current.value, upcoming } }
+}
+
 // ── Bank holidays (GOV.UK, England and Wales) ───────────────────────────────────────────
 export function parseBankHolidays(json: any): Fetched {
   const ew = json?.['england-and-wales']
@@ -263,6 +469,34 @@ export const SOURCES: SourceDef[] = [
   { key: 'council_homecare_rate', name: 'What councils pay per hour for external home care (median across England)', publisher: 'DHSC, Adult social care finance report', source_url: 'https://www.gov.uk/government/statistics/adult-social-care-finance-report-england-2025-to-2026', fetch_url: null,
     update_frequency: 'Every year (published in the autumn)', stale_after_days: 500, data_stale_after_days: null, weekly: false, fetch: null, validate: validateHomecareRate,
     note: 'Entered by hand from Orrery: the median across 154 councils of the unit cost per hour of home care bought from other providers, 2025/26. Individual councils range widely.' },
+  { key: 'statutory_pay', name: 'Statutory maternity, paternity, adoption and shared parental pay', publisher: 'GOV.UK (HMRC rates and thresholds for employers)', source_url: 'https://www.gov.uk/government/publications/rates-and-thresholds-for-employers-2026-to-2027', fetch_url: 'https://www.gov.uk/api/content/guidance/rates-and-thresholds-for-employers-2026-to-2027',
+    update_frequency: 'Every April (the page for the next tax year appears in the autumn)', stale_after_days: 396, data_stale_after_days: 400, weekly: true,
+    fetch: async (get, today) => fetchRatesPage(get, today, parseStatutoryPay), validate: validateStatutoryPay,
+    note: 'Read from the rates and thresholds page for the current tax year (6 April to 5 April). When next year\'s page appears it is shown as "upcoming". Statutory Sick Pay has its own figure.' },
+  { key: 'employer_ni', name: 'Employer National Insurance (rate and thresholds)', publisher: 'GOV.UK (HMRC rates and thresholds for employers)', source_url: 'https://www.gov.uk/government/publications/rates-and-thresholds-for-employers-2026-to-2027', fetch_url: 'https://www.gov.uk/api/content/guidance/rates-and-thresholds-for-employers-2026-to-2027',
+    update_frequency: 'Every April (announced at the Budget)', stale_after_days: 396, data_stale_after_days: 400, weekly: true,
+    fetch: async (get, today) => fetchRatesPage(get, today, parseEmployerNi), validate: validateEmployerNi,
+    note: 'Category A (most staff). The rate must be the same in every band or the figure goes to review. Employment Allowance is not taken off.' },
+  { key: 'pension_ae', name: 'Workplace pension automatic enrolment (thresholds and minimum contributions)', publisher: 'GOV.UK', source_url: 'https://www.gov.uk/workplace-pensions', fetch_url: 'https://www.gov.uk/api/content/workplace-pensions',
+    update_frequency: 'Usually reviewed every April', stale_after_days: 396, data_stale_after_days: null, weekly: true,
+    fetch: async get => parsePensionAe(await get('https://www.gov.uk/api/content/workplace-pensions')), validate: validatePensionAe,
+    note: 'GOV.UK does not date these figures on the page, so the date shown is when we last checked them.' },
+  { key: 'dbs_fees', name: 'DBS check fees', publisher: 'GOV.UK (Disclosure and Barring Service)', source_url: 'https://www.gov.uk/dbs-check-applicant-criminal-record', fetch_url: 'https://www.gov.uk/api/content/dbs-check-applicant-criminal-record',
+    update_frequency: 'When the DBS changes its fees (about every few years)', stale_after_days: 396, data_stale_after_days: null, weekly: true,
+    fetch: async get => parseDbsFees(await get('https://www.gov.uk/api/content/dbs-check-applicant-criminal-record')), validate: validateDbsFees,
+    note: 'The fee paid to the DBS. The organisation that processes the check (an umbrella body) may add its own administration fee. Checks are free for volunteers.' },
+  { key: 'earnings_growth', name: 'Average weekly earnings growth, whole economy', publisher: 'Office for National Statistics', source_url: 'https://www.ons.gov.uk/employmentandlabourmarket/peopleinwork/earningsandworkinghours/timeseries/kai9/lms', fetch_url: 'https://www.ons.gov.uk/employmentandlabourmarket/peopleinwork/earningsandworkinghours/timeseries/kai9/lms/data',
+    update_frequency: 'Monthly (ONS labour market release, mid month)', stale_after_days: 62, data_stale_after_days: 120, weekly: false,
+    fetch: async get => parseEarningsGrowth(await get('https://www.ons.gov.uk/employmentandlabourmarket/peopleinwork/earningsandworkinghours/timeseries/kai9/lms/data'), await get('https://www.ons.gov.uk/employmentandlabourmarket/peopleinwork/earningsandworkinghours/timeseries/kab9/lms/data')), validate: validateEarningsGrowth,
+    note: 'A guide to what pay is doing across the whole economy, for pay review conversations. It is not a care sector figure.' },
+  { key: 'bank_rate', name: 'Bank of England Bank Rate', publisher: 'Bank of England', source_url: 'https://www.bankofengland.co.uk/monetary-policy/the-interest-rate-bank-rate', fetch_url: 'https://www.bankofengland.co.uk/boeapps/database/Bank-Rate.asp',
+    update_frequency: 'When the Monetary Policy Committee changes it (eight meetings a year)', stale_after_days: 16, data_stale_after_days: null, weekly: true,
+    fetch: async get => parseBankRate(await get('https://www.bankofengland.co.uk/boeapps/database/Bank-Rate.asp')), validate: validateBankRate,
+    note: 'If the Bank of England page cannot be read, enter the rate by hand from the Platform console.' },
+  { key: 'holiday_rules', name: 'Holiday pay rules (statutory leave and irregular hours)', publisher: 'GOV.UK', source_url: 'https://www.gov.uk/holiday-entitlement-rights', fetch_url: 'https://www.gov.uk/api/content/holiday-entitlement-rights',
+    update_frequency: 'Rarely changes (the 12.07 percent rule started for leave years after 31 March 2024)', stale_after_days: 396, data_stale_after_days: null, weekly: true,
+    fetch: async get => parseHolidayRules(await get('https://www.gov.uk/api/content/holiday-entitlement-rights')), validate: validateHolidayRules,
+    note: 'GOV.UK does not date these rules on the page, so the date shown is when we last checked them. The holiday calculator in CareStream uses the same figures.' },
   { key: 'bank_holidays', name: 'Bank holidays in England and Wales', publisher: 'GOV.UK', source_url: 'https://www.gov.uk/bank-holidays', fetch_url: 'https://www.gov.uk/bank-holidays.json',
     update_frequency: 'Yearly (dates announced ahead)', stale_after_days: 365, data_stale_after_days: null, weekly: true,
     fetch: async get => parseBankHolidays(await get('https://www.gov.uk/bank-holidays.json')), validate: v => validateBankHolidays(v) },
@@ -292,6 +526,9 @@ export function essence(key: string, v: any): Json {
   if (key === 'nlw') return { current: v.current, upcoming: v.upcoming }
   if (key === 'cpi' || key === 'cpih' || key === 'cpi_food') return { latest: v.latest }
   if (key === 'road_fuel') return { latest: v.latest }
+  if (key === 'earnings_growth') return { latest: v.latest, total_pay: v.total_pay }
+  if (key === 'bank_rate') return { rate_pct: v.rate_pct, changed: v.changed }
+  if (['statutory_pay', 'employer_ni', 'pension_ae', 'dbs_fees', 'holiday_rules'].includes(key)) { const { page_updated, ...rest } = v; return rest }
   return v
 }
 export const sameFigure = (key: string, a: Json, b: Json) => stable(essence(key, a)) === stable(essence(key, b))
@@ -423,6 +660,13 @@ export function brief(key: string, v: any): string {
   if (key === 'mileage') return `cars and vans ${v.cars_vans_first_10000_pence}p then ${v.cars_vans_after_10000_pence}p, motorcycles ${v.motorcycle_pence}p, bikes ${v.bike_pence}p`
   if (key === 'bank_holidays') return `${(v.events ?? []).length} dates, ${v.first_year} to ${v.last_year}`
   if (key === 'real_living_wage') return `£${v.hourly_rate_gbp}`
+  if (key === 'statutory_pay') return `£${v.weekly_rate_gbp} a week or ${v.earnings_share_pct}% of average earnings if lower (${v.tax_year})`
+  if (key === 'employer_ni') return `${v.secondary_rate_pct}% above £${v.thresholds?.secondary_threshold?.year} a year (£${v.thresholds?.secondary_threshold?.month} a month), ${v.tax_year}`
+  if (key === 'pension_ae') return `enrol at £${v.earnings_trigger_gbp}, qualifying earnings £${v.qualifying_earnings_lower_gbp} to £${v.qualifying_earnings_upper_gbp}, minimum ${v.minimum_total_pct}% (employer ${v.minimum_employer_pct}%)`
+  if (key === 'dbs_fees') return `basic £${v.basic_gbp}, standard £${v.standard_gbp}, enhanced £${v.enhanced_gbp}${v.volunteers_free ? ', free for volunteers' : ''}`
+  if (key === 'earnings_growth') return `${v.latest?.rate}% regular pay growth for ${v.latest?.period}, average weekly total pay £${v.total_pay?.weekly_gbp}`
+  if (key === 'bank_rate') return `${v.rate_pct}% since ${v.changed}`
+  if (key === 'holiday_rules') return `${v.statutory_weeks} weeks (capped at ${v.cap_days_five_day_week} days), irregular hours ${v.irregular_hours_pct}%`
   if (key === 'road_fuel') return `petrol ${v.latest?.petrol}p, diesel ${v.latest?.diesel}p a litre (week of ${v.latest?.date})`
   if (key === 'homecare_private_rate' || key === 'homecare_min_price' || key === 'council_homecare_rate') return `£${v.hourly_gbp} an hour${v.low_gbp != null ? ` (£${v.low_gbp} to £${v.high_gbp})` : ''}, ${v.period ?? ''}`.trim()
   if (key === 'care_food_cost') return `£${v.low_gbp_week} to £${v.high_gbp_week} per resident per week (${v.price_year} prices${v.councils ? ', ' + v.councils + ' councils' : ''})`

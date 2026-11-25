@@ -15,6 +15,7 @@ import { useAskContext } from '@/lib/ask-context'
 import { closeAsk, initAskUi, openAsk, registerAskTrigger, setAskEnabled, setAskExpanded, setAskWidth, toggleAsk, useAskUi } from '@/lib/ask-ui-store'
 import { DocumentPanel } from '@/components/ask/document-panel'
 import { ActionCard } from '@/components/ask/action-card'
+import { NewsletterPicker } from '@/components/ask/newsletter-picker'
 
 export const OPEN_ASK_EVENT = 'cs:open-ask'
 const ICONS: Record<string, LucideIcon> = {
@@ -300,6 +301,7 @@ export function AskPanel({ token, layout, expanded, width, onClose }: { token: s
                     <div className={`mt-3 grid gap-2 ${expanded ? 'sm:grid-cols-2' : 'grid-cols-1'}`}>
                       {[...(chipOn && pageCtx && agentForPage(pageCtx.page) === agent.id ? contextStarters(pageCtx) : []), ...agent.starters].filter((q, i, a) => a.indexOf(q) === i).slice(0, expanded ? 8 : 6).map(s => <button key={s} type="button" onClick={() => send(s)} disabled={busy} className="rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-left text-sm font-medium text-neutral-dark hover:border-teal hover:bg-teal/5 disabled:opacity-60">{s}</button>)}
                     </div>
+                    {agent.id === 'newsletter' && token && <NewsletterPicker token={token} disabled={busy} onChoose={m => send(m)} />}
                   </div>
                 )}
                 {messages.map(m => m.role === 'user' ? (

@@ -87,6 +87,12 @@ export async function loadBirthdaysThisMonth(tenantId: string, today = ukToday()
   const people = det.map(d => ({ id: d.user_id, iso: day(d.date_of_birth)! })).filter(x => x.iso && x.iso.slice(5, 7) === month).map(x => ({ first_name: (names.get(x.id) ?? '').split(/\s+/)[0], day: Number(x.iso.slice(8, 10)) })).filter(p => p.first_name).sort((a, b) => a.day - b.day)
   return { enabled: true, people }
 }
+/** Work anniversaries this month: first name, the day of the month and whole years of service (never an age). Only people who started in an earlier year. */
+export async function loadAnniversariesThisMonth(tenantId: string, today = ukToday()): Promise<Array<{ first_name: string; day: number; years: number }>> {
+  const month = today.slice(5, 7), year = Number(today.slice(0, 4))
+  return (await loadRoster(tenantId)).filter(r => r.start_date && r.start_date.slice(5, 7) === month && Number(r.start_date.slice(0, 4)) < year)
+    .map(r => ({ first_name: (r.name ?? '').split(/\s+/)[0], day: Number(r.start_date!.slice(8, 10)), years: year - Number(r.start_date!.slice(0, 4)) })).filter(p => p.first_name).sort((a, b) => a.day - b.day)
+}
 /** Training completed in the last N days: how many, and which courses (counts only, no names). */
 export async function loadTrainingCompletions(tenantId: string, withinDays: number, today = ukToday()) {
   const since = new Date(addDays(today, -Math.max(1, Math.min(180, withinDays))) + 'T00:00:00Z')

@@ -15,6 +15,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { FreeLanguageLock, useIsFree } from '@/components/admin/free-tier'
 import { HolidayStaffFields } from '@/components/admin/holiday/holiday-staff-fields'
+import { StaffDobField } from '@/components/admin/staff/staff-dob-field'
 import { Globe, GraduationCap, ListChecks, Loader2, Mail, Pencil, Plus, X } from 'lucide-react'
 import {
   CommsLanguageToggle,
@@ -517,6 +518,7 @@ export function InviteModal({
   const isFree = useIsFree()
   const [loading,   setLoading]   = useState(false)
   const holidayRef = useRef<((userId: string) => Promise<void>) | null>(null)   // holiday boxes (pilot accounts only)
+  const dobRef = useRef<((userId: string) => Promise<void>) | null>(null)       // date of birth
   const [onboardingNote, setOnboardingNote] = useState('')
   const [sendLink, setSendLink] = useState(true)          // email them a one-time sign-in link now (ticked by default)
   const [linkNote, setLinkNote] = useState<{ ok: boolean; text: string } | null>(null)
@@ -596,6 +598,7 @@ export function InviteModal({
     } else setPictureNote(null)
 
     // The holiday boxes (pilot accounts only). A failure never undoes the new person: say so and point to their edit form.
+    try { await dobRef.current?.(res.user.id) } catch (e: any) { setError(`They were added, but their date of birth could not be saved (${e?.message ?? 'please try again'}). You can add it by editing the person.`) }
     try { await holidayRef.current?.(res.user.id) } catch (e: any) { setError(`They were added, but their holiday details could not be saved (${e?.message ?? 'please try again'}). You can add them by editing the person.`) }
 
     // Refresh the list in the background, but keep modal open to show credentials
@@ -741,6 +744,7 @@ export function InviteModal({
                 </div>
                 <p className="mt-1 text-xs text-neutral-mid">Only used for face-to-face training attended off shift, to cost their owed hours on the payroll report.</p>
               </div>
+              <StaffDobField token={token} saveRef={dobRef} />
               <HolidayStaffFields token={token} saveRef={holidayRef} />
               <div className="sm:col-span-2">
                 <AccessLevelField
@@ -955,6 +959,7 @@ export function EditModal({
   const [error,   setError]   = useState('')
   const isFree = useIsFree()
   const [loading, setLoading] = useState(false)
+  const dobRef = useRef<((userId: string) => Promise<void>) | null>(null)       // date of birth
   const holidayRef = useRef<((userId: string) => Promise<void>) | null>(null)   // holiday boxes (pilot accounts only)
 
   // Persist a new position to Settings (staff_roles) and select it here.
@@ -1000,6 +1005,7 @@ export function EditModal({
       allow_language_switching: allowSwitch && !!form.second_language,
       can_suggest_translations: canSuggest,
     }).catch((err: Error) => { setError(err.message); return null })
+    if (res) { try { await dobRef.current?.(user.id) } catch (e: any) { setError(`Saved, but the date of birth could not be saved (${e?.message ?? 'please try again'}).`) } }
     if (res) { try { await holidayRef.current?.(user.id) } catch (e: any) { setError(`Saved, but the holiday details could not be saved (${e?.message ?? 'please try again'}).`) } }
     setLoading(false)
     if (res) onSaved(res.user)
@@ -1125,6 +1131,7 @@ export function EditModal({
             )}
           </div>
 
+          <StaffDobField token={token} userId={user.id} saveRef={dobRef} />
           <HolidayStaffFields token={token} userId={user.id} saveRef={holidayRef} />
           <div className="sm:col-span-2">
             <AccessLevelField

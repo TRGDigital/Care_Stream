@@ -244,3 +244,15 @@ test('ROUTES: reading and changing need the draft to be editable, the picture up
   assert.match(src('../../lib/audit.ts'), /'ask_newsletter_edited'/)
   assert.ok(NEWSLETTER_TEMPLATES.length === 75 && !!newsletterTemplate('employee-of-the-month-standard'))
 })
+
+test('MONEY in custom blocks: any pound amount is allowed (a fundraising total, a prize, a ticket price), pay words and the normal rules stay refused', () => {
+  const { lintNewsletter } = require('./newsletter-templates')
+  assert.deepEqual(lintNewsletter('We raised £860 at the summer fair, and tickets were £5 each', { allowMoney: true }), [])
+  assert.deepEqual(lintNewsletter('A prize draw: £1,250 for the garden fund, or £2.5k next year', { allowMoney: true }), [])
+  assert.match(lintNewsletter('We raised £860 at the fair', {})[0], /pay figures/)          // still refused in the body without the option
+  assert.match(lintNewsletter('The new salary is £30,000', { allowMoney: true })[0], /pay figures/)
+  assert.match(lintNewsletter('Pay is now £14 an hour', { allowMoney: true })[0], /pay figures/)
+  assert.match(lintNewsletter('A pay rise of £1 per hour', { allowMoney: true })[0], /pay figures/)
+  assert.match(lintNewsletter('£860 raised – well done', { allowMoney: true })[0], /dash/)
+  assert.match(lintNewsletter('Helen turns 40 and raised £50', { allowMoney: true })[0], /age/)
+})

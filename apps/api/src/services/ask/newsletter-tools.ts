@@ -25,9 +25,9 @@ export async function nationalRateNumbers(): Promise<number[]> {
   } catch { return [] }
 }
 /** The checks a newsletter is saved or edited with: its template decides whether care words and the national rates are allowed. */
-export async function lintForTemplate(text: string, templateId?: string | null): Promise<string[]> {
+export async function lintForTemplate(text: string, templateId?: string | null, extra: { allowMoney?: boolean } = {}): Promise<string[]> {
   const t = templateId ? newsletterTemplate(templateId) : undefined
-  return lintNewsletter(text, lintOptionsFor(templateId, t?.national_rates ? await nationalRateNumbers() : []))
+  return lintNewsletter(text, { ...lintOptionsFor(templateId, t?.national_rates ? await nationalRateNumbers() : []), ...extra })
 }
 
 export const NEWSLETTER_TOOLS: AskTool[] = [
@@ -143,7 +143,7 @@ export const NEWSLETTER_TOOLS: AskTool[] = [
       if (String(input?.type) === 'picture_text') return { data: { saved: false, message: 'A picture cannot be added from the chat. Ask the administrator to open the newsletter and use Add a block, then Picture and text.' }, sources: [] }
       const r = applyOp({ body: d.body as string, data: d.data ?? {} }, { op: 'add', type: String(input?.type ?? ''), content: input?.content ?? {}, after: input?.after_id ? String(input.after_id) : null })
       if (!r.ok) return { data: { saved: false, message: r.message, block_types: BLOCK_TYPES.map(b => b.id) }, sources: [] }
-      const problems = await lintForTemplate(r.texts.filter(Boolean).join('\n'), String(d.data?.template_id ?? ''))
+      const problems = await lintForTemplate(r.texts.filter(Boolean).join('\n'), String(d.data?.template_id ?? ''), { allowMoney: true })
       if (problems.length) return { data: { saved: false, problems, message: 'Not added. Fix these and try again.' }, sources: [] }
       await updateDocumentContent(ctx.tenantId, d.id, { ...(r.state.body !== d.body ? { body: r.state.body } : {}), data: r.state.data })
       void writeAuditLog({ tenant_id: ctx.tenantId, user_id: ctx.userId, event_type: 'ask_newsletter_edited', entity_type: 'ask_document', entity_id: d.id, metadata: { op: 'add', type: String(input?.type), by: 'agent' } })

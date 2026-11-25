@@ -148,7 +148,7 @@ askDocsRouter.post('/:id/newsletter-edit', async (req: Request, res: Response) =
   if (!op || typeof (op as any).op !== 'string') { err(res, 'INVALID', 'Say what to change.', 400); return }
   const r = applyOp({ body: d.body, data: d.data ?? {} }, op)
   if (!r.ok) { err(res, 'INVALID', r.message, 400); return }
-  if (r.texts.some(x => x.trim())) { const problems = await lintForTemplate(r.texts.filter(Boolean).join('\n'), String(d.data?.template_id ?? '')); if (problems.length) { err(res, 'INVALID', problems[0], 400); return } }
+  if (r.texts.some(x => x.trim())) { const problems = await lintForTemplate(r.texts.filter(Boolean).join('\n'), String(d.data?.template_id ?? ''), { allowMoney: true }); if (problems.length) { err(res, 'INVALID', problems[0], 400); return } }
   if (op.op === 'add' && op.type === 'picture_text') { try { await (await import('../services/storage/s3')).downloadFile(blockImageKey(t, String((op.content as any)?.image_id ?? ''))) } catch { err(res, 'INVALID', 'That picture was not found for this account. Please add it again.', 400); return } }
   await store.updateDocumentContent(t, d.id, { ...(r.state.body !== d.body ? { body: r.state.body } : {}), data: r.state.data })
   void writeAuditLog({ tenant_id: t, user_id: u, event_type: 'ask_newsletter_edited', entity_type: 'ask_document', entity_id: d.id, metadata: { op: op.op, type: (op as any).type ?? null } })

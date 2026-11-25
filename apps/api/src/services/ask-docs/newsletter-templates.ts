@@ -358,7 +358,8 @@ export const NEWSLETTER_CHECKLIST = [
   'Every date, number and policy name checked against your own records before sharing.',
 ]
 
-export interface LintOptions { /** A care topic: everyday care words (illness, medical, warning) are allowed. */ careTopic?: boolean; /** The national rates that may be quoted (pounds an hour), from the Data sources register. When given, those exact figures and "pay rise" are allowed. */ nationalRates?: number[] }
+export interface LintOptions { /** A care topic: everyday care words (illness, medical, warning) are allowed. */ careTopic?: boolean; /** The national rates that may be quoted (pounds an hour), from the Data sources register. When given, those exact figures and "pay rise" are allowed. */ nationalRates?: number[]
+  /** Blocks the administrator adds themselves (a fundraising total, a prize, a ticket price): a pound amount is allowed, but pay words (salary, pay rise, hourly rate, per hour) are still refused. */ allowMoney?: boolean }
 /** The options a template is checked with. The rates are looked up by the caller and passed in. */
 export function lintOptionsFor(templateId: string | null | undefined, rates: number[] = []): LintOptions {
   const t = templateId ? newsletterTemplate(templateId) : undefined
@@ -374,6 +375,9 @@ export function lintNewsletter(text: string, opts: LintOptions = {}): string[] {
     ? /\b(absence|absent|disciplin\w*|capability|grievance)\b/i
     : /\b(sick|sickness|ill|illness|unwell|absence|absent|diagnos\w*|medical|disciplin\w*|capability|grievance|warning)\b/i
   if (health.test(t)) out.push(opts.careTopic ? 'It mentions absence or discipline. A staff newsletter must not.' : 'It mentions health, absence or discipline. A staff newsletter must not.')
+  // Custom blocks may carry any pound amount, but the words that make it pay stay refused below.
+  if (opts.allowMoney) t = t.replace(/(£\s?\d[\d,.]*)\s*(?:an hour|\/h(?:ou)?r)\b/gi, '$1 per hour')   // an hourly figure is pay, wherever it is
+  if (opts.allowMoney) t = t.replace(/£\s?\d[\d,]*(?:\.\d+)?(?:\s?[kKmM]\b)?/g, ' [amount] ')
   if (opts.nationalRates) {
     // Only the official national rates may appear, and only exactly as published. Anything else with a pound sign is still refused.
     t = t.replace(/£\s?(\d+(?:\.\d+)?)/g, (m, n) => (opts.nationalRates!.some(r => Math.abs(r - Number(n)) < 0.0051) ? ' ' : m))

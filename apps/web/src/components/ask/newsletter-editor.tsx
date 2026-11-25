@@ -3,6 +3,8 @@
 // Changing a newsletter without leaving the Ask panel: its COLOURS (the whole newsletter, then any one block) and the BLOCKS (move, edit, copy, delete, and add your own: text, picture and
 // text, quote, callout, button, big numbers, list, dates). Every change is saved to the draft straight away and the designed preview above follows. The words are checked against the
 // newsletter house rules by the server, and the reason is shown here in plain words. No scroll bars: the lists grow.
+import { plainSummary } from '@/lib/ask-dates'
+import { DateTextPicker } from '@/components/ask/date-picker'
 import { useCallback, useEffect, useState } from 'react'
 import { ArrowDown, ArrowUp, Copy, Loader2, Palette, Pencil, Plus, RotateCcw, Trash2, X } from 'lucide-react'
 import { ask, AskError, type NewsletterEditItem, type NewsletterEditState } from '@/lib/ask-client'
@@ -70,7 +72,7 @@ function BlockForm({ uid, type, value, onChange, token, setErr }: { uid: string;
   const r = rows('rows', { date: '', what: '' }, 8)
   return (<div className="space-y-2">
     <Labelled id={`${uid}-h`} label="Heading (optional)"><input id={`${uid}-h`} className={field} maxLength={80} value={value.heading ?? ''} onChange={e => set('heading', e.target.value)} /></Labelled>
-    {r.list.map((it, i) => <div key={i} className="flex items-end gap-2"><div className="w-40"><Labelled id={`${uid}-d${i}`} label={`Date ${i + 1}`}><input id={`${uid}-d${i}`} className={field} maxLength={28} placeholder="Monday 8 December" value={it.date ?? ''} onChange={e => r.edit(i, { date: e.target.value })} /></Labelled></div>
+    {r.list.map((it, i) => <div key={i} className="flex items-end gap-2"><div className="w-auto shrink-0"><Labelled id={`${uid}-d${i}`} label={`Date ${i + 1}`}><DateTextPicker id={`${uid}-d${i}`} label={`Date ${i + 1}`} text={it.date ?? ''} onChange={t => r.edit(i, { date: t })} /></Labelled></div>
       <div className="min-w-0 flex-1"><Labelled id={`${uid}-w${i}`} label="What is happening"><input id={`${uid}-w${i}`} className={field} maxLength={100} value={it.what ?? ''} onChange={e => r.edit(i, { what: e.target.value })} /></Labelled></div>
       {r.list.length > 1 && <button type="button" className={btn} aria-label={`Remove date ${i + 1}`} onClick={() => r.drop(i)}><X size={14} aria-hidden="true" /></button>}</div>)}
     {r.list.length < 8 && <button type="button" className={btn} onClick={r.add}><Plus size={14} aria-hidden="true" />Add a date</button>}</div>)
@@ -157,7 +159,7 @@ export function NewsletterEditor({ token, docId, version, focus, onChanged, bare
             <div key={it.id} className="space-y-1.5">
               <div className="rounded-lg border border-gray-200 bg-white p-2.5">
                 <div className="flex flex-wrap items-center gap-2">
-                  <div className="min-w-0 flex-1"><p className="truncate text-sm font-semibold">{it.title}</p><p className="truncate text-xs text-neutral-mid">{it.kind === 'custom' ? `${st.block_types.find(b => b.id === it.type)?.label ?? it.type}: ` : ''}{it.summary || 'No text'}</p></div>
+                  <div className="min-w-0 flex-1"><p className="truncate text-sm font-semibold">{it.title}</p><p className="truncate text-xs text-neutral-mid">{it.kind === 'custom' ? `${st.block_types.find(b => b.id === it.type)?.label ?? it.type}: ` : ''}{plainSummary(it.summary, 90) || 'No text'}</p></div>
                   <label className="sr-only" htmlFor={`st-${it.id}`}>Colour of {it.title}</label>
                   <select id={`st-${it.id}`} className="min-h-[34px] rounded-lg border border-gray-300 bg-white px-2 text-xs font-semibold" disabled={!!busy} value={it.style ?? ''} onChange={e => run('style', () => ask.newsletterOp(token, docId, { op: 'style', id: it.id, style: e.target.value || null }))}>
                     <option value="">As designed</option>{st.styles.map(x => <option key={x} value={x}>{STYLE_LABEL[x] ?? x}</option>)}

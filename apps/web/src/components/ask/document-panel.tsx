@@ -8,12 +8,14 @@ import { ask, AskError, type AskDocFull, type ShareIntent } from '@/lib/ask-clie
 import { MarkdownLite, Marked } from './markdown-lite'
 import { DocumentActions } from '@/components/ask/document-actions'
 import { SharePanel } from '@/components/ask/share-panel'
+import { DatePicker } from '@/components/ask/date-picker'
 import { GiftBox } from '@/components/ask/gift-box'
 import { NewsletterEditor } from '@/components/ask/newsletter-editor'
 import { FeaturedPeople } from '@/components/ask/featured-people'
 import { MarkedTextarea } from '@/components/ask/marked-textarea'
 import { setAskEditing, setAskEditMode, useAskUi } from '@/lib/ask-ui-store'
 import { splitFor, type EditMode } from '@/lib/ask-panel-state'
+import { EMPTY_NOTICE, noticeKey, openNotice, parseNotice, setNoticeOpen, type NoticePrefs } from '@/lib/ask-notice'
 import { takesPeople } from '@/lib/featured-people'
 import { ExpandViewer, Expandable, useExpandViewer, type ViewerItem } from './expand-viewer'
 import { FitHtml } from './fit-html'
@@ -116,6 +118,20 @@ export function DocumentPanel({ token, id, onClose, onChanged, focus }: { token:
   }
   const isFinal = d?.status === 'approved' || d?.status === 'shared'   // anything else is a DRAFT copy: stamped DRAFT on every page, never recorded as shared
   const letter = d?.type === 'letter', report = d?.type === 'report', news = d?.type === 'newsletter' || report, flow = !!d?.actions.needs_approval
+  // The "Before you send" band: open the first three times a person sees it, then collapsed; remembered per person after they choose.
+  const [noticeOpen, setNoticeOpenState] = useState(true)
+  const noticePrefs = useRef<NoticePrefs>({ ...EMPTY_NOTICE })
+  const showChecklist = !!d && flow && d.checklist.length > 0 && (d.status === 'draft' || d.status === 'pending')
+  useEffect(() => {
+    if (!d || !showChecklist) return
+    let raw: string | null = null
+    try { raw = window.localStorage.getItem(noticeKey(ui.who)) } catch { raw = null }
+    const r = openNotice(parseNotice(raw), d.id)
+    noticePrefs.current = r.prefs; setNoticeOpenState(d.status === 'pending' ? true : r.open)   // waiting for approval: always open, the approver must read it
+    try { window.localStorage.setItem(noticeKey(ui.who), JSON.stringify(r.prefs)) } catch { /* not remembered */ }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [d?.id, showChecklist, ui.who])
+  const toggleNotice = () => { const v = !noticeOpen; setNoticeOpenState(v); noticePrefs.current = setNoticeOpen(noticePrefs.current, v); try { window.localStorage.setItem(noticeKey(ui.who), JSON.stringify(noticePrefs.current)) } catch { /* not remembered */ } }
   const st = d ? STATUS[d.status] ?? STATUS.draft : null
   const split = splitFor(pw) && (d?.type === 'newsletter' || letter || report)   // tools and text on the left, the designed page on the right
   useEffect(() => { if (split && (letter || report)) setShowPaper(true) }, [split, letter, report])   // wide: the page is always beside the words
@@ -164,7 +180,8 @@ export function DocumentPanel({ token, id, onClose, onChanged, focus }: { token:
                   <div key={f.key}><label className="mb-1 block text-xs font-semibold text-neutral-mid" htmlFor={`ask-f-${f.key}`}>{f.label}{f.required ? ' *' : ''}</label>
                     {f.choices ? <select id={`ask-f-${f.key}`} className={input} value={String(values[f.key] ?? '')} onChange={e => setValues(v => ({ ...v, [f.key]: e.target.value }))}><option value="">Choose</option>{f.choices.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}</select>
                       : f.type === 'longtext' || f.type === 'list' ? <MarkedTextarea id={`ask-f-${f.key}`} rows={3} value={String(values[f.key] ?? '')} onChange={v => setValues(vals => ({ ...vals, [f.key]: v }))} label={f.label} />
-                      : <input id={`ask-f-${f.key}`} className={input} type={f.type === 'date' ? 'date' : 'text'} value={String(values[f.key] ?? '')} onChange={e => setValues(v => ({ ...v, [f.key]: e.target.value }))} />}</div>
+                      : f.type === 'date' ? <DatePicker id={`ask-f-${f.key}`} label={f.label} value={String(values[f.key] ?? '')} onChange={iso => setValues(v => ({ ...v, [f.key]: iso }))} />
+                      : <input id={`ask-f-${f.key}`} className={input} type="text" value={String(values[f.key] ?? '')} onChange={e => setValues(v => ({ ...v, [f.key]: e.target.value }))} />}</div>
                 ))}
               </div>
             ) : editing && news ? (
@@ -188,32 +205,42 @@ export function DocumentPanel({ token, id, onClose, onChanged, focus }: { token:
   const showWidth = canEditDoc && pw >= 560
   const sheetOn = d?.type === 'newsletter' && showPaper && !!paper?.sheet
   // what sits in the left column (tools and words) and what sits with the page
+  // Every notice, checklist and warning sits in ONE band under the toolbar, across the whole panel, above the editing and page columns (never squeezed into the left column).
+  const noticeBand = d ? (<>
+    {flow && docStatus && !docStatus.letterhead_ready && (
+      <p className="rounded-lg border border-gray-200 bg-neutral-light/60 px-3 py-2 text-xs text-neutral-dark">To make this look like a complete company letter, finish your <strong>Letterhead and company details</strong> in Settings{docStatus.missing.length ? ': ' + docStatus.missing.join(', ') : ''}.</p>
+    )}
+    {showChecklist && (
+      <div className="w-full rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-950">
+        <button type="button" aria-expanded={noticeOpen} aria-controls="ask-before-send" onClick={toggleNotice} className="flex w-full items-center justify-between gap-2 text-left font-semibold focus:outline-none focus-visible:ring-2 focus-visible:ring-teal">
+          <span className="flex items-center gap-1.5"><AlertTriangle size={14} aria-hidden="true" /> Before you send <span className="rounded-full bg-amber-200/70 px-2 py-0.5 text-xs">{d.checklist.length + 1} checks</span></span>
+          <span className="text-xs font-semibold underline">{noticeOpen ? 'Hide' : 'Show'}</span>
+        </button>
+        {noticeOpen && (
+          <div id="ask-before-send">
+            <ul className="mt-1.5 list-disc space-y-1 pl-5">{d.checklist.map((c, i) => <li key={i}>{c}</li>)}</ul>
+            {d.references.length > 0 && <p className="mt-2 text-xs">Sources: {d.references.map((r, i) => <span key={r.url}>{i > 0 ? ', ' : ''}<a href={r.url} target="_blank" rel="noopener noreferrer" className="underline">{r.label}</a></span>)}</p>}
+            <p className="mt-2 text-xs">CareStream does not give legal advice. Check it matches the person's contract and your policies.</p>
+          </div>
+        )}
+        {d.status === 'pending' && d.actions.approve !== undefined && (
+          <label className="mt-2 flex items-start gap-2 font-medium"><input type="checkbox" className="mt-0.5 h-4 w-4" checked={ticked} onChange={e => setTicked(e.target.checked)} /> I have read this checklist and checked the document.</label>
+        )}
+      </div>
+    )}
+  </>) : null
   const notices = d ? (<>
 
 
 
   </>) : null
   const rest = d ? (<>
-            {flow && docStatus && !docStatus.letterhead_ready && (
-              <p className="rounded-lg border border-gray-200 bg-neutral-light/60 px-3 py-2 text-xs text-neutral-dark">To make this look like a complete company letter, finish your <strong>Letterhead and company details</strong> in Settings{docStatus.missing.length ? ` (${docStatus.missing.slice(0, 3).join(', ')}${docStatus.missing.length > 3 ? ' and more' : ''})` : ''}.</p>
-            )}
             {flow && letter && (d.status === 'pending' || d.status === 'approved' || d.status === 'shared') && (
               <label className="flex items-start gap-2 text-sm text-neutral-dark"><input type="checkbox" className="mt-0.5 h-4 w-4" checked={sign} onChange={e => setSign(e.target.checked)} disabled={!docStatus?.signature} />
                 <span><strong className="font-medium">Sign with my signature.</strong> {docStatus?.signature ? 'Your signature and your printed name and job title go at the end of the letter.' : 'You have not added a signature yet. Add one in Settings under My signature (or in the hub). Your printed name will still be used.'}</span></label>
             )}
             {d.type === 'newsletter' && d.actions.edit && takesPeople(d.data?.template_id) && <FeaturedPeople token={token} docId={d.id} version={d.updated_at ?? ''} onChanged={() => { void load(); onChanged() }} />}
 
-            {flow && d.checklist.length > 0 && (d.status === 'draft' || d.status === 'pending') && (
-              <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-950">
-                <p className="flex items-center gap-1.5 font-semibold"><AlertTriangle size={14} aria-hidden="true" /> Before you send</p>
-                <ul className="mt-1.5 list-disc space-y-1 pl-5">{d.checklist.map((c, i) => <li key={i}>{c}</li>)}</ul>
-                {d.references.length > 0 && <p className="mt-2 text-xs">Sources: {d.references.map((r, i) => <span key={r.url}>{i > 0 ? ', ' : ''}<a href={r.url} target="_blank" rel="noopener noreferrer" className="underline">{r.label}</a></span>)}</p>}
-                <p className="mt-2 text-xs">CareStream does not give legal advice. Check it matches the person's contract and your policies.</p>
-                {d.status === 'pending' && d.actions.approve !== undefined && (
-                  <label className="mt-2 flex items-start gap-2 font-medium"><input type="checkbox" className="mt-0.5 h-4 w-4" checked={ticked} onChange={e => setTicked(e.target.checked)} /> I have read this checklist and checked the document.</label>
-                )}
-              </div>
-            )}
             {flow && letter && (
               <fieldset className="rounded-lg border border-gray-200 p-3">
                 <legend className="px-1 text-sm font-semibold text-neutral-dark">How will this letter be shared?</legend>
@@ -320,6 +347,8 @@ export function DocumentPanel({ token, id, onClose, onChanged, focus }: { token:
           )}
           {d.type === 'newsletter' && d.actions.edit && <NewsletterEditor bare open={tool} onOpen={setTool} token={token} docId={d.id} version={d.updated_at ?? ''} focus={focus} onChanged={() => { void load(); onChanged() }} />}
         </div>
+
+        <div className="flex-shrink-0 space-y-2 px-4 pt-3 empty:hidden" id="ask-notices">{noticeBand}</div>
 
         <div className={`min-h-0 flex-1 overflow-y-auto no-scrollbar px-4 py-3 ${split ? 'grid grid-cols-2 items-start gap-4' : 'space-y-3'}`}>
           {split ? (<>

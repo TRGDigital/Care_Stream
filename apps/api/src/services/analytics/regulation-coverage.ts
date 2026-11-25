@@ -33,7 +33,8 @@
 //
 // Results are cached in regulation_coverage and read by GET /analytics/gaps.
 
-import { inBatches as inBatchesOf, textWindows } from './in-batches'
+import { inBatches as inBatchesOf } from './in-batches'
+import { noCapFor, partsOf } from './uncapped'
 import { prisma } from '../../db/client'
 import { embedTexts } from '../rag/embedder'
 import { queryVectors, getTenantNamespace } from '../vector/pinecone'
@@ -231,11 +232,12 @@ type ElementFinding = { requirement: string; met: boolean; note: string }
 // question the old judge could never answer honestly from a 700-character excerpt.
 // Returns [] when there are no curated elements or the call fails; the caller treats that as
 // "the policy exists and is on the subject", never as evidence of a gap.
-export async function assessElements(reg: Reg, policyName: string, policyText: string): Promise<ElementFinding[]> {
-  const elements = (reg.required_elements ?? []).filter(Boolean)
+export async function assessElements(reg: Reg, policyName: string, policyText: string, open = true): Promise<ElementFinding[]> {
+  const all = (reg.required_elements ?? []).filter(Boolean)
+  const elements = open ? all : all.slice(0, ELEMENTS_PER_CALL)   // accounts not switched on for no cap keep the old limit of 12 points
   if (!elements.length || !policyText.trim()) return []
   // A policy longer than the read limit is read in overlapping parts, and a point is met if ANY part meets it. A policy within the limit is one part: the same single read as before.
-  const windows = textWindows(policyText, POLICY_TEXT_CAP)
+  const windows = partsOf(policyText, POLICY_TEXT_CAP, open)
   let failed = false
   const perWindow: ElementFinding[][] = []
   for (const w of windows) {
@@ -288,7 +290,7 @@ const shortRequirement = (s: string) =>
 // it meet the curated required elements (completeness). Only the first can produce a gap.
 async function analyseOne(
   reg: Reg, emb: number[], policies: Pol[], nameById: Map<string, string>,
-  namespace: string, promptTemplate: string, loadText: (id: string) => Promise<string | null>,
+  namespace: string, promptTemplate: string, loadText: (id: string) => Promise<string | null>, open = false,
 ): Promise<CoverageRow> {
   const noPolicy = (reason: string): CoverageRow => ({
     reference_key: reg.reference_key, status: 'gap', confidence: null,
@@ -378,7 +380,7 @@ async function analyseOne(
 
     // 3. QUESTION 2 — completeness, against the whole policy.
     const fullText = (await loadText(evidenceId)) ?? (chunks.get(evidenceId) ?? []).map(c => c.text).join('\n')
-    const findings = await assessElements(reg, evidenceName, fullText)
+    const findings = await assessElements(reg, evidenceName, fullText, open)
 
     if (!findings.length) {
       // No curated elements to assess, or the elements pass failed. What we can honestly say
@@ -466,8 +468,9 @@ export async function analyseCoverageBatch(tenantId: string, batchSize = COVERAG
 
   // Concurrency 3 (was 5): each regulation now reads whole policies, so the batch is bounded
   // by storage and model calls rather than by how many we can start at once.
+  const open = await noCapFor(tenantId)   // no cap on points or pages only for accounts switched on
   const rows = await mapLimit(todo, 3, (reg: Reg, i: number) =>
-    analyseOne(reg, embeddings[i], policies, nameById, namespace, promptTemplate, loadText))
+    analyseOne(reg, embeddings[i], policies, nameById, namespace, promptTemplate, loadText, open))
 
   const now = new Date()
   await Promise.all(rows.map(r =>

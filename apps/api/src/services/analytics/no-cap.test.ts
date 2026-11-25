@@ -17,7 +17,7 @@ test('WIRING: the curated checklist is never sliced, in the gap detail or in the
   assert.match(gd, /reg\.required_elements\.filter\(Boolean\) : \[\]/); assert.doesNotMatch(gd, /required_elements\.filter\(Boolean\)\.slice/)
   assert.doesNotMatch(rc, /required_elements \?\? \[\]\)\.filter\(Boolean\)\.slice/); assert.doesNotMatch(rc, /MAX_ELEMENTS/)
   for (const f of ['verifyAndSuggestChunk', 'findLocationsChunk', 'titleNewSectionsChunk', 'refineAmendmentsChunk']) assert.match(gd, new RegExp(`inBatches\\([^)]*=> ${f}\\(`), f)
-  assert.match(gd, /identify\(\{ \.\.\.reg, required_elements: chunk \}, evidenceText\)/); assert.match(rc, /assessElementsChunk\(reg, policyName, w, chunk\)/); assert.match(rc, /textWindows\(policyText, POLICY_TEXT_CAP\)/)
+  assert.match(gd, /identify\(\{ \.\.\.reg, required_elements: chunk \}, evidenceText, open\)/); assert.match(rc, /assessElementsChunk\(reg, policyName, w, chunk\)/); assert.match(rc, /partsOf\(policyText, POLICY_TEXT_CAP, open\)/)
 })
 
 import { textWindows, splitForComparison } from './in-batches'
@@ -40,7 +40,29 @@ test('COMPARISON SETS: a small group is compared as it is; a big one is split so
 test('WIRING: no cap left on cross-policy claims, CQC wording or out of date terms', () => {
   const r = (f: string) => fs.readFileSync(path.resolve(__dirname, f), 'utf8')
   const pc = r('policy-consistency.ts'), saf = r('saf.ts'), lint = r('policy-lint.ts')
-  assert.match(pc, /textWindows\(text, CLAIM_READ_CHARS\)/); assert.doesNotMatch(pc, /g\.slice\(0, MAX_GROUP_CLAIMS\)/); assert.match(pc, /splitForComparison\(g\.map\(i => claims\[i\]\), MAX_GROUP_CLAIMS\)/); assert.match(pc, /\|all-parts/)
-  assert.doesNotMatch(saf, /\.slice\(0, 5\)\n?\s*\.map\(\(a: any\)/); assert.doesNotMatch(saf, /\.slice\(0, 20\)/); assert.doesNotMatch(saf, /\.slice\(0, 30\)/); assert.match(saf, /textWindows\(fullText, SAF_POLICY_TEXT_CAP\)/); assert.match(saf, /needed = rated\.filter\(c => \(c\.status === 'no' \|\| c\.status === 'partly'\) && cues\[c\.n - 1\]\)\n/)
+  assert.match(pc, /partsOf\(text, CLAIM_READ_CHARS, open\)/); assert.match(pc, /splitForComparison\(g\.map\(i => claims\[i\]\), MAX_GROUP_CLAIMS\)/); assert.match(pc, /\|all-parts/)
+  assert.doesNotMatch(saf, /\.slice\(0, 5\)\n?\s*\.map\(\(a: any\)/); assert.doesNotMatch(saf, /\.slice\(0, 20\)/); assert.doesNotMatch(saf, /\.slice\(0, 30\)/); assert.match(saf, /partsOf\(fullText, SAF_POLICY_TEXT_CAP, open\)/); assert.match(saf, /let needed = rated\.filter\(c => \(c\.status === 'no' \|\| c\.status === 'partly'\) && cues\[c\.n - 1\]\)\n  if \(!open\) needed = needed\.slice\(0, 5\)/)
   assert.doesNotMatch(lint, /new Set\(hits\.map\(h => h\.match\)\)\]\.slice/)
+})
+
+import { noCapList, partsOf } from './uncapped'
+test('WHO GETS NO CAP: CS-1001 by default, * for everyone, and the old limits (one cut part) for everyone else', () => {
+  const was = process.env.NO_CAP_ACCOUNTS
+  try {
+    delete process.env.NO_CAP_ACCOUNTS; assert.deepEqual(noCapList(), ['CS-1001'])
+    process.env.NO_CAP_ACCOUNTS = ' cs-1001 , CS-1009 '; assert.deepEqual(noCapList(), ['CS-1001', 'CS-1009'])
+    process.env.NO_CAP_ACCOUNTS = '*'; assert.deepEqual(noCapList(), ['*'])
+  } finally { if (was === undefined) delete process.env.NO_CAP_ACCOUNTS; else process.env.NO_CAP_ACCOUNTS = was }
+  const long = 'x'.repeat(2500)
+  assert.deepEqual(partsOf(long, 1000, false), ['x'.repeat(1000)])           // old limit: the first 1000 characters, nothing more
+  assert.ok(partsOf(long, 1000, true).length > 1)                           // no cap: every part
+  assert.deepEqual(partsOf('short', 1000, true), ['short'])                 // within the limit both are the same single read
+})
+test('GATED: each place that lifted a cap keeps the old limit for accounts that are not switched on', () => {
+  const r = (f: string) => fs.readFileSync(path.resolve(__dirname, f), 'utf8')
+  const gd = r('gap-detail.ts'), rc = r('regulation-coverage.ts'), saf = r('saf.ts'), pc = r('policy-consistency.ts')
+  assert.match(gd, /if \(!open\) curated = curated\.slice\(0, MAX_REQUIREMENTS\)/); assert.match(gd, /const open = await noCapFor\(tenantId\)/)
+  assert.match(rc, /const elements = open \? all : all\.slice\(0, ELEMENTS_PER_CALL\)/); assert.match(rc, /const open = await noCapFor\(tenantId\)/)
+  assert.match(saf, /if \(!open\) cues = cues\.slice\(0, 20\)/); assert.match(saf, /if \(!open\) keepTerms = keepTerms\.slice\(0, 30\)/); assert.match(saf, /await noCapFor\(tenantId\)/)
+  assert.match(pc, /open && text\.length > CLAIM_READ_CHARS/); assert.match(pc, /open \? splitForComparison\(g\.map\(i => claims\[i\]\), MAX_GROUP_CLAIMS\) : \[g\.slice\(0, MAX_GROUP_CLAIMS\)/)
 })

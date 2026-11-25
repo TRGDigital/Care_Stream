@@ -14,7 +14,8 @@
 // cached verdict to "covered".
 
 import { GAP_VIEWS_VERSION } from './gap-views'
-import { inBatches as inBatchesOf, textWindows } from './in-batches'
+import { inBatches as inBatchesOf } from './in-batches'
+import { noCapFor, partsOf } from './uncapped'
 import { prisma } from '../../db/client'
 import { embedTexts } from '../rag/embedder'
 import { queryVectors, getTenantNamespace } from '../vector/pinecone'
@@ -170,20 +171,21 @@ const parseJson = (text: string): any => {
 // when present (authoritative, consistent, traceable). Only when a regulation has no
 // curated checklist do we fall back to model-derived requirements — and even then we
 // bind the model strictly to the regulation description, not outside knowledge.
-async function identify(reg: any, evidenceText: string | null): Promise<{ requirements: { requirement: string; in_policy: boolean }[] }> {
-  const curated: string[] = Array.isArray(reg.required_elements) ? reg.required_elements.filter(Boolean) : []
+async function identify(reg: any, evidenceText: string | null, open = true): Promise<{ requirements: { requirement: string; in_policy: boolean }[] }> {
+  let curated: string[] = Array.isArray(reg.required_elements) ? reg.required_elements.filter(Boolean) : []
+  if (!open) curated = curated.slice(0, MAX_REQUIREMENTS)   // the old limit, for accounts not switched on for no cap
 
   // ── A policy longer than the read limit is read in overlapping parts; a point is in the policy if ANY part has it. One part (the usual case) is the same single read as before. ──
-  if (evidenceText && curated.length && textWindows(evidenceText, POLICY_TEXT_CAP).length > 1) {
-    const parts = textWindows(evidenceText, POLICY_TEXT_CAP)
+  if (evidenceText && curated.length && partsOf(evidenceText, POLICY_TEXT_CAP, open).length > 1) {
+    const parts = partsOf(evidenceText, POLICY_TEXT_CAP, open)
     const results: Array<{ requirement: string; in_policy: boolean }[]> = []
-    for (const w of parts) results.push((await identify(reg, w)).requirements)
+    for (const w of parts) results.push((await identify(reg, w, open)).requirements)
     return { requirements: results[0].map((r, i) => ({ requirement: r.requirement, in_policy: results.some(x => x[i]?.in_policy) })) }
   }
 
   // ── Partial with a curated checklist: assess the evidence policy against EVERY point, BATCH points per call. ──
   if (evidenceText && curated.length > BATCH) {
-    const parts = await inBatches(curated, async chunk => (await identify({ ...reg, required_elements: chunk }, evidenceText)).requirements)
+    const parts = await inBatches(curated, async chunk => (await identify({ ...reg, required_elements: chunk }, evidenceText, open)).requirements)
     return { requirements: parts }
   }
 
@@ -245,9 +247,9 @@ Respond with ONLY minified JSON:
 // it should be a brand-new section. Returned aligned to the input order.
 type LocationHit = { quote: string; is_heading: boolean }
 
-async function findLocations(policyText: string, missing: string[]): Promise<LocationHit[]> {
+async function findLocations(policyText: string, missing: string[], open = true): Promise<LocationHit[]> {
   // A policy longer than the read limit is searched part by part; a requirement takes the first anchor found in any part (anchors are checked against the whole policy afterwards).
-  const parts = textWindows(policyText, POLICY_TEXT_CAP)
+  const parts = partsOf(policyText, POLICY_TEXT_CAP, open)
   if (parts.length <= 1) return inBatches(missing, chunk => findLocationsChunk(policyText, chunk))
   const best: LocationHit[] = missing.map(() => ({ quote: '', is_heading: false }))
   for (const w of parts) {
@@ -490,12 +492,12 @@ Respond with ONLY minified JSON — an array in the same order:
 
 /** Where in a policy to add or amend each missing requirement (house numbering in document order). Used once per policy a regulation routes to, so every row on /gaps has its own correct list.
  *  Mutates the requirements it is given (match_index, placement, location_quote, section_title, rewritten wording) and returns the aligned highlight arrays. */
-async function placeMissing(targetText: string | null, missingReqs: GapRequirement[], glossary: GlossaryTerm[], voiceSample: string): Promise<{ highlightQuotes: string[]; highlightPlacements: Placement[]; highlightLabels: string[] }> {
+async function placeMissing(targetText: string | null, missingReqs: GapRequirement[], glossary: GlossaryTerm[], voiceSample: string, open = true): Promise<{ highlightQuotes: string[]; highlightPlacements: Placement[]; highlightLabels: string[] }> {
   const highlightQuotes: string[] = []
   const highlightPlacements: Placement[] = []
   const highlightLabels: string[] = []
   if (missingReqs.length && targetText) {
-    const hits = await findLocations(targetText, missingReqs.map(r => r.requirement))
+    const hits = await findLocations(targetText, missingReqs.map(r => r.requirement), open)
     const lower = targetText.toLowerCase()
     const norm = (s: string) => s.toLowerCase().replace(/\s+/g, ' ').trim()
     // Keep only anchors that are ACTUALLY present in the policy (pos >= 0), so a number
@@ -623,6 +625,7 @@ export async function getGapDetail(tenantId: string, referenceKey: string, force
     }
   }
 
+  const open = await noCapFor(tenantId)   // no cap on points or pages only for accounts switched on (CS-1001 while it is checked)
   const reg = await (prisma as any).externalRegulation.findUnique({
     where:  { reference_key: referenceKey },
     select: { official_name: true, summary: true, care_home_context: true, practical_meaning: true, required_elements: true, authoritative_requirements: true, authority_basis: true, source_urls: true, expected_policy_titles: true },
@@ -651,7 +654,7 @@ export async function getGapDetail(tenantId: string, referenceKey: string, force
   const namespace = getTenantNamespace(tenantId)
 
   // 1. Identify which requirements the target policy already addresses (in_policy) vs not.
-  const ident = await identify(reg, evidenceText)
+  const ident = await identify(reg, evidenceText, open)
 
   // Requirements the evidence policy already covers → already_covered (plain, no
   // highlight — the focus of the highlights is where to ADD, not what's already there).
@@ -787,7 +790,7 @@ export async function getGapDetail(tenantId: string, referenceKey: string, force
     const mine = missingReqs.filter(r => keyOf(r.target_policy_id ?? null, r.target_policy_name ?? (suggestedNewPolicyTitle ?? 'New policy needed')) === keyOf(tp.id, tp.name))
     if (!mine.length) continue
     const text = tp.id === null ? null : tp.id === targetPolicy?.id ? targetText : await downloadExtractedText(tenantId, tp.id).catch(() => null)
-    const placed = await placeMissing(text, mine, glossary, buildVoiceSample(text) || voiceSample)
+    const placed = await placeMissing(text, mine, glossary, buildVoiceSample(text) || voiceSample, open)
     policyViews.push({ key: keyOf(tp.id, tp.name), policy: { id: tp.id, name: tp.name }, requirements: mine, highlight_quotes: placed.highlightQuotes, highlight_placements: placed.highlightPlacements, highlight_labels: placed.highlightLabels })
   }
   // The primary (back-compat) policy is one that really has items routed to it: a title match with nothing routed to it is never offered.

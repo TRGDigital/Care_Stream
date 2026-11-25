@@ -11,7 +11,8 @@
 //      re-run only when the policy text changes. Only policies that appear in a comparison set
 //      are extracted, so the AI cost is bounded to what can actually conflict.
 
-import { textWindows, splitForComparison } from './in-batches'
+import { splitForComparison } from './in-batches'
+import { noCapFor, partsOf } from './uncapped'
 import { createHash } from 'crypto'
 import { prisma } from '../../db/client'
 import { downloadExtractedText } from '../storage/s3'
@@ -195,7 +196,8 @@ export async function extractPolicyClaims(tenantId: string, policy: { id: string
   const text = await downloadExtractedText(tenantId, policy.id).catch(() => null)
   if (!text || text.trim().length < 200) { await writeRow('no-text', []); return [] }
   // A policy longer than one read had only its first part read before: its stored claims are replaced once (shorter policies keep theirs).
-  const hash = createHash('sha256').update(text.length > CLAIM_READ_CHARS ? `${text}|all-parts` : text).digest('hex')
+  const open = await noCapFor(tenantId)   // no cap on how much of a policy is read only for accounts switched on
+  const hash = createHash('sha256').update(open && text.length > CLAIM_READ_CHARS ? `${text}|all-parts` : text).digest('hex')
 
   const cached = await (prisma as any).policyClaim.findUnique({ where: { tenant_id_policy_id: { tenant_id: tenantId, policy_id: policy.id } } }).catch(() => null)
   if (cached && cached.content_hash === hash) return (cached.claims as PolicyClaim[]) ?? []
@@ -205,7 +207,7 @@ export async function extractPolicyClaims(tenantId: string, policy: { id: string
     // NO CAP on how much of a policy is read: a policy longer than one read is taken in overlapping parts, and the claims from every part are kept (the same claim is kept once).
     // A policy that fits in one read is the same single call as before.
     const seen = new Set<string>()
-    for (const part of textWindows(text, CLAIM_READ_CHARS)) {
+    for (const part of partsOf(text, CLAIM_READ_CHARS, open)) {
       const out = await callClaude(EXTRACT_SYSTEM, extractPrompt(policy.name, part), { model: HAIKU, maxTokens: 2000, temperature: 0, feature: 'policy_consistency' })
       const parsed = JSON.parse(out.slice(out.indexOf('{'), out.lastIndexOf('}') + 1))
       const got: PolicyClaim[] = (Array.isArray(parsed.claims) ? parsed.claims : [])
@@ -348,7 +350,7 @@ const MAX_GROUP_CLAIMS = 16     // beyond this a group is too broad to compare u
 
 type IndexedClaim = PolicyClaim & { policy_id: string; policy_name: string }
 
-async function buildClaimTopicGroups(claims: IndexedClaim[]): Promise<IndexedClaim[][]> {
+async function buildClaimTopicGroups(claims: IndexedClaim[], open = false): Promise<IndexedClaim[][]> {
   if (claims.length < 2) return []
   const vectors: number[][] = []
   for (let i = 0; i < claims.length; i += 200) {
@@ -372,7 +374,7 @@ async function buildClaimTopicGroups(claims: IndexedClaim[]): Promise<IndexedCla
   })
   return [...byRoot.values()]
     .filter(g => new Set(g.map(i => claims[i].policy_id)).size >= 2)
-    .flatMap(g => splitForComparison(g.map(i => claims[i]), MAX_GROUP_CLAIMS))
+    .flatMap(g => open ? splitForComparison(g.map(i => claims[i]), MAX_GROUP_CLAIMS) : [g.slice(0, MAX_GROUP_CLAIMS).map(i => claims[i])])   // old accounts: a group is cut at the limit, as before
 }
 
 function detectPrompt(group: IndexedClaim[], passages: string[]): string {
@@ -488,7 +490,7 @@ export async function runDetection(tenantId: string): Promise<{ conflicts: numbe
     }
   }
 
-  const groups = await buildClaimTopicGroups(claims)
+  const groups = await buildClaimTopicGroups(claims, await noCapFor(tenantId))
   if (!groups.length) {
     await (prisma as any).policyConsistency.upsert({
       where:  { tenant_id: tenantId },

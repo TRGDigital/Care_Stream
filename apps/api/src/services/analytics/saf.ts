@@ -2,7 +2,7 @@
 // covered / partial / gap status from the verified regulation coverage of the statement's
 // crosswalk (never re-matched). Grouped by key question. This is the SAF readiness data layer.
 
-import { textWindows } from './in-batches'
+import { noCapFor, partsOf } from './uncapped'
 import { prisma } from '../../db/client'
 import { resolvedPolicyIds } from './review-resolutions'
 import { callClaude } from '../ai/claude'
@@ -143,15 +143,18 @@ function groundAnchor(anchor: string, policyText: string): string {
 // for every policy it looked at, including a Water Supply Management policy. Step 1 now rates
 // each quality against the policy with an explicit n/a option; step 2 drafts wording ONLY for
 // the qualities genuinely absent, so zero suggestions is a normal, reachable answer.
-async function generateAlignments(statements: any[], fullText: string): Promise<SafAlignment[]> {
+async function generateAlignments(statements: any[], fullText: string, open = true): Promise<SafAlignment[]> {
   // NO CAP: every quality is checked and every genuinely missing one gets its wording. Qualities are rated QUALITIES_PER_CALL at a time and drafted DRAFTS_PER_CALL at a time (the sizes the
   // prompts were tuned on), and a policy longer than the read limit is read in overlapping parts. A short policy with few qualities is the same two calls as before.
-  const cues = [...new Set(statements.flatMap((s: any) => (s.expectation_cues as string[]) ?? []))]
+  let cues = [...new Set(statements.flatMap((s: any) => (s.expectation_cues as string[]) ?? []))]
+  if (!open) cues = cues.slice(0, 20)   // the old limits, for accounts not switched on for no cap
   if (!cues.length || !fullText.trim()) return []
-  const keepTerms = ((await (prisma as any).platformGlossary.findMany({ where: { keep: true }, select: { term: true } }).catch(() => [])) as any[]).map(t => t.term)
+  let keepTerms = ((await (prisma as any).platformGlossary.findMany({ where: { keep: true }, select: { term: true } }).catch(() => [])) as any[]).map(t => t.term)
+  if (!open) keepTerms = keepTerms.slice(0, 30)
 
   const system = 'You are a CQC inspection expert helping a care provider make a policy read the way CQC\'s Single Assessment Framework expects. Respond only with valid JSON.'
-  const windows = textWindows(fullText, SAF_POLICY_TEXT_CAP)
+  const windows = partsOf(fullText, SAF_POLICY_TEXT_CAP, open)
+  const groundIn = open ? fullText : fullText.slice(0, SAF_POLICY_TEXT_CAP)   // anchors are checked against what was read
 
   // Step 1 — which of these qualities does the policy already reflect?
   const rateChunk = async (chunk: string[], policyText: string): Promise<Array<{ n: number; status: string; quote: string }> | null> => {
@@ -195,7 +198,8 @@ Respond with ONLY minified JSON: {"cues":[{"n":1,"status":"yes|partly|no|n/a","q
   }
   const rated = [...best.entries()].sort((x, y) => x[0] - y[0]).map(([n, v]) => ({ n, ...v }))
 
-  const needed = rated.filter(c => (c.status === 'no' || c.status === 'partly') && cues[c.n - 1])
+  let needed = rated.filter(c => (c.status === 'no' || c.status === 'partly') && cues[c.n - 1])
+  if (!open) needed = needed.slice(0, 5)
   if (!needed.length) return []   // already reads well — a real and common answer, not a failure
 
   // Step 2 — draft wording only for what is genuinely missing, DRAFTS_PER_CALL at a time, against the part of the policy that holds the closest existing wording.
@@ -230,7 +234,7 @@ Respond with ONLY minified JSON:
         // An anchor that is not really in the policy cannot be replaced, so the adopt step
         // would silently do nothing. Fall back to a new section rather than offer that.
         if (placement === 'amend' || placement === 'add_under_heading') {
-          anchor = groundAnchor(anchor, fullText)
+          anchor = groundAnchor(anchor, groundIn)
           if (!anchor) placement = 'new_section'
         }
         return {
@@ -280,7 +284,7 @@ export async function safAlignment(tenantId: string, referenceKey: string, polic
 
   let alignments: SafAlignment[]
   try {
-    alignments = await generateAlignments(statements as any[], policyText)
+    alignments = await generateAlignments(statements as any[], policyText, await noCapFor(tenantId))
   } catch (e: any) {
     console.error('[saf] alignment failed', e?.message)
     return { statements: stmtOut, target_policy: { id: policy.id, name: policy.name }, alignments: [], message: 'The wording check could not be completed. Please try again.' }
@@ -395,7 +399,7 @@ export async function wordingAlignmentBatch(tenantId: string, batchSize = 3): Pr
         message = 'The policy text is not available to check.'
       } else {
         await checkAiCreditLimit(tenantId)   // throws PlanLimitError → stops the run (402)
-        try { alignments = await generateAlignments(statements as any[], policyText) }
+        try { alignments = await generateAlignments(statements as any[], policyText, await noCapFor(tenantId)) }
         catch (e: any) { console.error('[saf] policy wording failed', p.id, e?.message); alignments = [] }
         if (alignments.length > 0) await logAiCredit(tenantId, 'saf_alignment', p.id)
         message = alignments.length

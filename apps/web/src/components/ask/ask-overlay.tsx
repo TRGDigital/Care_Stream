@@ -449,7 +449,7 @@ export function AskPanel({ token, layout, expanded, width, locked = false, onClo
         )}
 
         {docId && !expanded && !ui.editing && layout !== 'phone' && expandHint !== docId && (
-          <div className="absolute inset-x-0 top-0 z-20 flex items-center justify-between gap-2 border-b border-teal/30 bg-teal/10 px-4 py-2 text-xs text-neutral-dark" role="status">
+          <div className="absolute inset-x-3 bottom-3 z-20 flex items-center justify-between gap-2 rounded-lg border border-teal/30 bg-white px-4 py-2 text-xs text-neutral-dark shadow-md" role="status">
             <span>This is easier to read and edit in the larger view.</span>
             <span className="flex items-center gap-2">
               <button type="button" onClick={() => setAskExpanded(true)} className="rounded-md bg-teal px-2.5 py-1 font-semibold text-white hover:bg-teal-dark">Expand</button>

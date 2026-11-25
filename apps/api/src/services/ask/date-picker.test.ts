@@ -92,6 +92,6 @@ test('BLOCK LIST: the summary has no formatting marks and is cut at a word with 
 test('APPROVAL STEP: the Share panel carries the submit, approve and send back controls itself, so a document that is not yet approved always has a way forward; email-off offers a hub notification', () => {
   const sp = web('components/ask/share-panel.tsx'), dp = web('components/ask/document-panel.tsx')
   assert.match(sp, /approval\?: ReactNode/); assert.match(sp, /\{approval\}/); assert.match(sp, /Use a hub notification instead/); assert.match(sp, /Open Ask settings/)
-  assert.match(dp, /id="ask-approval-step"/); assert.match(dp, /approval=\{approvalNode\}/)
-  assert.match(dp, /Submit for approval/); assert.match(dp, /Send back to edit/); assert.match(dp, /waiting for another administrator/)
+  assert.match(dp, /id="ask-approval-step"/); assert.match(dp, /\{approvalNode\}/); assert.match(dp, /\(!flow \|\| isFinal\) && <SharePanel/)
+  assert.match(dp, /Submit for approval/); assert.match(dp, /Send back to edit/); assert.match(dp, /Another administrator needs to approve it/)
 })

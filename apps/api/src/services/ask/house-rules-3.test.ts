@@ -176,7 +176,7 @@ test('EVERY AGENT: the composed prompt carries rule 9 (editable, after the job a
       assert.ok(p.indexOf('RULE 9, A GENTLE CHECK') < p.indexOf(LOCKED_RULES.slice(0, 40)), `${a.id}: before the locked rules`)
     }
   } finally { __setPromptTestHooks({ reader: null }) }
-  assert.deepEqual(HOUSE_RULES_SUMMARY.map(r => r.n), [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13])
+  assert.deepEqual(HOUSE_RULES_SUMMARY.map(r => r.n), [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14])
   const nine = HOUSE_RULES_SUMMARY[8]
   assert.equal(nine.locked, false); assert.ok(nine.line.length < 100); assert.doesNotMatch(`${nine.title} ${nine.line}`, /[–—]/)
   const page = webSrc('app/(platform)/platform/prompts/page.tsx')
@@ -210,4 +210,15 @@ test('RULE 13: keep it uncluttered is in the shared prompt of every agent, edita
   assert.ok(DEFAULT_HOUSE_RULES_FORMS.includes(r.phrase)); assert.match(DEFAULT_HOUSE_RULES_FORMS, /Never show CareStream's internal checks/)
   __setPromptTestHooks({ reader: async () => null })
   try { for (const a of AGENTS) assert.ok((await buildSystemPrompt(a, '2026-11-26', 'Ferndale', '')).includes('RULE 13, KEEP IT UNCLUTTERED'), a.id) } finally { __setPromptTestHooks({ reader: null }) }
+})
+
+test('RULE 14: say it once is in every agent prompt, and the screen has a Go back on forms and choices and shows a form title only when it is not the first question', async () => {
+  const r = HOUSE_RULES_SUMMARY[13]
+  assert.equal(r.n, 14); assert.equal(r.locked, false); assert.ok(r.line.length < 100); assert.doesNotMatch(`${r.title} ${r.line}`, /[–—]/)
+  assert.ok(DEFAULT_HOUSE_RULES_FORMS.includes(r.phrase)); assert.match(DEFAULT_HOUSE_RULES_FORMS, /title must not repeat its first question/)
+  __setPromptTestHooks({ reader: async () => null })
+  try { for (const a of AGENTS) assert.ok((await buildSystemPrompt(a, '2026-11-26', 'Ferndale', '')).includes('RULE 14, SAY IT ONCE'), a.id) } finally { __setPromptTestHooks({ reader: null }) }
+  const qf = webSrc('components/ask/question-form.tsx'), ob = webSrc('components/ask/options-block.tsx'), ov = webSrc('components/ask/ask-overlay.tsx')
+  assert.match(qf, /Go back/); assert.match(qf, /!sameWords\(form\.title, form\.questions\[0\]\?\.label\)/); assert.match(ob, /Go back/)
+  assert.match(ov, /const goBack = /); assert.match(ov, /onBack=\{canGoBack && last \? goBack : undefined\}/)
 })

@@ -5,12 +5,15 @@
 // message that pairs each question with its answer, so nothing is ambiguous. The form stays editable until it is sent; after that the answered card shows what was sent.
 import { DatePicker } from '@/components/ask/date-picker'
 import { useId, useMemo, useRef, useState } from 'react'
-import { Check, Loader2, Send } from 'lucide-react'
+import { ArrowLeft, Check, Loader2, Send } from 'lucide-react'
 import { StaffPicker, useStaff } from '@/components/ask/staff-picker'
 import { ask } from '@/lib/ask-client'
 import { prefillForm } from '@/lib/ask-prefill'
 import { formatAnswers, missingAnswers, type AnswerValue, type Question, type QuestionForm as Form } from '@/lib/ask-blocks'
 import { checksFor, declineValue, maxPeople, peopleMode, pendingChecks, type CheckItem } from '@/lib/ask-check'
+
+/** The same words once the case, punctuation and an (optional) tag are ignored: a title that is just the first question is not shown twice (HOUSE RULE 14). */
+export const sameWords = (a?: string, b?: string) => { const n = (t?: string) => String(t ?? '').toLowerCase().replace(/\((optional|required)\)/g, '').replace(/[^a-z0-9 ]/g, '').replace(/\s+/g, ' ').trim(); return !!n(a) && n(a) === n(b) }
 
 const inp = 'w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-neutral-dark outline-none focus:border-teal focus:ring-2 focus:ring-teal/20'
 
@@ -65,7 +68,7 @@ export function CheckLine({ item, onYes, onNo, disabled }: { item: CheckItem; on
   )
 }
 
-export function QuestionFormCard({ token, form: given, typed = [], disabled, onSend }: { token: string; form: Form; /** What the administrator has typed so far in this chat: used to fill in what they have already said (HOUSE RULE 8). */ typed?: string[]; disabled?: boolean; onSend: (message: string) => void }) {
+export function QuestionFormCard({ token, form: given, typed = [], disabled, onSend, onBack }: { token: string; form: Form; /** HOUSE RULE 14: go back to where they were before (the screen supplies it; nothing is final until they send). */ onBack?: () => void; /** What the administrator has typed so far in this chat: used to fill in what they have already said (HOUSE RULE 8). */ typed?: string[]; disabled?: boolean; onSend: (message: string) => void }) {
   const uid = useId()
   const staffForHints = useStaff(token, given.questions.some(q => q.kind === 'people'))
   const pre = useMemo(() => prefillForm(given, typed, staffForHints), [given, typed.join('\n'), staffForHints])   // eslint-disable-line react-hooks/exhaustive-deps
@@ -94,7 +97,7 @@ export function QuestionFormCard({ token, form: given, typed = [], disabled, onS
   const no = (c: CheckItem) => { const q = form.questions.find(x => x.id === c.qid); if (q) set(q.id, declineValue(c, values[q.id] ?? { text: '' }, q, pre.said, staffForHints)) }
   return (
     <form ref={rootRef} onSubmit={e => { e.preventDefault(); send() }} className="mt-3 rounded-xl border border-teal/30 bg-teal/5 p-3 sm:p-4" aria-label={form.title || 'Questions for you'}>
-      {form.title && <p className="mb-2 text-sm font-semibold text-neutral-dark">{form.title}</p>}
+      {form.title && !sameWords(form.title, form.questions[0]?.label) && <p className="mb-2 text-sm font-semibold text-neutral-dark">{form.title}</p>}   {/* HOUSE RULE 14: said once. When the title is the first question, only the question shows. */}
       <div className="space-y-3">
         {form.questions.map(q => {
           const id = `${uid}-${q.id}`; const v = values[q.id] ?? { text: '' }
@@ -119,6 +122,7 @@ export function QuestionFormCard({ token, form: given, typed = [], disabled, onS
       </div>
       <div className="mt-3 flex flex-wrap items-center gap-2">
         <button type="submit" disabled={disabled} className="inline-flex min-h-[40px] items-center gap-1.5 rounded-lg bg-teal px-4 text-sm font-semibold text-white hover:bg-teal-dark disabled:opacity-50"><Send size={14} aria-hidden="true" />Send answers</button>
+        {onBack && <button type="button" onClick={onBack} disabled={disabled} className="inline-flex min-h-[40px] items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-4 text-sm font-semibold text-neutral-dark hover:bg-neutral-light disabled:opacity-50"><ArrowLeft size={14} aria-hidden="true" />Go back</button>}
         {tried && missing.length > 0 && <span role="alert" className="text-xs font-medium text-red-700">{missing.length === 1 ? 'One required answer is missing.' : `${missing.length} required answers are missing.`}</span>}
       </div>
     </form>

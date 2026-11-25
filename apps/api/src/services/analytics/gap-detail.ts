@@ -14,7 +14,7 @@
 // cached verdict to "covered".
 
 import { GAP_VIEWS_VERSION } from './gap-views'
-import { inBatches as inBatchesOf } from './in-batches'
+import { inBatches as inBatchesOf, textWindows } from './in-batches'
 import { prisma } from '../../db/client'
 import { embedTexts } from '../rag/embedder'
 import { queryVectors, getTenantNamespace } from '../vector/pinecone'
@@ -173,6 +173,14 @@ const parseJson = (text: string): any => {
 async function identify(reg: any, evidenceText: string | null): Promise<{ requirements: { requirement: string; in_policy: boolean }[] }> {
   const curated: string[] = Array.isArray(reg.required_elements) ? reg.required_elements.filter(Boolean) : []
 
+  // ── A policy longer than the read limit is read in overlapping parts; a point is in the policy if ANY part has it. One part (the usual case) is the same single read as before. ──
+  if (evidenceText && curated.length && textWindows(evidenceText, POLICY_TEXT_CAP).length > 1) {
+    const parts = textWindows(evidenceText, POLICY_TEXT_CAP)
+    const results: Array<{ requirement: string; in_policy: boolean }[]> = []
+    for (const w of parts) results.push((await identify(reg, w)).requirements)
+    return { requirements: results[0].map((r, i) => ({ requirement: r.requirement, in_policy: results.some(x => x[i]?.in_policy) })) }
+  }
+
   // ── Partial with a curated checklist: assess the evidence policy against EVERY point, BATCH points per call. ──
   if (evidenceText && curated.length > BATCH) {
     const parts = await inBatches(curated, async chunk => (await identify({ ...reg, required_elements: chunk }, evidenceText)).requirements)
@@ -238,7 +246,15 @@ Respond with ONLY minified JSON:
 type LocationHit = { quote: string; is_heading: boolean }
 
 async function findLocations(policyText: string, missing: string[]): Promise<LocationHit[]> {
-  return inBatches(missing, chunk => findLocationsChunk(policyText, chunk))
+  // A policy longer than the read limit is searched part by part; a requirement takes the first anchor found in any part (anchors are checked against the whole policy afterwards).
+  const parts = textWindows(policyText, POLICY_TEXT_CAP)
+  if (parts.length <= 1) return inBatches(missing, chunk => findLocationsChunk(policyText, chunk))
+  const best: LocationHit[] = missing.map(() => ({ quote: '', is_heading: false }))
+  for (const w of parts) {
+    const hits = await inBatches(missing, chunk => findLocationsChunk(w, chunk))
+    hits.forEach((h, i) => { if (!best[i].quote && h.quote) best[i] = h })
+  }
+  return best
 }
 async function findLocationsChunk(policyText: string, missing: string[]): Promise<LocationHit[]> {
   const empty = (): LocationHit[] => missing.map(() => ({ quote: '', is_heading: false }))

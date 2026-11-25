@@ -152,7 +152,7 @@ export function lintPolicyText(
     if (!hits.length) continue
     // Distinct verbatim matched strings (e.g. "Primary Care Trusts", "PCTs", "PCT") so the UI
     // can highlight and replace EVERY occurrence of EACH, not just the first.
-    const terms = [...new Set(hits.map(h => h.match))].slice(0, 25)
+    const terms = [...new Set(hits.map(h => h.match))]   // every distinct term, so each one can be highlighted and replaced (no cap)
     findings.push({
       signal_key: s.id, category: s.category, severity: s.severity,
       label: s.label, detail: s.detail, superseded_by: s.supersededBy ?? null,

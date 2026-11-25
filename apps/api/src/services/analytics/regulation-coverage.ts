@@ -33,7 +33,7 @@
 //
 // Results are cached in regulation_coverage and read by GET /analytics/gaps.
 
-import { inBatches as inBatchesOf } from './in-batches'
+import { inBatches as inBatchesOf, textWindows } from './in-batches'
 import { prisma } from '../../db/client'
 import { embedTexts } from '../rag/embedder'
 import { queryVectors, getTenantNamespace } from '../vector/pinecone'
@@ -234,9 +234,19 @@ type ElementFinding = { requirement: string; met: boolean; note: string }
 async function assessElements(reg: Reg, policyName: string, policyText: string): Promise<ElementFinding[]> {
   const elements = (reg.required_elements ?? []).filter(Boolean)
   if (!elements.length || !policyText.trim()) return []
+  // A policy longer than the read limit is read in overlapping parts, and a point is met if ANY part meets it. A policy within the limit is one part: the same single read as before.
+  const windows = textWindows(policyText, POLICY_TEXT_CAP)
   let failed = false
-  const out = await inBatchesOf(elements, ELEMENTS_PER_CALL, async chunk => { if (failed) return []; const part = await assessElementsChunk(reg, policyName, policyText, chunk); if (!part.length) failed = true; return part })
-  return failed ? [] : out   // any call failing keeps the safe answer: never a verdict from half a checklist
+  const perWindow: ElementFinding[][] = []
+  for (const w of windows) {
+    const out = await inBatchesOf(elements, ELEMENTS_PER_CALL, async chunk => { if (failed) return []; const part = await assessElementsChunk(reg, policyName, w, chunk); if (!part.length) failed = true; return part })
+    if (failed) return []   // any call failing keeps the safe answer: never a verdict from half a checklist or half a policy
+    perWindow.push(out)
+  }
+  return elements.map((e, i) => {
+    const met = perWindow.find(w => w[i]?.met)
+    return met ? met[i] : (perWindow[0][i] ?? { requirement: e, met: false, note: '' })
+  })
 }
 async function assessElementsChunk(reg: Reg, policyName: string, policyText: string, elements: string[]): Promise<ElementFinding[]> {
   const user = `REGULATION: ${reg.official_name}

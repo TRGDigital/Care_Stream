@@ -11,6 +11,7 @@
 //      re-run only when the policy text changes. Only policies that appear in a comparison set
 //      are extracted, so the AI cost is bounded to what can actually conflict.
 
+import { textWindows, splitForComparison } from './in-batches'
 import { createHash } from 'crypto'
 import { prisma } from '../../db/client'
 import { downloadExtractedText } from '../storage/s3'
@@ -28,6 +29,7 @@ const HAIKU = 'claude-haiku-4-5-20251001'
 const DRIFT_MIN = 0.4
 // Title+section topic relatedness (cosine) for grouping policies on the same subject.
 const TOPIC_MIN = 0.72
+const CLAIM_READ_CHARS = 24000   // one read of a policy for claims; a longer policy is read in several overlapping parts, never cut off
 const MAX_CLUSTER = 14        // clusters larger than this are too broad to compare usefully
 
 export type ClaimKind = 'timeframe' | 'role' | 'location' | 'frequency' | 'threshold' | 'escalation' | 'definition' | 'other'
@@ -145,7 +147,7 @@ function extractPrompt(name: string, text: string): string {
     'Return ONLY JSON: {"claims":[{"topic":"...","statement":"...","quote":"...","kind":"..."}]}',
     '',
     'POLICY TEXT:',
-    text.slice(0, 24000),
+    text.slice(0, CLAIM_READ_CHARS),
   ].join('\n')
 }
 
@@ -192,19 +194,26 @@ export async function extractPolicyClaims(tenantId: string, policy: { id: string
 
   const text = await downloadExtractedText(tenantId, policy.id).catch(() => null)
   if (!text || text.trim().length < 200) { await writeRow('no-text', []); return [] }
-  const hash = createHash('sha256').update(text).digest('hex')
+  // A policy longer than one read had only its first part read before: its stored claims are replaced once (shorter policies keep theirs).
+  const hash = createHash('sha256').update(text.length > CLAIM_READ_CHARS ? `${text}|all-parts` : text).digest('hex')
 
   const cached = await (prisma as any).policyClaim.findUnique({ where: { tenant_id_policy_id: { tenant_id: tenantId, policy_id: policy.id } } }).catch(() => null)
   if (cached && cached.content_hash === hash) return (cached.claims as PolicyClaim[]) ?? []
 
   let claims: PolicyClaim[] = []
   try {
-    const out = await callClaude(EXTRACT_SYSTEM, extractPrompt(policy.name, text), { model: HAIKU, maxTokens: 2000, temperature: 0, feature: 'policy_consistency' })
-    const parsed = JSON.parse(out.slice(out.indexOf('{'), out.lastIndexOf('}') + 1))
-    claims = (Array.isArray(parsed.claims) ? parsed.claims : [])
+    // NO CAP on how much of a policy is read: a policy longer than one read is taken in overlapping parts, and the claims from every part are kept (the same claim is kept once).
+    // A policy that fits in one read is the same single call as before.
+    const seen = new Set<string>()
+    for (const part of textWindows(text, CLAIM_READ_CHARS)) {
+      const out = await callClaude(EXTRACT_SYSTEM, extractPrompt(policy.name, part), { model: HAIKU, maxTokens: 2000, temperature: 0, feature: 'policy_consistency' })
+      const parsed = JSON.parse(out.slice(out.indexOf('{'), out.lastIndexOf('}') + 1))
+      const got: PolicyClaim[] = (Array.isArray(parsed.claims) ? parsed.claims : [])
       .map((c: any) => ({ topic: String(c.topic ?? '').trim(), statement: String(c.statement ?? '').trim(), quote: groundQuote(String(c.quote ?? '').trim(), text), kind: (KINDS.has(c.kind) ? c.kind : 'other') as ClaimKind }))
-      .filter((c: PolicyClaim) => c.topic && c.statement && !isReviewMetaClaim(c))
-      .slice(0, 25)
+        .filter((c: PolicyClaim) => c.topic && c.statement && !isReviewMetaClaim(c))
+        .slice(0, 25)   // the prompt asks for at most 25 per part of the policy
+      for (const c of got) { const k = `${c.topic}|${c.statement}`.toLowerCase().replace(/\s+/g, ' '); if (!seen.has(k)) { seen.add(k); claims.push(c) } }
+    }
   } catch (e: any) {
     console.error('[consistency] claim extraction failed', policy.id, e?.message)
     await writeRow(hash, [])   // mark attempted so the run terminates; a later re-scan can retry
@@ -363,7 +372,7 @@ async function buildClaimTopicGroups(claims: IndexedClaim[]): Promise<IndexedCla
   })
   return [...byRoot.values()]
     .filter(g => new Set(g.map(i => claims[i].policy_id)).size >= 2)
-    .map(g => g.slice(0, MAX_GROUP_CLAIMS).map(i => claims[i]))
+    .flatMap(g => splitForComparison(g.map(i => claims[i]), MAX_GROUP_CLAIMS))
 }
 
 function detectPrompt(group: IndexedClaim[], passages: string[]): string {
@@ -500,7 +509,10 @@ export async function runDetection(tenantId: string): Promise<{ conflicts: numbe
   const candidates = (await mapLimit(groups, 3, (g: IndexedClaim[], i: number) =>
     detectGroupConflicts(g, i, textById).catch(() => []))).flat()
 
-  const verified = (await mapLimit(candidates, 3, (c: PolicyConflict) =>
+  // A bigger group is compared in pieces, so the same disagreement can turn up twice: it is kept once.
+  const seenConflict = new Set<string>()
+  const unique = candidates.filter(c => { const k = c.positions.map(p => `${p.policy_id}::${p.statement}`).sort().join('||'); if (seenConflict.has(k)) return false; seenConflict.add(k); return true })
+  const verified = (await mapLimit(unique, 3, (c: PolicyConflict) =>
     verifyConflict(c, textById).catch(() => null))).filter(Boolean) as PolicyConflict[]
 
   const rank = { high: 0, medium: 1, low: 2 } as const

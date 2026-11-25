@@ -9,6 +9,7 @@ import sharp from 'sharp'
 import { Router, Request, Response } from 'express'
 import { prisma } from '../db/client'
 import { LOGO_ROW, LOGO_BLOCK } from '../services/email/org-logo-markers'
+import { applyBrandAccent, usableBrand } from './brand-colour'
 
 const p = () => prisma as any
 const apiBase = () => (process.env.API_PUBLIC_URL || 'https://api.carestreamai.com').replace(/\/$/, '')
@@ -51,6 +52,20 @@ export async function orgLogoForTenant(tenantId: string): Promise<OrgLogo | null
   } catch { return null }
 }
 
+/** The brand colour of an account (null when none is set or the column does not exist yet). Used to colour the button in staff and family emails. */
+export async function brandColourForTenant(tenantId: string): Promise<string | null> {
+  try {
+    const r: any[] = await p().$queryRawUnsafe('select brand_colour from tenant_letterhead where tenant_id = $1', tenantId)
+    return usableBrand(r[0]?.brand_colour)
+  } catch { return null }
+}
+async function brandColourForRecipient(email: string): Promise<string | null> {
+  try {
+    const u = await p().user.findFirst({ where: { email: { equals: email.trim().toLowerCase(), mode: 'insensitive' } }, select: { tenant_id: true } })
+    return u?.tenant_id ? await brandColourForTenant(u.tenant_id) : null
+  } catch { return null }
+}
+
 /** Replace the markers with the logo, or remove them when there is none. */
 export function applyOrgLogo(html: string, logo: OrgLogo | null): string {
   if (!html.includes(LOGO_ROW) && !html.includes(LOGO_BLOCK)) return html
@@ -72,7 +87,8 @@ export async function withOrgLogo(msg: any): Promise<any> {
   if (!msg.html.includes(LOGO_ROW) && !msg.html.includes(LOGO_BLOCK)) return msg
   const to = firstRecipient(msg.to ?? msg.personalizations?.[0]?.to)
   const logo = to ? await orgLogoForRecipient(to).catch(() => null) : null
-  return { ...msg, html: applyOrgLogo(msg.html, logo) }
+  const brand = to && !override ? await brandColourForRecipient(to) : null
+  return { ...msg, html: applyBrandAccent(applyOrgLogo(msg.html, logo), brand) }
 }
 
 // ── The image ────────────────────────────────────────────────────────────────

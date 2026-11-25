@@ -3,6 +3,7 @@
 // works without them.
 
 import { footerFor, printable, type LayoutDoc } from './layout'
+import { usableBrand } from '../../lib/brand-colour'
 
 const M = 56, W = 595.28, H = 841.89
 const INK = '#1A1530', MID = '#5E4D70', LINE = '#d9d4e0', GREY = '#777777', TEAL = '#0f766e'
@@ -10,6 +11,7 @@ const INK = '#1A1530', MID = '#5E4D70', LINE = '#d9d4e0', GREY = '#777777', TEAL
 export async function renderLayoutPdf(d: LayoutDoc, opts: { compress?: boolean } = {}): Promise<Buffer> {
   const [{ default: PDFDocument }, { logoForPdf }] = await Promise.all([import('pdfkit'), import('../policy/policy-pdf')])
   const logo = await logoForPdf(d.head.logoDataUrl ?? null)
+  const BRAND = usableBrand(d.head.brandColour)   // the organisation's colour: header rule and headings only, never body text
   const foot = footerFor(d.head)
   const footH = foot.length ? foot.length * 9.5 + 14 : 0
   const width = W - M * 2
@@ -38,7 +40,7 @@ export async function renderLayoutPdf(d: LayoutDoc, opts: { compress?: boolean }
     doc.y = Math.max(doc.y, top + 58)
   }
   doc.moveDown(0.4)
-  doc.moveTo(M, doc.y).lineTo(W - M, doc.y).lineWidth(0.7).strokeColor(LINE).stroke()
+  doc.moveTo(M, doc.y).lineTo(W - M, doc.y).lineWidth(BRAND ? 1.4 : 0.7).strokeColor(BRAND ?? LINE).stroke()
   doc.moveDown(1)
 
   const body = (b: { t: string; text: string }, prev: { v: string | null }) => {
@@ -51,7 +53,7 @@ export async function renderLayoutPdf(d: LayoutDoc, opts: { compress?: boolean }
       doc.text(printable(b.text), M + 20, y, { width: width - 20, lineGap: 2 })
       doc.moveDown(0.25)
     } else if (b.t === 'h') {
-      ensure(46); doc.moveDown(0.4); doc.fillColor(d.kind === 'letter' ? INK : TEAL).font('Helvetica-Bold').fontSize(d.kind === 'letter' ? 11 : 13).text(printable(b.text), M, doc.y, { width }); doc.moveDown(0.3)
+      ensure(46); doc.moveDown(0.4); doc.fillColor(BRAND ?? (d.kind === 'letter' ? INK : TEAL)).font('Helvetica-Bold').fontSize(d.kind === 'letter' ? 11 : 13).text(printable(b.text), M, doc.y, { width }); doc.moveDown(0.3)
     } else {
       ensure(30)
       doc.fillColor(INK).font('Helvetica').fontSize(10.5).text(printable(b.text), M, doc.y, { width, lineGap: 2.5, align: 'left' })

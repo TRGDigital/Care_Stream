@@ -210,9 +210,6 @@ export function DocumentPanel({ token, id, onClose, onChanged, focus }: { token:
     {flow && d.type !== 'newsletter' && docStatus && !docStatus.letterhead_ready && (
       <p className="rounded-lg border border-gray-200 bg-neutral-light/60 px-3 py-2 text-xs text-neutral-dark">To make this look like a complete company letter, finish your <strong>Letterhead and company details</strong> in Settings{docStatus.missing.length ? ': ' + docStatus.missing.join(', ') : ''}.</p>
     )}
-    {showChecklist && d.type === 'newsletter' && d.status === 'pending' && d.actions.approve !== undefined && (
-      <label className="flex w-full items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm font-medium text-amber-950"><input type="checkbox" className="mt-0.5 h-4 w-4" checked={ticked} onChange={e => setTicked(e.target.checked)} /> I have checked this is ready to share.</label>
-    )}
     {showChecklist && d.type !== 'newsletter' && (
       <div className="w-full rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-950">
         <button type="button" aria-expanded={noticeOpen} aria-controls="ask-before-send" onClick={toggleNotice} className="flex w-full items-center justify-between gap-2 text-left font-semibold focus:outline-none focus-visible:ring-2 focus-visible:ring-teal">
@@ -232,6 +229,31 @@ export function DocumentPanel({ token, id, onClose, onChanged, focus }: { token:
       </div>
     )}
   </>) : null
+  // The approval step, built into the Share panel so there is always a way forward: submit it, approve it (another administrator, or you when you are the only one), or send it back.
+  const approvalNode = d && flow && d.status !== 'approved' && d.status !== 'shared' ? (
+    <div className="rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-neutral-dark" id="ask-approval-step">
+      <p className="font-semibold">First, it needs approving</p>
+      {d.status === 'draft' && (<>
+        <p className="mt-0.5 text-xs text-neutral-mid">{d.actions.submit ? 'Submit it for approval, then approve it here. Once it is approved you can send it.' : 'Only the person who wrote it can submit it.'}</p>
+        {d.actions.submit && <button type="button" disabled={!!busy || dirty} title={dirty ? 'Save your changes first' : undefined} onClick={() => run('submit', () => ask.submit(token, d.id), 'Submitted. It is now waiting for approval.')} className={`${btn} mt-2 bg-teal text-white hover:bg-teal-dark`}>{busy === 'submit' ? <Loader2 size={14} className="animate-spin" /> : <FileText size={14} />} Submit for approval</button>}
+        {dirty && d.actions.submit && <p className="mt-1 text-xs text-amber-900">Save your changes first.</p>}
+      </>)}
+      {d.status === 'pending' && (<>
+        {d.actions.approve !== undefined && d.actions.approve ? (<>
+          {d.type === 'newsletter'
+            ? <label className="mt-2 flex items-start gap-2 font-medium"><input type="checkbox" className="mt-0.5 h-4 w-4" checked={ticked} onChange={e => setTicked(e.target.checked)} /> I have checked this is ready to share.</label>
+            : <p className="mt-0.5 text-xs text-neutral-mid">Tick the checklist above, then approve.</p>}
+          <div className="mt-2 flex flex-wrap gap-2">
+            <button type="button" disabled={!ticked || !!busy} onClick={() => run('approve', () => ask.approve(token, d.id, ticked), 'Approved. You can now send it.')} className={`${btn} bg-teal text-white hover:bg-teal-dark`}>{busy === 'approve' ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />} Approve</button>
+            {d.actions.return && <button type="button" disabled={!!busy} onClick={() => run('return', () => ask.returnToDraft(token, d.id, undefined), 'Sent back to draft.')} className={`${btn} border border-gray-200 bg-white text-neutral-dark hover:bg-neutral-light`}><RotateCcw size={14} /> Send back to edit</button>}
+          </div>
+        </>) : (<>
+          <p className="mt-0.5 text-xs text-neutral-mid">It is waiting for another administrator to approve it.</p>
+          {d.actions.return && <button type="button" disabled={!!busy} onClick={() => run('return', () => ask.returnToDraft(token, d.id, undefined), 'Sent back to draft.')} className={`${btn} mt-2 border border-gray-200 bg-white text-neutral-dark hover:bg-neutral-light`}><RotateCcw size={14} /> Take it back to edit</button>}
+        </>)}
+      </>)}
+    </div>
+  ) : null
   const notices = d ? (<>
 
 
@@ -325,7 +347,7 @@ export function DocumentPanel({ token, id, onClose, onChanged, focus }: { token:
           <div className="flex flex-wrap items-start gap-2">
               {(letter || news) && <DocumentActions title={d.title} draft={!isFinal} disabled={!!busy} getPdf={getPdfBlob} tooLong={d.type === 'newsletter' ? { orientation, canTwoPages: canTwo, onSwitch: o => setLayout({ orientation: o }), onShorten: () => setEditing(true), onTwoPages: canTwo ? () => setLayout({ pages: 'two' }) : undefined } : undefined} getDocx={() => ask.documentBlob(token, d.id, 'docx', { sign: sign && letter, draft: !isFinal })}
                 onDone={w => { setInfo(w === 'pdf' ? 'The PDF has been saved.' : w === 'word' ? 'The Word document has been saved.' : 'Sent to your printer dialog.'); if (isFinal) { void load(); onChanged() } }} onError={m => setError(m)} />}
-              {(letter || news) && (d.actions.share.length > 0 || flow) && !(letter && intent.print_only) && <SharePanel token={token} doc={{ id: d.id, type: d.type, title: d.title, status: d.status, staff_name: d.staff_name, share_intent: d.share_intent ?? null }} sign={sign && letter} needsAck={ack ?? d.ack_default ?? false} onPreview={openViewer} onSent={() => { void load(); onChanged() }} />}
+              {(letter || news) && (d.actions.share.length > 0 || flow) && !(letter && intent.print_only) && <SharePanel token={token} doc={{ id: d.id, type: d.type, title: d.title, status: d.status, staff_name: d.staff_name, share_intent: d.share_intent ?? null }} sign={sign && letter} needsAck={ack ?? d.ack_default ?? false} approval={approvalNode} onPreview={openViewer} onSent={() => { void load(); onChanged() }} />}
               {d.actions.submit && <button type="button" disabled={!!busy || dirty} title={dirty ? 'Save your changes first' : undefined} onClick={() => run('submit', () => ask.submit(token, d.id), 'Submitted. It is now waiting for approval.')} className={`${btn} bg-teal text-white hover:bg-teal-dark`}>{busy === 'submit' ? <Loader2 size={14} className="animate-spin" /> : <FileText size={14} />} Submit for approval</button>}
               {d.status === 'draft' && flow && !d.actions.submit && d.actions.edit && letter && <span className="text-xs text-amber-800">Finish the missing details before submitting.</span>}
               {d.status === 'pending' && d.actions.approve && <button type="button" disabled={!ticked || !!busy} onClick={() => run('approve', () => ask.approve(token, d.id, ticked), 'Approved. You can now share it.')} className={`${btn} bg-teal text-white hover:bg-teal-dark`}>{busy === 'approve' ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />} Approve</button>}

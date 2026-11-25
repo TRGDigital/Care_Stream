@@ -88,3 +88,10 @@ test('BLOCK LIST: the summary has no formatting marks and is cut at a word with 
   assert.match(web('components/ask/newsletter-editor.tsx'), /plainSummary\(it\.summary, 90\)/)
   const ne = web('components/ask/newsletter-editor.tsx'); assert.doesNotMatch(ne, /max-h-\[|overflow-y-auto/)
 })
+
+test('APPROVAL STEP: the Share panel carries the submit, approve and send back controls itself, so a document that is not yet approved always has a way forward; email-off offers a hub notification', () => {
+  const sp = web('components/ask/share-panel.tsx'), dp = web('components/ask/document-panel.tsx')
+  assert.match(sp, /approval\?: ReactNode/); assert.match(sp, /\{approval\}/); assert.match(sp, /Use a hub notification instead/); assert.match(sp, /Open Ask settings/)
+  assert.match(dp, /id="ask-approval-step"/); assert.match(dp, /approval=\{approvalNode\}/)
+  assert.match(dp, /Submit for approval/); assert.match(dp, /Send back to edit/); assert.match(dp, /waiting for another administrator/)
+})

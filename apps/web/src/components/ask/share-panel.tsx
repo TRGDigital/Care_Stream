@@ -3,7 +3,7 @@
 // HOUSE RULE 5, DISTRIBUTION CHOICE: one place, next to Save PDF and Print, to choose HOW a document goes (email, a hub notification, or both) and WHO gets it (one person, chosen staff,
 // or all staff), with a summary of exactly what will happen before anything is sent. The summary comes from the server (counts, names for ten or fewer, the Ask settings limits, the
 // approval rule). Nothing is sent until the administrator presses Send and then confirms it once more. A letter goes to one person at a time and a print only letter is never sent.
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { Check, Eye, Loader2, Send } from 'lucide-react'
 import { ask, AskError, type SharePlan } from '@/lib/ask-client'
 import { StaffPicker, useStaff } from '@/components/ask/staff-picker'
@@ -13,13 +13,15 @@ type Who = 'one' | 'selected' | 'all'
 const WHO_FOR: Record<string, Who[]> = { letter: ['one'], newsletter: ['one', 'selected', 'all'], report: ['one', 'selected'] }
 const WHO_LABEL: Record<Who, string> = { one: 'One person', selected: 'Chosen staff', all: 'All staff' }
 
-export function SharePanel({ token, doc, sign, needsAck, onPreview, onSent }: {
+export function SharePanel({ token, doc, sign, needsAck, onPreview, onSent, approval }: {
   token: string
   doc: { id: string; type: string; title: string; status: string; staff_name?: string | null; share_intent?: { hub: boolean; email: boolean; print_only: boolean } | null }
   sign?: boolean
   needsAck?: boolean
   onPreview?: () => void
   onSent?: () => void
+  /** The approval step, shown at the top while the document is not yet approved: submit, approve or send back, right here, so nobody has to go looking for it. */
+  approval?: ReactNode
 }) {
   const letter = doc.type === 'letter'
   const options = WHO_FOR[doc.type] ?? []
@@ -61,6 +63,7 @@ export function SharePanel({ token, doc, sign, needsAck, onPreview, onSent }: {
       </div>
       {open && (
         <div className="mt-3 space-y-3">
+          {approval}
           <fieldset><legend className="text-xs font-semibold uppercase tracking-wide text-neutral-mid">How</legend>
             <div className="mt-1 space-y-1">
               {([['hub', hubText], ['email', emailText], ['both', letter ? 'By email and in their hub' : 'Email and hub notification (the same as email)']] as Array<[How, string]>).filter(([k]) => letter || k !== 'both').map(([k, t]) => (
@@ -83,7 +86,20 @@ export function SharePanel({ token, doc, sign, needsAck, onPreview, onSent }: {
                 <div className="flex gap-2"><dt className="w-14 shrink-0 text-neutral-mid">How</dt><dd>{p.how_text}</dd></div>
                 <div className="flex gap-2"><dt className="w-14 shrink-0 text-neutral-mid">To</dt><dd>{p.count} {p.count === 1 ? 'person' : 'people'}{p.names.length ? `: ${p.names.join(', ')}` : ''}{p.left_out ? `. ${p.left_out} left out (no email address or not eligible).` : ''}</dd></div>
               </dl>
-            ) : <ul className="mt-1 list-disc space-y-0.5 pl-4 text-red-800">{p.blockers.map((b, i) => <li key={i}>{b}</li>)}</ul>}
+            ) : (() => {
+              // The approval blocker is answered by the step above, so it is not repeated here.
+              const shown = p.blockers.filter(b => !(approval && /has to be approved/i.test(b)))
+              const emailOff = shown.some(b => /switched off/i.test(b))
+              return shown.length === 0
+                ? <p className="mt-1 text-xs text-neutral-mid">Approve it first and the summary appears here.</p>
+                : <>
+                    <ul className="mt-1 list-disc space-y-0.5 pl-4 text-red-800">{shown.map((b, i) => <li key={i}>{b}</li>)}</ul>
+                    {emailOff && <div className="mt-2 flex flex-wrap items-center gap-2">
+                      <button type="button" onClick={() => setHow('hub')} className="rounded-lg border border-teal bg-teal px-3 py-1.5 text-xs font-semibold text-white hover:bg-teal-dark">Use a hub notification instead</button>
+                      <a href="/settings" className="text-xs font-semibold text-teal underline">Open Ask settings</a>
+                    </div>}
+                  </>
+            })()}
             {onPreview && <button type="button" onClick={onPreview} className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-teal underline"><Eye size={12} aria-hidden="true" /> Preview what they will get</button>}
           </div>
           {error && <p role="alert" className="text-xs font-medium text-red-700">{error}</p>}

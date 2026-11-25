@@ -165,7 +165,7 @@ test('ADAPTS: after "yes, two" the plan is plural, with a consent and a picture 
   assert.ok(DEFAULT_HOUSE_RULES_FORMS.includes('always use "one"'))                              // the risky kinds are named
 })
 
-test('EVERY AGENT: the composed prompt carries rule 9 (editable, after the job and before the locked rules), and the summary lists eleven rules', async () => {
+test('EVERY AGENT: the composed prompt carries rule 9 (editable, after the job and before the locked rules), and the summary lists twelve rules', async () => {
   assert.ok(AGENTS.length >= 20)
   __setPromptTestHooks({ reader: async () => null })
   try {
@@ -176,7 +176,7 @@ test('EVERY AGENT: the composed prompt carries rule 9 (editable, after the job a
       assert.ok(p.indexOf('RULE 9, A GENTLE CHECK') < p.indexOf(LOCKED_RULES.slice(0, 40)), `${a.id}: before the locked rules`)
     }
   } finally { __setPromptTestHooks({ reader: null }) }
-  assert.deepEqual(HOUSE_RULES_SUMMARY.map(r => r.n), [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11])
+  assert.deepEqual(HOUSE_RULES_SUMMARY.map(r => r.n), [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12])
   const nine = HOUSE_RULES_SUMMARY[8]
   assert.equal(nine.locked, false); assert.ok(nine.line.length < 100); assert.doesNotMatch(`${nine.title} ${nine.line}`, /[–—]/)
   const page = webSrc('app/(platform)/platform/prompts/page.tsx')

@@ -3,6 +3,7 @@
 // HOUSE RULE 1: when an agent needs information it asks in a form, not in a paragraph. Each question has its own labelled box with a free text field (a choice question also
 // offers quick buttons, a people question also offers the staff picker), a short hint, and "required" or "optional". One Send answers button sends every answer back as one
 // message that pairs each question with its answer, so nothing is ambiguous. The form stays editable until it is sent; after that the answered card shows what was sent.
+import { DatePicker } from '@/components/ask/date-picker'
 import { useId, useMemo, useRef, useState } from 'react'
 import { Check, Loader2, Send } from 'lucide-react'
 import { StaffPicker, useStaff } from '@/components/ask/staff-picker'
@@ -103,7 +104,7 @@ export function QuestionFormCard({ token, form: given, typed = [], disabled, onS
               <label htmlFor={id} className="block text-sm font-medium text-neutral-dark">{q.label} <span className={`text-xs font-normal ${q.required ? 'text-red-700' : 'text-neutral-mid'}`}>{q.required ? '(required)' : '(optional)'}</span></label>
               {q.hint && <p id={`${id}-hint`} className="mb-1 text-xs text-neutral-mid">{q.hint}</p>}
               {q.kind === 'longtext' ? <textarea id={id} rows={3} className={`${inp} resize-y`} value={v.text} disabled={disabled} onChange={e => set(q.id, { ...v, text: e.target.value })} aria-invalid={bad} aria-describedby={q.hint ? `${id}-hint` : undefined} />
-                : q.kind === 'date' ? <input id={id} type="date" className={`${inp} sm:w-auto`} value={v.text} disabled={disabled} onChange={e => set(q.id, { ...v, text: e.target.value })} aria-invalid={bad} />
+                : q.kind === 'date' ? <DatePicker id={id} label={q.label} value={v.text} disabled={disabled} onChange={iso => set(q.id, { ...v, text: iso })} />
                 : q.kind === 'image' ? <ImageField token={token} value={v} onChange={nv => set(q.id, nv)} disabled={!!disabled} boxId={id} />
                 : q.kind === 'people' ? <PeopleField token={token} q={q} value={v} onChange={nv => set(q.id, nv)} disabled={!!disabled} boxId={id} />
                 : <>

@@ -2,6 +2,8 @@
 
 // An action card in the Ask CareStream panel. The agent only PROPOSED this; nothing happens until the administrator presses Confirm. The card shows exactly who it would
 // reach (with a picker to tick or untick people), one fully personalised preview, and lets the wording, people and due date be changed first.
+import { DatePicker } from '@/components/ask/date-picker'
+import { todayIso } from '@/lib/ask-dates'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import { AlertTriangle, Check, CheckCircle2, Loader2, Search, ShieldCheck, Undo2, Users, X } from 'lucide-react'
@@ -86,7 +88,7 @@ export function ActionCard({ token, card: initial, onChanged }: { token: string;
       {card.type === 'allocate_training' && (
         <div className="mt-3 space-y-2">
           <p className="text-xs font-semibold text-neutral-dark">Course{(card.courses ?? []).length === 1 ? '' : 's'}: <span className="font-normal">{(card.courses ?? []).join(', ')}</span></p>
-          <label className="block text-xs font-semibold text-neutral-dark">Due date (optional)<input type="date" value={due} onChange={e => setDue(e.target.value)} disabled={!open} className={`${inp} mt-1 max-w-[12rem]`} /></label>
+          <div className="block text-xs font-semibold text-neutral-dark"><label htmlFor={`due-${card.id}`}>Due date (optional)</label><div className="mt-1"><DatePicker id={`due-${card.id}`} value={due} onChange={setDue} disabled={!open} min={todayIso()} /></div></div>
           {(card.skipped ?? []).length > 0 && <div className="rounded-lg border border-gray-200 bg-white p-3 text-xs"><p className="font-semibold text-neutral-dark">Skipped</p><ul className="mt-1 space-y-0.5">{card.skipped!.map((s, i) => <li key={i} className="text-neutral-mid">{s.name}: {s.course} ({s.reason})</li>)}</ul></div>}
         </div>
       )}

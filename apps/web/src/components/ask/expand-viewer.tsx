@@ -181,7 +181,9 @@ export function Expandable({ label, onOpen, children, className = '', hint = tru
     <div className={`group relative ${className}`}>
       <div role="button" tabIndex={0} aria-label={`${label}. Click to enlarge`} onClick={onOpen} onKeyDown={e => { if (isActivateKey(e.key)) { e.preventDefault(); onOpen() } }}
         className="cursor-zoom-in rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-teal">{children}</div>
-      <span aria-hidden="true" className="pointer-events-none absolute right-2 top-2 inline-flex items-center gap-1 rounded-md bg-white/95 px-1.5 py-1 text-[11px] font-semibold text-neutral-dark opacity-70 shadow-sm ring-1 ring-gray-200 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
+      {/* A designed page is drawn inside an iframe, and a click inside an iframe never reaches the button around it. This clear layer sits over the page and takes the click instead (keyboard users use the button above). */}
+      <div aria-hidden="true" data-expand-hit="true" onClick={onOpen} className="absolute inset-0 z-[5] cursor-zoom-in rounded-lg" />
+      <span aria-hidden="true" className="pointer-events-none absolute right-2 top-2 z-[6] inline-flex items-center gap-1 rounded-md bg-white/95 px-1.5 py-1 text-[11px] font-semibold text-neutral-dark opacity-70 shadow-sm ring-1 ring-gray-200 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
         <Maximize2 size={12} />{hint && <span className="hidden group-hover:inline group-focus-within:inline">Click to enlarge</span>}
       </span>
     </div>

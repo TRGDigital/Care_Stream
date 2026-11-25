@@ -5,6 +5,7 @@
 // The PDF stays at /ask/documents/:id/pdf (now also on the letterhead, and ?sign=1 adds MY signature).
 // A signature is used only for the signed in person, and only when they ask for it in this request. Pilot account and administrators only.
 
+import { photoAllowedFor, photoChoice, resolvePerson, staffHasPicture } from '../services/ask-docs/newsletter-photo'
 import { Router, Request, Response, NextFunction } from 'express'
 import { getTenantId } from '../db/tenant-context'
 import { ok, err } from '../lib/response'
@@ -59,21 +60,35 @@ askDocsRouter.post('/:id/preview-draft', async (req: Request, res: Response) => 
   } catch (e: any) { err(res, 'PREVIEW_FAILED', 'The preview could not be made just now.', 500) }
 })
 
-// A photo of one person in the newsletter (employee of the month and so on): only when the administrator chooses a person here, and only their staff picture.
-// user_id null removes it. Email never carries a photo, only the hub, the preview and the PDF.
+// A photo of one person in the newsletter (employee of the month, a staff story, new starters, leavers): only when the administrator chooses a person here AND confirms the person agrees,
+// and only their staff picture. user_id null removes it. Email never carries a photo (initials and a note instead); the hub, the preview and the PDF do.
 askDocsRouter.post('/:id/newsletter-photo', async (req: Request, res: Response) => {
   const t = getTenantId(), u = req.user!.sub
   const d = await store.getDocumentFor(t, u, String(req.params.id)); if (!d || d.type !== 'newsletter') { notFound(res); return }
   const ed = canEdit(d, u); if (!ed.ok) { err(res, 'NOT_ALLOWED', ed.reason, 409); return }
   const uid = req.body?.user_id == null || req.body.user_id === '' ? null : String(req.body.user_id)
+  let photo: Record<string, unknown> | null = null
   if (uid) {
-    const person = await (prisma as any).user.findFirst({ where: { id: uid, tenant_id: t, is_active: true, is_shared: false }, select: { id: true } })
-    if (!person) { err(res, 'INVALID', 'That person was not found.', 400); return }
+    if (!photoAllowedFor(d.data?.template_id)) { err(res, 'INVALID', 'A person\'s picture can only go in an employee of the month, staff story, new starters or leavers newsletter.', 400); return }
+    const who = await resolvePerson(t, { user_id: uid })
+    if (!who.ok) { err(res, 'INVALID', 'That person was not found.', 400); return }
+    const ch = photoChoice({ userId: who.id, consent: req.body?.consent, actorId: u })
+    if (!ch.ok) { err(res, 'CONSENT_REQUIRED', ch.reason, 400); return }
+    photo = ch.photo as unknown as Record<string, unknown>
   }
-  const data = { ...(d.data ?? {}), photo: uid ? { user_id: uid, include: true } : null }
+  const data = { ...(d.data ?? {}), photo }
   await store.updateDocumentContent(t, d.id, { data })
-  void writeAuditLog({ tenant_id: t, user_id: u, event_type: 'ask_newsletter_photo_set', entity_type: 'ask_document', entity_id: d.id, metadata: { included: !!uid } })
-  ok(res, { saved: true, photo_user_id: uid })
+  void writeAuditLog({ tenant_id: t, user_id: u, event_type: 'ask_newsletter_photo_set', entity_type: 'ask_document', entity_id: d.id, metadata: { included: !!uid, consent: !!uid } })
+  ok(res, { saved: true, photo_user_id: uid, has_picture: uid ? await staffHasPicture(t, uid) : false })
+})
+// Who the picture is of and whether they have one yet (so the screen can say so plainly).
+askDocsRouter.get('/:id/newsletter-photo', async (req: Request, res: Response) => {
+  const t = getTenantId(), u = req.user!.sub
+  const d = await store.getDocumentFor(t, u, String(req.params.id)); if (!d || d.type !== 'newsletter') { notFound(res); return }
+  const ph = d.data?.photo
+  if (!ph?.user_id) { ok(res, { chosen: false }); return }
+  const who = await resolvePerson(t, { user_id: String(ph.user_id) })
+  ok(res, { chosen: true, name: who.ok ? who.name : null, consent: ph.consent === true, has_picture: who.ok ? await staffHasPicture(t, who.id) : false })
 })
 
 // A SAMPLE of one option an agent offers (a newsletter layout, a letter, a report, a notification, an email), with the organisation's own logo and colour and placeholder words only.

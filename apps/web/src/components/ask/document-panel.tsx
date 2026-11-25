@@ -36,6 +36,10 @@ export function DocumentPanel({ token, id, onClose, onChanged }: { token: string
   const [showPaper, setShowPaper] = useState(false)
   const [live, setLive] = useState<string | null>(null)   // the designed newsletter for the text being edited
   const [photoStaff, setPhotoStaff] = useState<StaffOption[] | null>(null)
+  const [photoPick, setPhotoPick] = useState<string | null>(null)
+  const [photoAgreed, setPhotoAgreed] = useState(false)
+  const [photoState, setPhotoState] = useState<{ chosen: boolean; name?: string | null; consent?: boolean; has_picture?: boolean } | null>(null)
+  const photoUser = d?.data?.photo?.user_id ?? null
   const viewer = useExpandViewer()
   const [picking, setPicking] = useState(false), [audience, setAudience] = useState<'all' | 'selected'>('all'), [chosen, setChosen] = useState<Set<string>>(new Set()), [q, setQ] = useState('')
 
@@ -57,6 +61,7 @@ export function DocumentPanel({ token, id, onClose, onChanged }: { token: string
     const t = setTimeout(() => { ask.previewDraft(token, id, { title, body }).then(r => setLive(r.html)).catch(() => undefined) }, 500)
     return () => clearTimeout(t)
   }, [editing, d?.type, token, id, title, body])
+  useEffect(() => { if (d?.type !== 'newsletter' || !photoUser) { setPhotoState(null); return } ask.newsletterPhotoStatus(token, id).then(setPhotoState).catch(() => setPhotoState(null)) }, [d?.type, d?.updated_at, photoUser, token, id])
   const msg = (e: unknown) => (e instanceof AskError || e instanceof Error ? e.message : 'Something went wrong. Please try again.')
   async function run(name: string, fn: () => Promise<unknown>, done?: string) {
     setBusy(name); setError(''); setInfo('')
@@ -150,14 +155,25 @@ export function DocumentPanel({ token, id, onClose, onChanged }: { token: string
             )}
             {d.type === 'newsletter' && d.actions.edit && (
               <div className="rounded-lg border border-gray-200 p-3 text-sm text-neutral-dark">
-                <label htmlFor="ask-nl-photo" className="font-semibold">Photo of one person (optional)</label>
-                <p className="mt-0.5 text-xs text-neutral-mid">For employee of the month and similar. Only their staff picture is used, and only if they agree. It shows in the preview, the hub and the PDF. Email never carries a photo.</p>
-                <select id="ask-nl-photo" className={`${input} mt-2`} value={d.data?.photo?.user_id ?? ''} onFocus={async () => { if (!photoStaff) { try { setPhotoStaff((await adminNotifications.staff(token)).staff) } catch { /* the list stays empty */ } } }}
-                  onChange={e => run('photo', () => ask.newsletterPhoto(token, d.id, e.target.value || null), e.target.value ? 'The photo is included.' : 'No photo.')}>
-                  <option value="">No photo</option>
+                <label htmlFor="ask-nl-photo" className="font-semibold">Picture of the person (employee of the month, a story, new starters, a farewell)</label>
+                <p className="mt-0.5 text-xs text-neutral-mid">Only their staff picture is used, and only when they agree. It shows large and round in the preview, the hub and the PDF. The email shows their initials and says the photo is in the hub and the PDF.</p>
+                <select id="ask-nl-photo" className={`${input} mt-2`} value={photoPick ?? d.data?.photo?.user_id ?? ''} onFocus={async () => { if (!photoStaff) { try { setPhotoStaff((await adminNotifications.staff(token)).staff) } catch { /* the list stays empty */ } } }}
+                  onChange={e => { const v = e.target.value; setPhotoPick(v || null); setPhotoAgreed(false); if (!v) run('photo', () => ask.newsletterPhoto(token, d.id, null), 'No picture.') }}>
+                  <option value="">No picture</option>
                   {d.data?.photo?.user_id && !(photoStaff ?? []).some(s => s.id === d.data?.photo?.user_id) && <option value={d.data.photo.user_id}>The chosen person</option>}
                   {(photoStaff ?? []).map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                 </select>
+                {photoPick && photoPick !== d.data?.photo?.user_id && (
+                  <div className="mt-2 space-y-2">
+                    <label className="flex items-start gap-2 text-sm"><input type="checkbox" className="mt-1 h-4 w-4" checked={photoAgreed} onChange={e => setPhotoAgreed(e.target.checked)} /><span>They are happy to be named and photographed</span></label>
+                    <button type="button" disabled={!photoAgreed} onClick={() => run('photo', async () => { const r = await ask.newsletterPhoto(token, d.id, photoPick, true); setPhotoPick(null); return r }, 'The picture is set.')} className="inline-flex min-h-[36px] items-center rounded-lg bg-teal px-3 text-sm font-semibold text-white hover:bg-teal-dark disabled:opacity-50">Use their picture</button>
+                  </div>
+                )}
+                {d.data?.photo?.user_id && photoState?.chosen && (
+                  <p className={`mt-2 rounded-md px-2.5 py-1.5 text-xs ${photoState.has_picture ? 'bg-green-50 text-green-900' : 'bg-amber-50 text-amber-950'}`} role="status">
+                    {photoState.has_picture ? `${photoState.name ?? 'The person'}'s staff picture is in the newsletter.` : <>{photoState.name ?? 'The person'} has no staff picture yet, so their initials show. Add one in <a href="/staff" className="font-semibold underline">Staff</a> (open their profile, Picture) and it appears here by itself.</>}
+                  </p>
+                )}
               </div>
             )}
             {flow && d.checklist.length > 0 && (d.status === 'draft' || d.status === 'pending') && (

@@ -54,7 +54,7 @@ const TYPES: Type[] = [
     X('team_question', 'A question for the team', 'One question to get people talking, and how to reply.'),
   ] },
   { type: 'welcome-new-starters', title: 'Welcome to new starters', category: 'whole-team', audience: ALL, purpose: 'Introduce new colleagues to the team and help them settle in.',
-    heads_up: 'This names new starters from your staff records. You choose who is included, and it is worth checking each person is happy to be introduced.', sections: [
+    heads_up: 'This names new starters from your staff records. You choose who is included, and it is worth checking each person is happy to be introduced. Their staff picture goes in only if they agree: you will be asked, and it shows in the hub and the PDF (the email shows their initials).', sections: [
     C('welcome', 'A warm welcome', 'Two or three sentences from the manager.'),
     C('new_starters', 'Meet our new starters', 'Name, role and start date from your staff records. You choose who is named.', 'new_starters', true),
     C('who_to_ask', 'Who to ask', 'Who can help in the first weeks.'),
@@ -64,7 +64,7 @@ const TYPES: Type[] = [
     X('fun_facts', 'A little about our new starters', 'Only what each person has said they are happy to share.'),
   ] },
   { type: 'leavers-farewells', title: 'Leavers and farewells', category: 'whole-team', audience: ALL, purpose: 'Say a kind goodbye to colleagues who are leaving.',
-    heads_up: 'Only name someone who has agreed to be named. Do not give reasons for anyone leaving.', sections: [
+    heads_up: 'Only name someone who has agreed to be named. Do not give reasons for anyone leaving. Their staff picture goes in only if they agree: you will be asked, and it shows in the hub and the PDF (the email shows their initials).', sections: [
     C('opening', 'A note from the manager', 'A short, warm opening.'),
     C('farewell', 'Saying goodbye', 'Who is leaving, their role and what they will be remembered for. Only with their agreement.', undefined, true),
     C('thanks', 'Thank you', 'A specific thank you for what they gave to the team.'),
@@ -74,7 +74,7 @@ const TYPES: Type[] = [
     X('stay_in_touch', 'Staying in touch', 'How the person would like to keep in touch, if they wish.'),
   ] },
   { type: 'employee-of-the-month', title: 'Employee of the month', category: 'whole-team', audience: ALL, purpose: 'Celebrate the person chosen as employee of the month and how everyone can nominate.',
-    heads_up: 'Check the person is happy to be named and to have their story shared before you send this.', sections: [
+    heads_up: 'Check the person is happy to be named and to have their story shared before you send this. Their staff picture goes in only if they agree: you will be asked, and it shows in the hub and the PDF (the email shows their initials).', sections: [
     C('who', 'Our employee of the month', 'Who it is and their role. You write this: the agent does not choose.', undefined, true),
     C('why', 'Why they were chosen', 'What they did and the difference it made. Positive and specific.'),
     C('thank_you', 'A thank you', 'A closing thank you from the manager.'),
@@ -216,7 +216,7 @@ const TYPES: Type[] = [
   ] },
   // ── Culture ─────────────────────────────────────────────────────────────────────────
   { type: 'staff-stories', title: 'Staff stories', category: 'culture', audience: ALL, purpose: 'Share a colleague\'s story, with their agreement.',
-    heads_up: 'Only share a story with the person\'s permission, and let them read it first.', sections: [
+    heads_up: 'Only share a story with the person\'s permission, and let them read it first. Their staff picture goes in only if they agree: you will be asked, and it shows in the hub and the PDF (the email shows their initials).', sections: [
     C('story', 'Their story', 'Who they are and what brought them to care. Only what they are happy to share.', undefined, true),
     C('words', 'In their own words', 'A few short quotes.'),
     C('thanks', 'Thank you', 'A thank you to them for sharing.'),

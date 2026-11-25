@@ -75,7 +75,7 @@ test('DESIGN: logo, person photo and the picture slot', () => {
   assert.ok(!mail.includes('data:image/jpeg') && !mail.includes('Photo of'), 'email never carries a photo')
   assert.match(mail, /aria-label="Picture slot for Helen Thomas"[^>]*>HT</, 'email shows initials instead')
   assert.ok(!render('employee-of-the-month-standard').includes('Picture slot'), 'no photo chosen: no picture slot in a real newsletter')
-  const sample = sampleDesigns('employee-of-the-month', BRAND)[0].html; assert.match(sample, /Picture slot/, 'a sample shows where the picture goes')
+  const sample = sampleDesigns('employee-of-the-month', BRAND)[0].html; assert.match(sample, /Sample picture of a member of staff/, 'a sample shows where the picture goes, with a neutral silhouette')
   for (const html of [withLogo, web1, mail, sample]) for (const m of html.match(/<img\b[^>]*>/g) ?? []) assert.match(m, /\balt="/, 'every picture has alt text')
 })
 

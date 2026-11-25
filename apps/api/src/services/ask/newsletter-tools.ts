@@ -6,6 +6,7 @@ import { loadNewStarters, loadBirthdaysThisMonth, loadAnniversariesThisMonth, lo
 import { loadEnrolments } from './tools-people'
 import { dueAndOverdue } from './people-calc'
 import { saveDocument } from './store'
+import { photoAllowedFor, photoChoice, resolvePerson, staffHasPicture, CONSENT_QUESTION } from '../ask-docs/newsletter-photo'
 import { NEWSLETTER_TEMPLATES, NEWSLETTER_CHECKLIST, NEWSLETTER_CATEGORIES, newsletterTemplate, newsletterMenu, matchNewsletterTypes, lintNewsletter, lintOptionsFor } from '../ask-docs/newsletter-templates'
 
 const OWN = (label: string, today: string) => ownSource(`${label} (CareStream records)`, today)
@@ -33,7 +34,7 @@ export const NEWSLETTER_TOOLS: AskTool[] = [
     async run(_ctx, input) {
       const id = String(input?.template_id ?? '').trim(), type = String(input?.type ?? '').trim(), cat = String(input?.category ?? '').trim(), query = String(input?.query ?? '').trim()
       if (query && !id && !type) { const matches = matchNewsletterTypes(query); if (matches.length) return { data: { best_matches: matches.map(m => ({ ...m, layouts: NEWSLETTER_TEMPLATES.filter(x => x.type === m.type).map(x => ({ id: x.id, layout: x.layout, sections: x.sections.length })) })), note: 'Offer the first match unless the administrator\'s words clearly fit another. Never offer a different type that does not match their words.', accuracy_and_tone_checklist: NEWSLETTER_CHECKLIST }, sources: [] } }
-      if (id) { const t = newsletterTemplate(id); return { data: t ? { template: t, accuracy_and_tone_checklist: NEWSLETTER_CHECKLIST } : { error: 'No template has that id. Call this tool with no input for the menu.' }, sources: [] } }
+      if (id) { const t = newsletterTemplate(id); return { data: t ? { template: t, takes_photo: photoAllowedFor(t.id), accuracy_and_tone_checklist: NEWSLETTER_CHECKLIST } : { error: 'No template has that id. Call this tool with no input for the menu.' }, sources: [] } }
       if (type) { const list = NEWSLETTER_TEMPLATES.filter(t => t.type === type); return { data: list.length ? { templates: list, accuracy_and_tone_checklist: NEWSLETTER_CHECKLIST } : { error: 'No newsletter type has that name. Call this tool with no input for the menu.' }, sources: [] } }
       const menu = newsletterMenu().filter(m => !cat || m.id === cat)
       return { data: { categories: menu, accuracy_and_tone_checklist: NEWSLETTER_CHECKLIST }, sources: [] }
@@ -67,15 +68,41 @@ export const NEWSLETTER_TOOLS: AskTool[] = [
   {
     name: 'save_newsletter_draft',
     description: 'Save the finished newsletter as a DRAFT in the library for approval. body is plain text: ## for a heading, - for a bullet, blank lines between paragraphs. It is refused if it breaks the house rules (dashes, health or pay content, superlatives): fix and try again. Nothing is sent from here.',
-    input_schema: { type: 'object', properties: { title: { type: 'string' }, template_id: { type: 'string' }, body: { type: 'string' } }, required: ['title', 'body'] },
+    input_schema: { type: 'object', properties: { title: { type: 'string' }, template_id: { type: 'string' }, body: { type: 'string' }, photo_user_id: { type: 'string', description: 'The staff id of the person whose picture goes in the newsletter (the staff id from the question form answer). Only for employee of the month, staff stories, new starters and leavers.' }, photo_person_name: { type: 'string', description: 'Their full name, only if you have no staff id.' }, photo_consent: { type: 'boolean', description: 'true ONLY when the administrator answered yes to "They are happy to be named and photographed" in the question form. Never guess it.' } }, required: ['title', 'body'] },
     async run(ctx, input) {
       const title = String(input?.title ?? '').trim().slice(0, 120), body = String(input?.body ?? '').trim()
       if (!title || body.length < 40) return { data: { saved: false, message: 'Please give a title and the newsletter text.' }, sources: [] }
       const problems = await lintForTemplate(`${title}\n${body}`, String(input?.template_id ?? ''))
       if (problems.length) return { data: { saved: false, problems, message: 'Not saved. Fix these and try again.' }, sources: [] }
       const tpl = newsletterTemplate(String(input?.template_id ?? ''))
-      const id = await saveDocument(ctx.tenantId, ctx.userId, { type: 'newsletter', title, body, data: { template_id: tpl?.id ?? null, checklist: NEWSLETTER_CHECKLIST } })
-      return { data: { saved: true, document_id: id, status: 'draft', next: 'Open it in the library to review, edit, submit for approval and then share it with your staff.' }, sources: [] }
+      // A picture of one person: only for the types that carry one, only with a recorded yes, only an active member of staff of this account. Refused BEFORE anything is saved.
+      let photo: Record<string, unknown> | null = null, photoInfo: Record<string, unknown> | undefined
+      if (input?.photo_user_id || input?.photo_person_name) {
+        if (!photoAllowedFor(tpl?.id)) return { data: { saved: false, message: 'A person\'s picture can only go in an employee of the month, staff story, new starters or leavers newsletter.' }, sources: [] }
+        const ch0 = photoChoice({ userId: 'x', consent: input?.photo_consent, actorId: ctx.userId })
+        if (!ch0.ok) return { data: { saved: false, message: `Not saved. ${ch0.reason}` }, sources: [] }
+        const who = await resolvePerson(ctx.tenantId, { user_id: input?.photo_user_id, name: input?.photo_person_name })
+        if (!who.ok) return { data: { saved: false, message: `Not saved. ${who.reason}` }, sources: [] }
+        const ch = photoChoice({ userId: who.id, consent: true, actorId: ctx.userId })
+        if (ch.ok) photo = ch.photo as unknown as Record<string, unknown>
+        const has = await staffHasPicture(ctx.tenantId, who.id)
+        photoInfo = has
+          ? { person: who.name, picture: 'included', note: 'Their staff picture is in the designed newsletter, the PDF and the hub. Email shows their initials and says the photo is in the hub and the PDF.' }
+          : { person: who.name, picture: 'none_on_file', note: `${who.name} has no staff picture yet, so the newsletter shows their initials. Tell the administrator that plainly, and offer two choices: carry on with initials, or add a picture first (Staff, open their profile, Picture) and it then appears in the newsletter by itself. Do not say a picture is included.` }
+      }
+      const id = await saveDocument(ctx.tenantId, ctx.userId, { type: 'newsletter', title, body, data: { template_id: tpl?.id ?? null, checklist: NEWSLETTER_CHECKLIST, ...(photo ? { photo } : {}) } })
+      return { data: { saved: true, document_id: id, status: 'draft', ...(photoInfo ? { photo: photoInfo } : {}), next: 'Open it in the library to review, edit, submit for approval and then share it with your staff.' }, sources: [] }
+    },
+  },
+  {
+    name: 'check_staff_picture',
+    description: 'Before you ask for a picture in a newsletter: does this member of staff have a staff picture on file? Pass their staff id (from the question form answer) or their full name. Returns yes or no and their name only. Administrators only. Use it for employee of the month, staff stories, new starters and leavers, after the administrator has answered yes to "' + CONSENT_QUESTION + '".',
+    input_schema: { type: 'object', properties: { user_id: { type: 'string' }, name: { type: 'string' } } },
+    async run(ctx, input) {
+      const who = await resolvePerson(ctx.tenantId, { user_id: input?.user_id, name: input?.name })
+      if (!who.ok) return { data: { found: false, message: who.reason }, sources: [] }
+      const has = await staffHasPicture(ctx.tenantId, who.id)
+      return { data: { found: true, person: who.name, staff_id: who.id, has_picture: has, next: has ? 'Their picture can go in the newsletter once they have agreed.' : 'They have no staff picture yet. Say so plainly and offer: carry on with initials, or add a picture first in Staff, their profile, Picture; it then appears by itself.' }, sources: [] }
     },
   },
 ]

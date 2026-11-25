@@ -15,7 +15,7 @@ export interface Brand { name: string; accent?: string | null; /** A data URL (w
 export interface DesignInput {
   templateId?: string | null; title: string; body: string; brand: Brand; sentBy?: string; monthText?: string
   /** A person's photo, only when the administrator ticked to include it. Never shown in email. */
-  photo?: { dataUrl: string; name?: string } | null
+  photo?: { dataUrl: string; name?: string; inHub?: boolean } | null
   /** Where a button may point (the staff hub); without one the call to action is a plain panel, never a button that goes nowhere. */
   links?: { holiday?: string | null }
   sample?: boolean
@@ -215,11 +215,18 @@ function dateRows(d: Design, blocks: Block[]): string {
       : `<tr><td colspan="2" style="padding:5px 0;font-size:14px;color:${INK};border-bottom:1px solid ${LINE}">${esc(b.text)}</td></tr>`
   }).join('')}</table>`
 }
+/** A neutral silhouette for SAMPLE previews: never a real person. */
+function silhouette(d: Design, size: number): string {
+  const c = d.pal.accent
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 100 100" role="img" aria-label="Sample picture of a member of staff" style="display:block;border-radius:50%;background:${d.pal.tint2};border:3px solid ${d.pal.tint}"><circle cx="50" cy="38" r="17" fill="${c}" opacity=".55"/><path d="M16 96c2-22 15-34 34-34s32 12 34 34z" fill="${c}" opacity=".55"/></svg>`
+}
 function photoSlot(d: Design, t: Target, size: number): string {
   const name = d.photo?.name ?? ''
+  if (d.sample && t === 'web' && !d.photo?.dataUrl) return silhouette(d, size)
   if (t === 'web' && d.photo?.dataUrl) return `<img src="${esc(d.photo.dataUrl)}" alt="${esc(name ? `Photo of ${name}` : 'Photo')}" width="${size}" height="${size}" style="display:block;width:${size}px;height:${size}px;border-radius:50%;object-fit:cover;border:3px solid ${d.pal.tint2}">`
   const ini = initials(name)
-  return `<table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr><td width="${size}" height="${size}" align="center" valign="middle" style="width:${size}px;height:${size}px;border-radius:50%;background:${d.pal.tint2};border:3px solid ${d.pal.tint};font-size:${Math.round(size / 3)}px;font-weight:700;color:${d.pal.dark};text-align:center" role="img" aria-label="${esc(name ? `Picture slot for ${name}` : 'Picture slot')}">${ini ? esc(ini) : '&#9733;'}</td></tr></table>`
+  const note = t === 'email' && d.photo?.inHub ? `<div style="font-size:11px;line-height:1.35;color:${MUTED};text-align:center;padding-top:6px;max-width:${size + 20}px">Their photo is in the hub and the PDF</div>` : ''
+  return `<table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr><td width="${size}" height="${size}" align="center" valign="middle" style="width:${size}px;height:${size}px;border-radius:50%;background:${d.pal.tint2};border:3px solid ${d.pal.tint};font-size:${Math.round(size / 3)}px;font-weight:700;color:${d.pal.dark};text-align:center" role="img" aria-label="${esc(name ? `Picture slot for ${name}` : 'Picture slot')}">${ini ? esc(ini) : '&#9733;'}</td></tr></table>${note}`
 }
 function cardShell(d: Design, inner: string, tinted = false, extra = ''): string {
   const r = d.look.radius
@@ -242,10 +249,10 @@ function body(d: Design, s: Sec, big = false): string {
 
 function cell(d: Design, s: Sec, t: Target, kind: Row['kind']): string {
   if (kind === 'hero') {
-    const person = s.role === 'person' && (!!d.photo || (d.sample && s.key === 'who'))
+    const person = s.role === 'person' && (!!d.photo || (d.sample && (s.key === 'who' || s.key === 'story')))
     const left = `${head(d, s, t, true)}${body(d, s, true)}`
     const inner = person
-      ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td valign="top">${left}</td><td valign="top" align="right" width="116" style="padding-left:14px">${photoSlot(d, t, 100)}</td></tr></table>`
+      ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td valign="top">${left}</td><td valign="top" align="right" width="156" style="padding-left:14px">${photoSlot(d, t, 140)}</td></tr></table>`
       : left
     return cardShell(d, inner, true)
   }
@@ -359,8 +366,9 @@ export async function renderNewsletterPdf(input: DesignInput, logoPng?: Buffer |
 
   const cardInner = (s: Sec, w: number, big: boolean) => ({ size: big ? 11.5 : 10.5, hw: w - 28, titleSize: big ? 14 : 12.5 })
   const cardHeight = (s: Sec, w: number, big: boolean, withPhoto = false) => {
-    const c = cardInner(s, w, big); const textW = withPhoto ? c.hw - 112 : c.hw
-    return 14 + Math.max(34, 4) + 6 + bodyH(s, textW, c.size) + 8
+    const c = cardInner(s, w, big); const textW = withPhoto ? c.hw - 120 : c.hw
+    const h = 14 + Math.max(34, 4) + 6 + bodyH(s, textW, c.size) + 8
+    return withPhoto ? Math.max(h, 150) : h   // room for the round picture
   }
   const drawCard = (s: Sec, x: number, yy: number, w: number, h: number, big: boolean, tinted: boolean, withPhoto = false) => {
     const bg = tinted || d.look.cardStyle === 'soft' ? d.pal.tint : '#FFFFFF'
@@ -372,18 +380,22 @@ export async function renderNewsletterPdf(input: DesignInput, logoPng?: Buffer |
     if (stat) {
       const cw = (c.hw - (stat.length - 1) * 6) / stat.length
       stat.forEach((st, i) => { const sx = px + i * (cw + 6); doc.save(); doc.roundedRect(sx, yy + 50, cw, 52, 8).fillColor(d.pal.tint).fill(); doc.restore(); doc.fillColor(d.pal.accent).font('Helvetica-Bold').fontSize(22).text(st.n, sx, yy + 56, { width: cw, align: 'center' }); doc.fillColor(MUTED).font('Helvetica').fontSize(8.5).text(pdfSafe(st.label), sx + 4, yy + 84, { width: cw - 8, align: 'center' }) })
-    } else drawBody(s, px, yy + 50, withPhoto ? c.hw - 112 : c.hw, c.size)
+    } else drawBody(s, px, yy + 50, withPhoto ? c.hw - 120 : c.hw, c.size)
     if (withPhoto) {
-      const cx = x + w - 14 - 50, cy = yy + 56
-      if (photoPng) { try { doc.save(); doc.circle(cx + 25, cy + 25, 25).clip(); doc.image(photoPng, cx, cy, { fit: [50, 50], align: 'center', valign: 'center' }); doc.restore() } catch { /* no photo */ } }
-      else { doc.save(); doc.circle(cx + 25, cy + 25, 25).fillColor(d.pal.tint2).fill(); doc.restore(); doc.fillColor(d.pal.dark).font('Helvetica-Bold').fontSize(16).text(initials(d.photo?.name ?? '') || '*', cx, cy + 18, { width: 50, align: 'center' }) }
+      const D = 84, cx = x + w - 14 - D, cy = yy + 50
+      if (photoPng) { try { doc.save(); doc.circle(cx + D / 2, cy + D / 2, D / 2).clip(); doc.image(photoPng, cx, cy, { cover: [D, D], align: 'center', valign: 'center' }); doc.restore() } catch { /* no photo */ } doc.save(); doc.circle(cx + D / 2, cy + D / 2, D / 2).lineWidth(2).strokeColor(d.pal.tint2).stroke(); doc.restore() }
+      else if (d.sample && !d.photo) {
+        doc.save(); doc.circle(cx + D / 2, cy + D / 2, D / 2).fillColor(d.pal.tint2).fill(); doc.restore()
+        doc.save(); doc.circle(cx + D / 2, cy + D / 2, D / 2).clip(); doc.fillColor(d.pal.accent).opacity(0.55); doc.circle(cx + D / 2, cy + D * 0.38, D * 0.17).fill(); doc.moveTo(cx + D * 0.16, cy + D).bezierCurveTo(cx + D * 0.18, cy + D * 0.72, cx + D * 0.33, cy + D * 0.62, cx + D / 2, cy + D * 0.62).bezierCurveTo(cx + D * 0.67, cy + D * 0.62, cx + D * 0.82, cy + D * 0.72, cx + D * 0.84, cy + D).fill(); doc.restore()
+      }
+      else { doc.save(); doc.circle(cx + D / 2, cy + D / 2, D / 2).fillColor(d.pal.tint2).fill(); doc.restore(); doc.fillColor(d.pal.dark).font('Helvetica-Bold').fontSize(24).text(initials(d.photo?.name ?? '') || '*', cx, cy + D / 2 - 14, { width: D, align: 'center' }) }
     }
   }
   function statValues(s: Sec): Array<{ n: string; label: string }> | null {
     const li = s.blocks.filter(b => b.t === 'li'); const m = li.map(b => /^(\d{1,4})\s+(.{2,60})$/.exec(b.text)).filter(Boolean) as RegExpExecArray[]
     return m.length >= 2 && m.length === li.length && m.length <= 4 ? m.map(x => ({ n: x[1], label: x[2] })) : null
   }
-  const personHero = (s: Sec) => s.role === 'person' && (!!d.photo || (d.sample && s.key === 'who'))
+  const personHero = (s: Sec) => s.role === 'person' && (!!d.photo || (d.sample && (s.key === 'who' || s.key === 'story')))
   const need = (h: number) => { if (y + h > BOTTOM) newPage() }
   for (const r of d.rows) {
     if (r.kind === 'pair') {

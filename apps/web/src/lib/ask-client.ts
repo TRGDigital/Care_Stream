@@ -94,7 +94,8 @@ export const ask = {
   /** The designed newsletter for text that is being edited and is not saved yet. */
   previewDraft: (t: string, id: string, b: { title?: string; body?: string }) => call<{ html: string }>(`/ask-docs/${encodeURIComponent(id)}/preview-draft`, t, { method: 'POST', body: JSON.stringify(b) }),
   /** Include one person's staff photo in the newsletter (null removes it). */
-  newsletterPhoto: (t: string, id: string, userId: string | null) => call<{ saved: boolean; photo_user_id: string | null }>(`/ask-docs/${encodeURIComponent(id)}/newsletter-photo`, t, { method: 'POST', body: JSON.stringify({ user_id: userId }) }),
+  newsletterPhoto: (t: string, id: string, userId: string | null, consent = false) => call<{ saved: boolean; photo_user_id: string | null; has_picture: boolean }>(`/ask-docs/${encodeURIComponent(id)}/newsletter-photo`, t, { method: 'POST', body: JSON.stringify({ user_id: userId, consent }) }),
+  newsletterPhotoStatus: (t: string, id: string) => call<{ chosen: boolean; name?: string | null; consent?: boolean; has_picture?: boolean }>(`/ask-docs/${encodeURIComponent(id)}/newsletter-photo`, t),
   documents: (t: string) => call<{ documents: AskDocument[] }>('/ask/documents', t),
   document: (t: string, id: string) => call<{ document: AskDocFull }>(`/ask/documents/${encodeURIComponent(id)}`, t),
   approvals: (t: string) => call<{ approvals: AskApproval[]; waiting_for_me?: number }>('/ask/approvals', t),

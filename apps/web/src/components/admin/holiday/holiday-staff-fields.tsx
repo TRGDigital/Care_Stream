@@ -5,6 +5,7 @@
 // The pay rates are for administrators only (this form is admin only) and are stored for later; nothing is calculated from them yet.
 // The parent form gives a ref; after the person is created or saved it calls ref.current(userId) to store these values.
 
+import { LockedBadge } from '@/components/admin/locked-badge'
 import { useEffect, useRef, useState } from 'react'
 import { holiday, useHolidayMeta, type Unit } from '@/lib/holiday-client'
 
@@ -23,7 +24,7 @@ export function HolidayStaffFields({ token, userId, saveRef }: { token: string; 
   const [loaded, setLoaded] = useState(!userId)
 
   useEffect(() => {
-    if (!userId || !meta?.enabled) return
+    if (!userId || !(meta?.enabled || meta?.staff_fields)) return
     let live = true
     holiday.admin.staff(token, userId).then(r => {
       if (!live) return
@@ -31,24 +32,24 @@ export function HolidayStaffFields({ token, userId, saveRef }: { token: string; 
       setStart(r.start_date ?? ''); setWeekday(r.weekday_rate != null ? String(r.weekday_rate) : ''); setWeekend(r.weekend_rate != null ? String(r.weekend_rate) : ''); setLoaded(true)
     }).catch(() => setLoaded(true))
     return () => { live = false }
-  }, [token, userId, meta?.enabled])
+  }, [token, userId, meta?.enabled, meta?.staff_fields])
 
   useEffect(() => {
     saveRef.current = async (id: string) => {
-      if (!meta?.enabled || (!touched.current && !userId)) return    // nothing typed on a new person: leave their record as it is
+      if (!(meta?.enabled || meta?.staff_fields) || (!touched.current && !userId)) return    // nothing typed on a new person: leave their record as it is
       if (!touched.current) return
       await holiday.admin.saveStaff(token, id, { start_date: start || null, weekday_rate: weekday, weekend_rate: weekend, unit, allowance: allowance === '' ? null : allowance, contracted_hours: contracted === '' ? null : contracted })
     }
     return () => { saveRef.current = null }
-  }, [token, userId, meta?.enabled, start, weekday, weekend, unit, allowance, contracted, saveRef])
+  }, [token, userId, meta?.enabled, meta?.staff_fields, start, weekday, weekend, unit, allowance, contracted, saveRef])
 
-  if (!meta?.enabled || !meta.is_admin) return null
+  if (!(meta?.enabled || meta?.staff_fields) || !meta.is_admin) return null
   const on = (set: (v: string) => void) => (e: React.ChangeEvent<HTMLInputElement>) => { touched.current = true; set(e.target.value) }
 
   return (
     <div className="sm:col-span-2 rounded-lg border border-gray-200 p-4" aria-busy={!loaded}>
-      <p className="text-sm font-semibold text-neutral-dark">Holiday and pay</p>
-      <p className="mb-3 text-xs text-neutral-mid">Used by Holiday tracking. Pay rates are only visible to administrators.</p>
+      <p className="flex items-center gap-1.5 text-sm font-semibold text-neutral-dark">Holiday and pay <LockedBadge variant="icon" /></p>
+      <p className="mb-3 text-xs text-neutral-mid">Only administrators can see this. It is never shown to staff and never used by the hub chat. It feeds Holiday tracking and your reports.</p>
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
           <label className={lbl} htmlFor="hol-unit">Annual leave is counted in</label>

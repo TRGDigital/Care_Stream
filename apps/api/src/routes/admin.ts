@@ -3840,7 +3840,7 @@ export async function importCollectionDrafts(list: any[], allowRefresh: boolean)
           await submitUrlsForIndexing([`${siteUrl()}/collection/${c.slug}`], { source: 'page', refresh: true, force: true })
         }
         updated.push({ id: c.id, slug: c.slug, title: c.title })
-      } catch (e: any) { skipped.push({ slug, reason: String(e?.message ?? e).slice(0, 160) }) }
+      } catch (e: any) { skipped.push({ slug, reason: importFailure(slug, e) }) }
       continue
     }
     if (!raw?.cluster_key || !clusterByKey(String(raw.cluster_key))) { skipped.push({ slug, reason: 'a valid cluster_key is required' }); continue }
@@ -3860,9 +3860,16 @@ export async function importCollectionDrafts(list: any[], allowRefresh: boolean)
         const c = await (prisma as any).collection.create({ data })
         created.push({ id: c.id, slug: c.slug, title: c.title })
       }
-    } catch (e: any) { skipped.push({ slug, reason: String(e?.message ?? e).slice(0, 160) }) }
+    } catch (e: any) { skipped.push({ slug, reason: importFailure(slug, e) }) }
   }
   return { created, updated, skipped }
+}
+
+// A database refusal names its cause at the END of a long Prisma message, so cutting from the start loses it.
+function importFailure(slug: string, e: any): string {
+  const message = String(e?.message ?? e)
+  console.error(`[collections/import] ${slug}:`, message)
+  return message.length > 700 ? `${message.slice(0, 100)} ... ${message.slice(-600)}` : message
 }
 
 adminRouter.post('/collections/import', async (req: Request, res: Response) => {

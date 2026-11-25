@@ -4,7 +4,9 @@ import { prisma } from '../../db/client'
 import { loadLetterhead } from '../letters/letterhead'
 import { downloadFile, staffPhotoKey } from '../storage/s3'
 import { siteUrl } from '../../lib/urls'
-import { renderNewsletterHtml, renderNewsletterPdf, sampleBody, type DesignInput, type Target } from './newsletter-design'
+import { renderNewsletterHtml, renderNewsletterPdfFit, sampleBody, type DesignInput, type Target } from './newsletter-design'
+import { renderNewsletterSheet, orientationOf, type Orientation, type PagesMode, type FitInfo } from './newsletter-sheet'
+import { htmlToPdf, embeddedFontCss, pdfEngine } from './pdf-render'
 import { newsletterTemplate } from './newsletter-templates'
 import { staffHasPicture, featuredOf, giftKey, GIFT_IMAGE_ID } from './newsletter-photo'
 import { cleanContent, blockImageKey, BLOCK_IMAGE_ID } from './newsletter-edit'
@@ -80,6 +82,7 @@ export async function designInputFor(o: { tenantId: string; doc: Doc; target: Ta
     templateId: o.doc.data?.template_id ?? null, title: o.draft?.title ?? o.doc.title, body: o.draft?.body ?? o.doc.body,
     brand: { name: l.head.name, accent: typeof o.doc.data?.accent === 'string' && o.doc.data.accent ? o.doc.data.accent : (l.head.brandColour ?? null), logo, contact: (l.head.contactLines ?? []).slice(0, 3) },
     sentBy, people: people.map(x => ({ dataUrl: x.dataUrl, name: x.name, ...(web ? {} : { inHub: true }) })), gift: gift ? { text: gift.text, dataUrl: gift.dataUrl } : null, links: { holiday: `${siteUrl()}/chat`, hub: `${siteUrl()}/chat` },
+    orientation: orientationOf(o.doc.data?.orientation),
     styles: o.doc.data?.block_styles && typeof o.doc.data.block_styles === 'object' ? o.doc.data.block_styles : undefined, custom, customImages,
   }
   let logoPng: Buffer | null = null
@@ -92,9 +95,59 @@ export async function designedHtml(o: { tenantId: string; doc: Doc; target: Targ
   const { input } = await designInputFor(o)
   return renderNewsletterHtml(input, o.target)
 }
-export async function designedPdf(o: { tenantId: string; doc: Doc; sentBy?: string | null; stamp?: string }): Promise<Buffer> {
-  const { input, logoPng, photoPngs, giftPng } = await designInputFor({ ...o, target: 'web' })
-  return renderNewsletterPdf(o.stamp ? { ...input, stamp: o.stamp } : input, logoPng, photoPngs, giftPng)
+/** Two pages are only for the Detailed layout; everything else is one page. */
+export function pagesModeFor(doc: Doc, asked?: PagesMode | null): PagesMode {
+  const want = asked ?? (doc.data?.pages === 'two' ? 'two' : 'one')
+  return want === 'two' && newsletterTemplate(String(doc.data?.template_id ?? ''))?.layout === 'detailed' ? 'two' : 'one'
+}
+/** The newsletter would not fit one page at the smallest readable size: the caller asks the administrator what to do (landscape, shorten it, or allow two pages). */
+export class TooLongError extends Error {
+  code = 'TOO_LONG' as const
+  constructor(public fit: Partial<FitInfo> & { orientation: Orientation; canAllowTwoPages: boolean }) { super('This newsletter is too long for one page at a readable size.') }
+}
+export interface DesignedPdf { buffer: Buffer; engine: 'chromium' | 'pdfkit'; pages: number; scale: number; orientation: Orientation; mode: PagesMode }
+/** The one A4 sheet (screen, Print and Save PDF all use it), as a whole HTML document, for the panel and for Print. */
+export async function designedSheet(o: { tenantId: string; doc: Doc; sentBy?: string | null; stamp?: string | null; draft?: { title?: string; body?: string }; orientation?: Orientation; pages?: PagesMode | null }): Promise<{ html: string; orientation: Orientation; pages: PagesMode }> {
+  const { input } = await designInputFor({ tenantId: o.tenantId, doc: o.doc, target: 'web', sentBy: o.sentBy, draft: o.draft })
+  const orientation = o.orientation ?? orientationOf(o.doc.data?.orientation), pages = pagesModeFor(o.doc, o.pages)
+  return { html: renderNewsletterSheet({ ...input, orientation }, { orientation, pages, stamp: o.stamp ?? null }), orientation, pages }
+}
+/** The PDF of ANY newsletter design input (a saved newsletter, or a sample for the Preview button) through the same engines, so a sample is drawn exactly like a real one. */
+export async function pdfFromInput(input: DesignInput, o: { orientation?: Orientation; pages?: PagesMode; stamp?: string | null; logoPng?: Buffer | null; photoPngs?: Array<Buffer | null>; giftPng?: Buffer | null } = {}): Promise<{ buffer: Buffer; engine: 'chromium' | 'pdfkit'; pages: number; fits: boolean }> {
+  const orientation = o.orientation ?? orientationOf(input.orientation), mode: PagesMode = o.pages === 'two' ? 'two' : 'one'
+  const full: DesignInput = { ...input, orientation, ...(o.stamp ? { stamp: o.stamp } : {}) }
+  const engine = pdfEngine()
+  if (engine !== 'pdfkit') {
+    try { const r = await htmlToPdf(renderNewsletterSheet(full, { orientation, pages: mode, stamp: o.stamp ?? null, fonts: embeddedFontCss() }), { orientation }); return { buffer: r.buffer, engine: 'chromium', pages: r.pages, fits: r.fit?.fits ?? r.pages === 1 } }
+    catch (e: any) { if (engine === 'chromium') throw e; console.warn('[pdf] the browser engine could not make the PDF, using the fallback:', String(e?.message ?? e).slice(0, 200)) }
+  }
+  const r = await renderNewsletterPdfFit(full, o.logoPng ?? null, o.photoPngs ?? null, o.giftPng ?? null, { allowTwoPages: mode === 'two' })
+  return { buffer: r.buffer, engine: 'pdfkit', pages: r.pages, fits: r.fits }
+}
+/** The PDF of a newsletter. Chromium prints the very same sheet the screen shows; if it cannot start, the pdfkit drawing (fitted to one page the same way) is used, and the download still works. */
+export async function designedPdfResult(o: { tenantId: string; doc: Doc; sentBy?: string | null; stamp?: string; orientation?: Orientation; pages?: PagesMode | null }): Promise<DesignedPdf> {
+  const { input, logoPng, photoPngs, giftPng } = await designInputFor({ tenantId: o.tenantId, doc: o.doc, target: 'web', sentBy: o.sentBy })
+  const orientation = o.orientation ?? orientationOf(o.doc.data?.orientation), mode = pagesModeFor(o.doc, o.pages)
+  const full: DesignInput = { ...input, orientation, ...(o.stamp ? { stamp: o.stamp } : {}) }
+  const canAllowTwoPages = newsletterTemplate(String(o.doc.data?.template_id ?? ''))?.layout === 'detailed'
+  const engine = pdfEngine()
+  if (engine !== 'pdfkit') {
+    try {
+      const html = renderNewsletterSheet(full, { orientation, pages: mode, stamp: o.stamp ?? null, fonts: embeddedFontCss() })
+      const r = await htmlToPdf(html, { orientation })
+      if (r.fit && !r.fit.fits && mode === 'one') throw new TooLongError({ ...r.fit, orientation, canAllowTwoPages })
+      return { buffer: r.buffer, engine: 'chromium', pages: r.pages, scale: r.fit?.scale ?? 1, orientation, mode }
+    } catch (e: any) {
+      if (e instanceof TooLongError || engine === 'chromium') throw e
+      console.warn('[pdf] the browser engine could not make the PDF, using the fallback:', String(e?.message ?? e).slice(0, 200))
+    }
+  }
+  const r = await renderNewsletterPdfFit(full, logoPng, photoPngs, giftPng, { allowTwoPages: mode === 'two' })
+  if (!r.fits && mode === 'one') throw new TooLongError({ mode, fits: false, scale: r.scale, pages: r.pages, orientation, canAllowTwoPages })
+  return { buffer: r.buffer, engine: 'pdfkit', pages: r.pages, scale: r.scale, orientation, mode }
+}
+export async function designedPdf(o: { tenantId: string; doc: Doc; sentBy?: string | null; stamp?: string; orientation?: Orientation; pages?: PagesMode | null }): Promise<Buffer> {
+  return (await designedPdfResult(o)).buffer
 }
 /** Sample designs of every layout of one newsletter type, for the thumbnails (marked SAMPLE). */
 export async function sampleDesignsFor(tenantId: string, type: string): Promise<Array<{ id: string; layout: string; title: string; html: string }>> {

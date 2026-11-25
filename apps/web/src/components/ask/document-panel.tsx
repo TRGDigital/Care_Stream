@@ -13,6 +13,7 @@ import { GiftBox } from '@/components/ask/gift-box'
 import { NewsletterEditor } from '@/components/ask/newsletter-editor'
 import { ExpandViewer, Expandable, useExpandViewer, type ViewerItem } from './expand-viewer'
 import { FitHtml } from './fit-html'
+import { SheetFrame, type SheetFit } from './sheet-frame'
 
 const STATUS: Record<string, { label: string; cls: string }> = {
   draft: { label: 'Draft', cls: 'bg-gray-100 text-neutral-dark' }, pending: { label: 'Waiting for approval', cls: 'bg-amber-100 text-amber-900' },
@@ -20,6 +21,39 @@ const STATUS: Record<string, { label: string; cls: string }> = {
 }
 const input = 'w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-neutral-dark outline-none focus:border-teal focus:ring-2 focus:ring-teal/20'
 const btn = 'inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-semibold disabled:opacity-50'
+
+
+/** HOUSE RULE 10: the page of a newsletter. Portrait or landscape, a note that it fits one page, and, when it does not fit at a readable size, the gentle check with buttons (never silently shrunk or cut). */
+function PageControls({ doc, fit, tooLong, busy, canEdit, onSet, onShorten }: { doc: AskDocFull; fit: SheetFit | null; tooLong: boolean; busy: boolean; canEdit: boolean; onSet: (o: { orientation?: 'portrait' | 'landscape'; pages?: 'one' | 'two' }) => void; onShorten: () => void }) {
+  const orientation = doc.data?.orientation === 'landscape' ? 'landscape' : 'portrait'
+  const two = doc.data?.pages === 'two'
+  const canTwo = String(doc.data?.template_id ?? '').endsWith('-detailed')
+  const over = tooLong || (!!fit && !fit.fits)
+  const other = orientation === 'portrait' ? 'landscape' : 'portrait'
+  const cb = 'rounded-lg border px-3 py-1.5 text-xs font-semibold disabled:opacity-50'
+  return (
+    <div className="rounded-lg border border-gray-200 bg-white p-3 text-sm text-neutral-dark">
+      <div className="flex flex-wrap items-center gap-3">
+        <span className="font-semibold" id="ask-page-label">Page</span>
+        <div role="group" aria-labelledby="ask-page-label" className="inline-flex overflow-hidden rounded-lg border border-gray-200 text-xs font-semibold">
+          {(['portrait', 'landscape'] as const).map(o => <button key={o} type="button" disabled={!canEdit || busy} aria-pressed={orientation === o} onClick={() => orientation !== o && onSet({ orientation: o })} className={`px-3 py-1.5 ${orientation === o ? 'bg-teal text-white' : 'bg-white text-neutral-dark hover:bg-neutral-light'} disabled:opacity-60`}>{o === 'portrait' ? 'Portrait' : 'Landscape'}</button>)}
+        </div>
+        {!over && fit && <span role="status" className="inline-flex items-center gap-1 text-xs font-semibold text-green-800"><Check size={12} aria-hidden="true" /> {fit.pages > 1 ? `Runs to ${fit.pages} pages (two pages allowed)` : 'Fits one page'}</span>}
+      </div>
+      {over && canEdit && (
+        <div role="alert" className="mt-2 rounded-lg border border-amber-300 bg-amber-50 p-3">
+          <p className="text-sm text-neutral-dark">This newsletter will not fit one page at a readable size. What would you like to do?</p>
+          <div className="mt-2 flex flex-wrap gap-2">
+            <button type="button" disabled={busy} onClick={() => onSet({ orientation: other })} className={`${cb} border-teal bg-teal text-white hover:bg-teal-dark`}>Switch to {other}</button>
+            <button type="button" disabled={busy} onClick={onShorten} className={`${cb} border-gray-300 bg-white text-neutral-dark hover:bg-neutral-light`}>Shorten it</button>
+            {canTwo && !two && <button type="button" disabled={busy} onClick={() => onSet({ pages: 'two' })} className={`${cb} border-gray-300 bg-white text-neutral-dark hover:bg-neutral-light`}>Allow two pages</button>}
+          </div>
+        </div>
+      )}
+      {canTwo && two && canEdit && <p className="mt-2 text-xs text-neutral-mid">Two pages are allowed. <button type="button" disabled={busy} onClick={() => onSet({ pages: 'one' })} className="font-semibold text-teal underline">Back to one page</button></p>}
+    </div>
+  )
+}
 
 export function DocumentPanel({ token, id, onClose, onChanged, focus }: { token: string; id: string; onClose: () => void; onChanged: () => void; focus?: 'colours' | 'blocks' | null }) {
   const [d, setD] = useState<AskDocFull | null>(null)
@@ -35,9 +69,11 @@ export function DocumentPanel({ token, id, onClose, onChanged, focus }: { token:
   const [sign, setSign] = useState(false)
   const [ack, setAck] = useState<boolean | null>(null)   // ask the person to confirm they have read it (the template's default unless the administrator changes it)
   const [docStatus, setDocStatus] = useState<{ letterhead_ready: boolean; trading_name: string; missing: string[]; signature: boolean } | null>(null)
-  const [paper, setPaper] = useState<{ html: string; css: string } | null>(null)
+  const [paper, setPaper] = useState<{ html: string; css: string; sheet?: string; orientation?: 'portrait' | 'landscape'; pages?: 'one' | 'two' } | null>(null)
+  const [fit, setFit] = useState<SheetFit | null>(null)   // HOUSE RULE 10: does the newsletter fit one page? (told by the page itself)
+  const [tooLong, setTooLong] = useState(false)          // the PDF said it would not fit one page at a readable size
   const [showPaper, setShowPaper] = useState(false)
-  const [live, setLive] = useState<string | null>(null)   // the designed newsletter for the text being edited
+  const [live, setLive] = useState<{ html: string; sheet?: string; orientation?: 'portrait' | 'landscape' } | null>(null)   // the designed newsletter for the text being edited
   const [photoPick, setPhotoPick] = useState<string | null>(null)
   const [photoAgreed, setPhotoAgreed] = useState(false)
   const [photoState, setPhotoState] = useState<{ chosen: boolean; name?: string | null; consent?: boolean; has_picture?: boolean } | null>(null)
@@ -60,7 +96,7 @@ export function DocumentPanel({ token, id, onClose, onChanged, focus }: { token:
   useEffect(() => { if (d?.type === 'newsletter') setShowPaper(true) }, [d?.id, d?.type])
   useEffect(() => {
     if (!editing || d?.type !== 'newsletter') { setLive(null); return }
-    const t = setTimeout(() => { ask.previewDraft(token, id, { title, body }).then(r => setLive(r.html)).catch(() => undefined) }, 500)
+    const t = setTimeout(() => { ask.previewDraft(token, id, { title, body }).then(r => setLive({ html: r.html, sheet: r.sheet, orientation: r.orientation })).catch(() => undefined) }, 500)
     return () => clearTimeout(t)
   }, [editing, d?.type, token, id, title, body])
   useEffect(() => { if (d?.type !== 'newsletter' || !photoUser) { setPhotoState(null); return } ask.newsletterPhotoStatus(token, id).then(setPhotoState).catch(() => setPhotoState(null)) }, [d?.type, d?.updated_at, photoUser, token, id])
@@ -93,8 +129,11 @@ export function DocumentPanel({ token, id, onClose, onChanged, focus }: { token:
       if (r.missing?.length) setInfo(`Saved. Still missing: ${r.missing.join(', ')}.`)
     })
   }
+  /** The PDF (and Print, which prints the same PDF). A newsletter that will not fit one page at a readable size is not silently shrunk or cut: the page controls ask what to do. */
+  const getPdfBlob = async () => { try { return await ask.documentBlob(token, d!.id, 'pdf', { sign: sign && letter, draft: !isFinal }) } catch (e) { if (e instanceof AskError && e.code === 'TOO_LONG') setTooLong(true); throw e } }
   async function openViewer() { if (d && (letter || news) && showPaper && !paper) await loadPaper(); viewer.show() }
-  const viewerItems: ViewerItem[] = !d ? [] : (letter || news) && showPaper && paper ? [{ kind: 'html', html: paper.html, css: paper.css }]
+  const viewerItems: ViewerItem[] = !d ? [] : d.type === 'newsletter' && showPaper && paper?.sheet ? [{ kind: 'sheet', html: paper.sheet, orientation: paper.orientation ?? 'portrait' }]
+    : (letter || news) && showPaper && paper ? [{ kind: 'html', html: paper.html, css: paper.css }]
     : [{ kind: 'node', node: <div className="w-[680px] max-w-full p-8 text-neutral-dark">{letter ? <pre className="whitespace-pre-wrap font-sans text-sm leading-relaxed">{d.body}</pre> : <MarkdownLite text={d.body} />}</div> }]
 
   return (
@@ -110,6 +149,7 @@ export function DocumentPanel({ token, id, onClose, onChanged, focus }: { token:
           </div>
 
           <div className="min-h-0 flex-1 space-y-3 overflow-y-auto no-scrollbar pr-1">
+            {d.type === 'newsletter' && showPaper && !editing && paper?.sheet && <PageControls doc={d} fit={fit} tooLong={tooLong} busy={!!busy} canEdit={!!d.actions.edit} onSet={(o: { orientation?: 'portrait' | 'landscape'; pages?: 'one' | 'two' }) => { setTooLong(false); void run('layout', () => ask.newsletterOp(token, d.id, { op: 'layout', ...o })) }} onShorten={() => { setTooLong(false); setEditing(true) }} />}
             {d.data?.review_note && d.status === 'draft' && <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">Sent back: {d.data.review_note.note}</p>}
 
             {editing && letter && d.fields ? (
@@ -126,13 +166,13 @@ export function DocumentPanel({ token, id, onClose, onChanged, focus }: { token:
             ) : editing && news ? (
               <div className="space-y-3">
                 <div><label className="mb-1 block text-xs font-semibold text-neutral-mid" htmlFor="ask-doc-title">Title</label><input id="ask-doc-title" className={input} value={title} onChange={e => setTitle(e.target.value)} maxLength={160} /></div>
-                <div><label className="mb-1 block text-xs font-semibold text-neutral-mid" htmlFor="ask-doc-body">{report ? 'Report' : 'Newsletter'} (## for a heading, - for a bullet)</label><div className={d.type === 'newsletter' ? 'grid gap-3 md:grid-cols-2' : ''}><textarea id="ask-doc-body" rows={16} className={`no-scrollbar ${input} font-mono`} value={body} onChange={e => setBody(e.target.value)} />{d.type === 'newsletter' && <div><p className="mb-1 text-xs font-semibold text-neutral-mid">Designed preview (follows what you type)</p>{live ? <FitHtml html={live} className="rounded-lg border border-gray-200" /> : <p className="flex items-center gap-2 text-xs text-neutral-mid"><Loader2 size={12} className="animate-spin" aria-hidden="true" />Making the preview</p>}</div>}</div></div>
+                <div><label className="mb-1 block text-xs font-semibold text-neutral-mid" htmlFor="ask-doc-body">{report ? 'Report' : 'Newsletter'} (## for a heading, - for a bullet)</label><div className={d.type === 'newsletter' ? 'grid gap-3 md:grid-cols-2' : ''}><textarea id="ask-doc-body" rows={16} className={`no-scrollbar ${input} font-mono`} value={body} onChange={e => setBody(e.target.value)} />{d.type === 'newsletter' && <div><p className="mb-1 text-xs font-semibold text-neutral-mid">Designed preview (follows what you type)</p>{live ? (live.sheet ? <SheetFrame html={live.sheet} orientation={live.orientation ?? 'portrait'} className="rounded-lg border border-gray-200" /> : <FitHtml html={live.html} className="rounded-lg border border-gray-200" />) : <p className="flex items-center gap-2 text-xs text-neutral-mid"><Loader2 size={12} className="animate-spin" aria-hidden="true" />Making the preview</p>}</div>}</div></div>
                 {report && (
                   <label className="flex items-start gap-2 rounded-lg border border-gray-200 bg-neutral-light/60 p-3 text-sm text-neutral-dark"><input type="checkbox" className="mt-0.5 h-4 w-4" checked={internal} onChange={e => setInternal(e.target.checked)} />
                     <span><span className="font-semibold">Internal only.</span> It may name people and quote pay. It can be downloaded or emailed to the administrators, and can never be sent to staff. Leave this off for a report you may share: it then uses roles and counts only.</span></label>
                 )}
               </div>
-            ) : showPaper && (letter || news) ? (paper ? <Expandable label={d.type === 'newsletter' ? 'The designed newsletter' : 'The document on letterhead'} onOpen={openViewer}>{d.type === 'newsletter' ? <FitHtml html={paper.html} className="rounded-xl border border-gray-200" /> : <div className="no-scrollbar overflow-x-auto rounded-xl bg-neutral-light p-3"><style>{paper.css}</style><div dangerouslySetInnerHTML={{ __html: paper.html }} /></div>}</Expandable> : <p className="flex items-center gap-2 text-sm text-neutral-mid"><Loader2 size={14} className="animate-spin" /> Preparing the preview</p>)
+            ) : showPaper && (letter || news) ? (paper ? <Expandable label={d.type === 'newsletter' ? 'The designed newsletter' : 'The document on letterhead'} onOpen={openViewer}>{d.type === 'newsletter' ? (paper.sheet ? <SheetFrame html={paper.sheet} orientation={paper.orientation ?? 'portrait'} onFit={setFit} className="rounded-xl border border-gray-200" /> : <FitHtml html={paper.html} className="rounded-xl border border-gray-200" />) : <div className="no-scrollbar overflow-x-auto rounded-xl bg-neutral-light p-3"><style>{paper.css}</style><div dangerouslySetInnerHTML={{ __html: paper.html }} /></div>}</Expandable> : <p className="flex items-center gap-2 text-sm text-neutral-mid"><Loader2 size={14} className="animate-spin" /> Preparing the preview</p>)
             : <Expandable label="The text" onOpen={openViewer}>{letter ? <pre className="whitespace-pre-wrap rounded-lg border border-gray-200 bg-neutral-light/50 p-4 font-sans text-sm leading-relaxed text-neutral-dark">{d.body}</pre>
               : <MarkdownLite text={d.body} />}</Expandable>}
 
@@ -232,7 +272,7 @@ export function DocumentPanel({ token, id, onClose, onChanged, focus }: { token:
               {d.status === 'pending' && !d.actions.approve && !d.mine && <span className="text-xs text-neutral-mid">Someone else needs to approve this.</span>}
               {d.status === 'pending' && d.actions.return && <button type="button" disabled={!!busy} onClick={() => { const n = window.prompt('Why is it going back? (optional)', note); if (n !== null) { setNote(n); run('return', () => ask.returnToDraft(token, d.id, n.trim() || undefined), 'Sent back to draft.') } }} className={`${btn} border border-gray-200 text-neutral-dark hover:bg-neutral-light`}><RotateCcw size={14} /> Send back</button>}
               {d.actions.reopen && <button type="button" disabled={!!busy} onClick={() => run('reopen', () => ask.reopen(token, d.id), 'Back to draft. It needs approving again.')} className={`${btn} border border-gray-200 text-neutral-dark hover:bg-neutral-light`}><RotateCcw size={14} /> Re-open</button>}
-              {(letter || news) && <DocumentActions title={d.title} draft={!isFinal} disabled={!!busy} getPdf={() => ask.documentBlob(token, d.id, 'pdf', { sign: sign && letter, draft: !isFinal })} getDocx={() => ask.documentBlob(token, d.id, 'docx', { sign: sign && letter, draft: !isFinal })}
+              {(letter || news) && <DocumentActions title={d.title} draft={!isFinal} disabled={!!busy} getPdf={getPdfBlob} getDocx={() => ask.documentBlob(token, d.id, 'docx', { sign: sign && letter, draft: !isFinal })}
                 onDone={w => { setInfo(w === 'pdf' ? 'The PDF has been saved.' : w === 'word' ? 'The Word document has been saved.' : 'Sent to your printer dialog.'); if (isFinal) { void load(); onChanged() } }} onError={m => setError(m)} />}
               {(letter || news) && (d.actions.share.length > 0 || flow) && !(letter && intent.print_only) && <SharePanel token={token} doc={{ id: d.id, type: d.type, title: d.title, status: d.status, staff_name: d.staff_name, share_intent: d.share_intent ?? null }} sign={sign && letter} needsAck={ack ?? d.ack_default ?? false} onPreview={openViewer} onSent={() => { void load(); onChanged() }} />}
               {letter && intent.print_only && <span className="text-xs text-neutral-mid">Print only: Save PDF or Print it from here. Nothing is sent to {first}.</span>}
@@ -242,7 +282,7 @@ export function DocumentPanel({ token, id, onClose, onChanged, focus }: { token:
       </div>
       {d && <ExpandViewer open={viewer.open} onClose={viewer.close} title={d.title} items={viewerItems}
         switcher={d.type === 'newsletter' ? { value: showPaper ? 'designed' : 'text', options: [{ id: 'designed', label: 'Designed' }, { id: 'text', label: 'Text' }], onChange: k => setShowPaper(k === 'designed') } : undefined}
-        pdf={(letter || news) ? { getPdf: () => ask.documentBlob(token, d.id, 'pdf', { sign: sign && letter, draft: !isFinal }), getDocx: () => ask.documentBlob(token, d.id, 'docx', { sign: sign && letter, draft: !isFinal }), draft: !isFinal } : undefined} />}
+        pdf={(letter || news) ? { getPdf: getPdfBlob, getDocx: () => ask.documentBlob(token, d.id, 'docx', { sign: sign && letter, draft: !isFinal }), draft: !isFinal } : undefined} />}
     </div>
   )
 }

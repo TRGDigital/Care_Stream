@@ -270,13 +270,18 @@ askRouter.get('/documents/:id/pdf', wrap(async (req, res) => {
   const v = canShare(d), draft = !v.ok
   if (draft && req.query.draft !== '1') { err(res, 'NOT_ALLOWED', v.ok ? '' : v.reason, 409); return }
   try {
-    const { buffer, filename } = await pdfFor(t, d, req.query.sign === '1' ? req.user!.sub : null, req.user!.sub, draft ? DRAFT_STAMP : undefined)   // MY signature only when I ask for it
+    const lay = { orientation: req.query.orientation === 'landscape' ? 'landscape' as const : req.query.orientation === 'portrait' ? 'portrait' as const : undefined, pages: req.query.pages === 'two' ? 'two' as const : req.query.pages === 'one' ? 'one' as const : undefined }
+    const { buffer, filename } = await pdfFor(t, d, req.query.sign === '1' ? req.user!.sub : null, req.user!.sub, draft ? DRAFT_STAMP : undefined, lay)   // MY signature only when I ask for it
     if (draft) audit(req, 'ask_document_draft_copy', d.id, { type: d.type, format: 'pdf' })
     else { audit(req, 'ask_document_pdf_downloaded', d.id, { type: d.type }); await store.appendShareRecord(t, d.id, { method: 'pdf', by: req.user!.sub, at: new Date().toISOString() }); await store.setDocumentStatus(t, d.id, ['approved'], 'shared') }
     res.setHeader('Content-Type', 'application/pdf'); res.setHeader('Cache-Control', 'private, no-store'); res.setHeader('X-Content-Type-Options', 'nosniff')
     res.setHeader('Content-Disposition', `attachment; filename="${filename.replace(/[^a-zA-Z0-9._-]/g, '_')}"`)
     res.send(buffer)
-  } catch (e: any) { err(res, 'PDF_FAILED', 'The PDF could not be made just now. Please try again.', 500) }
+  } catch (e: any) {
+    // HOUSE RULE 10: a newsletter that will not fit one page at a readable size is never silently shrunk or cut; the screen asks what to do.
+    if (e?.code === 'TOO_LONG') { res.status(422).json({ success: false, error: { code: 'TOO_LONG', message: 'This newsletter is too long for one page at a readable size. Switch to landscape, shorten it, or (Detailed layout) allow two pages.', details: { orientation: e.fit?.orientation ?? 'portrait', can_allow_two_pages: !!e.fit?.canAllowTwoPages, scale: e.fit?.scale ?? null } } }); return }
+    err(res, 'PDF_FAILED', 'The PDF could not be made just now. Please try again.', 500)
+  }
 }))
 
 // Saves HOW a letter is to be shared (in their hub, by email, print only, or hub and email). The Letters agent asks the administrator and saves the answer; the document panel shows and edits it.

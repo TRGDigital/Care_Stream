@@ -64,35 +64,38 @@ export async function renderLayoutDocx(d: LayoutDoc): Promise<Buffer> {
     new Paragraph({ alignment: AlignmentType.RIGHT, spacing: { before: 40 }, children: [new TextRun({ children: ['Page ', PageNumber.CURRENT, ' of ', PageNumber.TOTAL_PAGES], font: FONT, size: PT(7.5), color: '777777' })] }),
   ]
 
-  const para = (text: string, o: { bold?: boolean; color?: string; size?: number; after?: number; before?: number; bullet?: boolean } = {}) => new Paragraph({
+  // HOUSE RULE 10: a paragraph is never split across pages (keepLines), headings and the closing stay with what follows (keepNext), and a single line is never left alone at the top or bottom of a page (widowControl).
+  const para = (text: string, o: { bold?: boolean; color?: string; size?: number; after?: number; before?: number; bullet?: boolean; keepNext?: boolean } = {}) => new Paragraph({
+    keepLines: true, keepNext: o.keepNext ?? false, widowControl: true,
     spacing: { after: o.after ?? 140, before: o.before ?? 0, line: 300 }, bullet: o.bullet ? { level: 0 } : undefined,
     children: [new TextRun({ text: printable(text), font: FONT, size: PT(o.size ?? 10.5), bold: o.bold, color: o.color ?? '1A1530' })],
   })
-  const bodyParas = d.blocks.map(b => b.t === 'li' ? para(b.text, { bullet: true, after: 60 }) : b.t === 'h' ? para(b.text, { bold: true, size: d.kind === 'letter' ? 11 : 13, color: BRAND ? BRAND.slice(1) : d.kind === 'letter' ? '1A1530' : '0F766E', before: 120, after: 80 }) : para(b.text))
+  const lastBody = (() => { for (let k = d.blocks.length - 1; k >= 0; k--) if (d.blocks[k].t !== 'h') return k; return -1 })()
+  const bodyParas = d.blocks.map((b, k) => b.t === 'li' ? para(b.text, { bullet: true, after: 60, keepNext: d.kind === 'letter' && k === lastBody }) : b.t === 'h' ? para(b.text, { keepNext: true, bold: true, size: d.kind === 'letter' ? 11 : 13, color: BRAND ? BRAND.slice(1) : d.kind === 'letter' ? '1A1530' : '0F766E', before: 120, after: 80 }) : para(b.text, { keepNext: d.kind === 'letter' && k === lastBody }))
 
   const children: any[] = []
   if (d.kind === 'letter') {
     children.push(para(d.date ?? '', { color: '5E4D70', size: 10, after: 200 }))
     if (d.confidential) children.push(para('PRIVATE AND CONFIDENTIAL', { bold: true, color: '5E4D70', size: 8.5, after: 60 }))
-    children.push(para(d.recipient?.name ?? '', { bold: true, after: 0 }))
-    if (d.recipient?.role) children.push(para(d.recipient.role, { color: '5E4D70', size: 10, after: 0 }))
-    for (const l of d.recipient?.addressLines ?? []) children.push(para(l, { color: '5E4D70', size: 10, after: 0 }))
-    children.push(para(d.subject ?? '', { bold: true, size: 11.5, before: 240, after: 200 }))
+    children.push(para(d.recipient?.name ?? '', { bold: true, after: 0, keepNext: true }))   // the address block and the subject never split
+    if (d.recipient?.role) children.push(para(d.recipient.role, { color: '5E4D70', size: 10, after: 0, keepNext: true }))
+    for (const l of d.recipient?.addressLines ?? []) children.push(para(l, { color: '5E4D70', size: 10, after: 0, keepNext: true }))
+    children.push(para(d.subject ?? '', { bold: true, size: 11.5, before: 240, after: 200, keepNext: true }))
     children.push(...bodyParas)
-    children.push(para(d.closing ?? '', { before: 120, after: 80 }))
+    children.push(para(d.closing ?? '', { before: 120, after: 80, keepNext: true }))   // closing, signature and printed name stay together, with the last paragraph
     const sig = d.signer?.signature ?? null
     if (sig) {
       const size = fit(sig.width, sig.height, 227, 68)   // about 18 mm high at most
-      children.push(new Paragraph({ spacing: { after: 40 }, children: [new ImageRun({ type: 'png', data: sig.png, transformation: size })] }))
-    } else children.push(new Paragraph({ spacing: { after: 480 }, children: [] }))
-    children.push(para(d.signer?.name ?? '', { bold: true, after: 0 }))
+      children.push(new Paragraph({ keepNext: true, keepLines: true, spacing: { after: 40 }, children: [new ImageRun({ type: 'png', data: sig.png, transformation: size })] }))
+    } else children.push(new Paragraph({ keepNext: true, spacing: { after: 480 }, children: [] }))
+    children.push(para(d.signer?.name ?? '', { bold: true, after: 0, keepNext: !!d.signer?.role }))
     if (d.signer?.role) children.push(para(d.signer.role, { color: '5E4D70', size: 10, after: 0 }))
     if (d.acknowledgement) {
       const box = { style: BorderStyle.SINGLE, size: 4, color: 'D9D4E0' }
       children.push(new Paragraph({ spacing: { after: 160 }, children: [] }))
       children.push(new Table({
         width: { size: 100, type: WidthType.PERCENTAGE },
-        rows: [new TableRow({ children: [new TableCell({ borders: { top: box, bottom: box, left: box, right: box }, margins: { top: 120, bottom: 120, left: 160, right: 160 }, children: [
+        rows: [new TableRow({ cantSplit: true, children: [new TableCell({ borders: { top: box, bottom: box, left: box, right: box }, margins: { top: 120, bottom: 120, left: 160, right: 160 }, children: [
           para(d.acknowledgement, { size: 10 }), para('Signed: ____________________________        Date: ________________', { size: 10, color: '5E4D70', before: 200, after: 0 }),
         ] })] })],
       }))
@@ -115,9 +118,10 @@ export async function renderLayoutDocx(d: LayoutDoc): Promise<Buffer> {
   const document = new Document({
     creator: printable(d.head.name), title: printable(d.subject ?? d.head.name),
     sections: [{
-      properties: { page: { size: { width: 11906, height: 16838 }, margin: { top: 1700, bottom: 1300, left: 1134, right: 1134, header: 560, footer: 500 } } },
-      headers: { default: new Header({ children: headerChildren }) },
-      footers: { default: new Footer({ children: footerChildren }) },
+      properties: { titlePage: true, page: { size: { width: 11906, height: 16838 }, margin: { top: 1700, bottom: 1300, left: 1134, right: 1134, header: 560, footer: 500 } } },
+      // the full letterhead is on page 1 only; later pages carry a small running header (the organisation and the subject)
+      headers: { first: new Header({ children: headerChildren }), default: new Header({ children: [new Paragraph({ spacing: { after: 0 }, border: { bottom: { style: BorderStyle.SINGLE, size: 4, color: 'D9D4E0', space: 4 } }, children: [new TextRun({ text: printable(d.head.name), font: FONT, size: PT(8), color: '777777' }), ...(d.subject ? [new TextRun({ text: `     ${printable(d.subject)}`, font: FONT, size: PT(8), color: '777777' })] : [])] })] }) },
+      footers: { first: new Footer({ children: footerChildren }), default: new Footer({ children: footerChildren }) },
       children,
     }],
   })

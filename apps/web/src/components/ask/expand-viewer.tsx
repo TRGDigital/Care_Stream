@@ -7,11 +7,13 @@
 import { createPortal } from 'react-dom'
 import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState, type KeyboardEvent as RKeyboardEvent, type ReactNode } from 'react'
 import { DocumentActions } from './document-actions'
+import { SheetFrame, SHEET_PX } from './sheet-frame'
 import { ChevronLeft, ChevronRight, Download, Maximize2, Printer, X, ZoomIn, ZoomOut } from 'lucide-react'
 import { canZoomIn, canZoomOut, clampPage, clampZoom, fitScale, hasNext, hasPrev, isActivateKey, pageLabel, stepPage, trapTab, viewerKey, zoomIn, zoomLabel, zoomOut } from '../../lib/expand-viewer-logic'
 
 export type ViewerItem =
   | { kind: 'html'; html: string; css?: string; label?: string }
+  | { kind: 'sheet'; html: string; orientation: 'portrait' | 'landscape'; label?: string }
   | { kind: 'node'; node: ReactNode; label?: string }
   | { kind: 'image'; src: string; alt: string; label?: string }
   | { kind: 'pdf'; src: string; pages?: number; label?: string }
@@ -42,6 +44,7 @@ function printItem(item: ViewerItem, title: string) {
   const esc = (s: string) => s.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c] as string))
   let doc = ''
   if (item.kind === 'html') doc = `<!doctype html><meta charset="utf-8"><title>${esc(title)}</title><style>${item.css ?? ''}@page{margin:12mm}body{margin:0}</style>${item.html}`
+  else if (item.kind === 'sheet') doc = item.html
   else if (item.kind === 'image') doc = `<!doctype html><meta charset="utf-8"><title>${esc(title)}</title><style>body{margin:0}img{max-width:100%}</style><img src="${esc(item.src)}" alt="${esc(item.alt)}">`
   else if (item.kind === 'pdf') { frame.src = item.src }
   else { const el = document.getElementById('expand-viewer-node'); doc = `<!doctype html><meta charset="utf-8"><title>${esc(title)}</title><style>body{font-family:sans-serif;margin:16px}table{border-collapse:collapse}td,th{border:1px solid #ccc;padding:4px 8px}</style>${el?.innerHTML ?? ''}` }
@@ -148,6 +151,7 @@ export function ExpandViewer({ open, onClose, title, items, downloads, actions, 
           <div style={{ width: (contentRef.current?.scrollWidth ?? 0) * scale || undefined, height: (contentRef.current?.scrollHeight ?? 0) * scale || undefined }}>
             <div ref={contentRef} id="expand-viewer-node" style={{ transform: `scale(${scale})`, transformOrigin: 'top left', width: 'max-content', maxWidth: 'none' }} className="bg-white shadow-lg">
               {item.kind === 'html' && <><style>{item.css ?? ''}</style><div dangerouslySetInnerHTML={{ __html: item.html }} /></>}
+              {item.kind === 'sheet' && <div style={{ width: SHEET_PX[item.orientation].w }}><SheetFrame html={item.html} orientation={item.orientation} fixedScale={1} title={title} /></div>}
               {item.kind === 'node' && item.node}
               {item.kind === 'image' && (/* eslint-disable-next-line @next/next/no-img-element */ <img src={item.src} alt={item.alt} className="block max-h-none max-w-none" onLoad={measure} />)}
               {item.kind === 'pdf' && <iframe title={`${title} PDF`} src={`${item.src}#page=${pdfPage + 1}&toolbar=0&navpanes=0`} style={{ width: 794, height: 1123, border: 0 }} />}

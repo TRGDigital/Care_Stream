@@ -49,9 +49,9 @@ askDocsRouter.get('/:id/preview', async (req: Request, res: Response) => {
   const t = getTenantId(), u = req.user!.sub
   const d = await store.getDocumentFor(t, u, String(req.params.id)); if (!d) { notFound(res); return }
   try {
-    const { html, css } = await previewHtml({ tenantId: t, doc: d, signerUserId: wantsSignature(req) ? u : null, sentByUserId: u })
+    const { html, css, sheet, orientation, pages } = await previewHtml({ tenantId: t, doc: d, signerUserId: wantsSignature(req) ? u : null, sentByUserId: u, stamp: ['approved', 'shared'].includes(String(d.status)) ? null : DRAFT_STAMP })
     res.setHeader('Cache-Control', 'private, no-store')
-    ok(res, { html, css })
+    ok(res, { html, css, ...(sheet ? { sheet, orientation, pages } : {}) })
   } catch (e: any) { err(res, 'PREVIEW_FAILED', 'The preview could not be made just now.', 500) }
 })
 
@@ -61,9 +61,9 @@ askDocsRouter.post('/:id/preview-draft', async (req: Request, res: Response) => 
   const d = await store.getDocumentFor(t, u, String(req.params.id)); if (!d || d.type !== 'newsletter') { notFound(res); return }
   try {
     const draft = { title: typeof req.body?.title === 'string' ? req.body.title.slice(0, 160) : undefined, body: typeof req.body?.body === 'string' ? req.body.body.slice(0, 20000) : undefined }
-    const { html } = await previewHtml({ tenantId: t, doc: d, sentByUserId: u, draft })
+    const { html, sheet, orientation, pages } = await previewHtml({ tenantId: t, doc: d, sentByUserId: u, draft, stamp: ['approved', 'shared'].includes(String(d.status)) ? null : DRAFT_STAMP })
     res.setHeader('Cache-Control', 'private, no-store')
-    ok(res, { html })
+    ok(res, { html, ...(sheet ? { sheet, orientation, pages } : {}) })
   } catch (e: any) { err(res, 'PREVIEW_FAILED', 'The preview could not be made just now.', 500) }
 })
 

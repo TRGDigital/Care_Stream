@@ -28,6 +28,8 @@ export interface DesignInput {
   custom?: CustomIn[]
   /** Pictures for picture blocks, by block id (screen and PDF only; email shows the words and a note). */
   customImages?: Record<string, CustomImage>
+  /** A4 portrait (the default) or landscape. Landscape lays the blocks out in columns so it reads well wide. */
+  orientation?: 'portrait' | 'landscape'
   sample?: boolean
   /** Printed at the top of every PDF page when the copy is not final (a draft or a sample). */
   stamp?: string
@@ -41,7 +43,7 @@ export interface CustomImage { dataUrl: string; buffer?: Buffer | null }
 export const BLOCK_STYLES = ['soft', 'bold', 'outline', 'none'] as const
 export type BlockStyle = (typeof BLOCK_STYLES)[number]
 export interface Sec { id: string; key: string | null; title: string; role: Role; icon: IconName; blocks: Block[]; first?: boolean; custom?: CustomIn }
-export interface Row { kind: 'hero' | 'full' | 'pair' | 'quote' | 'cta' | 'footer' | 'gift' | 'custom'; cells: Sec[] }
+export interface Row { kind: 'hero' | 'full' | 'pair' | 'quote' | 'cta' | 'footer' | 'gift' | 'custom'; cells: Sec[]; /** For a row of columns: how each cell is drawn (a quote, a call to action or the gift keep their own look in a column). */ cellKinds?: Array<Row['kind']> }
 export interface Look { id: string; label: string; accent: string; accent2: string | null; radius: number; headFont: string; cardStyle: 'soft' | 'rule' | 'plain' | 'outline'; iconShape: 'circle' | 'square' }
 
 const esc = (s: unknown) => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c] as string))
@@ -191,6 +193,7 @@ export interface Design {
   /** The colour of the words on the page and of the quieter words (white in a bold block). */
   ink: string; muted: string
   styles: Record<string, BlockStyle>; customImages: Record<string, CustomImage>
+  orientation: 'portrait' | 'landscape'
 }
 /** A bold block: the accent colour behind white words. The accent already reads on white (4.5 to 1 or better), so white words on it always read too. */
 export function boldDesign(d: Design): Design {
@@ -232,6 +235,18 @@ function customRow(c: CustomIn): Row {
   const icon = (c.type === 'callout' && x.icon && x.icon in ICONS ? x.icon : CUSTOM_ICON[c.type]) as IconName
   return { kind: 'custom', cells: [{ id: c.id, key: null, title, role: c.type === 'quote' ? 'quote' : c.type === 'dates' ? 'dates' : c.type === 'list' ? 'list' : 'plain', icon, blocks, custom: c }] }
 }
+/** Landscape: after the hero, the ordinary blocks sit three to a row (a wide page reads better in columns). Quotes, calls to action, the gift, the footer and the tenant's own blocks keep their own full width row. */
+export function landscapeRows(rows: Row[]): Row[] {
+  const out: Row[] = []
+  let group: Array<{ s: Sec; k: Row['kind'] }> = []
+  const flush = () => { while (group.length) { const take = group.length === 4 ? 2 : Math.min(3, group.length); const part = group.splice(0, take); out.push(part.length === 1 ? { kind: part[0].k === 'gift' ? 'gift' : part[0].k, cells: [part[0].s] } : { kind: 'pair', cells: part.map(x => x.s), cellKinds: part.map(x => x.k) }) } }
+  for (const r of rows) {
+    if (r.kind === 'hero' || r.kind === 'custom' || r.kind === 'footer') { flush(); out.push(r); continue }
+    r.cells.forEach((c, i) => group.push({ s: c, k: r.kind === 'pair' ? 'full' : r.kind }))
+  }
+  flush()
+  return out
+}
 /** More than one featured person: the wording turns plural ("Employees of the month"). One person leaves it as written. */
 export function pluralise(text: string, n: number): string {
   if (n < 2) return text
@@ -250,7 +265,9 @@ export function buildDesign(input: DesignInput): Design {
   const rows = placeCustom(rows0, (input.custom ?? []).slice(0, 12))
   const giftOn = !!(input.gift && (input.gift.text.trim() || input.gift.dataUrl)) || (!!input.sample && !!tpl && /^(employee-of-the-month|staff-stories|recognition)/.test(tpl.id))
   if (giftOn) { const at = rows.length && rows[rows.length - 1].kind === 'footer' ? rows.length - 1 : rows.length; rows.splice(at, 0, { kind: 'gift', cells: [{ id: 'gift', key: 'gift', title: n > 1 ? 'Their gifts' : 'Their gift', role: 'plain', icon: 'gift', blocks: [{ t: 'p', text: input.gift?.text?.trim() || '[What the gift is, for example a voucher or an extra day off]' }] }] }) }
-  return { tpl, look, pal: paletteFor(look, input.brand.accent), layout, title: pluralise(String(input.title || tpl?.type_title || 'Staff newsletter'), n).slice(0, 140), month: input.monthText || monthNow(), kicker, intro, rows, brand: input.brand, sentBy: input.sentBy ?? '', photo: input.photo ?? people[0] ?? null, people, gift: input.gift ?? null, links: input.links ?? {}, sample: !!input.sample, ink: INK, muted: MUTED,
+  const orientation: 'portrait' | 'landscape' = input.orientation === 'landscape' ? 'landscape' : 'portrait'
+  const rowsOut = orientation === 'landscape' ? landscapeRows(rows) : rows
+  return { orientation, tpl, look, pal: paletteFor(look, input.brand.accent), layout, title: pluralise(String(input.title || tpl?.type_title || 'Staff newsletter'), n).slice(0, 140), month: input.monthText || monthNow(), kicker, intro, rows: rowsOut, brand: input.brand, sentBy: input.sentBy ?? '', photo: input.photo ?? people[0] ?? null, people, gift: input.gift ?? null, links: input.links ?? {}, sample: !!input.sample, ink: INK, muted: MUTED,
     styles: Object.fromEntries(Object.entries(input.styles ?? {}).filter(([, v]) => (BLOCK_STYLES as readonly string[]).includes(v))) as Record<string, BlockStyle>, customImages: input.customImages ?? {} }
 }
 
@@ -364,7 +381,9 @@ function cell(d0: Design, s: Sec, t: Target, kind: Row['kind']): string {
   if (kind === 'hero') {
     const box = boxFor(d0, s.id, cardDefault(d0, true)), d = box.dd
     const person = s.role === 'person' && (d.people.length > 0 || !!d.photo || (d.sample && (s.key === 'who' || s.key === 'story')))
-    const left = `${head(d, s, t, true)}${body(d, s, true)}`
+    // When the card's heading just repeats the newsletter's own title, it is shown once (in the banner), not twice.
+    const dup = norm(s.title) === norm(d0.title)
+    const left = `${dup ? '' : head(d, s, t, true)}${body(d, s, true)}`
     const n = Math.max(1, d.people.length)
     const inner = person
       ? (n >= 3 ? `${left}<div style="padding-top:6px">${photoCluster(d, t)}</div><div style="clear:both"></div>`
@@ -439,26 +458,28 @@ function customCell(d0: Design, s: Sec, t: Target): string {
 function rowHtml(d: Design, r: Row, t: Target): string {
   if (r.kind === 'gift') return giftCard(d, r.cells[0], t)
   if (r.kind === 'pair') {
-    return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>${r.cells.map((c, i) => `<td class="nl-col" width="50%" valign="top" style="width:50%;padding:${i === 0 ? '0 6px 0 0' : '0 0 0 6px'}">${cell(d, c, t, 'full')}</td>`).join('')}</tr></table>`
+    return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>${r.cells.map((c, i) => { const n = r.cells.length, pct = Math.floor(100 / n), pad = n === 1 ? '0' : i === 0 ? '0 6px 0 0' : i === n - 1 ? '0 0 0 6px' : '0 6px'; return `<td class="nl-col" width="${pct}%" valign="top" style="width:${pct}%;padding:${pad}">${(r.cellKinds?.[i] ?? 'full') === 'gift' ? giftCard(d, c, t) : cell(d, c, t, r.cellKinds?.[i] ?? 'full')}</td>` }).join('')}</tr></table>`
   }
   return cell(d, r.cells[0], t, r.kind)
 }
 
 /** The designed newsletter as email safe HTML (target "email": glyph icons, initials instead of a photo, a logo address) or for the screen (target "web": inline line icons, the photo if chosen). */
-export function renderNewsletterHtml(input: DesignInput, target: Target = 'web'): string {
+/** `sheet`: the page itself (a full width card with no grey surround), for the A4 sheet that screen, Print and Save PDF all share. */
+export function renderNewsletterHtml(input: DesignInput, target: Target = 'web', opts: { sheet?: boolean } = {}): string {
   const d = buildDesign(input)
   const stripe = d.pal.accent2
     ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td height="6" style="height:6px;line-height:6px;font-size:0;background:${d.pal.accent}" width="50%">&nbsp;</td><td height="6" style="height:6px;line-height:6px;font-size:0;background:${d.pal.accent2}" width="30%">&nbsp;</td><td height="6" style="height:6px;line-height:6px;font-size:0;background:${d.pal.tint2}" width="20%">&nbsp;</td></tr></table>`
     : `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td height="6" style="height:6px;line-height:6px;font-size:0;background:${d.pal.accent}">&nbsp;</td></tr></table>`
   const logo = d.brand.logo ? `<img src="${esc(d.brand.logo)}" alt="${esc(d.brand.name)} logo" height="44" style="display:block;height:44px;width:auto;max-width:180px;border:0">` : ''
-  const mast = `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td style="padding:18px 24px 14px" valign="middle">${logo || `<span style="font-size:18px;font-weight:700;color:${d.pal.dark}">${esc(d.brand.name)}</span>`}</td><td align="right" valign="middle" style="padding:18px 24px 14px;font-size:13px;color:${MUTED}">${logo ? `<span style="font-weight:700;color:${INK}">${esc(d.brand.name)}</span><br>` : ''}Staff newsletter</td></tr></table>`
+  const mast = `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td style="padding:${d.orientation === 'landscape' ? '10px 24px 8px' : '18px 24px 14px'}" valign="middle">${logo || `<span style="font-size:18px;font-weight:700;color:${d.pal.dark}">${esc(d.brand.name)}</span>`}</td><td align="right" valign="middle" style="padding:${d.orientation === 'landscape' ? '10px 24px 8px' : '18px 24px 14px'};font-size:13px;color:${MUTED}">${logo ? `<span style="font-weight:700;color:${INK}">${esc(d.brand.name)}</span><br>` : ''}Staff newsletter</td></tr></table>`
   const sampleTag = d.sample ? `<span style="display:inline-block;margin-left:8px;padding:3px 10px;border:1px dashed ${d.pal.accent};border-radius:999px;font-size:11px;font-weight:700;letter-spacing:.8px;color:${d.pal.dark};background:#FFFFFF">SAMPLE</span>` : ''
   const intro = d.intro.length ? `<tr><td style="padding:0 24px 14px;font-size:16px;line-height:1.6;color:${INK}">${paras(d.intro, 16)}</td></tr>` : ''
-  const banner = `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${d.pal.tint2}"><tr><td style="padding:22px 24px"><span style="display:inline-block;padding:4px 12px;background:#FFFFFF;border-radius:999px;font-size:12px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:${d.pal.dark}">${esc(d.kicker)}</span>${sampleTag}<h1 style="margin:12px 0 4px;font-family:${d.look.headFont};font-size:28px;line-height:1.2;color:${d.pal.dark}">${esc(d.title)}</h1><div style="font-size:14px;color:${MUTED}">${esc(d.month)}</div></td></tr></table>`
+  const banner = `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${d.pal.tint2}"><tr><td style="padding:${d.orientation === 'landscape' ? '12px 24px' : '22px 24px'}"><span style="display:inline-block;padding:4px 12px;background:#FFFFFF;border-radius:999px;font-size:12px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:${d.pal.dark}">${esc(d.kicker)}</span>${sampleTag}<h1 style="margin:${d.orientation === 'landscape' ? '6px 0 2px' : '12px 0 4px'};font-family:${d.look.headFont};font-size:${d.orientation === 'landscape' ? 24 : 28}px;line-height:1.2;color:${d.pal.dark}">${esc(d.title)}</h1><div style="font-size:14px;color:${MUTED}">${esc(d.month)}</div></td></tr></table>`
   const rows = d.rows.map(r => `<tr><td style="padding:0 24px 14px">${rowHtml(d, r, target)}</td></tr>`).join('')
   const contact = (d.brand.contact ?? []).filter(Boolean).slice(0, 3).map(esc).join('<br>')
-  const foot = `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-top:1px solid ${LINE}"><tr><td style="padding:16px 24px 20px;font-size:13px;line-height:1.6;color:${MUTED}"><strong style="color:${INK}">${esc(d.brand.name)}</strong>${contact ? `<br>${contact}` : ''}${d.sentBy ? `<br>Sent by ${esc(d.sentBy)}` : ''}<br>For the staff of ${esc(d.brand.name)} only.</td></tr></table>`
-  const css = `<style>.nl-wrap h1,.nl-wrap h2{font-weight:700}@media only screen and (max-width:540px){.nl-wrap .nl-col{display:block!important;width:100%!important;padding:0 0 12px 0!important}}</style>`
+  const foot = `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-top:1px solid ${LINE}"><tr><td style="padding:${d.orientation === 'landscape' ? '8px 24px 10px' : '16px 24px 20px'};font-size:13px;line-height:1.6;color:${MUTED}"><strong style="color:${INK}">${esc(d.brand.name)}</strong>${d.orientation === 'landscape' ? ` &nbsp;|&nbsp; ${[(d.brand.contact ?? []).filter(Boolean).slice(0, 3).map(esc).join(' &nbsp;|&nbsp; '), d.sentBy ? `Sent by ${esc(d.sentBy)}` : '', `For the staff of ${esc(d.brand.name)} only`].filter(Boolean).join(' &nbsp;|&nbsp; ')}` : `${contact ? `<br>${contact}` : ''}${d.sentBy ? `<br>Sent by ${esc(d.sentBy)}` : ''}<br>For the staff of ${esc(d.brand.name)} only.`}</td></tr></table>`
+  const css = opts.sheet ? '' : `<style>.nl-wrap h1,.nl-wrap h2{font-weight:700}@media only screen and (max-width:540px){.nl-wrap .nl-col{display:block!important;width:100%!important;padding:0 0 12px 0!important}}</style>`
+  if (opts.sheet) return `<div class="nl-card" style="background:#FFFFFF;font-family:${SANS}"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#FFFFFF"><tr><td>${stripe}${mast}${banner}</td></tr><tr><td style="height:16px;line-height:16px;font-size:0">&nbsp;</td></tr>${intro}${rows}<tr><td>${foot}</td></tr></table></div>`
   return `${css}<div class="nl-wrap" style="background:${PAGE};padding:14px 8px;font-family:${SANS}"><table role="presentation" align="center" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:640px;margin:0 auto;background:#FFFFFF;border:1px solid ${LINE};border-radius:${Math.min(d.look.radius, 18)}px;overflow:hidden"><tr><td>${stripe}${mast}${banner}</td></tr><tr><td style="height:16px;line-height:16px;font-size:0">&nbsp;</td></tr>${intro}${rows}<tr><td>${foot}</td></tr></table></div>`
 }
 
@@ -466,22 +487,28 @@ export function renderNewsletterHtml(input: DesignInput, target: Target = 'web')
 export const htmlToText = (html: string) => html.replace(/<style[\s\S]*?<\/style>/gi, ' ').replace(/<[^>]+>/g, ' ').replace(/&#?\w+;/g, ' ').replace(/\s+/g, ' ').trim()
 
 // ── PDF: the same design model drawn with pdfkit ───────────────────────────────────────
+/** The same steps as the sheet's fit step (newsletter-sheet.ts FIT_STEPS). */
+const FIT_STEPS_PDF = [1, 0.97, 0.94, 0.91, 0.88, 0.85, 0.82, 0.8]
 const pdfSafe = (s: string) => String(s ?? '').normalize('NFC').replace(/[‘’]/g, '’').replace(/[^\u0009\u000A -~ -ÿ’“”…•€]/g, '')
-export async function renderNewsletterPdf(input: DesignInput, logoPng?: Buffer | null, photoPngs?: Buffer | null | Array<Buffer | null>, giftPng?: Buffer | null): Promise<Buffer> {
+async function drawNewsletterPdf(input: DesignInput, logoPng: Buffer | null | undefined, photoPngs: Buffer | null | undefined | Array<Buffer | null>, giftPng: Buffer | null | undefined, scale: number): Promise<{ buffer: Buffer; pages: number }> {
   const { default: PDFDocument } = await import('pdfkit')
   const d0 = buildDesign(input)
   let d = d0   // swapped for a bold block while it is drawn, so its words come out white on the accent
   const photos: Array<Buffer | null> = Array.isArray(photoPngs) ? photoPngs : photoPngs ? [photoPngs] : []
   const photoPng = photos[0] ?? null
-  const multi = d.people.length > 1
-  const W = 595.28, H = 841.89, M = 36, CW = W - M * 2, G = 10
-  const doc = new PDFDocument({ size: 'A4', margin: M, bufferPages: true, info: { Title: pdfSafe(d.title), Author: pdfSafe(d.brand.name) } })
+  const multi = d.people.length > 2, twin = d.people.length === 2   // three or more: a row of pictures along the bottom of the card; two: beside the words, as on the screen
+  // The page is A4. The whole drawing is made at `scale` (the fit step: 1, then smaller in small steps) by drawing on a virtual page that is 1/scale bigger, so the design is exactly the same, just smaller.
+  const landscape = d0.orientation === 'landscape'
+  const W = (landscape ? 841.89 : 595.28) / scale, H = (landscape ? 595.28 : 841.89) / scale, M = 36, CW = W - M * 2, G = 10
+  const doc = new PDFDocument({ size: 'A4', layout: landscape ? 'landscape' : 'portrait', margin: M, bufferPages: true, info: { Title: pdfSafe(d.title), Author: pdfSafe(d.brand.name) } })
+  const setPage = () => { if (scale !== 1) doc.scale(scale); doc.page.margins.bottom = -1e6 }   // pdfkit must never start a page of its own: every page break below is decided by the design
+  setPage()
   const chunks: Buffer[] = []
   doc.on('data', (c: Buffer) => chunks.push(c))
   const done = new Promise<Buffer>(resolve => doc.on('end', () => resolve(Buffer.concat(chunks))))
   const BOTTOM = H - M - 34
   let y = M
-  const newPage = () => { doc.addPage(); y = M }
+  const newPage = () => { doc.addPage(); setPage(); y = M }
   const icon = (name: IconName, x: number, yy: number, size: number, color: string) => {
     doc.save(); doc.translate(x, yy).scale(size / 24); doc.lineWidth(1.8).lineCap('round').lineJoin('round').strokeColor(color)
     for (const o of ICONS[name]) { if ('d' in o) doc.path(o.d).stroke(); else doc.circle(o.c[0], o.c[1], o.c[2]).stroke() }
@@ -525,7 +552,7 @@ export async function renderNewsletterPdf(input: DesignInput, logoPng?: Buffer |
   else doc.fillColor(d.pal.dark).font('Helvetica-Bold').fontSize(15).text(pdfSafe(d.brand.name), M, y + 8, { width: CW * 0.6 })
   doc.fillColor(MUTED).font('Helvetica').fontSize(9).text(pdfSafe(logoPng ? `${d.brand.name}\nStaff newsletter` : 'Staff newsletter'), M, y + 4, { width: CW, align: 'right' })
   y += 52
-  const titleH = textH(d.title, CW - 32, 24, 'Helvetica-Bold', 1)
+  const titleH = textH(d.title, CW - 20, 24, 'Helvetica-Bold', 1)
   const bh = 22 + 12 + titleH + 22
   doc.save(); doc.rect(M - 6, y, CW + 12, bh).fillColor(d.pal.tint2).fill(); doc.restore()
   doc.fillColor(d.pal.dark).font('Helvetica-Bold').fontSize(8).text(pdfSafe(d.kicker.toUpperCase() + (d.sample ? '   SAMPLE' : '')), M + 10, y + 12, { width: CW - 20, characterSpacing: 0.8 })
@@ -535,27 +562,31 @@ export async function renderNewsletterPdf(input: DesignInput, logoPng?: Buffer |
   if (d.intro.length) { const t = d.intro.map(b => b.text).join(' '); doc.fillColor(INK).font('Helvetica').fontSize(11.5).text(pdfSafe(t), M, y, { width: CW, lineGap: 3 }); y += textH(t, CW, 11.5, 'Helvetica', 3) + 12 }
 
   const cardInner = (s: Sec, w: number, big: boolean) => ({ size: big ? 11.5 : 10.5, hw: w - 28, titleSize: big ? 14 : 12.5 })
+  const dupHero = (s: Sec, big: boolean) => big && norm(s.title) === norm(d0.title)   // the heading just repeats the newsletter's title: shown once, in the banner
+  const textWidth = (c: { hw: number }, withPhoto: boolean) => (withPhoto ? (multi ? c.hw : twin ? c.hw - 196 : c.hw - 120) : c.hw)
   const cardHeight = (s: Sec, w: number, big: boolean, withPhoto = false) => {
-    const c = cardInner(s, w, big); const textW = withPhoto && !multi ? c.hw - 120 : c.hw
-    const h = 14 + Math.max(34, 4) + 6 + bodyH(s, textW, c.size) + 8
-    return withPhoto ? (multi ? h + 104 : Math.max(h, 150)) : h   // room for the round picture, or a row of them
+    const c = cardInner(s, w, big); const textW = textWidth(c, withPhoto)
+    const h = (dupHero(s, big) ? 14 + 2 : 14 + Math.max(34, 4)) + 6 + bodyH(s, textW, c.size) + 8
+    return withPhoto ? (multi ? h + 104 : Math.max(h, twin ? 160 : 150)) : h   // room for the round picture, or a row of them
   }
   const drawCard = (s: Sec, x: number, yy: number, w: number, h: number, big: boolean, tinted: boolean, withPhoto = false) => {
     const bx = boxPdf(s.id, { bg: tinted || d0.look.cardStyle === 'soft' ? d0.pal.tint : '#FFFFFF', stroke: d0.look.cardStyle === 'outline' ? d0.pal.tint2 : LINE, left: d0.look.cardStyle === 'rule' ? d0.pal.accent : undefined })
     fillBox(x, yy, w, h, bx.bg, bx.stroke, bx.left)
     const c = cardInner(s, w, big); const px = x + 14
-    bubble(s.icon, px, yy + 12, 28)
-    doc.fillColor(d.pal.dark).font('Helvetica-Bold').fontSize(c.titleSize).text(pdfSafe(s.title), px + 38, yy + 12 + (28 - c.titleSize) / 2 - 1, { width: c.hw - 38 - (withPhoto && !multi ? 112 : 0), lineBreak: false, ellipsis: true })
+    const dup = dupHero(s, big), bodyY = dup ? yy + 16 : yy + 50
+    if (!dup) bubble(s.icon, px, yy + 12, 28)
+    if (!dup) doc.fillColor(d.pal.dark).font('Helvetica-Bold').fontSize(c.titleSize).text(pdfSafe(s.title), px + 38, yy + 12 + (28 - c.titleSize) / 2 - 1, { width: c.hw - 38 - (withPhoto ? (twin ? 188 : multi ? 0 : 112) : 0), lineBreak: false, ellipsis: true })
     const stat = statValues(s)
     if (stat) {
       const cw = (c.hw - (stat.length - 1) * 6) / stat.length
       stat.forEach((st, i) => { const sx = px + i * (cw + 6); doc.save(); doc.roundedRect(sx, yy + 50, cw, 52, 8).fillColor(d.pal.tint).fill(); doc.restore(); doc.fillColor(d.pal.accent).font('Helvetica-Bold').fontSize(22).text(st.n, sx, yy + 56, { width: cw, align: 'center' }); doc.fillColor(d.muted).font('Helvetica').fontSize(8.5).text(pdfSafe(st.label), sx + 4, yy + 84, { width: cw - 8, align: 'center' }) })
-    } else drawBody(s, px, yy + 50, withPhoto && !multi ? c.hw - 120 : c.hw, c.size)
-    if (withPhoto && multi) {
-      // two or more featured people: a row of round pictures (or initials) with first names, along the bottom of the card, wrapping if there are many
-      const D = d.people.length <= 4 ? 64 : 52, gap = 18, per = Math.max(1, Math.floor((c.hw + gap) / (D + gap)))
+    } else drawBody(s, px, bodyY, textWidth(c, withPhoto), c.size)
+    if (withPhoto && (multi || twin)) {
+      // three or more featured people: a row of round pictures (or initials) with first names along the bottom of the card, wrapping if there are many; two: side by side at the right, beside the words
+      const D = twin ? 78 : d.people.length <= 4 ? 64 : 52, gap = twin ? 14 : 18, per = twin ? 2 : Math.max(1, Math.floor((c.hw + gap) / (D + gap)))
+      const baseX = twin ? x + w - 14 - (2 * D + gap) : px, baseY = twin ? yy + (dup ? 16 : 46) : yy + h - 96
       d.people.forEach((pp, i) => {
-        const col = i % per, row = Math.floor(i / per), cx = px + col * (D + gap), cy = yy + h - 96 + row * (D + 24)
+        const col = i % per, row = Math.floor(i / per), cx = baseX + col * (D + gap), cy = baseY + row * (D + 24)
         const buf = photos[i]
         if (buf && buf.length) { try { doc.save(); doc.circle(cx + D / 2, cy + D / 2, D / 2).clip(); doc.image(buf, cx, cy, { cover: [D, D], align: 'center', valign: 'center' }); doc.restore() } catch { /* no photo */ } doc.save(); doc.circle(cx + D / 2, cy + D / 2, D / 2).lineWidth(2).strokeColor(d.pal.tint2).stroke(); doc.restore() }
         else if (d.sample && !pp.name) { doc.save(); doc.circle(cx + D / 2, cy + D / 2, D / 2).fillColor(d.pal.tint2).fill(); doc.restore() }
@@ -563,8 +594,8 @@ export async function renderNewsletterPdf(input: DesignInput, logoPng?: Buffer |
         doc.fillColor(d.ink).font('Helvetica').fontSize(8.5).text(pdfSafe(String(pp.name ?? '').split(' ')[0]), cx - 6, cy + D + 3, { width: D + 12, align: 'center', lineBreak: false, ellipsis: true })
       })
     }
-    if (withPhoto && !multi) {
-      const D = 84, cx = x + w - 14 - D, cy = yy + 50
+    if (withPhoto && !multi && !twin) {
+      const D = 84, cx = x + w - 14 - D, cy = yy + (dup ? 16 : 50)
       if (photoPng) { try { doc.save(); doc.circle(cx + D / 2, cy + D / 2, D / 2).clip(); doc.image(photoPng, cx, cy, { cover: [D, D], align: 'center', valign: 'center' }); doc.restore() } catch { /* no photo */ } doc.save(); doc.circle(cx + D / 2, cy + D / 2, D / 2).lineWidth(2).strokeColor(d.pal.tint2).stroke(); doc.restore() }
       else if (d.sample && !d.photo) {
         doc.save(); doc.circle(cx + D / 2, cy + D / 2, D / 2).fillColor(d.pal.tint2).fill(); doc.restore()
@@ -641,7 +672,7 @@ export async function renderNewsletterPdf(input: DesignInput, logoPng?: Buffer |
   for (const r of d0.rows) {
     d = tonedFor(r.cells[0]?.id ?? '')
     if (r.kind === 'pair') {
-      const w = (CW - G) / 2
+      const nn = r.cells.length, w = (CW - G * (nn - 1)) / nn
       const h = Math.max(...r.cells.map(c => (statValues(c) ? 112 : cardHeight(c, w, false))))
       need(h + G); r.cells.forEach((c, i) => { d = tonedFor(c.id); drawCard(c, M + i * (w + G), y, w, h, false, c.role === 'thanks') }); y += h + G
     } else if (r.kind === 'custom') {
@@ -683,18 +714,33 @@ export async function renderNewsletterPdf(input: DesignInput, logoPng?: Buffer |
     }
     d = d0
   }
-  // footer on every page
+  // footer on every page: the organisation line, and "Page 2 of 3" only when there is more than one page. A draft or sample note goes small in the footer, never over the design.
   const range = doc.bufferedPageRange()
   for (let i = 0; i < range.count; i++) {
-    doc.switchToPage(range.start + i); doc.page.margins.bottom = 0
-    if (input.stamp) doc.fillColor('#B91C1C').font('Helvetica-Bold').fontSize(8).text(pdfSafe(input.stamp), M, 14, { width: CW, align: 'center', lineBreak: false })
+    doc.switchToPage(range.start + i); doc.page.margins.bottom = -1e6
     doc.moveTo(M, H - M - 26).lineTo(W - M, H - M - 26).lineWidth(0.6).strokeColor(LINE).stroke()
     const line = [d.brand.name, ...(d.brand.contact ?? []).slice(0, 2), d.sentBy ? `Sent by ${d.sentBy}` : '', 'Staff only'].filter(Boolean).join('   |   ')
     doc.fillColor(MUTED).font('Helvetica').fontSize(8).text(pdfSafe(line), M, H - M - 20, { width: CW - 70, height: 10, lineBreak: false, ellipsis: true })
-    doc.text(`Page ${i + 1} of ${range.count}`, M, H - M - 20, { width: CW, align: 'right', lineBreak: false })
+    if (range.count > 1) doc.text(`Page ${i + 1} of ${range.count}`, M, H - M - 20, { width: CW, align: 'right', lineBreak: false })
+    if (input.stamp) doc.fillColor('#B91C1C').font('Helvetica-Bold').fontSize(7.5).text(pdfSafe(input.stamp), M, H - M - 8, { width: CW, align: 'right', lineBreak: false })
   }
+  const pages = range.count
   doc.end()
-  return done
+  return { buffer: await done, pages }
+}
+
+/** The pdfkit drawing, fitted to ONE page like the sheet: it tries the same steps (1 down to the minimum) and keeps the first that fits. It is the fallback when the browser engine cannot start, and the design is the same. */
+export async function renderNewsletterPdfFit(input: DesignInput, logoPng?: Buffer | null, photoPngs?: Buffer | null | Array<Buffer | null>, giftPng?: Buffer | null, o: { allowTwoPages?: boolean } = {}): Promise<{ buffer: Buffer; pages: number; scale: number; fits: boolean }> {
+  const steps = o.allowTwoPages ? [1] : FIT_STEPS_PDF
+  let last: { buffer: Buffer; pages: number } | null = null
+  for (const sc of steps) {
+    last = await drawNewsletterPdf(input, logoPng, photoPngs, giftPng, sc)
+    if (last.pages === 1) return { ...last, scale: sc, fits: true }
+  }
+  return { ...last!, scale: steps[steps.length - 1], fits: !!o.allowTwoPages }
+}
+export async function renderNewsletterPdf(input: DesignInput, logoPng?: Buffer | null, photoPngs?: Buffer | null | Array<Buffer | null>, giftPng?: Buffer | null): Promise<Buffer> {
+  return (await renderNewsletterPdfFit(input, logoPng, photoPngs, giftPng, { allowTwoPages: false })).buffer
 }
 
 /** One sample design for every layout of a newsletter type (for the thumbnails). */

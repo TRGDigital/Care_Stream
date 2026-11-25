@@ -53,7 +53,7 @@ export async function buildLayout(o: { tenantId: string; doc: Doc; signerUserId?
 
 /** A copy that is not final says so on every page: an administrator can save or print a draft, and it is stamped. */
 export const DRAFT_STAMP = 'DRAFT: not yet approved. Do not share.'
-export async function renderDocument(o: { tenantId: string; doc: Doc; format: 'pdf' | 'docx'; signerUserId?: string | null; sentByUserId?: string | null; stamp?: string }): Promise<{ buffer: Buffer; filename: string; mime: string }> {
+export async function renderDocument(o: { tenantId: string; doc: Doc; format: 'pdf' | 'docx'; signerUserId?: string | null; sentByUserId?: string | null; stamp?: string; orientation?: 'portrait' | 'landscape'; pages?: 'one' | 'two' | null }): Promise<{ buffer: Buffer; filename: string; mime: string }> {
   const b = await buildLayout(o)
   const ext = o.format
   const mime = o.format === 'pdf' ? 'application/pdf' : 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
@@ -65,7 +65,7 @@ export async function renderDocument(o: { tenantId: string; doc: Doc; format: 'p
   }
   if (o.format === 'pdf' && o.doc.type === 'newsletter') {   // a newsletter is DESIGNED: the same design as the email and the screen
     const { designedPdf } = await import('./newsletter-design-doc')
-    return { buffer: await designedPdf({ tenantId: o.tenantId, doc: o.doc, sentBy: await nameOf(o.sentByUserId), stamp: o.stamp }), filename: `${b.file}.pdf`, mime }
+    return { buffer: await designedPdf({ tenantId: o.tenantId, doc: o.doc, sentBy: await nameOf(o.sentByUserId), stamp: o.stamp, orientation: o.orientation, pages: o.pages }), filename: `${b.file}.pdf`, mime }
   }
   if (o.format === 'pdf') { const { renderLayoutPdf } = await import('../letters/layout-pdf'); return { buffer: await renderLayoutPdf(o.stamp ? { ...b.layout, stamp: o.stamp } : b.layout), filename: `${b.file}.pdf`, mime } }
   const { renderLayoutDocx } = await import('../letters/layout-docx')
@@ -73,10 +73,12 @@ export async function renderDocument(o: { tenantId: string; doc: Doc; format: 'p
 }
 
 /** The headed page as HTML and its CSS, for the preview in the Ask panel. Works on an unfinished letter (gaps show as [Label]). */
-export async function previewHtml(o: { tenantId: string; doc: Doc; signerUserId?: string | null; sentByUserId?: string | null; draft?: { title?: string; body?: string } }): Promise<{ html: string; css: string; designed?: boolean }> {
+export async function previewHtml(o: { tenantId: string; doc: Doc; signerUserId?: string | null; sentByUserId?: string | null; draft?: { title?: string; body?: string }; stamp?: string | null }): Promise<{ html: string; css: string; designed?: boolean; sheet?: string; orientation?: 'portrait' | 'landscape'; pages?: 'one' | 'two' }> {
   if (o.doc.type === 'newsletter') {
-    const { designedHtml } = await import('./newsletter-design-doc')
-    return { html: await designedHtml({ tenantId: o.tenantId, doc: o.doc, target: 'web', sentBy: await nameOf(o.sentByUserId), draft: o.draft }), css: '', designed: true }
+    const { designedHtml, designedSheet } = await import('./newsletter-design-doc')
+    const sentBy = await nameOf(o.sentByUserId)
+    const sh = await designedSheet({ tenantId: o.tenantId, doc: o.doc, sentBy, draft: o.draft, stamp: o.stamp ?? null })
+    return { html: await designedHtml({ tenantId: o.tenantId, doc: o.doc, target: 'web', sentBy, draft: o.draft }), css: '', designed: true, sheet: sh.html, orientation: sh.orientation, pages: sh.pages }
   }
   const b = await buildLayout(o)
   return { html: layoutToHtml(b.layout, b.logoDataUrl), css: PREVIEW_CSS }

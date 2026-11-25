@@ -19,8 +19,8 @@ const safeName = (s: string) => s.replace(/[^a-zA-Z0-9 _-]/g, '').trim().replace
 const ukDate = (d = new Date()) => d.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/London' })
 
 /** The finished PDF for an approved document, on the organisation's letterhead. A letter refuses to print while anything is missing. The signature is added only for `signerUserId`. */
-export async function pdfFor(tenantId: string, doc: Doc, signerUserId?: string | null, sentByUserId?: string | null, stamp?: string): Promise<{ buffer: Buffer; filename: string }> {
-  const r = await renderDocument({ tenantId, doc, format: 'pdf', signerUserId, sentByUserId, stamp })
+export async function pdfFor(tenantId: string, doc: Doc, signerUserId?: string | null, sentByUserId?: string | null, stamp?: string, layout?: { orientation?: 'portrait' | 'landscape'; pages?: 'one' | 'two' | null }): Promise<{ buffer: Buffer; filename: string }> {
+  const r = await renderDocument({ tenantId, doc, format: 'pdf', signerUserId, sentByUserId, stamp, orientation: layout?.orientation, pages: layout?.pages })
   return { buffer: r.buffer, filename: r.filename }
 }
 

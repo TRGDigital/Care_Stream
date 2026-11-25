@@ -270,7 +270,7 @@ export function AskPanel({ token, layout, expanded, width, onClose }: { token: s
     if (!token) return
     try {
       if (d.type === 'answer') { const r = await ask.document(token, d.id); setLibView({ title: d.title, doc: d, items: [{ kind: 'node', node: <div className="w-[680px] max-w-full p-8 text-neutral-dark"><MarkdownLite text={r.document.body} /></div> }] }) }
-      else { const p = await ask.preview(token, d.id); setLibView({ title: d.title, doc: d, items: [{ kind: 'html', html: p.html, css: p.css }] }) }
+      else { const p = await ask.preview(token, d.id); setLibView({ title: d.title, doc: d, items: [p.sheet ? { kind: 'sheet', html: p.sheet, orientation: p.orientation ?? 'portrait' } : { kind: 'html', html: p.html, css: p.css }] }) }
     } catch { /* it can still be opened normally */ }
   }
   async function removeDoc(d: AskDocument) { if (window.confirm('Delete this saved item? This cannot be undone.')) { await ask.removeDocument(token, d.id).catch(() => undefined); setDocId(null); loadLib() } }

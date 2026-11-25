@@ -9,12 +9,13 @@ import { layout as letterLayout } from '../letters'
 import { layoutToHtml, PREVIEW_CSS, type LayoutDoc } from '../letters/layout'
 import { reportTemplate } from '../ask/report-templates'
 import { renderNewsletterHtml, sampleBody, contrast } from './newsletter-design'
+import { renderNewsletterSheet } from './newsletter-sheet'
 import { newsletterTemplate, NEWSLETTER_TEMPLATES } from './newsletter-templates'
 
 export const PREVIEW_KINDS = ['newsletter', 'letter', 'report', 'notification', 'email', 'other'] as const
 export type PreviewKind = (typeof PREVIEW_KINDS)[number]
 export interface PreviewRequest { kind: PreviewKind; template_id?: string | null; layout?: string | null }
-export interface PreviewResult { kind: PreviewKind; title: string; html: string; css: string; sample: true; has_logo: boolean; brand_colour: string | null; note: string | null }
+export interface PreviewResult { kind: PreviewKind; title: string; html: string; css: string; /** For a newsletter: the A4 sheet, the same page Save PDF prints (the viewer shows this one). */ sheet?: string; sample: true; has_logo: boolean; brand_colour: string | null; note: string | null }
 
 const esc = (s: unknown) => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c] as string))
 export const SAMPLE_LINE = 'SAMPLE: placeholder words only. Your real names and details are not shown here.'
@@ -69,7 +70,8 @@ export async function renderOptionPreview(tenantId: string, req: PreviewRequest,
       || null
     if (!tpl) return { ...base, kind: 'newsletter', title: 'Newsletter (sample)', css: '', html: plain(accent, 'Newsletter', 'This newsletter template could not be found, so here is a plain sample.', logo, l.head.name), note: 'Template not found.' }
     const html = renderNewsletterHtml({ templateId: tpl.id, title: tpl.type_title, body: sampleBody(tpl), brand: { name: l.head.name || 'Your service', accent: brand, logo, contact: [] }, sentBy: 'Your name', sample: true }, 'web')
-    return { ...base, kind: 'newsletter', title: `${tpl.title} (sample)`, css: '', html: sampleBanner(accent) + html, note: null }
+    const sheet = renderNewsletterSheet({ templateId: tpl.id, title: tpl.type_title, body: sampleBody(tpl), brand: { name: l.head.name || 'Your service', accent: brand, logo, contact: [] }, sentBy: 'Your name', sample: true }, { orientation: 'portrait', stamp: SAMPLE_STAMP })
+    return { ...base, kind: 'newsletter', title: `${tpl.title} (sample)`, css: '', html: sampleBanner(accent) + html, sheet, note: null }
   }
   if (req.kind === 'letter') {
     const t = req.template_id ? getLetterTemplate(req.template_id) : undefined
@@ -114,8 +116,8 @@ export async function renderOptionPreviewPdf(tenantId: string, req: PreviewReque
     if (tpl) {
       let logoPng: Buffer | null = null
       if (l.head.logoDataUrl) { try { const { logoForPdf } = await import('../policy/policy-pdf'); logoPng = await logoForPdf(l.head.logoDataUrl) } catch { logoPng = null } }
-      const { renderNewsletterPdf } = await import('./newsletter-design')
-      return { buffer: await renderNewsletterPdf({ templateId: tpl.id, title: tpl.type_title, body: sampleBody(tpl), brand: { name: l.head.name || 'Your service', accent: brand, logo: l.head.logoDataUrl ?? null, contact: [] }, sentBy: 'Your name', sample: true, stamp: SAMPLE_STAMP }, logoPng, null), filename: name }
+      const { pdfFromInput } = await import('./newsletter-design-doc')
+      return { buffer: (await pdfFromInput({ templateId: tpl.id, title: tpl.type_title, body: sampleBody(tpl), brand: { name: l.head.name || 'Your service', accent: brand, logo: l.head.logoDataUrl ?? null, contact: [] }, sentBy: 'Your name', sample: true, stamp: SAMPLE_STAMP }, { stamp: SAMPLE_STAMP, logoPng })).buffer, filename: name }
     }
   }
   let doc: LayoutDoc

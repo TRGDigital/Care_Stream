@@ -8,7 +8,14 @@ import { usableBrand } from '../../lib/brand-colour'
 const M = 56, W = 595.28, H = 841.89
 const INK = '#1A1530', MID = '#5E4D70', LINE = '#d9d4e0', GREY = '#777777', TEAL = '#0f766e'
 
-export async function renderLayoutPdf(d: LayoutDoc, opts: { compress?: boolean } = {}): Promise<Buffer> {
+/** Where each block landed, for the tests: which page it started and ended on. */
+export interface PlacedBlock { i: number; t: string; startPage: number; endPage: number; text: string }
+
+// HOUSE RULE 10 (document layout), letters and long documents: a paragraph is never split across two pages (it moves, whole, to the next page; only a paragraph longer than a page may split),
+// a heading always stays with the start of the paragraph after it, the sign-off (closing, signature, name) stays with at least the last paragraph and is never alone on a page,
+// a bullet or the acknowledgement box is never cut, there are no blank pages, the letterhead is in full on page 1 only (a small running header follows on later pages), and every
+// page has "Page 2 of 3" when there is more than one.
+export async function renderLayoutPdf(d: LayoutDoc, opts: { compress?: boolean; trace?: PlacedBlock[] } = {}): Promise<Buffer> {
   const [{ default: PDFDocument }, { logoForPdf }] = await Promise.all([import('pdfkit'), import('../policy/policy-pdf')])
   const logo = await logoForPdf(d.head.logoDataUrl ?? null)
   const BRAND = usableBrand(d.head.brandColour)   // the organisation's colour: header rule and headings only, never body text
@@ -20,7 +27,21 @@ export async function renderLayoutPdf(d: LayoutDoc, opts: { compress?: boolean }
   const chunks: Buffer[] = []
   doc.on('data', (c: Buffer) => chunks.push(c))
   const done = new Promise<Buffer>(resolve => doc.on('end', () => resolve(Buffer.concat(chunks))))
-  const ensure = (h: number) => { if (doc.y + h > bottom) doc.addPage() }
+  const pageNow = () => doc.bufferedPageRange().count - 1
+  /** A new page: a small running header (the organisation and the subject) and the content starts below it. The full letterhead is on page 1 only. */
+  const newPage = () => {
+    doc.addPage()
+    doc.fillColor(GREY).font('Helvetica').fontSize(8).text(printable(d.head.name), M, 28, { width: width / 2, lineBreak: false, ellipsis: true })
+    if (d.subject) doc.text(printable(d.subject), M + width / 2, 28, { width: width / 2, align: 'right', lineBreak: false, ellipsis: true })
+    doc.moveTo(M, 42).lineTo(W - M, 42).lineWidth(0.5).strokeColor(LINE).stroke()
+    doc.y = M
+  }
+  const room = bottom - M   // the most that fits on a fresh page
+  const ensure = (h: number) => { if (doc.y + h > bottom) newPage() }
+  /** Keeps a piece together: if it does not fit in what is left of this page but would fit on a fresh one, it moves to the next page (a piece longer than a page may split). */
+  const keepTogether = (h: number) => { if (doc.y + h > bottom && h <= room) newPage() }
+  const hOf = (text: string, size: number, w: number, gap: number, font = 'Helvetica') => { doc.font(font).fontSize(size); return doc.heightOfString(printable(text), { width: w, lineGap: gap }) }
+  const lineH = (size: number, gap: number) => size * 1.2 + gap
 
   // ── The header: logo, then the organisation's name, address and contact lines ──
   const top = doc.y
@@ -43,22 +64,30 @@ export async function renderLayoutPdf(d: LayoutDoc, opts: { compress?: boolean }
   doc.moveTo(M, doc.y).lineTo(W - M, doc.y).lineWidth(BRAND ? 1.4 : 0.7).strokeColor(BRAND ?? LINE).stroke()
   doc.moveDown(1)
 
-  const body = (b: { t: string; text: string }, prev: { v: string | null }) => {
+  const sizeOf = (t: string) => (t === 'h' ? (d.kind === 'letter' ? 11 : 13) : 10.5)
+  /** One block. `next` is the block after it (a heading is kept with the start of that one); `extra` is more that must stay with this block on the same page (the sign-off after the last paragraph). */
+  const body = (b: { t: string; text: string }, prev: { v: string | null }, next?: { t: string; text: string } | null, extra = 0) => {
     if (prev.v === 'li' && b.t !== 'li') doc.moveDown(0.45)
     prev.v = b.t
+    const start = pageNow()
     if (b.t === 'li') {
-      ensure(16)
+      keepTogether(hOf(b.text, 10.5, width - 20, 2) + 8 + extra)
       const y = doc.y
       doc.fillColor(INK).font('Helvetica').fontSize(10.5).text('•', M + 6, y, { width: 12, lineBreak: false })
       doc.text(printable(b.text), M + 20, y, { width: width - 20, lineGap: 2 })
       doc.moveDown(0.25)
     } else if (b.t === 'h') {
-      ensure(46); doc.moveDown(0.4); doc.fillColor(BRAND ?? (d.kind === 'letter' ? INK : TEAL)).font('Helvetica-Bold').fontSize(d.kind === 'letter' ? 11 : 13).text(printable(b.text), M, doc.y, { width }); doc.moveDown(0.3)
+      // a heading never ends a page: it travels with the first lines of what follows (the whole next paragraph when it is short)
+      const own = hOf(b.text, sizeOf('h'), width, 0, 'Helvetica-Bold') + 14
+      const follow = next ? (next.t === 'p' ? Math.min(hOf(next.text, 10.5, width, 2.5), lineH(10.5, 2.5) * 3) : hOf(next.text, 10.5, width - 20, 2)) + 8 : 0
+      keepTogether(own + follow)
+      doc.moveDown(0.4); doc.fillColor(BRAND ?? (d.kind === 'letter' ? INK : TEAL)).font('Helvetica-Bold').fontSize(sizeOf('h')).text(printable(b.text), M, doc.y, { width }); doc.moveDown(0.3)
     } else {
-      ensure(30)
+      keepTogether(hOf(b.text, 10.5, width, 2.5) + 9 + extra)
       doc.fillColor(INK).font('Helvetica').fontSize(10.5).text(printable(b.text), M, doc.y, { width, lineGap: 2.5, align: 'left' })
       doc.moveDown(0.7)
     }
+    opts.trace?.push({ i: opts.trace.length, t: b.t, startPage: start, endPage: pageNow(), text: b.text })
   }
   const prev = { v: null as string | null }
 
@@ -72,7 +101,10 @@ export async function renderLayoutPdf(d: LayoutDoc, opts: { compress?: boolean }
     doc.moveDown(1)
     doc.fillColor(INK).font('Helvetica-Bold').fontSize(11.5).text(printable(d.subject ?? ''), M, doc.y, { width })
     doc.moveDown(0.8)
-    for (const b of d.blocks) body(b, prev)
+    const sig0 = d.signer?.signature ?? null
+    const signOffH = 48 + (sig0 ? Math.min(51, (sig0.height * Math.min(170 / sig0.width, 51 / sig0.height)) || 51) : 40) + 40 + 14
+    const lastIdx = (() => { for (let k = d.blocks.length - 1; k >= 0; k--) if (d.blocks[k].t !== 'h') return k; return -1 })()
+    d.blocks.forEach((b, k) => body(b, prev, d.blocks[k + 1] ?? null, k === lastIdx ? signOffH : 0))   // the sign-off stays with at least the last paragraph
 
     // ── Sign off: the closing, the signature (or room for a signature by hand), then the printed name and job title ──
     const sig = d.signer?.signature ?? null
@@ -88,7 +120,7 @@ export async function renderLayoutPdf(d: LayoutDoc, opts: { compress?: boolean }
     if (d.signer?.role) doc.fillColor(MID).font('Helvetica').fontSize(10).text(printable(d.signer.role), M, doc.y, { width })
 
     if (d.acknowledgement) {
-      ensure(130)
+      keepTogether(130 + 24)
       doc.moveDown(1.6)
       const y = doc.y
       doc.rect(M, y, width, 108).lineWidth(0.7).strokeColor(LINE).stroke()
@@ -107,7 +139,7 @@ export async function renderLayoutPdf(d: LayoutDoc, opts: { compress?: boolean }
     if (d.date) doc.fillColor(MID).font('Helvetica').fontSize(10).text(printable(d.date), M, doc.y, { width })
     if (d.subtitle) doc.fillColor(MID).font('Helvetica').fontSize(10).text(printable(d.subtitle), M, doc.y, { width })
     doc.moveDown(1)
-    for (const b of d.blocks) body(b, prev)
+    d.blocks.forEach((b, k) => body(b, prev, d.blocks[k + 1] ?? null))
     if (d.signer?.name) {
       ensure(90)
       doc.moveDown(1)
@@ -122,7 +154,7 @@ export async function renderLayoutPdf(d: LayoutDoc, opts: { compress?: boolean }
   for (let i = 0; i < range.count; i++) {
     doc.switchToPage(range.start + i)
     doc.page.margins.bottom = 0
-    if (d.stamp) doc.fillColor('#B91C1C').font('Helvetica-Bold').fontSize(8).text(printable(d.stamp), M, 14, { width, align: 'center', lineBreak: false })
+    if (d.stamp) doc.fillColor('#B91C1C').font('Helvetica-Bold').fontSize(7.5).text(printable(d.stamp), M, H - 22, { width: width - 90, align: 'left', lineBreak: false, ellipsis: true })
     let y = H - 28 - footH
     if (foot.length) {
       doc.moveTo(M, y - 4).lineTo(W - M, y - 4).lineWidth(0.5).strokeColor(LINE).stroke()

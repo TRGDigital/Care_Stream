@@ -1,7 +1,7 @@
 // Ask CareStream (apps/api/src/routes/ask.ts): administrators on the pilot account only. Every call is a plain authenticated request.
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
 
-export class AskError extends Error { constructor(public code: string, message: string, public status: number) { super(message) } }
+export class AskError extends Error { constructor(public code: string, message: string, public status: number, public details?: Record<string, any>) { super(message) } }
 async function call<T>(path: string, token: string, init: RequestInit = {}): Promise<T> {
   const res = await fetch(`${API_URL}${path}`, { ...init, headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}`, ...(init.headers ?? {}) } })
   let body: any = null
@@ -43,12 +43,13 @@ export type NewsletterOp =
   | { op: 'update_section'; id: string; title?: string; text?: string }
   | { op: 'delete'; id: string } | { op: 'duplicate'; id: string } | { op: 'move'; id: string; dir: 'up' | 'down' }
   | { op: 'style'; id: string; style: string | null } | { op: 'reset_styles' } | { op: 'accent'; accent: string | null }
+  | { op: 'layout'; orientation?: 'portrait' | 'landscape'; pages?: 'one' | 'two' }
 
 export interface AskDocFull {
   id: string; type: string; title: string; body: string; status: string; version: number; updated_at: string | null; mine: boolean; created_by: string
   staff_name: string | null; internal_only?: boolean; checklist: string[]; references: Array<{ label: string; url: string }>; shared: Array<{ method: string; at: string }>
   share_intent?: ShareIntent | null; share_intent_text?: string; ack_default?: boolean; hub_shares?: HubShare[]
-  values?: Record<string, string | number>; fields?: AskDocField[]; actions: AskDocActions; data?: { custom_blocks?: Array<{ id: string; type: string; content: Record<string, any> }>; review_note?: { note: string; at: string }; photo?: { user_id: string; include: boolean } | null; photos?: Array<{ user_id: string; include: boolean }>; gift?: { text?: string; image_id?: string | null } | null; template_id?: string | null } | null
+  values?: Record<string, string | number>; fields?: AskDocField[]; actions: AskDocActions; data?: { orientation?: 'portrait' | 'landscape'; pages?: 'one' | 'two'; template_layout?: string; custom_blocks?: Array<{ id: string; type: string; content: Record<string, any> }>; review_note?: { note: string; at: string }; photo?: { user_id: string; include: boolean } | null; photos?: Array<{ user_id: string; include: boolean }>; gift?: { text?: string; image_id?: string | null } | null; template_id?: string | null } | null
 }
 export type UploadRetention = 'chat_end' | '30d' | 'keep'
 export interface MatchRowView { row: number; file_name: string; status: 'matched' | 'ambiguous' | 'unmatched'; staff_id: string | null; candidates: Array<{ id: string; name: string }>; chosen?: string | null }
@@ -60,7 +61,7 @@ export interface AskUpload {
 }
 export interface AskApproval { id: string; type: string; title: string; staff_name: string | null; mine: boolean; can_approve?: boolean; updated_at: string | null }
 
-export interface OptionPreview { kind: string; title: string; html: string; css: string; sample: true; has_logo: boolean; brand_colour: string | null; note: string | null }
+export interface OptionPreview { kind: string; title: string; html: string; css: string; sheet?: string; sample: true; has_logo: boolean; brand_colour: string | null; note: string | null }
 export interface NewsletterSample { id: string; layout: 'short' | 'standard' | 'detailed' | string; title: string; html: string }
 export interface NewsletterLibrary {
   categories: Array<{ id: string; title: string; blurb: string; types: Array<{ type: string; title: string; purpose: string; layouts: Array<{ id: string; layout: 'short' | 'standard' | 'detailed'; sections: number }> }> }>
@@ -105,7 +106,7 @@ export const ask = {
   optionPreview: (t: string, p: { kind: string; template_id: string | null; layout: string | null }) => call<OptionPreview>(`/ask-docs/option-preview?kind=${encodeURIComponent(p.kind)}${p.template_id ? `&template_id=${encodeURIComponent(p.template_id)}` : ''}${p.layout ? `&layout=${encodeURIComponent(p.layout)}` : ''}`, t),
   newsletterSamples: (t: string, type: string) => call<{ designs: NewsletterSample[] }>(`/ask-docs/newsletter-samples/${encodeURIComponent(type)}`, t),
   /** The designed newsletter for text that is being edited and is not saved yet. */
-  previewDraft: (t: string, id: string, b: { title?: string; body?: string }) => call<{ html: string }>(`/ask-docs/${encodeURIComponent(id)}/preview-draft`, t, { method: 'POST', body: JSON.stringify(b) }),
+  previewDraft: (t: string, id: string, b: { title?: string; body?: string }) => call<{ html: string; sheet?: string; orientation?: 'portrait' | 'landscape'; pages?: 'one' | 'two' }>(`/ask-docs/${encodeURIComponent(id)}/preview-draft`, t, { method: 'POST', body: JSON.stringify(b) }),
   /** Include one person's staff photo in the newsletter (null removes it). */
   newsletterPhoto: (t: string, id: string, userId: string | null, consent = false) => call<{ saved: boolean; photo_user_id: string | null; has_picture: boolean }>(`/ask-docs/${encodeURIComponent(id)}/newsletter-photo`, t, { method: 'POST', body: JSON.stringify({ user_id: userId, consent }) }),
   /** The optional gift picture (png, jpg or webp, up to 1 MB): kept privately for this account; returns the id to use. */
@@ -143,11 +144,11 @@ export const ask = {
   /** Takes one shared letter out of the person's hub (the record stays here). */
   withdrawHubShare: (t: string, id: string, letterId: string) => call<{ withdrawn: boolean }>(`/ask/documents/${encodeURIComponent(id)}/hub-shares/${encodeURIComponent(letterId)}/withdraw`, t, { method: 'POST', body: '{}' }),
   /** HOUSE RULE 4: the document as a PDF or Word file. Approved: the finished copy. Not approved yet: pass draft, and it comes back stamped DRAFT on every page (nothing is recorded as shared). */
-  documentBlob: async (t: string, id: string, format: 'pdf' | 'docx', o: { sign?: boolean; draft?: boolean } = {}): Promise<Blob> => {
-    const qs = [o.sign ? 'sign=1' : '', o.draft ? 'draft=1' : ''].filter(Boolean).join('&')
+  documentBlob: async (t: string, id: string, format: 'pdf' | 'docx', o: { sign?: boolean; draft?: boolean; pages?: 'one' | 'two'; orientation?: 'portrait' | 'landscape' } = {}): Promise<Blob> => {
+    const qs = [o.sign ? 'sign=1' : '', o.draft ? 'draft=1' : '', o.pages ? `pages=${o.pages}` : '', o.orientation ? `orientation=${o.orientation}` : ''].filter(Boolean).join('&')
     const path = format === 'pdf' ? `/ask/documents/${encodeURIComponent(id)}/pdf` : `/ask-docs/${encodeURIComponent(id)}/docx`
     const res = await fetch(`${API_URL}${path}${qs ? `?${qs}` : ''}`, { headers: { Authorization: `Bearer ${t}` } })
-    if (!res.ok) { let m = format === 'pdf' ? 'The PDF could not be made just now.' : 'The Word document could not be made just now.'; try { m = (await res.json())?.error?.message ?? m } catch { /* not json */ } throw new AskError(format === 'pdf' ? 'PDF_FAILED' : 'DOCX_FAILED', m, res.status) }
+    if (!res.ok) { let m = format === 'pdf' ? 'The PDF could not be made just now.' : 'The Word document could not be made just now.', code = format === 'pdf' ? 'PDF_FAILED' : 'DOCX_FAILED', details: Record<string, any> | undefined; try { const e = (await res.json())?.error; m = e?.message ?? m; if (e?.code === 'TOO_LONG') { code = 'TOO_LONG'; details = e.details } } catch { /* not json */ } throw new AskError(code, m, res.status, details) }
     return res.blob()
   },
   /** A SAMPLE (an option preview) as a PDF with SAMPLE printed on every page. */
@@ -182,7 +183,7 @@ export const ask = {
   /** Is the letterhead set up, what is missing, and do I have a signature (never the picture). */
   docStatus: (t: string) => call<{ letterhead_ready: boolean; trading_name: string; missing: string[]; signature: boolean }>('/ask-docs/status', t),
   /** The headed page as HTML (made by the server with the same layout as the PDF and Word), for the on screen preview. */
-  preview: (t: string, id: string, sign = false) => call<{ html: string; css: string }>(`/ask-docs/${encodeURIComponent(id)}/preview${sign ? '?sign=1' : ''}`, t),
+  preview: (t: string, id: string, sign = false) => call<{ html: string; css: string; sheet?: string; orientation?: 'portrait' | 'landscape'; pages?: 'one' | 'two' }>(`/ask-docs/${encodeURIComponent(id)}/preview${sign ? '?sign=1' : ''}`, t),
   save: (t: string, b: { type?: string; title: string; body: string; sources?: AskSource[] }) => call<{ id: string }>('/ask/documents', t, { method: 'POST', body: JSON.stringify(b) }),
   updateDocument: (t: string, id: string, b: { title?: string; body?: string }) => call<{ saved: boolean }>(`/ask/documents/${encodeURIComponent(id)}`, t, { method: 'PATCH', body: JSON.stringify(b) }),
   removeDocument: (t: string, id: string) => call<{ deleted: boolean }>(`/ask/documents/${encodeURIComponent(id)}`, t, { method: 'DELETE' }),

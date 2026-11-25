@@ -9,7 +9,7 @@ import { Expandable, ExpandViewer, useExpandViewer } from '@/components/ask/expa
 import { DocumentActions } from '@/components/ask/document-actions'
 
 const W = 640, THUMB_W = 220, THUMB_H = 280
-type Paper = { html: string; css: string }
+type Paper = { html: string; css: string; sheet?: string; orientation?: 'portrait' | 'landscape' }
 const isFinal = (d: Pick<AskDocFull, 'status'>) => d.status === 'approved' || d.status === 'shared'
 
 /** The large viewer for one document, with Save PDF and Print as separate buttons. Opened by the Expand click or by the "See the designed version" button. */
@@ -18,7 +18,7 @@ export function DocViewer({ token, id, onClose }: { token: string; id: string; o
   useEffect(() => { let live = true; Promise.all([ask.document(token, id), ask.preview(token, id)]).then(([a, b]) => { if (live) { setD(a.document); setPaper(b) } }).catch(() => { if (live) onClose() }); return () => { live = false } }, [token, id]) // eslint-disable-line react-hooks/exhaustive-deps
   if (!d || !paper) return null
   const draft = !isFinal(d)
-  return <ExpandViewer open onClose={onClose} title={d.title} items={[{ kind: 'html', html: paper.html, css: paper.css || undefined }]}
+  return <ExpandViewer open onClose={onClose} title={d.title} items={[paper.sheet ? { kind: 'sheet', html: paper.sheet, orientation: paper.orientation ?? 'portrait' } : { kind: 'html', html: paper.html, css: paper.css || undefined }]}
     pdf={{ getPdf: () => ask.documentBlob(token, id, 'pdf', { draft }), getDocx: () => ask.documentBlob(token, id, 'docx', { draft }), draft }} />
 }
 

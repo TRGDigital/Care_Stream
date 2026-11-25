@@ -68,7 +68,7 @@ export function OptionsBlock({ token, set, disabled, chosenId, onChoose, typed =
       </ul>
       {check && !done && <CheckLine item={check.item} disabled={disabled} onYes={() => { const o = check.o; setCheck(null); onChoose(formatChoice(o)) }} onNo={() => setCheck(null)} />}
       {err && <p role="alert" className="mt-2 text-xs text-red-700">{err}</p>}
-      <ExpandViewer open={viewer.open && !!big} onClose={() => viewer.close()} title={big ? big.p.title : 'Preview'} items={big ? [{ kind: 'html', html: big.p.html, css: big.p.css || undefined }] : []}
+      <ExpandViewer open={viewer.open && !!big} onClose={() => viewer.close()} title={big ? big.p.title : 'Preview'} items={big ? [big.p.sheet ? { kind: 'sheet' as const, html: big.p.sheet, orientation: 'portrait' as const } : { kind: 'html' as const, html: big.p.html, css: big.p.css || undefined }] : []}
         pdf={big ? { getPdf: () => ask.samplePdfBlob(token, big.o.preview), sample: true } : undefined}
         actions={big && !done ? [{ label: `Choose ${big.o.title}`, primary: true, disabled, onClick: () => { const o = big.o; viewer.close(); choose(o) } }] : []} />
     </div>

@@ -82,7 +82,7 @@ export function layoutToHtml(d: LayoutDoc, logoDataUrl?: string | null): string 
        <p class="lh-subject"><strong>${esc(d.subject ?? '')}</strong></p>`
     : `<h1 class="lh-title">${esc(d.subject ?? '')}</h1>${d.date ? `<p class="lh-date">${esc(d.date)}</p>` : ''}${d.subtitle ? `<p class="lh-date">${esc(d.subtitle)}</p>` : ''}`
   const close = d.kind === 'letter'
-    ? `<p>${esc(d.closing ?? '')}</p>${sig}<p><strong>${esc(d.signer?.name ?? '')}</strong>${d.signer?.role ? `<br>${esc(d.signer.role)}` : ''}</p>${d.acknowledgement ? `<div class="lh-ack"><p>${esc(d.acknowledgement)}</p><p>Signed: ____________________ &nbsp; Date: ______________</p></div>` : ''}`
+    ? `<div class="lh-close"><p>${esc(d.closing ?? '')}</p>${sig}<p><strong>${esc(d.signer?.name ?? '')}</strong>${d.signer?.role ? `<br>${esc(d.signer.role)}` : ''}</p></div>${d.acknowledgement ? `<div class="lh-ack"><p>${esc(d.acknowledgement)}</p><p>Signed: ____________________ &nbsp; Date: ______________</p></div>` : ''}`
     : ''
   const foot = footerFor(h)
   return `<div class="lh-page">${head}<hr${rule}>${top}${body.join('')}${close}${foot.length ? `<div class="lh-foot">${foot.map(l => `<div>${esc(l)}</div>`).join('')}</div>` : ''}</div>`
@@ -95,4 +95,10 @@ export const PREVIEW_CSS = `.lh-page{background:#fff;color:#1a1530;font:14px/1.5
 .lh-page hr{border:0;border-top:1px solid #d9d4e0;margin:14px 0 18px}.lh-date{color:#5e4d70;margin:0 0 12px}.lh-conf{font:bold 10px Arial,sans-serif;letter-spacing:.06em;color:#5e4d70;margin:0 0 4px}
 .lh-title{font:bold 22px Arial,sans-serif;margin:0 0 6px}.lh-subject{margin:14px 0}.lh-page p{margin:0 0 10px}.lh-page ul{margin:0 0 10px;padding-left:20px}.lh-page h3{font:bold 14px Arial,sans-serif;margin:14px 0 6px}
 .lh-sig{display:block;max-height:68px;max-width:227px;margin:8px 0 4px}.lh-gap{height:44px}.lh-ack{border:1px solid #d9d4e0;padding:10px 12px;margin-top:22px;font-size:13px}
-.lh-foot{border-top:1px solid #d9d4e0;margin-top:26px;padding-top:8px;font:10px/1.45 Arial,sans-serif;color:#777;text-align:center}`
+.lh-foot{border-top:1px solid #d9d4e0;margin-top:26px;padding-top:8px;font:10px/1.45 Arial,sans-serif;color:#777;text-align:center}
+/* HOUSE RULE 10, printing: a paragraph, a bullet, the address and the sign-off never split across pages, a heading stays with what follows, a short last line is never left alone */
+.lh-page p,.lh-page li,.lh-page .lh-ack,.lh-page .lh-close,.lh-page .lh-sig,.lh-page tr{break-inside:avoid;page-break-inside:avoid;orphans:3;widows:3}
+.lh-page h3,.lh-page .lh-subject,.lh-page .lh-date,.lh-page .lh-conf{break-after:avoid;page-break-after:avoid}.lh-page .lh-close{break-before:avoid}
+.lh-page thead{display:table-header-group}
+@page{size:A4;margin:16mm 14mm}
+@media print{.lh-page{border:0;box-shadow:none;padding:0;max-width:none}}`

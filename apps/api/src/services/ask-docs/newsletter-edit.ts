@@ -9,6 +9,7 @@
 import { BLOCK_STYLES, ICONS, parseSections, sectionIds, type CustomIn, type CustomKind } from './newsletter-design'
 import { validateBrandColour, SWATCHES } from '../../lib/brand-colour'
 import { contrast } from './newsletter-design'
+import { newsletterTemplate } from './newsletter-templates'
 
 export const BLOCK_TYPES: Array<{ id: CustomKind; label: string; hint: string }> = [
   { id: 'text', label: 'Text', hint: 'A heading and a few paragraphs.' },
@@ -126,6 +127,8 @@ export type Op =
   | { op: 'style'; id: string; style: string | null }
   | { op: 'reset_styles' }
   | { op: 'accent'; accent: string | null }
+  /** The page: A4 portrait or landscape, and (Detailed layout only) whether it may run to two pages. */
+  | { op: 'layout'; orientation?: string; pages?: string }
 export type OpResult = { ok: true; state: EditState; texts: string[]; id?: string } | { ok: false; message: string }
 
 const customsOf = (data: any): CustomIn[] => (Array.isArray(data?.custom_blocks) ? data.custom_blocks.filter((c: any) => c && typeof c.id === 'string') : [])
@@ -268,6 +271,16 @@ export function applyOp(state: EditState, op: Op): OpResult {
     case 'accent': {
       const v = validateAccent(op.accent); if (!v.ok) return v
       const data = { ...(state.data ?? {}) }; if (v.value) data.accent = v.value; else delete data.accent
+      return { ok: true, state: { body: state.body, data }, texts: [] }
+    }
+    case 'layout': {
+      const data = { ...(state.data ?? {}) }
+      if (op.orientation !== undefined) { if (op.orientation !== 'portrait' && op.orientation !== 'landscape') return { ok: false, message: 'The page is either portrait or landscape.' }; data.orientation = op.orientation }
+      if (op.pages !== undefined) {
+        if (op.pages !== 'one' && op.pages !== 'two') return { ok: false, message: 'A newsletter is one page, or two pages for the Detailed layout.' }
+        if (op.pages === 'two' && newsletterTemplate(String(data.template_id ?? ''))?.layout !== 'detailed') return { ok: false, message: 'Two pages are only for the Detailed layout. Shorten it, or switch to landscape, to keep it to one page.' }
+        data.pages = op.pages
+      }
       return { ok: true, state: { body: state.body, data }, texts: [] }
     }
   }

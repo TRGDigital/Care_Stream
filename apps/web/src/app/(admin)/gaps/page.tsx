@@ -807,23 +807,20 @@ export default function GapsPage() {
 
                 return rows.map((row, ri) => {
                   const policy = row.policy
-                  // For a partial, "Partially covered by X" already names the covering policy;
-                  // only add the routing line when the fix goes somewhere different (or it's a gap).
-                  const showRouting = !!policy && (reg.status === 'gap' || policy.id !== reg.evidence_policy_id)
+                  // Every row, gap or elements to add, names its policy the same way: the icon and "Relevant policy: X" (or "New policy needed: X"). A partial that has no routed policy yet
+                  // names the policy that already covers it, so the wording never differs between the two kinds of row.
+                  const shown: { id: string | null; name: string } | null = policy ?? (reg.status === 'partial' && reg.evidence_policy_name ? { id: reg.evidence_policy_id ?? 'evidence', name: reg.evidence_policy_name } : null)
                   return (
                     <div key={`${reg.reference_key}::${policy?.id ?? (policy ? `new-${ri}` : 'only')}`} className="flex items-center justify-between gap-3 px-6 py-3.5">
                       <div className="min-w-0">
                         <p className="truncate font-medium text-neutral-dark">{reg.official_name}</p>
-                        {reg.status === 'partial' && reg.evidence_policy_name && (!policy || policy.id === reg.evidence_policy_id) && (
-                          <p className="truncate text-xs text-neutral-mid">Partially covered by {reg.evidence_policy_name}</p>
-                        )}
-                        {showRouting && policy && (
+                        {shown && (
                           <p className="mt-0.5 flex items-center gap-1.5 text-xs">
-                            <FileQuestion size={11} className={`shrink-0 ${policy.id ? 'text-teal' : 'text-amber-500'}`} />
+                            <FileQuestion size={11} className={`shrink-0 ${shown.id ? 'text-teal' : 'text-amber-500'}`} />
                             <span className="truncate text-neutral-mid">
-                              {policy.id
-                                ? <>Relevant policy: <span className="font-medium text-neutral-dark">{policy.name}</span></>
-                                : <>New policy needed: <span className="font-medium text-neutral-dark">{policy.name}</span></>}
+                              {shown.id
+                                ? <>Relevant policy: <span className="font-medium text-neutral-dark">{shown.name}</span></>
+                                : <>New policy needed: <span className="font-medium text-neutral-dark">{shown.name}</span></>}
                             </span>
                           </p>
                         )}

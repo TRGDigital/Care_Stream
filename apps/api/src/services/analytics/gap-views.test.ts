@@ -45,3 +45,9 @@ test('WIRING: the generator places wording once per routed policy and rebuilds o
   assert.match(pg, /view_key: policy \? \(policy\.id \?\? `new:\$\{policy\.name\.toLowerCase\(\)\}`\)/); assert.match(pg, /viewKey=\{detailReg\.view_key\}/)
   assert.match(md, /-\$\{viewKey \?\? 'first'\}`/); assert.match(md, /gapDetail\(referenceKey, false, \{ key: viewKey, name: viewName \}\)/)
 })
+
+test('ONE WORDING: a gap row and an elements to add row both name the policy as "Relevant policy" with the same icon (a partial with no routed policy names the policy that covers it)', () => {
+  const pg = fs.readFileSync(path.resolve(__dirname, '../../../../web/src/app/(admin)/gaps/page.tsx'), 'utf8')
+  assert.match(pg, /const shown: \{ id: string \| null; name: string \} \| null = policy \?\? \(reg\.status === 'partial' && reg\.evidence_policy_name/)
+  assert.doesNotMatch(pg, /Partially covered by/); assert.match(pg, /Relevant policy: <span/)
+})

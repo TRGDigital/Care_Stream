@@ -20,7 +20,7 @@ export type Unit = 'hours' | 'days'
 export type Part = 'full' | 'am' | 'pm' | 'part'
 export interface DayRow { day: string; hours: number; part?: Part }
 export interface Override { override?: boolean; override_note?: string }
-export interface Meta { enabled: boolean; ready?: boolean; is_admin?: boolean; can_decide?: boolean; pending_count?: number; max_hours_per_day?: number; today?: string; settings?: { year_start: { month: number; day: number }; carry_over: boolean; manager_approval: boolean } }
+export interface Meta { enabled: boolean; /** The Holiday and pay boxes on the staff forms: on for every account's administrators, even where holiday tracking itself is still a pilot. */ staff_fields?: boolean; ready?: boolean; is_admin?: boolean; can_decide?: boolean; pending_count?: number; max_hours_per_day?: number; today?: string; settings?: { year_start: { month: number; day: number }; carry_over: boolean; manager_approval: boolean } }
 export interface Balance { unit: Unit; allowance: number; carry_in: number; entitlement: number; taken: number; booked: number; used: number; remaining: number; percent_taken: number; by_month_taken: Record<string, number>; by_month_booked: Record<string, number> }
 export interface Request { id: string; user_id: string; name: string; status: 'pending' | 'approved' | 'rejected' | 'cancelled'; total_hours: number; total_days: number; note: string | null; decision_note: string | null; source: string; requested_at: string | null; decided_by_name: string | null; decided_at: string | null; days: DayRow[]; from: string | null; to: string | null; over_allowance?: boolean; exception_note?: string | null }
 export interface BankHoliday { date: string; name: string; multiplier: number }

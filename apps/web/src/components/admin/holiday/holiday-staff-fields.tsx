@@ -23,7 +23,7 @@ export function HolidayStaffFields({ token, userId, saveRef }: { token: string; 
   const [loaded, setLoaded] = useState(!userId)
 
   useEffect(() => {
-    if (!userId || !meta?.enabled) return
+    if (!userId || !(meta?.enabled || meta?.staff_fields)) return
     let live = true
     holiday.admin.staff(token, userId).then(r => {
       if (!live) return
@@ -31,18 +31,18 @@ export function HolidayStaffFields({ token, userId, saveRef }: { token: string; 
       setStart(r.start_date ?? ''); setWeekday(r.weekday_rate != null ? String(r.weekday_rate) : ''); setWeekend(r.weekend_rate != null ? String(r.weekend_rate) : ''); setLoaded(true)
     }).catch(() => setLoaded(true))
     return () => { live = false }
-  }, [token, userId, meta?.enabled])
+  }, [token, userId, meta?.enabled, meta?.staff_fields])
 
   useEffect(() => {
     saveRef.current = async (id: string) => {
-      if (!meta?.enabled || (!touched.current && !userId)) return    // nothing typed on a new person: leave their record as it is
+      if (!(meta?.enabled || meta?.staff_fields) || (!touched.current && !userId)) return    // nothing typed on a new person: leave their record as it is
       if (!touched.current) return
       await holiday.admin.saveStaff(token, id, { start_date: start || null, weekday_rate: weekday, weekend_rate: weekend, unit, allowance: allowance === '' ? null : allowance, contracted_hours: contracted === '' ? null : contracted })
     }
     return () => { saveRef.current = null }
-  }, [token, userId, meta?.enabled, start, weekday, weekend, unit, allowance, contracted, saveRef])
+  }, [token, userId, meta?.enabled, meta?.staff_fields, start, weekday, weekend, unit, allowance, contracted, saveRef])
 
-  if (!meta?.enabled || !meta.is_admin) return null
+  if (!(meta?.enabled || meta?.staff_fields) || !meta.is_admin) return null
   const on = (set: (v: string) => void) => (e: React.ChangeEvent<HTMLInputElement>) => { touched.current = true; set(e.target.value) }
 
   return (

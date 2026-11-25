@@ -40,7 +40,7 @@ export const holidayRouter = Router()
 // ── Who am I here ────────────────────────────────────────────────────────────────────────
 holidayRouter.get('/meta', async (req: Request, res: Response) => {
   const tenantId = tenantOf(req)
-  if (!(await holidayPilotEnabled(tenantId))) { ok(res, { enabled: false }); return }
+  if (!(await holidayPilotEnabled(tenantId))) { ok(res, { enabled: false, staff_fields: roleOf(req) === 'admin', is_admin: roleOf(req) === 'admin' }); return }
   const settings = await loadSettings(tenantId)
   const decide = await canDecide(tenantId, userOf(req), roleOf(req), settings)
   let pending = 0, ready = true
@@ -354,7 +354,8 @@ holidayRouter.post('/requests/:id/remove', requireDecider, async (req: Request, 
 
 // ── Administrators ───────────────────────────────────────────────────────────────────────
 export const holidayAdminRouter = Router()
-holidayAdminRouter.use(pilotGate)
+// A person's holiday and pay boxes on the staff forms (/staff/:userId) are open to every account (administrators only); everything else here stays in the pilot.
+holidayAdminRouter.use((req, res, next) => (/^\/staff\/[^/]+\/?$/.test(req.path) ? next() : pilotGate(req, res, next)))
 holidayAdminRouter.use(requireAdmin)
 // Sickness recording: administrators only (health information). Kept in its own file; it never changes a holiday balance.
 holidayAdminRouter.use('/sick', buildSickRouter({ actorOf, tellPerson, unitOf, daysOfRequest }))

@@ -9,6 +9,7 @@ import { LOCKED_RULES } from './safety'
 import { DEFAULT_ACTIONS_RULES, ACTION_TOOL_NAMES } from './actions/prompts'
 import { KNOWLEDGE_PROMPTS } from './agents-knowledge'
 import { uploadPromptMeta } from './agents-uploads'
+import { HOUSE_RULES_FORMS_USAGE, DEFAULT_HOUSE_RULES_FORMS } from './house-rules-forms'
 
 export const ASK_GROUP = 'Ask CareStream'
 export const ASK_PROMPT_MAX = 8000
@@ -30,6 +31,8 @@ export const DEFAULT_PAGE_CONTEXT = 'The administrator is currently looking at {
 export const ASK_PROMPTS: AskPromptMeta[] = [
   { usage: 'ask_house_rules', label: 'Ask CareStream: house rules', default: HOUSE_RULES,
     note: 'Used at the start of every answer by every Ask CareStream agent: how it answers, its tone, British English, no dashes, showing working. The privacy and safety rules are separate and locked.' },
+  { usage: HOUSE_RULES_FORMS_USAGE, label: 'Ask CareStream: house rules for questions and choices', default: DEFAULT_HOUSE_RULES_FORMS,
+    note: 'Added to EVERY Ask CareStream agent after its own job and before the locked rules: when an agent needs information it asks in a question form (one labelled box per question), and when it offers templates or designs it shows option cards with a Preview button. The two block formats are read by the screen, so keep the examples as they are.' },
   { usage: 'ask_agent_staff', label: 'Ask CareStream: Staff agent', default: jobOf('staff'),
     note: 'Used after the house rules when an administrator picks the Staff agent: roster, hours, checks due, pay questions. It chooses from the Staff agent tools.' },
   { usage: 'ask_agent_holiday', label: 'Ask CareStream: Holiday agent', default: jobOf('holiday'),
@@ -101,14 +104,15 @@ export async function askPrompt(usage: string): Promise<string> {
 /** The system prompt for one run: house rules, today, this agent's job (and its drafting rules), the page line, then the LOCKED rules last. */
 export async function buildSystemPrompt(a: AgentDef, today: string, orgName: string, pageLine: string): Promise<string> {
   const actions = a.tools.some(t => (ACTION_TOOL_NAMES as readonly string[]).includes(t)) ? await askPrompt('ask_actions_rules') : ''
-  const [house, job, drafting] = await Promise.all([
+  const [house, forms, job, drafting] = await Promise.all([
     askPrompt('ask_house_rules'),
+    askPrompt(HOUSE_RULES_FORMS_USAGE),
     askPrompt(`ask_agent_${a.id.replace(/-/g, '_')}`),
     a.id === 'letters' ? askPrompt('ask_letter_drafting') : a.id === 'newsletter' ? askPrompt('ask_newsletter_drafting') : Promise.resolve(''),
   ])
   const uploads = a.uploads ? (await Promise.all([askPrompt('ask_uploads_rules'), askPrompt(`ask_uploads_${a.id.replace(/-/g, '_')}`)])).filter(Boolean).join('\n') : ''
   const jobText = [job, drafting, actions, uploads].filter(Boolean).join('\n')
-  return `${house}\n\nTODAY: ${today} (UK). ORGANISATION: ${orgName}.\n\nYOUR JOB: ${jobText}${pageLine}\n\n${LOCKED_RULES}`
+  return `${house}\n\nTODAY: ${today} (UK). ORGANISATION: ${orgName}.\n\nYOUR JOB: ${jobText}${pageLine}\n\n${forms}\n\n${LOCKED_RULES}`
 }
 
 /** The page context line from the editable template. */

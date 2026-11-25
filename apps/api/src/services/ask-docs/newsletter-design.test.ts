@@ -109,7 +109,7 @@ test('WIRING: the PDF, email, hub and agent all use the designed newsletter', ()
   assert.match(fs.readFileSync(path.resolve(__dirname, '../../routes/notifications.ts'), 'utf8'), /newsletters\/\$\{n\.id\}\.html/)
   assert.match(fs.readFileSync(path.resolve(__dirname, '../../routes/notifications.ts'), 'utf8'), /'\/:id\/designed'[\s\S]*mine\(tenantOf\(req\)/)   // only the people it was sent to
   const prompt = AGENTS.find(a => a.id === 'newsletter')!.prompt
-  assert.match(prompt, /newsletter-layouts/); assert.match(prompt, /DESIGNED/); assert.match(prompt, /Designed and Text/)
+  assert.match(prompt, /options block/); assert.match(prompt, /DESIGNED/); assert.match(prompt, /Designed and Text/)
   assert.ok(prompt.trim().endsWith('if a section has no data, leave it out and say so.'), 'the accuracy and tone paragraph is still last')
 })
 

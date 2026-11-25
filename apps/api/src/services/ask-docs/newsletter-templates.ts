@@ -293,6 +293,61 @@ export const templatesInCategory = (c: NewsletterCategory) => NEWSLETTER_TEMPLAT
 /** A short menu for the agent and the picker: one row per type, with the layouts it comes in. */
 export const newsletterMenu = () => NEWSLETTER_CATEGORIES.map(c => ({ ...c, types: NEWSLETTER_TYPES.filter(t => t.category === c.id).map(t => ({ ...t, layouts: NEWSLETTER_TEMPLATES.filter(x => x.type === t.type).map(x => ({ id: x.id, layout: x.layout, sections: x.sections.length })) })) }))
 
+
+// ── Finding the right type from what the administrator says ────────────────────────────────
+// Every type has the words people use for it (synonyms), so "employee of the month newsletter" finds Employee of the month and never a story or a thank you. The match is
+// ranked: the type's own title scores highest, then its keywords, then its purpose. The agent is told to ask the library with the administrator's own words first.
+export const NEWSLETTER_KEYWORDS: Record<string, string[]> = {
+  'monthly-update': ['monthly update', 'monthly newsletter', 'monthly', 'team update', 'news roundup', 'general update', 'this month'],
+  'welcome-new-starters': ['welcome', 'new starters', 'new starter', 'new staff', 'new joiners', 'joiners', 'introduce new', 'new team members'],
+  'leavers-farewells': ['leavers', 'leaver', 'farewell', 'goodbye', 'leaving', 'retiring', 'retirement', 'moving on'],
+  'employee-of-the-month': ['employee of the month', 'employee of month', 'star of the month', 'carer of the month', 'staff member of the month', 'member of staff of the month', 'team member of the month', 'worker of the month', 'recognition of one person', 'winner of the month', 'eotm'],
+  'team-achievements': ['team achievements', 'achievements', 'well done', 'celebrate the team', 'thank you to the team', 'recognition', 'praise', 'kudos', 'good news'],
+  'birthdays-anniversaries': ['birthdays', 'birthday', 'anniversaries', 'anniversary', 'years of service', 'work anniversary', 'long service'],
+  'cqc-preparation': ['cqc preparation', 'cqc inspection', 'inspection preparation', 'inspection coming', 'prepare for cqc', 'cqc visit', 'getting ready for inspection', 'cqc'],
+  'inspection-result': ['inspection result', 'after an inspection', 'cqc result', 'cqc rating', 'inspection outcome', 'inspection feedback', 'rated good', 'rated outstanding'],
+  'policy-update': ['policy', 'policies', 'new policy', 'updated policy', 'policy change', 'procedure change', 'new procedure'],
+  'training-due': ['training', 'training due', 'new courses', 'courses', 'mandatory training', 'refresher', 'learning', 'overdue training'],
+  'safeguarding-reminder': ['safeguarding', 'safeguarding reminder', 'protect', 'report a concern', 'whistleblowing'],
+  'infection-control': ['infection control', 'infection', 'hand hygiene', 'ipc', 'outbreak', 'covid', 'flu', 'norovirus'],
+  'hot-weather': ['hot weather', 'heatwave', 'heat', 'summer heat', 'dehydration', 'staying cool'],
+  'winter-pressures': ['winter pressures', 'winter', 'cold weather', 'flu season', 'snow', 'ice'],
+  'bank-holiday-cover': ['bank holiday cover', 'bank holiday rota', 'bank holiday cover note', 'cover for the bank holiday', 'bank holiday shifts'],
+  'christmas-rota': ['christmas rota', 'christmas shifts', 'christmas cover', 'festive rota', 'christmas working', 'new year rota'],
+  'minimum-wage-change': ['minimum wage', 'national living wage', 'living wage', 'nlw', 'pay rise', 'pay change', 'new pay rates', 'april pay'],
+  'holiday-booking': ['holiday booking', 'book holiday', 'annual leave', 'holiday requests', 'holiday reminder', 'leave booking', 'holiday'],
+  'staff-stories': ['staff stories', 'staff story', 'story', 'a day in the life', 'meet the team', 'profile', 'my story', 'why i care'],
+  'wellbeing-support': ['wellbeing', 'well being', 'support', 'mental health', 'looking after you', 'employee assistance', 'staff support'],
+  'survey-results': ['survey', 'survey results', 'staff survey', 'you said we did', 'feedback results', 'questionnaire'],
+  'seasonal-christmas': ['christmas', 'festive', 'xmas', 'christmas message', 'season greetings'],
+  'seasonal-summer': ['summer', 'summer note', 'summer message', 'garden party'],
+  'seasonal-easter': ['easter', 'easter note', 'easter message'],
+  'seasonal-bank-holiday': ['bank holiday note', 'bank holiday message', 'bank holiday', 'bank holidays'],
+}
+const norm = (x: string) => ` ${x.toLowerCase().replace(/[^a-z0-9 ]+/g, ' ').replace(/\s+/g, ' ').trim()} `
+export interface NewsletterMatch { type: string; title: string; category: NewsletterCategory; score: number; reason: string }
+/** The newsletter types that best fit the words used, best first. A type scores highest when its own title is in the words, then by its longest matching keyword, then by shared words with its title or purpose. A type with no match is left out. */
+export function matchNewsletterTypes(query: string, limit = 4): NewsletterMatch[] {
+  const q = norm(String(query ?? ''))
+  if (q.trim().length < 3) return []
+  const qWords = new Set(q.trim().split(' ').filter(w => w.length > 2 && !['the', 'and', 'for', 'newsletter', 'letter', 'template', 'need', 'want', 'staff', 'our', 'with', 'about', 'please', 'build', 'make', 'write', 'draft', 'create'].includes(w)))
+  const out: NewsletterMatch[] = []
+  for (const t of NEWSLETTER_TYPES) {
+    let score = 0, reason = ''
+    if (q.includes(norm(t.title))) { score = 100 + t.title.length; reason = `the words match "${t.title}"` }
+    for (const k of NEWSLETTER_KEYWORDS[t.type] ?? []) {
+      if (q.includes(norm(k))) { const sc = 50 + k.length; if (sc > score) { score = sc; reason = `"${k}" is one of its words` } }
+    }
+    if (score === 0 && qWords.size) {
+      const titleWords = new Set(norm(t.title).trim().split(' '))
+      const shared = [...qWords].filter(w => titleWords.has(w) || (NEWSLETTER_KEYWORDS[t.type] ?? []).some(k => norm(k).includes(` ${w} `)))
+      if (shared.length) { score = 10 * shared.length; reason = `shares "${shared.join('", "')}"` }
+    }
+    if (score > 0) out.push({ type: t.type, title: t.title, category: t.category, score, reason })
+  }
+  return out.sort((a, b) => b.score - a.score || a.title.localeCompare(b.title)).slice(0, limit)
+}
+
 export const NEWSLETTER_CHECKLIST = [
   'British English, short paragraphs and plain words.',
   'No dashes in sentences (use commas, full stops or the word "to").',

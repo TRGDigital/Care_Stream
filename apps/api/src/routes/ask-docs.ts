@@ -18,6 +18,7 @@ import { loadLetterhead } from '../services/letters/letterhead'
 import { prisma } from '../db/client'
 import { sampleDesignsFor } from '../services/ask-docs/newsletter-design-doc'
 import { getMeta } from '../services/letters/signatures'
+import { cleanRequest, renderOptionPreview } from '../services/ask-docs/option-preview'
 
 export const askDocsRouter = Router()
 const notFound = (res: Response) => err(res, 'NOT_FOUND', 'Not found.', 404)
@@ -73,6 +74,14 @@ askDocsRouter.post('/:id/newsletter-photo', async (req: Request, res: Response) 
   await store.updateDocumentContent(t, d.id, { data })
   void writeAuditLog({ tenant_id: t, user_id: u, event_type: 'ask_newsletter_photo_set', entity_type: 'ask_document', entity_id: d.id, metadata: { included: !!uid } })
   ok(res, { saved: true, photo_user_id: uid })
+})
+
+// A SAMPLE of one option an agent offers (a newsletter layout, a letter, a report, a notification, an email), with the organisation's own logo and colour and placeholder words only.
+// Never reads staff or resident records and never calls the model.
+askDocsRouter.get('/option-preview', async (req: Request, res: Response) => {
+  const q = cleanRequest(req.query)
+  if (!q) { err(res, 'INVALID', 'That option cannot be previewed.', 400); return }
+  try { res.setHeader('Cache-Control', 'private, max-age=120'); ok(res, await renderOptionPreview(getTenantId(), q)) } catch { err(res, 'PREVIEW_FAILED', 'The preview could not be made just now.', 500) }
 })
 
 // Sample designs (marked SAMPLE) of every layout of one newsletter type, for the thumbnails when choosing a layout.

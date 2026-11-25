@@ -13,12 +13,12 @@ const FIELD_HINTS: Array<[string, string]> = [['{first_name}', 'first name'], ['
 const inp = 'w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-neutral-dark outline-none focus:border-teal focus:ring-2 focus:ring-teal/20'
 
 let staffCache: { at: number; token: string; list: ActionPerson[] } | null = null
-async function loadStaff(token: string): Promise<ActionPerson[]> {
+export async function loadStaff(token: string): Promise<ActionPerson[]> {
   if (staffCache && staffCache.token === token && Date.now() - staffCache.at < 60_000) return staffCache.list
   const r = await ask.actions.staff(token); staffCache = { at: Date.now(), token, list: r.staff }; return r.staff
 }
 
-function Picker({ people, selected, suggested, onChange, max, disabled, needEmail }: { people: ActionPerson[]; selected: Set<string>; suggested: Set<string>; onChange: (ids: string[]) => void; max: number; disabled: boolean; needEmail: boolean }) {
+export function Picker({ people, selected, suggested, onChange, max, disabled, needEmail }: { people: ActionPerson[]; selected: Set<string>; suggested: Set<string>; onChange: (ids: string[]) => void; max: number; disabled: boolean; needEmail: boolean }) {
   const [q, setQ] = useState(''), [role, setRole] = useState('')
   const roles = useMemo(() => [...new Set(people.map(p => p.job_role).filter(Boolean) as string[])].sort(), [people])
   const shown = people.filter(p => (!q || p.name.toLowerCase().includes(q.toLowerCase())) && (!role || p.job_role === role))

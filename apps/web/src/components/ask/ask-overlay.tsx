@@ -19,6 +19,9 @@ import { LayoutThumbs } from '@/components/ask/layout-thumbs'
 import { ExpandViewer, type ViewerItem } from '@/components/ask/expand-viewer'
 import { AttachButton, UploadsBlock } from '@/components/ask/upload-panel'
 import { NewsletterPicker } from '@/components/ask/newsletter-picker'
+import { QuestionFormCard, AnsweredCard } from '@/components/ask/question-form'
+import { OptionsBlock } from '@/components/ask/options-block'
+import { parseQuestions, parseOptions, visibleText, parseAnswersMessage, parseChoiceMessage } from '@/lib/ask-blocks'
 
 export const OPEN_ASK_EVENT = 'cs:open-ask'
 const ICONS: Record<string, LucideIcon> = {
@@ -334,11 +337,17 @@ export function AskPanel({ token, layout, expanded, width, onClose }: { token: s
                     {agent.id === 'newsletter' && token && <NewsletterPicker token={token} disabled={busy} onChoose={m => send(m)} />}
                   </div>
                 )}
-                {messages.map(m => m.role === 'user' ? (
-                  <div key={m.id} className="ml-auto max-w-[85%] rounded-2xl rounded-br-sm bg-teal px-4 py-2.5 text-[15px] text-white">{m.content}</div>
+                {messages.map((m, mi) => m.role === 'user' ? (
+                  (() => { const ans = parseAnswersMessage(m.content), pick = parseChoiceMessage(m.content)
+                    return ans ? <AnsweredCard key={m.id} title={ans.title} pairs={ans.pairs} />
+                      : pick ? <div key={m.id} className="ml-auto max-w-[85%] rounded-2xl rounded-br-sm bg-teal px-4 py-2.5 text-[15px] text-white">You chose: {pick.title}</div>
+                      : <div key={m.id} className="ml-auto max-w-[85%] rounded-2xl rounded-br-sm bg-teal px-4 py-2.5 text-[15px] text-white">{m.content}</div> })()
                 ) : (
                   <div key={m.id} className="max-w-full rounded-2xl rounded-bl-sm border border-gray-200 bg-white px-4 py-3 shadow-sm">
-                    <MarkdownLite text={agent.id === 'notifications' ? withoutDraftBlock(m.content) : agent.id === 'newsletter' ? withoutLayoutsBlock(m.content) : m.content} />
+                    <MarkdownLite text={visibleText(agent.id === 'notifications' ? withoutDraftBlock(m.content) : agent.id === 'newsletter' ? withoutLayoutsBlock(m.content) : m.content)} />
+                    {(() => { const form = parseQuestions(m.content), opts = parseOptions(m.content), nxt = messages[mi + 1], last = mi === messages.length - 1
+                      const answered = !!(nxt && nxt.role === 'user' && parseAnswersMessage(nxt.content)); const chosen = nxt && nxt.role === 'user' ? parseChoiceMessage(nxt.content)?.id ?? null : null
+                      return <>{form && !answered && last && <QuestionFormCard token={token} form={form} disabled={busy} onSend={t => send(t)} />}{opts && token && (last || chosen) && <OptionsBlock token={token} set={opts} disabled={busy || !last} chosenId={chosen} onChoose={t => send(t)} />}</> })()}
                     {agent.id === 'newsletter' && token && parseNewsletterLayouts(m.content) && <LayoutThumbs token={token} type={parseNewsletterLayouts(m.content)!} disabled={busy} onPick={d => send(`I would like the ${d.layout} layout (${d.id}).`)} />}
                     {agent.id === 'notifications' && parseNotificationDraft(m.content) && (() => { const d = parseNotificationDraft(m.content)!; return <div className="mt-3 rounded-lg border border-teal/30 bg-teal/5 p-3 text-sm"><p className="font-semibold text-neutral-dark">{d.title}</p><p className="mt-1 whitespace-pre-line text-neutral-dark">{d.body}</p></div> })()}
                     {(cards[m.id] ?? []).map(c => <ActionCard key={c.id} token={token} card={c} />)}

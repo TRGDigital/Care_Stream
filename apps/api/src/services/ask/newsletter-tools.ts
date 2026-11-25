@@ -6,7 +6,7 @@ import { loadNewStarters, loadBirthdaysThisMonth, loadAnniversariesThisMonth, lo
 import { loadEnrolments } from './tools-people'
 import { dueAndOverdue } from './people-calc'
 import { saveDocument } from './store'
-import { NEWSLETTER_TEMPLATES, NEWSLETTER_CHECKLIST, NEWSLETTER_CATEGORIES, newsletterTemplate, newsletterMenu, lintNewsletter, lintOptionsFor } from '../ask-docs/newsletter-templates'
+import { NEWSLETTER_TEMPLATES, NEWSLETTER_CHECKLIST, NEWSLETTER_CATEGORIES, newsletterTemplate, newsletterMenu, matchNewsletterTypes, lintNewsletter, lintOptionsFor } from '../ask-docs/newsletter-templates'
 
 const OWN = (label: string, today: string) => ownSource(`${label} (CareStream records)`, today)
 
@@ -28,10 +28,11 @@ export async function lintForTemplate(text: string, templateId?: string | null):
 export const NEWSLETTER_TOOLS: AskTool[] = [
   {
     name: 'list_newsletter_templates',
-    description: 'The staff newsletter library: 25 newsletter types in 4 categories (whole-team, compliance-care, rota-pay, culture), each in short, standard and detailed layouts. With no input it returns the menu (categories, types and the layout ids). With category it returns that category\'s types; with template_id (or type) it returns the full sections, which are filled from data and by which tool, the people who need ticking, and any heads up to give the administrator. Use it to offer 3 or 4 matching templates and to know how to fill one.',
-    input_schema: { type: 'object', properties: { category: { type: 'string', enum: NEWSLETTER_CATEGORIES.map(c => c.id) }, type: { type: 'string' }, template_id: { type: 'string' } } },
+    description: 'ALWAYS call this first with query set to the administrator\'s own words (for example "employee of the month newsletter"): it returns the best matching newsletter types, best first, and you offer THAT type, never a different one. The staff newsletter library: 25 newsletter types in 4 categories (whole-team, compliance-care, rota-pay, culture), each in short, standard and detailed layouts. With no input it returns the menu (categories, types and the layout ids). With category it returns that category\'s types; with template_id (or type) it returns the full sections, which are filled from data and by which tool, the people who need ticking, and any heads up to give the administrator. Use it to offer 3 or 4 matching templates and to know how to fill one.',
+    input_schema: { type: 'object', properties: { query: { type: 'string', description: 'The administrator\'s own words for the newsletter, for example "employee of the month". Always pass this first: it returns the best matching types, best first.' }, category: { type: 'string', enum: NEWSLETTER_CATEGORIES.map(c => c.id) }, type: { type: 'string' }, template_id: { type: 'string' } } },
     async run(_ctx, input) {
-      const id = String(input?.template_id ?? '').trim(), type = String(input?.type ?? '').trim(), cat = String(input?.category ?? '').trim()
+      const id = String(input?.template_id ?? '').trim(), type = String(input?.type ?? '').trim(), cat = String(input?.category ?? '').trim(), query = String(input?.query ?? '').trim()
+      if (query && !id && !type) { const matches = matchNewsletterTypes(query); if (matches.length) return { data: { best_matches: matches.map(m => ({ ...m, layouts: NEWSLETTER_TEMPLATES.filter(x => x.type === m.type).map(x => ({ id: x.id, layout: x.layout, sections: x.sections.length })) })), note: 'Offer the first match unless the administrator\'s words clearly fit another. Never offer a different type that does not match their words.', accuracy_and_tone_checklist: NEWSLETTER_CHECKLIST }, sources: [] } }
       if (id) { const t = newsletterTemplate(id); return { data: t ? { template: t, accuracy_and_tone_checklist: NEWSLETTER_CHECKLIST } : { error: 'No template has that id. Call this tool with no input for the menu.' }, sources: [] } }
       if (type) { const list = NEWSLETTER_TEMPLATES.filter(t => t.type === type); return { data: list.length ? { templates: list, accuracy_and_tone_checklist: NEWSLETTER_CHECKLIST } : { error: 'No newsletter type has that name. Call this tool with no input for the menu.' }, sources: [] } }
       const menu = newsletterMenu().filter(m => !cat || m.id === cat)

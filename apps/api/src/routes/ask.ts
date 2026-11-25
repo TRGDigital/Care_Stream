@@ -26,7 +26,8 @@ import { sharesOfDocument, withdraw as withdrawLetter, isMissingTable as letters
 import { withdrawNotification } from '../lib/notification-withdraw'
 import { lintReport } from '../services/ask/report-templates'
 import { loadStaff } from '../services/ask/data'
-import { lintNewsletter } from '../services/ask-docs/newsletter-templates'
+import { lintForTemplate } from '../services/ask/newsletter-tools'
+import { NEWSLETTER_TEMPLATES, newsletterMenu } from '../services/ask-docs/newsletter-templates'
 import { askActionsRouter } from './ask-actions'
 import { askUploadsRouter } from './ask-uploads'
 import * as uploadStore from '../services/ask/uploads/store'
@@ -136,6 +137,8 @@ askRouter.delete('/conversations/:id', wrap(async (req, res) => {
   ok(res, { deleted: true })
 }))
 
+// The staff newsletter library for the template picker: categories, types and each layout's sections (what each one is, which are filled from your records). Static, no account data.
+askRouter.get('/newsletter-templates', wrap(async (_req, res) => { ok(res, { categories: newsletterMenu(), templates: NEWSLETTER_TEMPLATES.map(t => ({ id: t.id, type: t.type, layout: t.layout, title: t.title, heads_up: t.heads_up, sections: t.sections.map(x => ({ key: x.key, title: x.title, from_data: x.from_data, needs_ticks: x.needs_ticks })) })) }) }))
 askRouter.get('/documents', wrap(async (req, res) => { ok(res, { documents: await store.listDocuments(getTenantId(), req.user!.sub) }) }))
 askRouter.post('/documents', wrap(async (req, res) => {
   const type = documentType(String(req.body?.type ?? 'answer'))?.id ?? 'answer'
@@ -188,7 +191,7 @@ askRouter.patch('/documents/:id', wrap(async (req, res) => {
     ok(res, { saved: true, missing: r.missing, unreadable: r.invalid.map(i => i.label), body: r.text }); return
   }
   const body = req.body?.body != null ? String(req.body.body) : undefined
-  if (d.type === 'newsletter' && (body || title)) { const problems = lintNewsletter(`${title ?? d.title}\n${body ?? d.body}`); if (problems.length) { err(res, 'RULES', `Not saved. ${problems.join(' ')}`, 400); return } }
+  if (d.type === 'newsletter' && (body || title)) { const problems = await lintForTemplate(`${title ?? d.title}\n${body ?? d.body}`, (d.data as any)?.template_id ?? null); if (problems.length) { err(res, 'RULES', `Not saved. ${problems.join(' ')}`, 400); return } }
   if (d.type === 'report') {
     // A governance report is checked again on every save. Shareable means no named people and no pay; internal only may name people but can never be sent to staff.
     const internal = typeof req.body?.internal_only === 'boolean' ? req.body.internal_only : d.data?.internal_only === true

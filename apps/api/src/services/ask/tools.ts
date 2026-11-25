@@ -173,8 +173,8 @@ export const TOOLS: AskTool[] = [
   // ── Pay and inflation ────────────────────────────────────────────────────────────────
   {
     name: 'get_figures',
-    description: 'Official reference figures, each with the date it applies from and a warning if it is out of date or could not be confirmed. keys: nlw (National Living Wage and minimum wage by age band, with the next rate if announced), cpi, cpih (inflation), ssp (statutory sick pay), mileage (HMRC mileage rates), bank_holidays, real_living_wage.',
-    input_schema: { type: 'object', properties: { keys: { type: 'array', items: { type: 'string', enum: ['nlw', 'cpi', 'cpih', 'ssp', 'mileage', 'bank_holidays', 'real_living_wage'] } } }, required: ['keys'] },
+    description: 'Official reference figures, each with the date it applies from and a warning if it is out of date or could not be confirmed. keys: nlw (National Living Wage and minimum wage by age band, with the next rate if announced), cpi, cpih (inflation), cpi_food (food price inflation, the annual rate), road_fuel (weekly UK pump prices, petrol and diesel pence per litre), homecare_private_rate (England median private hourly price for home care), homecare_min_price (Homecare Association minimum price per hour), council_homecare_rate (median hourly rate councils pay for external home care), care_food_cost (council cost of care benchmark for food per resident per week, in the prices of the exercise year: bring it to today with cpi_food and say so), ssp (statutory sick pay), mileage (HMRC mileage rates), bank_holidays, real_living_wage.',
+    input_schema: { type: 'object', properties: { keys: { type: 'array', items: { type: 'string', enum: ['nlw', 'cpi', 'cpih', 'cpi_food', 'road_fuel', 'homecare_private_rate', 'homecare_min_price', 'council_homecare_rate', 'care_food_cost', 'ssp', 'mileage', 'bank_holidays', 'real_living_wage'] } } }, required: ['keys'] },
     async run(_ctx, input) {
       const keys: string[] = Array.isArray(input?.keys) ? input.keys.map(String) : []
       const r = await figuresFor(keys)

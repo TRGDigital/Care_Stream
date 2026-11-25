@@ -47,6 +47,11 @@ export interface AskUpload {
 }
 export interface AskApproval { id: string; type: string; title: string; staff_name: string | null; mine: boolean; updated_at: string | null }
 
+export interface NewsletterLibrary {
+  categories: Array<{ id: string; title: string; blurb: string; types: Array<{ type: string; title: string; purpose: string; layouts: Array<{ id: string; layout: 'short' | 'standard' | 'detailed'; sections: number }> }> }>
+  templates: Array<{ id: string; type: string; layout: string; title: string; heads_up: string | null; sections: Array<{ key: string; title: string; from_data: boolean; needs_ticks: boolean }> }>
+}
+
 export const ask = {
   meta: (t: string) => call<{ enabled: boolean; ready: boolean; role?: 'admin' | 'manager'; agents: AskAgent[] }>('/ask/meta', t),
   chat: (t: string, b: { agent_id: string; conversation_id?: string | null; message: string; context?: { page: string; staffUserId?: string; residentId?: string; year?: number; month?: string } }) =>
@@ -79,6 +84,7 @@ export const ask = {
     match: (t: string, id: string, choices: Record<string, string | null>, confirm: boolean) => call<{ upload: AskUpload }>(`/ask/uploads/${encodeURIComponent(id)}/match`, t, { method: 'POST', body: JSON.stringify({ choices, confirm }) }),
     remove: (t: string, id: string) => call<{ deleted: boolean }>(`/ask/uploads/${encodeURIComponent(id)}`, t, { method: 'DELETE' }),
   },
+  newsletterTemplates: (t: string) => call<NewsletterLibrary>('/ask/newsletter-templates', t),
   documents: (t: string) => call<{ documents: AskDocument[] }>('/ask/documents', t),
   document: (t: string, id: string) => call<{ document: AskDocFull }>(`/ask/documents/${encodeURIComponent(id)}`, t),
   approvals: (t: string) => call<{ approvals: AskApproval[] }>('/ask/approvals', t),

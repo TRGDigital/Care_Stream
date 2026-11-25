@@ -8,6 +8,8 @@ import { dueAndOverdue } from './people-calc'
 import { saveDocument, getDocumentFor, updateDocumentContent } from './store'
 import { canEdit } from '../ask-docs/workflow'
 import { applyOp, listItems, PALETTES, BLOCK_TYPES, type Op } from '../ask-docs/newsletter-edit'
+import { brandColourFor } from '../ask-docs/option-preview'
+import { colourOptions } from '../ask-docs/newsletter-colours'
 import { writeAuditLog } from '../../lib/audit'
 import { photoAllowedFor, photoChoice, resolvePerson, staffHasPicture, CONSENT_QUESTION, MAX_FEATURED, giftAllowedFor, lintGift, giftKey, GIFT_IMAGE_ID } from '../ask-docs/newsletter-photo'
 import { downloadFile } from '../storage/s3'
@@ -113,8 +115,20 @@ export const NEWSLETTER_TOOLS: AskTool[] = [
     },
   },
   {
+    name: 'newsletter_colour_options',
+    description: 'The colour choices for a newsletter DRAFT the administrator already has (use the document id from save_newsletter_draft). Returns the ready made options for you to put in ONE options block in your message, copied exactly as given, so the administrator can look at their own newsletter in each colour (a Preview on every card) and press Choose. Use it whenever they ask to change the colours in chat, before anything else.',
+    input_schema: { type: 'object', properties: { document_id: { type: 'string' } }, required: ['document_id'] },
+    async run(ctx, input) {
+      const d = await getDocumentFor(ctx.tenantId, ctx.userId, String(input?.document_id ?? ''))
+      if (!d || d.type !== 'newsletter') return { data: { message: 'That newsletter was not found.' }, sources: [] }
+      const brand = await brandColourFor(ctx.tenantId)
+      const options = colourOptions(d.id, brand)
+      return { data: { document_id: d.id, current_colour: d.data?.accent ?? null, options, then: 'Put these options, exactly as given, in ONE fenced options block titled "Choose a colour for your newsletter" (the options array copied as it is), then a questions block with ONE optional text question (id hex, label "Or type your own colour", hint "For example #1D4E89"). When they choose, call set_newsletter_style with accent set to the chosen option id (or the typed colour), say what changed in one line, then give next step buttons (Change a block look, Add a block, Save PDF, Print, Share).' }, sources: [] }
+    },
+  },
+  {
     name: 'set_newsletter_style',
-    description: 'Change the COLOURS of a newsletter DRAFT the administrator already has (use the document id from save_newsletter_draft). accent: the colour of the whole newsletter, either a palette id (teal, ocean, forest, plum, berry, terracotta, bronze, slate) or a hex such as #1D4E89, or "default" to go back to the brand or category colour; pale colours that cannot be read on white are refused. block_id with block_style (soft, bold, outline or none, or "default") changes ONE block; reset_block_styles true puts every block back. Words such as "make it blue" mean you pick the nearest palette (blue is ocean, green is forest, purple is plum, pink is berry, orange is terracotta, yellow or gold is bronze, grey is slate) and say which one you chose. Administrators only; never changes the words. After it, give next step buttons including "Change colours".',
+    description: 'Change the COLOURS of a newsletter DRAFT the administrator already has (use the document id from save_newsletter_draft). accent: the colour of the whole newsletter, either brand (the saved brand colour), category (the normal colour for this type), a palette id (teal, ocean, forest, plum, berry, terracotta, bronze, slate) or a hex such as #1D4E89, or "default" to go back to the brand or category colour; pale colours that cannot be read on white are refused. block_id with block_style (soft, bold, outline or none, or "default") changes ONE block; reset_block_styles true puts every block back. Words such as "make it blue" mean you pick the nearest palette (blue is ocean, green is forest, purple is plum, pink is berry, orange is terracotta, yellow or gold is bronze, grey is slate) and say which one you chose. Administrators only; never changes the words. After it, give next step buttons including "Change colours".',
     input_schema: { type: 'object', properties: { document_id: { type: 'string' }, accent: { type: 'string' }, block_id: { type: 'string' }, block_style: { type: 'string', enum: ['soft', 'bold', 'outline', 'none', 'default'] }, reset_block_styles: { type: 'boolean' } }, required: ['document_id'] },
     async run(ctx, input) {
       const d = await getDocumentFor(ctx.tenantId, ctx.userId, String(input?.document_id ?? ''))
@@ -122,7 +136,11 @@ export const NEWSLETTER_TOOLS: AskTool[] = [
       const ed = canEdit(d as any, ctx.userId); if (!ed.ok) return { data: { saved: false, message: ed.reason }, sources: [] }
       let state = { body: d.body as string, data: d.data ?? {} }
       const ops: Op[] = []
-      if (typeof input?.accent === 'string' && input.accent.trim()) { const a = input.accent.trim(); const pal = PALETTES.find(x => x.id === a.toLowerCase()); ops.push({ op: 'accent', accent: a.toLowerCase() === 'default' ? null : pal ? pal.accent : a }) }
+      if (typeof input?.accent === 'string' && input.accent.trim()) {
+        const a = input.accent.trim(); const al = a.toLowerCase(); const pal = PALETTES.find(x => x.id === al)
+        if (al === 'brand') { const b = await brandColourFor(ctx.tenantId); if (!b) return { data: { saved: false, message: 'There is no brand colour saved in Settings yet, so choose a palette or type a colour.' }, sources: [] }; ops.push({ op: 'accent', accent: b }) }
+        else ops.push({ op: 'accent', accent: al === 'default' || al === 'category' ? null : pal ? pal.accent : a })
+      }
       if (input?.reset_block_styles === true) ops.push({ op: 'reset_styles' })
       if (input?.block_id) ops.push({ op: 'style', id: String(input.block_id), style: input?.block_style === 'default' ? null : String(input?.block_style ?? '') })
       if (!ops.length) return { data: { saved: false, message: 'Say what to change: the overall colour, or a block and its look.', palettes: PALETTES, blocks: listItems(state.body, state.data).map(i => ({ id: i.id, title: i.title, style: i.style })) }, sources: [] }

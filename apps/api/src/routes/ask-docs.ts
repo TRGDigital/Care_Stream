@@ -172,13 +172,13 @@ askDocsRouter.post('/block-image', giftImageMiddleware, async (req: Request, res
 askDocsRouter.get('/option-preview', async (req: Request, res: Response) => {
   const q = cleanRequest(req.query)
   if (!q) { err(res, 'INVALID', 'That option cannot be previewed.', 400); return }
-  try { res.setHeader('Cache-Control', 'private, max-age=120'); ok(res, await renderOptionPreview(getTenantId(), q)) } catch { err(res, 'PREVIEW_FAILED', 'The preview could not be made just now.', 500) }
+  try { res.setHeader('Cache-Control', q.kind === 'newsletter_palette' ? 'private, no-store' : 'private, max-age=120'); ok(res, await renderOptionPreview(getTenantId(), q, {}, req.user!.sub)) } catch { err(res, 'PREVIEW_FAILED', 'The preview could not be made just now.', 500) }
 })
 
 // The same sample as a PDF (SAMPLE printed on every page), for Save PDF and Print on a preview. Never reads staff or resident records, never calls the model.
 askDocsRouter.get('/option-preview/pdf', async (req: Request, res: Response) => {
   const q = cleanRequest(req.query)
-  if (!q) { err(res, 'INVALID', 'That option cannot be previewed.', 400); return }
+  if (!q || q.kind === 'newsletter_palette') { err(res, 'INVALID', 'That option cannot be previewed.', 400); return }
   try {
     const { buffer, filename } = await renderOptionPreviewPdf(getTenantId(), q)
     void writeAuditLog({ tenant_id: getTenantId(), user_id: req.user!.sub, event_type: 'ask_option_preview_pdf', entity_type: 'ask_document', entity_id: 'option-preview', metadata: { kind: q.kind } })

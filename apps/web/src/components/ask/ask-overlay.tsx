@@ -237,19 +237,23 @@ export function AskPanel({ token, layout, expanded, width, onClose }: { token: s
   }
   /** HOUSE RULE 7: a next step button that runs a screen action. A draft the agent just saved has its own id on the message; anything else is asked of the agent instead. */
   async function nextAction(action: NextAction, step: NextStep, m: AskMessage) {
-    const doc = (m.sources ?? []).find(x => x.document_id)?.document_id ?? null
+    // The draft this button belongs to: the one on this message, else the latest one made in this chat, else the one that is open. A button for a document is never typed to the model.
+    const doc = (m.sources ?? []).find(x => x.document_id)?.document_id
+      ?? [...messages].reverse().flatMap(x => x.sources ?? []).find(x => x.document_id)?.document_id
+      ?? docId ?? null
     const ask_ = () => send(formatNext(step))
+    const noDoc = () => setError('Open or make a draft first, then use this button. Nothing has been sent.')
     try {
-      if (action === 'colours' || action === 'add_block') { if (doc) { setDocFocus(action === 'colours' ? 'colours' : 'blocks'); setDocId(doc) } else ask_(); return }
+      if (action === 'colours' || action === 'add_block') { if (doc) { setDocFocus(action === 'colours' ? 'colours' : 'blocks'); setDocId(doc) } else noDoc(); return }
       if (action === 'edit' || action === 'share' || action === 'choose_who' || action === 'send') { if (doc) setDocId(doc); else ask_(); return }
       if (action === 'preview') { if (doc) setViewDocId(doc); else ask_(); return }
       if (action === 'save_pdf' || action === 'print') {
-        if (!doc) { ask_(); return }
+        if (!doc) { noDoc(); return }
         const d = (await ask.document(token, doc)).document, draft = !(d.status === 'approved' || d.status === 'shared')
         const blob = await ask.documentBlob(token, doc, 'pdf', { draft }); if (action === 'save_pdf') saveBlob(blob, d.title, 'pdf'); else printBlob(blob); return
       }
       if (action === 'save_library') {
-        if (doc) { setSavedMsg(m.id); return }   // a draft is already in the library
+        if ((m.sources ?? []).some(x => x.document_id)) { setSavedMsg(m.id); return }   // a draft is already in the library
         const text = withoutDraftBlock(visibleText(m.content)); await ask.save(token, { type: 'answer', title: (text.split('\n')[0] ?? '').slice(0, 80) || 'Saved answer', body: text, sources: m.sources }); setSavedMsg(m.id); return
       }
       ask_()   // back_to_layouts and show_working go back to the agent

@@ -1,6 +1,7 @@
 // The tool use loop. The model asks for tools, the tools run (read only, this account only), the results go back wrapped as DATA, and the model writes the answer.
 // Every model call is metered (usage events) and the monthly AI allowance is checked first. Hard limits on rounds, tokens and time. Non streaming for now;
 // the shape (one function returning the answer) is what a streaming route would call, with onText added later.
+import { withDeadEndFallback } from './dead-end'
 import Anthropic from '@anthropic-ai/sdk'
 import { recordUsage, withAiFeature } from '../../lib/token-usage'
 import { checkAiTokenLimit } from '../../lib/ai-tokens'
@@ -84,6 +85,7 @@ export async function runAgent(o: { agentId: string; ctx: ToolContext; orgName: 
   }
   await withAiFeature('ask_carestream', exec)
   if (!answer) answer = stopped === 'time' ? 'That took too long to work out. Please try a narrower question.' : 'I could not finish working that out. Please try asking it a little differently, or break it into smaller questions.'
+  if (stopped === 'done') answer = withDeadEndFallback(answer, { agentId: agent.id, drafts: documents.length }).text   // never leave a choice written in words with nothing to click (house rules 1, 2 and 7)
   ;(deps.audit ?? writeAuditLog)({ tenant_id: o.ctx.tenantId, user_id: o.ctx.userId, event_type: 'ask_run', entity_type: 'ask_conversation', entity_id: agent.id, metadata: { agent: agent.id, tools: [...new Set(used)], rounds } })
   return { answer, sources: dedupeSources(sources), tools_used: [...new Set(used)], rounds, stopped, proposals, documents }
 }

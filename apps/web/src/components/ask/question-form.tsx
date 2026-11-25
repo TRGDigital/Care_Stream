@@ -5,7 +5,8 @@
 // message that pairs each question with its answer, so nothing is ambiguous. The form stays editable until it is sent; after that the answered card shows what was sent.
 import { DatePicker } from '@/components/ask/date-picker'
 import { useId, useMemo, useRef, useState } from 'react'
-import { ArrowLeft, Check, Loader2, Send } from 'lucide-react'
+import { Check, Loader2, Send } from 'lucide-react'
+import { GoBack } from '@/components/ask/go-back'
 import { StaffPicker, useStaff } from '@/components/ask/staff-picker'
 import { ask } from '@/lib/ask-client'
 import { prefillForm } from '@/lib/ask-prefill'
@@ -122,7 +123,7 @@ export function QuestionFormCard({ token, form: given, typed = [], disabled, onS
       </div>
       <div className="mt-3 flex flex-wrap items-center gap-2">
         <button type="submit" disabled={disabled} className="inline-flex min-h-[40px] items-center gap-1.5 rounded-lg bg-teal px-4 text-sm font-semibold text-white hover:bg-teal-dark disabled:opacity-50"><Send size={14} aria-hidden="true" />Send answers</button>
-        {onBack && <button type="button" onClick={onBack} disabled={disabled} className="inline-flex min-h-[40px] items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-4 text-sm font-semibold text-neutral-dark hover:bg-neutral-light disabled:opacity-50"><ArrowLeft size={14} aria-hidden="true" />Go back</button>}
+        {onBack && <GoBack onBack={onBack} disabled={disabled} className="ml-1" />}
         {tried && missing.length > 0 && <span role="alert" className="text-xs font-medium text-red-700">{missing.length === 1 ? 'One required answer is missing.' : `${missing.length} required answers are missing.`}</span>}
       </div>
     </form>

@@ -44,7 +44,7 @@ test('RULE 12: every date in the Ask panel is picked: the only date input is the
 })
 
 test('RULE 12: the rule is in the shared prompt of every agent, with one example, and the list on the prompts page has twelve', async () => {
-  assert.deepEqual(HOUSE_RULES_SUMMARY.map(r => r.n), [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14])
+  assert.deepEqual(HOUSE_RULES_SUMMARY.map(r => r.n), [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15])
   const r12 = HOUSE_RULES_SUMMARY[11]; assert.equal(r12.locked, false); assert.ok(DEFAULT_HOUSE_RULES_FORMS.includes(r12.phrase))
   assert.match(DEFAULT_HOUSE_RULES_FORMS, /kind "date"/); assert.match(DEFAULT_HOUSE_RULES_FORMS, /never ask for a date as kind text|Never ask for a date as kind text/i)
   assert.match(DEFAULT_HOUSE_RULES_FORMS, /"id":"deadline","label":"When is the nomination deadline\?","kind":"date"/)

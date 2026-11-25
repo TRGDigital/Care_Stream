@@ -160,6 +160,11 @@ function ContextCard({ ctx, agents, onDismiss, onAsk }: { ctx: AskPageContext; a
   )
 }
 
+/** HOUSE RULE 15: when a draft already exists in this chat and the buttons do not already lead to it, the first button is Open the draft (it opens the document panel; the draft is found by the screen, never typed to the model). */
+const OPEN_DRAFT: NextStep = { id: 'open_draft', label: 'Open the draft', kind: 'action', payload: 'edit' }
+const LEADS_TO_DRAFT = new Set(['edit', 'share', 'choose_who', 'send', 'preview'])
+const withOpenDraft = (steps: NextStep[], draftExists: boolean): NextStep[] => (!draftExists || steps.some(s => s.kind === 'action' && LEADS_TO_DRAFT.has(String(s.payload))) ? steps : [OPEN_DRAFT, ...steps].slice(0, 6))
+
 export function AskPanel({ token, layout, expanded, width, locked = false, onClose }: { token: string; layout: PanelLayout; expanded: boolean; width: number; locked?: boolean; onClose: () => void }) {
   const ui = useAskUi()
   const [view, setView] = useState<View>('picker')
@@ -388,11 +393,11 @@ export function AskPanel({ token, layout, expanded, width, locked = false, onClo
                     {(() => { const form = parseQuestions(m.content), opts = parseOptions(m.content), nxt = messages[mi + 1], last = mi === messages.length - 1
                       const answered = !!(nxt && nxt.role === 'user' && parseAnswersMessage(nxt.content)); const chosen = nxt && nxt.role === 'user' ? parseChoiceMessage(nxt.content)?.id ?? null : null
                       return <>{form && !answered && last && <QuestionFormCard token={token} form={form} typed={messages.filter(x => x.role === 'user' && !parseAnswersMessage(x.content) && !parseChoiceMessage(x.content) && !parseNextMessage(x.content)).map(x => x.content)} disabled={busy} onSend={t => send(t)} onBack={canGoBack && last ? goBack : undefined} />}{opts && token && (last || chosen) && <OptionsBlock token={token} set={opts} disabled={busy || !last} chosenId={chosen} onBack={canGoBack && last ? goBack : undefined} typed={messages.filter(x => x.role === 'user' && !parseAnswersMessage(x.content) && !parseChoiceMessage(x.content) && !parseNextMessage(x.content)).map(x => x.content)} onChoose={t => send(t)} />}</> })()}
-                    {agent.id === 'newsletter' && token && parseNewsletterLayouts(m.content) && <LayoutThumbs token={token} type={parseNewsletterLayouts(m.content)!} disabled={busy} onPick={d => send(`I would like the ${d.layout} layout (${d.id}).`)} />}
+                    {agent.id === 'newsletter' && token && parseNewsletterLayouts(m.content) && <LayoutThumbs token={token} type={parseNewsletterLayouts(m.content)!} onBack={canGoBack && mi === messages.length - 1 ? goBack : undefined} disabled={busy} onPick={d => send(`I would like the ${d.layout} layout (${d.id}).`)} />}
                     {agent.id === 'notifications' && parseNotificationDraft(m.content) && (() => { const d = parseNotificationDraft(m.content)!; return <div className="mt-3 rounded-lg border border-teal/30 bg-teal/5 p-3 text-sm"><p className="font-semibold text-neutral-dark">{d.title}</p><p className="mt-1 whitespace-pre-line text-neutral-dark">{d.body}</p></div> })()}
                     {(m.sources ?? []).filter(x => x.document_id).map(x => <DraftCard key={x.document_id} token={token} id={x.document_id!} onOpenViewer={setViewDocId} onEdit={setDocId} />)}
                     {(cards[m.id] ?? []).map(c => <ActionCard key={c.id} token={token} card={c} />)}
-                    {(() => { const ns = parseNextSteps(m.content); return ns && mi === messages.length - 1 && !busy ? <NextStepsBar steps={ns.steps} disabled={busy} onAsk={t => send(t)} onAction={(a, st) => nextAction(a, st, m)} /> : null })()}
+                    {(() => { const ns = parseNextSteps(m.content); return ns && mi === messages.length - 1 && !busy ? <NextStepsBar steps={withOpenDraft(ns.steps, !(m.sources ?? []).some(x => x.document_id) && messages.some(x => (x.sources ?? []).some(y => y.document_id)))} onBack={canGoBack ? goBack : undefined} disabled={busy} onAsk={t => send(t)} onAction={(a, st) => nextAction(a, st, m)} /> : null })()}
                     {savedMsg === m.id && <p role="status" className="mt-2 text-xs font-semibold text-green-800">Saved to your library.</p>}
                     <SourcesFooter sources={m.sources ?? []} />
                     <AnswerActions m={m} token={token} agentId={agent.id} />

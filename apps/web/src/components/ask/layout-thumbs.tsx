@@ -2,6 +2,7 @@
 
 // Small pictures of each layout of a newsletter type (short, standard, detailed), made from sample text and marked SAMPLE, so the layout can be chosen by its looks. Click a picture
 // (or press Enter or Space on it) to see it large in the shared viewer. Used in the chat when the agent offers layouts, and in the template browser.
+import { GoBack } from '@/components/ask/go-back'
 import { useEffect, useState } from 'react'
 import { Loader2 } from 'lucide-react'
 import { ask, type NewsletterSample } from '@/lib/ask-client'
@@ -10,7 +11,7 @@ import { ExpandViewer, Expandable, useExpandViewer } from '@/components/ask/expa
 const LABEL: Record<string, string> = { short: 'Short', standard: 'Standard', detailed: 'Detailed' }
 const THUMB_W = 192, SCALE = THUMB_W / 640, THUMB_H = 280
 
-export function LayoutThumbs({ token, type, onPick, selected, disabled }: { token: string; type: string; onPick: (s: NewsletterSample) => void; selected?: string | null; disabled?: boolean }) {
+export function LayoutThumbs({ token, type, onPick, selected, disabled, onBack }: { token: string; type: string; onPick: (s: NewsletterSample) => void; selected?: string | null; disabled?: boolean; /** HOUSE RULE 14: a quiet way back. */ onBack?: () => void }) {
   const [designs, setDesigns] = useState<NewsletterSample[] | null>(null)
   const [failed, setFailed] = useState(false)
   const [big, setBig] = useState<NewsletterSample | null>(null)
@@ -36,6 +37,7 @@ export function LayoutThumbs({ token, type, onPick, selected, disabled }: { toke
           </li>
         ))}
       </ul>
+      {onBack && <div className="mt-2"><GoBack onBack={onBack} disabled={disabled} /></div>}
       <ExpandViewer open={viewer.open && !!big} onClose={() => { viewer.close() }} title={big ? `${big.title}: ${LABEL[big.layout] ?? big.layout} layout (sample)` : 'Layout'}
         items={big ? [{ kind: 'html', html: big.html }] : []}
         pdf={big ? { getPdf: () => ask.samplePdfBlob(token, { kind: 'newsletter', template_id: big.id, layout: big.layout }), sample: true } : undefined}

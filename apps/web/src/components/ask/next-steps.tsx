@@ -6,8 +6,9 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { Send } from 'lucide-react'
 import { formatNext, formatSomethingElse, type NextAction, type NextStep } from '@/lib/ask-blocks'
+import { GoBack } from '@/components/ask/go-back'
 
-export function NextStepsBar({ steps, disabled, onAsk, onAction }: { steps: NextStep[]; disabled?: boolean; onAsk: (message: string) => void; onAction: (action: NextAction, step: NextStep) => void }) {
+export function NextStepsBar({ steps, disabled, onAsk, onAction, onBack }: { steps: NextStep[]; disabled?: boolean; onAsk: (message: string) => void; onAction: (action: NextAction, step: NextStep) => void; /** HOUSE RULE 14: a quiet way back to the step before. */ onBack?: () => void }) {
   const [other, setOther] = useState('')
   return (
     <div className="mt-3 border-t border-gray-100 pt-3" role="group" aria-label="Next steps">
@@ -24,6 +25,7 @@ export function NextStepsBar({ steps, disabled, onAsk, onAction }: { steps: Next
         <input id="next-else" value={other} disabled={disabled} onChange={e => setOther(e.target.value)} maxLength={600} placeholder="Something else..." className="min-w-0 flex-1 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm outline-none focus:border-teal focus:ring-2 focus:ring-teal/20" />
         <button type="submit" disabled={disabled || !other.trim()} className="inline-flex min-h-[34px] items-center gap-1 rounded-lg border border-gray-300 px-3 text-xs font-semibold text-neutral-dark hover:bg-neutral-light disabled:opacity-50"><Send size={12} aria-hidden="true" /> Send</button>
       </form>
+      {onBack && <div className="mt-2"><GoBack onBack={onBack} disabled={disabled} /></div>}
     </div>
   )
 }

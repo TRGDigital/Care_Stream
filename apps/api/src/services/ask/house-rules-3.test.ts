@@ -176,7 +176,7 @@ test('EVERY AGENT: the composed prompt carries rule 9 (editable, after the job a
       assert.ok(p.indexOf('RULE 9, A GENTLE CHECK') < p.indexOf(LOCKED_RULES.slice(0, 40)), `${a.id}: before the locked rules`)
     }
   } finally { __setPromptTestHooks({ reader: null }) }
-  assert.deepEqual(HOUSE_RULES_SUMMARY.map(r => r.n), [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14])
+  assert.deepEqual(HOUSE_RULES_SUMMARY.map(r => r.n), [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15])
   const nine = HOUSE_RULES_SUMMARY[8]
   assert.equal(nine.locked, false); assert.ok(nine.line.length < 100); assert.doesNotMatch(`${nine.title} ${nine.line}`, /[–—]/)
   const page = webSrc('app/(platform)/platform/prompts/page.tsx')
@@ -219,6 +219,20 @@ test('RULE 14: say it once is in every agent prompt, and the screen has a Go bac
   __setPromptTestHooks({ reader: async () => null })
   try { for (const a of AGENTS) assert.ok((await buildSystemPrompt(a, '2026-11-26', 'Ferndale', '')).includes('RULE 14, SAY IT ONCE'), a.id) } finally { __setPromptTestHooks({ reader: null }) }
   const qf = webSrc('components/ask/question-form.tsx'), ob = webSrc('components/ask/options-block.tsx'), ov = webSrc('components/ask/ask-overlay.tsx')
-  assert.match(qf, /Go back/); assert.match(qf, /!sameWords\(form\.title, form\.questions\[0\]\?\.label\)/); assert.match(ob, /Go back/)
+  assert.match(qf, /<GoBack onBack=\{onBack\}/); assert.match(qf, /!sameWords\(form\.title, form\.questions\[0\]\?\.label\)/); assert.match(ob, /<GoBack onBack=\{onBack\}/)
   assert.match(ov, /const goBack = /); assert.match(ov, /onBack=\{canGoBack && last \? goBack : undefined\}/)
+})
+
+test('RULE 15: steps are buttons (the rule is in every agent prompt), a closing "anything else?" becomes buttons, Open the draft leads when a draft exists in the chat, and Go back is a quiet link on every interaction', async () => {
+  const r = HOUSE_RULES_SUMMARY[14]
+  assert.equal(r.n, 15); assert.equal(r.locked, false); assert.ok(r.line.length < 100); assert.doesNotMatch(`${r.title} ${r.line}`, /[–—]/)
+  assert.ok(DEFAULT_HOUSE_RULES_FORMS.includes(r.phrase)); assert.match(DEFAULT_HOUSE_RULES_FORMS, /never ask "Is there anything else\?"/)
+  __setPromptTestHooks({ reader: async () => null })
+  try { for (const a of AGENTS) assert.ok((await buildSystemPrompt(a, '2026-11-26', 'Ferndale', '')).includes('RULE 15, STEPS ARE BUTTONS'), a.id) } finally { __setPromptTestHooks({ reader: null }) }
+  const de = await import('./dead-end')
+  const closing = de.withDeadEndFallback('Excellent! Your newsletter is ready.\n\nIs there anything else you would like help with today?', { agentId: 'newsletter', drafts: 0 })
+  assert.equal(closing.appended, true); assert.match(closing.text, /Make something else/); assert.match(closing.text, /Ask a follow up/); assert.doesNotMatch(closing.text, /Yes, please/)
+  const gb = webSrc('components/ask/go-back.tsx'); assert.match(gb, /text-xs font-medium text-neutral-mid/); assert.doesNotMatch(gb, /bg-teal|border /)   // a quiet link, not a button
+  for (const f of ['question-form', 'options-block', 'next-steps', 'layout-thumbs']) assert.match(webSrc(`components/ask/${f}.tsx`), /<GoBack /, f)
+  const ov = webSrc('components/ask/ask-overlay.tsx'); assert.match(ov, /withOpenDraft\(ns\.steps/); assert.match(ov, /label: 'Open the draft'/)
 })

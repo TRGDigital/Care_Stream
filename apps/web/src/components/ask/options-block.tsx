@@ -4,7 +4,8 @@
 // picture, a Preview button and a Choose button. Preview opens the shared viewer with the real design, SAMPLE words only (none of the person's information) and the organisation's
 // own logo and colour. The picture and the preview come from the server (never the model). Choose sends the choice back as one structured message.
 import { useEffect, useState } from 'react'
-import { ArrowLeft, Check, Eye, Loader2 } from 'lucide-react'
+import { Check, Eye, Loader2 } from 'lucide-react'
+import { GoBack } from '@/components/ask/go-back'
 import { ask, type OptionPreview } from '@/lib/ask-client'
 import { ExpandViewer, useExpandViewer } from '@/components/ask/expand-viewer'
 import { formatChoice, type OptionItem, type OptionSet } from '@/lib/ask-blocks'
@@ -79,7 +80,7 @@ export function OptionsBlock({ token, set, disabled, chosenId, onChoose, onBack,
           )
         })}
       </ul>
-      {onBack && !done && <button type="button" onClick={onBack} disabled={disabled} className="mt-3 inline-flex min-h-[36px] items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 text-sm font-semibold text-neutral-dark hover:bg-neutral-light disabled:opacity-50"><ArrowLeft size={14} aria-hidden="true" />Go back</button>}
+      {onBack && !done && <div className="mt-2"><GoBack onBack={onBack} disabled={disabled} /></div>}
       {check && !done && <CheckLine item={check.item} disabled={disabled} onYes={() => { const o = check.o; setCheck(null); onChoose(formatChoice(o)) }} onNo={() => setCheck(null)} />}
       {err && <p role="alert" className="mt-2 text-xs text-red-700">{err}</p>}
       <ExpandViewer open={viewer.open && !!big} onClose={() => viewer.close()} title={big ? big.p.title : 'Preview'} items={big ? [big.p.sheet ? { kind: 'sheet' as const, html: big.p.sheet, orientation: 'portrait' as const } : { kind: 'html' as const, html: big.p.html, css: big.p.css || undefined }] : []}

@@ -93,9 +93,17 @@ const YES_STEPS: Step[] = [
   { id: 'not_now', label: 'Not now', kind: 'ask', payload: 'No thank you, not now.' },
 ]
 
+// A closing "Is there anything else I can help with?" is never left as a question: it becomes two buttons (HOUSE RULE 15).
+const CLOSING_STEPS: Step[] = [
+  { id: 'make_another', label: 'Make something else', kind: 'ask', payload: 'I would like to make something else.' },
+  { id: 'follow_up', label: 'Ask a follow up', kind: 'action', payload: 'follow_up' },
+]
+const IS_CLOSING = /\b(anything else|something else|any other|else (?:i|we) can help|more help|help (?:you )?with (?:anything|today))\b/i
+
 /** The buttons for a dead end, chosen from what the answer was about. Deterministic. */
 export function fallbackSteps(answer: string, o: { agentId?: string; drafts?: number }): Step[] {
   const t = String(answer ?? '')
+  if ((o.drafts ?? 0) === 0 && IS_CLOSING.test(lastParagraph(t.trim()).para) && !/colou?r|palette|accent/i.test(t)) return CLOSING_STEPS
   if (o.agentId === 'newsletter' && /colou?r|palette|accent/i.test(t)) return COLOUR_STEPS
   if ((o.drafts ?? 0) > 0) return DRAFT_STEPS
   const { before, para } = lastParagraph(t.trim())

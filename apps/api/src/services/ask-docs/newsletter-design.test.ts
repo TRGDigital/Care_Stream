@@ -119,3 +119,10 @@ test('WEB: the layout block is read from the agent message and removed from the 
   assert.equal(parseNewsletterLayouts(text), 'employee-of-the-month'); assert.ok(!/```/.test(withoutLayoutsBlock(text))); assert.equal(parseNewsletterLayouts('nothing here'), null)
   assert.equal(parseNewsletterLayouts('```newsletter-layouts\ntype: ../../etc\n```'), null)
 })
+
+test('icon badges: the picture is a block centred in its circle, not an inline image on a text baseline', () => {
+  const fs = require('fs'), path = require('path')
+  const src = fs.readFileSync(path.join(__dirname, 'newsletter-design.ts'), 'utf8')
+  assert.match(src, /viewBox="0 0 24 24" style="display:block;margin:0 auto"/)
+  assert.match(src, /vertical-align:middle;line-height:0;font-size:0">\$\{inner\}/)
+})

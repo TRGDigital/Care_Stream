@@ -114,6 +114,7 @@ export function ExpandViewer({ open, onClose, title, items, downloads, actions, 
 
   if (!open || !item) return null
   const scale = fit * clampZoom(zoom)
+  const btnPrimary = 'inline-flex min-h-[40px] min-w-[40px] items-center justify-center gap-1.5 rounded-lg border border-teal bg-teal px-3 text-sm font-semibold text-white hover:bg-teal-dark focus:outline-none focus-visible:ring-2 focus-visible:ring-teal disabled:opacity-40'
   const btn = 'inline-flex min-h-[40px] min-w-[40px] items-center justify-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 text-sm font-semibold text-neutral-dark hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal disabled:opacity-40'
   return createPortal(
     <div ref={dialogRef} role="dialog" aria-modal="true" aria-labelledby={titleId} onKeyDown={onKeyDown} className="fixed inset-0 z-[95] flex flex-col bg-neutral-100/95 backdrop-blur-sm">
@@ -136,7 +137,7 @@ export function ExpandViewer({ open, onClose, title, items, downloads, actions, 
           <button type="button" className={`${btn} w-16`} onClick={() => setZoom(1)} aria-label={`Zoom ${zoomLabel(zoom)}, press to fit the page`}>{zoomLabel(zoom)}</button>
           <button type="button" className={btn} onClick={() => setZoom(z => zoomIn(z))} disabled={!canZoomIn(zoom)} aria-label="Zoom in"><ZoomIn size={16} aria-hidden="true" /></button>
         </div>
-        {(actions ?? []).map(a => <button key={a.label} type="button" disabled={a.disabled || !!busy} onClick={() => run(a.label, async () => { await a.onClick() })} className={a.primary ? `${btn} border-teal bg-teal text-white hover:bg-teal-dark` : btn}>{a.label}</button>)}
+        {(actions ?? []).map(a => <button key={a.label} type="button" disabled={a.disabled || !!busy} onClick={() => run(a.label, async () => { await a.onClick() })} className={a.primary ? btnPrimary : btn}>{a.label}</button>)}
         {pdf && <DocumentActions title={title} getPdf={pdf.getPdf} getDocx={pdf.getDocx} draft={pdf.draft} sample={pdf.sample} quiet />}
         {!pdf && (downloads ?? []).map(d => <button key={d.label} type="button" disabled={d.disabled || !!busy} onClick={() => run(d.label, async () => { await d.onClick() })} className={btn}><Download size={16} aria-hidden="true" />{busy === d.label ? 'Working' : d.label}</button>)}
         {!noPrint && !pdf && <button type="button" className={btn} onClick={() => printItem(item, title)}><Printer size={16} aria-hidden="true" /><span className="hidden sm:inline">Print</span><span className="sm:hidden sr-only">Print</span></button>}

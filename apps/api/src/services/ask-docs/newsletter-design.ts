@@ -77,7 +77,7 @@ export const ICONS: Record<IconName, Op[]> = {
 }
 const GLYPH: Record<IconName, string> = { megaphone: '!', star: '&#9733;', heart: '&#9829;', calendar: '&#9638;', check: '&#10003;', users: '&#9786;', book: '&#9776;', shield: '&#10010;', sun: '&#9728;', clock: '&#9719;', gift: '&#9733;', quote: '&#8220;', arrow: '&#10140;', snow: '&#10052;' }
 const svgIcon = (n: IconName, color: string, size = 20) =>
-  `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">${ICONS[n].map(o => 'd' in o ? `<path d="${o.d}"/>` : `<circle cx="${o.c[0]}" cy="${o.c[1]}" r="${o.c[2]}"/>`).join('')}</svg>`
+  `<svg width="${size}" height="${size}" viewBox="0 0 24 24" style="display:block;margin:0 auto" fill="none" stroke="${color}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">${ICONS[n].map(o => 'd' in o ? `<path d="${o.d}"/>` : `<circle cx="${o.c[0]}" cy="${o.c[1]}" r="${o.c[2]}"/>`).join('')}</svg>`
 
 // ── reading the draft: sections, roles, icons ────────────────────────────────────────
 const KEY_ROLE: Record<string, Role> = {
@@ -206,7 +206,7 @@ const unquote = (s: string) => s.replace(/^["“‘']+|["”’']+$/g, '').trim(
 function iconBubble(d: Design, name: IconName, t: Target, size = 36): string {
   const radius = d.look.iconShape === 'circle' ? '50%' : '8px'
   const inner = t === 'web' ? svgIcon(name, d.pal.accent, Math.round(size * 0.55)) : `<span style="font-size:${Math.round(size * 0.5)}px;line-height:${size}px;color:${d.pal.accent};font-weight:700">${GLYPH[name]}</span>`
-  return `<table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr><td width="${size}" height="${size}" align="center" valign="middle" style="width:${size}px;height:${size}px;background:${d.pal.tint2};border-radius:${radius};text-align:center">${inner}</td></tr></table>`
+  return `<table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr><td width="${size}" height="${size}" align="center" valign="middle" style="width:${size}px;height:${size}px;background:${d.pal.tint2};border-radius:${radius};text-align:center;vertical-align:middle;line-height:0;font-size:0">${inner}</td></tr></table>`
 }
 function bullets(d: Design, blocks: Block[], size = 15): string {
   const items = blocks.filter(b => b.t === 'li')

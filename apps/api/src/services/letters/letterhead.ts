@@ -181,15 +181,40 @@ export async function saveBrandColour(tenantId: string, colour: string | null, u
      on conflict (tenant_id) do update set brand_colour = excluded.brand_colour, updated_by = excluded.updated_by, updated_at = now()`, tenantId, colour, userId)
 }
 
-export interface LoadedLetterhead { head: Letterhead; details: LetterheadDetails | null; missing: string[]; ready: boolean; displayName: string }
+export interface LoadedLetterhead { head: Letterhead; details: LetterheadDetails | null; missing: string[]; ready: boolean; displayName: string; /** The address typed in Settings, Organisation details, as one line (null when none). */ orgAddress: string | null; /** True when the letterhead has no address of its own and the Organisation details address is being used. */ addressFromOrg: boolean }
+
+const UK_POSTCODE = /^[A-Za-z]{1,2}\d[A-Za-z\d]?\s*\d[A-Za-z]{2}$/
+/** The single address line typed in Settings, Organisation details ("3 Amberley Close, Burgess Hill, RH15 8JB") as the parts of a letterhead address. */
+export function orgAddressParts(raw: unknown): Partial<LetterheadDetails> | null {
+  const parts = String(raw ?? '').split(/[\n,]+/).map(x => x.trim()).filter(Boolean).slice(0, 8)
+  if (!parts.length) return null
+  let postcode = ''
+  if (parts.length > 1 && UK_POSTCODE.test(parts[parts.length - 1])) postcode = parts.pop() as string
+  const out: Partial<LetterheadDetails> = { address_line1: parts[0] }
+  if (parts.length >= 2) out.town = parts[parts.length - 1]
+  if (parts.length >= 3) out.address_line2 = parts.slice(1, -1).join(', ')
+  if (postcode) out.postcode = postcode
+  return out
+}
+/** The lines under a newsletter: the address first (one line), then the phone and email, at most three. */
+export const footerContactLines = (head: { addressLines?: string[]; contactLines?: string[] }): string[] => [...((head.addressLines ?? []).length ? [(head.addressLines ?? []).join(', ')] : []), ...(head.contactLines ?? [])].slice(0, 3)
+/** The letterhead details with the Organisation details address filled in, but ONLY where the letterhead has no address of its own (what the administrator typed for the letterhead always wins). */
+export function withOrgAddress(d: LetterheadDetails | null, raw: unknown): { details: LetterheadDetails | null; fromOrg: boolean } {
+  if (d && addressLines(d).length) return { details: d, fromOrg: false }
+  const parts = orgAddressParts(raw)
+  if (!parts) return { details: d, fromOrg: false }
+  return { details: { ...(d ?? ({} as LetterheadDetails)), ...parts } as LetterheadDetails, fromOrg: true }
+}
 
 /** The letterhead for a tenant. Falls back to the display name and the organisation logo when nothing is saved or the table does not exist yet. */
 export async function loadLetterhead(tenantId: string): Promise<LoadedLetterhead> {
   let t: any = null
-  try { t = await q().tenant.findUnique({ where: { id: tenantId }, select: { name: true, logo_url: true } }) } catch { t = null }
+  try { t = await q().tenant.findUnique({ where: { id: tenantId }, select: { name: true, logo_url: true, organisation_details: true } }) } catch { t = null }
   const logo = typeof t?.logo_url === 'string' && /^data:image\//.test(t.logo_url) ? t.logo_url : null
-  const details = await getDetails(tenantId)
+  const saved = await getDetails(tenantId)
+  const orgRaw = (t?.organisation_details as any)?.address
+  const { details, fromOrg } = withOrgAddress(saved, orgRaw)
   const head = toLetterhead(details, t?.name ?? 'Your service', logo)
   head.brandColour = await getBrandColour(tenantId)
-  return { head, details, missing: missingChecklist(details ?? {}, !!logo), ready: !!details, displayName: t?.name ?? 'Your service' }
+  return { head, details: saved, missing: missingChecklist(details ?? {}, !!logo), ready: !!saved, displayName: t?.name ?? 'Your service', orgAddress: String(orgRaw ?? '').trim() || null, addressFromOrg: fromOrg }
 }

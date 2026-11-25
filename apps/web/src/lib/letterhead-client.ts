@@ -11,7 +11,7 @@ export interface Details {
   registered_office_same: boolean; registered_office: string | null; vat_number: string | null; cqc_provider_id: string | null; cqc_location_id: string | null; ico_number: string | null
   footer_line: string | null; logo_align: 'left' | 'centre'
 }
-export interface LetterheadState { table_ready: boolean; brand_ready?: boolean; brand_colour?: string | null; brand_default?: string; brand_swatches?: string[]; details: Details; display_name: string; has_logo: boolean; missing: string[]; registered_in_options: string[] }
+export interface LetterheadState { /** The address typed in Settings, Organisation details, and whether letters and newsletters are using it because the letterhead has none of its own. */ organisation_address?: string | null; address_from_organisation?: boolean; table_ready: boolean; brand_ready?: boolean; brand_colour?: string | null; brand_default?: string; brand_swatches?: string[]; details: Details; display_name: string; has_logo: boolean; missing: string[]; registered_in_options: string[] }
 export interface SignatureMeta { allowed?: boolean; table_ready?: boolean; name?: string; job_role?: string; has: boolean; width: number | null; height: number | null; updated_at: string | null }
 
 async function call<T>(base: string, path: string, token: string, init: RequestInit = {}): Promise<T> {

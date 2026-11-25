@@ -9,7 +9,7 @@ import { getTenantId } from '../db/tenant-context'
 import { ok, err } from '../lib/response'
 import { writeAuditLog } from '../lib/audit'
 import { askPilotEnabled } from '../lib/ask-pilot'
-import { cleanDetails, EMPTY_DETAILS, getDetails, saveDetails, letterheadTableReady, loadLetterhead, toLetterhead, missingChecklist, REGISTERED_IN, brandColumnReady, saveBrandColour } from '../services/letters/letterhead'
+import { withOrgAddress, cleanDetails, EMPTY_DETAILS, getDetails, saveDetails, letterheadTableReady, loadLetterhead, toLetterhead, missingChecklist, REGISTERED_IN, brandColumnReady, saveBrandColour } from '../services/letters/letterhead'
 import { validateBrandColour, usableBrand, SWATCHES, DEFAULT_BRAND } from '../lib/brand-colour'
 import { layoutToHtml, PREVIEW_CSS, type LayoutDoc } from '../services/letters/layout'
 
@@ -41,7 +41,7 @@ letterheadRouter.get('/', async (_req: Request, res: Response) => {
   const t = getTenantId()
   const ready = await letterheadTableReady()
   const l = await loadLetterhead(t)
-  ok(res, { table_ready: ready, brand_ready: await brandColumnReady(), brand_colour: l.head.brandColour ?? null, brand_default: DEFAULT_BRAND, brand_swatches: SWATCHES, details: l.details ?? EMPTY_DETAILS, display_name: l.displayName, has_logo: !!l.head.logoDataUrl, missing: l.missing, registered_in_options: REGISTERED_IN })
+  ok(res, { organisation_address: l.orgAddress, address_from_organisation: l.addressFromOrg, table_ready: ready, brand_ready: await brandColumnReady(), brand_colour: l.head.brandColour ?? null, brand_default: DEFAULT_BRAND, brand_swatches: SWATCHES, details: l.details ?? EMPTY_DETAILS, display_name: l.displayName, has_logo: !!l.head.logoDataUrl, missing: l.missing, registered_in_options: REGISTERED_IN })
 })
 
 letterheadRouter.post('/preview', async (req: Request, res: Response) => {
@@ -50,7 +50,9 @@ letterheadRouter.post('/preview', async (req: Request, res: Response) => {
   const details = cleanDetails(req.body ?? {})
   const head = toLetterhead(details, l.displayName, l.head.logoDataUrl ?? null)
   head.brandColour = 'brand_colour' in (req.body ?? {}) ? usableBrand(req.body.brand_colour) : (l.head.brandColour ?? null)   // the colour in the form, before it is saved
-  ok(res, { html: layoutToHtml(sampleLetter(head), l.head.logoDataUrl ?? null), css: PREVIEW_CSS, missing: missingChecklist(details, !!l.head.logoDataUrl) })
+  const eff = withOrgAddress(details, l.orgAddress).details ?? details
+  head.addressLines = toLetterhead(eff, l.displayName, null).addressLines; head.address = (head.addressLines ?? []).join(', ') || null
+  ok(res, { html: layoutToHtml(sampleLetter(head), l.head.logoDataUrl ?? null), css: PREVIEW_CSS, missing: missingChecklist(eff, !!l.head.logoDataUrl) })
 })
 
 letterheadRouter.put('/', async (req: Request, res: Response) => {

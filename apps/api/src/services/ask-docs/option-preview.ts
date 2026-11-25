@@ -3,7 +3,7 @@
 // the logo uploaded in Settings, the letterhead details (letters and reports) and the brand colour when the account has one.
 // Nothing here calls a model, reads staff or resident records, or changes anything: the same option always gives the same sample. Admin only (the route guards it).
 import { prisma } from '../../db/client'
-import { loadLetterhead } from '../letters/letterhead'
+import { loadLetterhead, footerContactLines } from '../letters/letterhead'
 import { getTemplate as getLetterTemplate } from '../letters/render'
 import { layout as letterLayout } from '../letters'
 import { layoutToHtml, PREVIEW_CSS, type LayoutDoc } from '../letters/layout'
@@ -90,8 +90,8 @@ export async function renderOptionPreview(tenantId: string, req: PreviewRequest,
       || (req.template_id && NEWSLETTER_TEMPLATES.find(t => t.type === req.template_id && t.layout === (req.layout ?? 'standard')))
       || null
     if (!tpl) return { ...base, kind: 'newsletter', title: 'Newsletter (sample)', css: '', html: plain(accent, 'Newsletter', 'This newsletter template could not be found, so here is a plain sample.', logo, l.head.name), note: 'Template not found.' }
-    const html = renderNewsletterHtml({ templateId: tpl.id, title: tpl.type_title, body: sampleBody(tpl), brand: { name: l.head.name || 'Your service', accent: brand, logo, contact: [] }, sentBy: 'Your name', sample: true }, 'web')
-    const sheet = renderNewsletterSheet({ templateId: tpl.id, title: tpl.type_title, body: sampleBody(tpl), brand: { name: l.head.name || 'Your service', accent: brand, logo, contact: [] }, sentBy: 'Your name', sample: true }, { orientation: 'portrait', stamp: SAMPLE_STAMP })
+    const html = renderNewsletterHtml({ templateId: tpl.id, title: tpl.type_title, body: sampleBody(tpl), brand: { name: l.head.name || 'Your service', accent: brand, logo, contact: footerContactLines(l.head) }, sentBy: 'Your name', sample: true }, 'web')
+    const sheet = renderNewsletterSheet({ templateId: tpl.id, title: tpl.type_title, body: sampleBody(tpl), brand: { name: l.head.name || 'Your service', accent: brand, logo, contact: footerContactLines(l.head) }, sentBy: 'Your name', sample: true }, { orientation: 'portrait', stamp: SAMPLE_STAMP })
     return { ...base, kind: 'newsletter', title: `${tpl.title} (sample)`, css: '', html: sampleBanner(accent) + html, sheet, note: null }
   }
   if (req.kind === 'letter') {
@@ -138,7 +138,7 @@ export async function renderOptionPreviewPdf(tenantId: string, req: PreviewReque
       let logoPng: Buffer | null = null
       if (l.head.logoDataUrl) { try { const { logoForPdf } = await import('../policy/policy-pdf'); logoPng = await logoForPdf(l.head.logoDataUrl) } catch { logoPng = null } }
       const { pdfFromInput } = await import('./newsletter-design-doc')
-      return { buffer: (await pdfFromInput({ templateId: tpl.id, title: tpl.type_title, body: sampleBody(tpl), brand: { name: l.head.name || 'Your service', accent: brand, logo: l.head.logoDataUrl ?? null, contact: [] }, sentBy: 'Your name', sample: true, stamp: SAMPLE_STAMP }, { stamp: SAMPLE_STAMP, logoPng })).buffer, filename: name }
+      return { buffer: (await pdfFromInput({ templateId: tpl.id, title: tpl.type_title, body: sampleBody(tpl), brand: { name: l.head.name || 'Your service', accent: brand, logo: l.head.logoDataUrl ?? null, contact: footerContactLines(l.head) }, sentBy: 'Your name', sample: true, stamp: SAMPLE_STAMP }, { stamp: SAMPLE_STAMP, logoPng })).buffer, filename: name }
     }
   }
   let doc: LayoutDoc

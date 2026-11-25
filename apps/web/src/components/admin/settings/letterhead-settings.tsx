@@ -59,6 +59,7 @@ export function LetterheadSettingsBody({ token }: { token: string }) {
             <Field id="lh-trading" label="Name you trade under" hint={`Printed at the top and in letters. Today letters use: ${state.display_name}`}><input id="lh-trading" className={INPUT} value={txt('trading_name')} onChange={e => set('trading_name', e.target.value)} /></Field>
             <Field id="lh-legal" label="Legal company name" hint="Printed in the footer."><input id="lh-legal" className={INPUT} value={txt('legal_name')} onChange={e => set('legal_name', e.target.value)} /></Field>
           </div>
+          {state.organisation_address && !state.details?.address_line1 && <p className="flex gap-2 rounded-lg bg-teal/5 px-3 py-2 text-xs text-neutral-dark"><Info size={14} className="mt-0.5 shrink-0" aria-hidden="true" /> <span>Letters and newsletters are using the address from Organisation details: <strong>{state.organisation_address}</strong>. Type an address below only if the letterhead should show a different one.</span></p>}
           <div className="grid gap-3 sm:grid-cols-2">
             <Field id="lh-a1" label="Address line 1"><input id="lh-a1" className={INPUT} value={txt('address_line1')} onChange={e => set('address_line1', e.target.value)} autoComplete="address-line1" /></Field>
             <Field id="lh-a2" label="Address line 2"><input id="lh-a2" className={INPUT} value={txt('address_line2')} onChange={e => set('address_line2', e.target.value)} autoComplete="address-line2" /></Field>

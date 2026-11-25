@@ -1,7 +1,7 @@
 // Turns a saved newsletter document into the designed newsletter: the organisation's name, logo and contact details from Settings, the optional brand colour, the optional photo of the
 // person (only when the administrator chose to include one), and who is sending it. The drawing itself is in newsletter-design.ts and needs no database.
 import { prisma } from '../../db/client'
-import { loadLetterhead } from '../letters/letterhead'
+import { loadLetterhead, footerContactLines } from '../letters/letterhead'
 import { downloadFile, staffPhotoKey } from '../storage/s3'
 import { siteUrl } from '../../lib/urls'
 import { renderNewsletterHtml, renderNewsletterPdfFit, sampleBody, type DesignInput, type Target } from './newsletter-design'
@@ -80,7 +80,7 @@ export async function designInputFor(o: { tenantId: string; doc: Doc; target: Ta
   if (!sentBy && o.doc.data?.sent_by) sentBy = String(o.doc.data.sent_by)
   const input: DesignInput = {
     templateId: o.doc.data?.template_id ?? null, title: o.draft?.title ?? o.doc.title, body: o.draft?.body ?? o.doc.body,
-    brand: { name: l.head.name, accent: typeof o.doc.data?.accent === 'string' && o.doc.data.accent ? o.doc.data.accent : (l.head.brandColour ?? null), logo, contact: (l.head.contactLines ?? []).slice(0, 3) },
+    brand: { name: l.head.name, accent: typeof o.doc.data?.accent === 'string' && o.doc.data.accent ? o.doc.data.accent : (l.head.brandColour ?? null), logo, contact: footerContactLines(l.head) },
     sentBy, people: people.map(x => ({ dataUrl: x.dataUrl, name: x.name, ...(web ? {} : { inHub: true }) })), gift: gift ? { text: gift.text, dataUrl: gift.dataUrl } : null, links: { holiday: `${siteUrl()}/chat`, hub: `${siteUrl()}/chat` },
     orientation: orientationOf(o.doc.data?.orientation),
     styles: o.doc.data?.block_styles && typeof o.doc.data.block_styles === 'object' ? o.doc.data.block_styles : undefined, custom, customImages,
@@ -155,6 +155,6 @@ export async function sampleDesignsFor(tenantId: string, type: string): Promise<
   const { NEWSLETTER_TEMPLATES } = await import('./newsletter-templates')
   return NEWSLETTER_TEMPLATES.filter(t => t.type === type).map(t => ({
     id: t.id, layout: t.layout, title: t.title,
-    html: renderNewsletterHtml({ templateId: t.id, title: t.type_title, body: sampleBody(newsletterTemplate(t.id)!), brand: { name: l.head.name || 'Your service', logo: l.head.logoDataUrl ?? null, contact: [] }, sentBy: 'Your name', sample: true }, 'web'),
+    html: renderNewsletterHtml({ templateId: t.id, title: t.type_title, body: sampleBody(newsletterTemplate(t.id)!), brand: { name: l.head.name || 'Your service', logo: l.head.logoDataUrl ?? null, contact: footerContactLines(l.head) }, sentBy: 'Your name', sample: true }, 'web'),
   }))
 }

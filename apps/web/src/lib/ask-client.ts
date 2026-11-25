@@ -12,7 +12,7 @@ async function call<T>(path: string, token: string, init: RequestInit = {}): Pro
 
 export type AgentStatus = 'ready' | 'shell' | 'soon'
 export interface AskAgent { id: string; name: string; blurb: string; icon: string; status: AgentStatus; starters: string[]; shell_message: string | null; uploads?: { kinds: string[]; hint: string } | null }
-export interface AskSource { label: string; as_of: string | null; warning?: string | null; url?: string | null }
+export interface AskSource { label: string; as_of: string | null; warning?: string | null; url?: string | null; /** A draft the agent saved in this answer (shown designed, with its buttons). */ document_id?: string; doc_type?: string }
 export interface AskMessage { id: string; role: 'user' | 'assistant'; content: string; sources?: AskSource[]; created_at?: string | null }
 export type ActionStatus = 'proposed' | 'confirmed' | 'cancelled' | 'expired' | 'failed' | 'done'
 export interface SharePlan { ok: boolean; blockers: string[]; what: string; how: string | null; who: string | null; how_text: string; who_text: string; count: number; names: string[]; more: number; left_out: number; channels: string[]; notification_email: boolean; needs_approval: boolean; preview: { doc_id: string | null; kind: string } }

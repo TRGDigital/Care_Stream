@@ -10,6 +10,9 @@ import { buildSystemPrompt, pageContextLine } from './prompt-register'
 import { TOOLS, toolByName, type ToolContext } from './tools'
 import { toolAllowed, MANAGER_LINE } from './manager-access'
 import { wrapToolResult } from './safety'
+import { withNextStepsReminder } from './house-rules-forms'
+/** The tools that save a document draft, and what kind of document each makes. */
+export const DRAFT_TOOL_TYPE: Record<string, string> = { save_letter_draft: 'letter', save_newsletter_draft: 'newsletter', save_report_draft: 'report' }
 import { dedupeSources, type AskSource } from './sources'
 import { type ResolvedContext } from './page-context'
 
@@ -26,7 +29,7 @@ export interface RunDeps {
   now?: () => number
 }
 export interface HistoryMessage { role: 'user' | 'assistant'; content: string }
-export interface RunResult { answer: string; sources: AskSource[]; tools_used: string[]; rounds: number; stopped: 'done' | 'rounds' | 'time' | 'length'; proposals: string[] }
+export interface RunResult { answer: string; sources: AskSource[]; tools_used: string[]; rounds: number; stopped: 'done' | 'rounds' | 'time' | 'length'; proposals: string[]; /** Drafts the agent saved in this turn: the chat shows each as its DESIGNED version, not as plain text. */ documents: Array<{ id: string; type: string }> }
 
 let shared: Anthropic | null = null
 const clientOf = () => (shared ??= new Anthropic())
@@ -46,6 +49,7 @@ export async function runAgent(o: { agentId: string; ctx: ToolContext; orgName: 
   const tools = toolDefsFor(agent, o.ctx)
   const msgs: Anthropic.Messages.MessageParam[] = [...o.history.slice(-10).map(m => ({ role: m.role, content: m.content })), { role: 'user', content: o.message.slice(0, 4000) }]
   const proposals: string[] = []
+  const documents: Array<{ id: string; type: string }> = []
   const ctx: ToolContext = { ...o.ctx, conversationId: o.conversationId ?? o.ctx.conversationId ?? null, collectProposal: (id: string) => { if (!proposals.includes(id)) proposals.push(id) } }
   const used: string[] = []; let sources: AskSource[] = []; let answer = ''; let rounds = 0; let stopped = 'done' as RunResult['stopped']
 
@@ -67,7 +71,9 @@ export async function runAgent(o: { agentId: string; ctx: ToolContext; orgName: 
         try {
           const r = await tool.run(ctx, c.input ?? {})
           sources = sources.concat(r.sources)
-          results.push({ type: 'tool_result', tool_use_id: c.id, content: wrapToolResult(c.name, { data: r.data, method: r.method ?? null, sources: r.sources.map(s => ({ label: s.label, as_of: s.as_of, warning: s.warning ?? null })) }) })
+          const dt = DRAFT_TOOL_TYPE[c.name]; const did = (r.data as any)?.document_id
+          if (dt && (r.data as any)?.saved === true && typeof did === 'string' && !documents.some(d => d.id === did)) documents.push({ id: did, type: dt })
+          results.push({ type: 'tool_result', tool_use_id: c.id, content: wrapToolResult(c.name, { data: withNextStepsReminder(c.name, r.data), method: r.method ?? null, sources: r.sources.map(s => ({ label: s.label, as_of: s.as_of, warning: s.warning ?? null })) }) })
         } catch (e: any) {
           results.push({ type: 'tool_result', tool_use_id: c.id, content: wrapToolResult(c.name, { error: 'The data could not be read just now.' }), is_error: true })
         }
@@ -79,6 +85,6 @@ export async function runAgent(o: { agentId: string; ctx: ToolContext; orgName: 
   await withAiFeature('ask_carestream', exec)
   if (!answer) answer = stopped === 'time' ? 'That took too long to work out. Please try a narrower question.' : 'I could not finish working that out. Please try asking it a little differently, or break it into smaller questions.'
   ;(deps.audit ?? writeAuditLog)({ tenant_id: o.ctx.tenantId, user_id: o.ctx.userId, event_type: 'ask_run', entity_type: 'ask_conversation', entity_id: agent.id, metadata: { agent: agent.id, tools: [...new Set(used)], rounds } })
-  return { answer, sources: dedupeSources(sources), tools_used: [...new Set(used)], rounds, stopped, proposals }
+  return { answer, sources: dedupeSources(sources), tools_used: [...new Set(used)], rounds, stopped, proposals, documents }
 }
 export { AGENTS, TOOLS }

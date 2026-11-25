@@ -3,9 +3,10 @@
 // HOUSE RULE 1: when an agent needs information it asks in a form, not in a paragraph. Each question has its own labelled box with a free text field (a choice question also
 // offers quick buttons, a people question also offers the staff picker), a short hint, and "required" or "optional". One Send answers button sends every answer back as one
 // message that pairs each question with its answer, so nothing is ambiguous. The form stays editable until it is sent; after that the answered card shows what was sent.
-import { useId, useState } from 'react'
+import { useId, useMemo, useState } from 'react'
 import { Check, Loader2, Send } from 'lucide-react'
 import { StaffPicker, useStaff } from '@/components/ask/staff-picker'
+import { prefillForm } from '@/lib/ask-prefill'
 import { formatAnswers, missingAnswers, type AnswerValue, type Question, type QuestionForm as Form } from '@/lib/ask-blocks'
 
 const inp = 'w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-neutral-dark outline-none focus:border-teal focus:ring-2 focus:ring-teal/20'
@@ -21,14 +22,20 @@ function PeopleField({ token, q, value, onChange, disabled, boxId }: { token: st
       {staff === null
         ? <p className="flex items-center gap-2 text-xs text-neutral-mid" role="status"><Loader2 size={12} className="animate-spin" aria-hidden="true" />Loading your staff</p>
         : <StaffPicker people={staff} selected={ids} onChange={pick} mode={multiple ? 'multi' : 'single'} disabled={disabled} label={q.label} bulk={multiple} />}
+      {q.expected && q.expected > 1 && <p className="mt-1.5 text-xs text-neutral-mid">You said {q.expected}: choose {q.expected} people (you can choose more or fewer).</p>}
       {(value.people ?? []).length > 0 && <p className="mt-1.5 text-xs font-medium text-neutral-dark" aria-live="polite">Chosen: {(value.people ?? []).map(p => p.name).join(', ')}</p>}
     </div>
   )
 }
 
-export function QuestionFormCard({ token, form, disabled, onSend }: { token: string; form: Form; disabled?: boolean; onSend: (message: string) => void }) {
+export function QuestionFormCard({ token, form: given, typed = [], disabled, onSend }: { token: string; form: Form; /** What the administrator has typed so far in this chat: used to fill in what they have already said (HOUSE RULE 8). */ typed?: string[]; disabled?: boolean; onSend: (message: string) => void }) {
   const uid = useId()
-  const [values, setValues] = useState<Record<string, AnswerValue>>({})
+  const staffForHints = useStaff(token, given.questions.some(q => q.kind === 'people'))
+  const pre = useMemo(() => prefillForm(given, typed, staffForHints), [given, typed.join('\n'), staffForHints])   // eslint-disable-line react-hooks/exhaustive-deps
+  const form = pre.form
+  const [edited, setEdited] = useState<Record<string, AnswerValue>>({})
+  const values = useMemo(() => ({ ...pre.values, ...edited }), [pre.values, edited])
+  const setValues = (f: (s: Record<string, AnswerValue>) => Record<string, AnswerValue>) => setEdited(e => f({ ...pre.values, ...e }))
   const [tried, setTried] = useState(false)
   const set = (id: string, v: AnswerValue) => setValues(s => ({ ...s, [id]: v }))
   const missing = missingAnswers(form, values)

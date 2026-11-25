@@ -30,5 +30,5 @@ export function formatSources(sources: AskSource[]): string[] {
 }
 export function dedupeSources(list: AskSource[]): AskSource[] {
   const seen = new Set<string>()
-  return list.filter(s => { const k = `${s.label}|${s.as_of}`; if (seen.has(k)) return false; seen.add(k); return true })
+  return list.filter(s => { const k = `${s.label}|${s.as_of}|${(s as any).document_id ?? ''}`; if (seen.has(k)) return false; seen.add(k); return true })
 }

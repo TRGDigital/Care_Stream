@@ -3,7 +3,7 @@
 // plain text instead (the fences are taken off and the words kept), so a slip by the model never hides what it said.
 
 export type QuestionKind = 'text' | 'longtext' | 'choice' | 'people' | 'date'
-export interface Question { id: string; label: string; hint: string; required: boolean; kind: QuestionKind; choices: string[]; /** A people question: more than one person may be picked. Without it exactly ONE person. */ multiple?: boolean }
+export interface Question { id: string; label: string; hint: string; required: boolean; kind: QuestionKind; choices: string[]; /** A people question: more than one person may be picked. Without it exactly ONE person. */ multiple?: boolean; /** How many people the administrator said (two employees of the month). A hint: they may choose more or fewer. */ expected?: number }
 export interface QuestionForm { title: string; questions: Question[] }
 export type PreviewKind = 'newsletter' | 'letter' | 'report' | 'notification' | 'email' | 'other'
 export interface OptionItem { id: string; title: string; description: string; preview: { kind: PreviewKind; template_id: string | null; layout: string | null } }
@@ -44,7 +44,7 @@ export function parseQuestions(text: string): QuestionForm | null {
     seen.add(id)
     const kind: QuestionKind = KINDS.includes(q?.kind) ? q.kind : 'text'
     const choices = Array.isArray(q?.choices) ? q.choices.map((c: unknown) => clip(c, 80)).filter(Boolean).slice(0, 8) : []
-    questions.push({ id, label, hint: clip(q?.hint, 220), required: q?.required === true, kind: kind === 'choice' && !choices.length ? 'text' : kind, choices, ...(kind === 'people' && q?.multiple === true ? { multiple: true } : {}) })
+    questions.push({ id, label, hint: clip(q?.hint, 220), required: q?.required === true, kind: kind === 'choice' && !choices.length ? 'text' : kind, choices, ...(kind === 'people' && (q?.multiple === true || Number(q?.expected) > 1) ? { multiple: true } : {}), ...(kind === 'people' && Number(q?.expected) >= 1 ? { expected: Math.min(20, Math.round(Number(q.expected))) } : {}) })
   }
   return questions.length ? { title: clip(j?.title, 100), questions } : null
 }

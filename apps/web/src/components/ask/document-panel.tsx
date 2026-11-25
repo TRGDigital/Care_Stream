@@ -5,7 +5,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { AlertTriangle, Check, Copy, Download, FileText, Loader2, Mail, Maximize2, Bell, Pencil, Printer, RotateCcw, Send, Trash2, X } from 'lucide-react'
 import { ask, AskError, type AskDocFull, type ShareIntent } from '@/lib/ask-client'
-import { adminNotifications, type StaffOption } from '@/lib/notifications-client'
 import { MarkdownLite } from './markdown-lite'
 import { StaffPicker, useStaff } from '@/components/ask/staff-picker'
 import { DocumentActions } from '@/components/ask/document-actions'
@@ -31,21 +30,18 @@ export function DocumentPanel({ token, id, onClose, onChanged }: { token: string
   const [internal, setInternal] = useState(false)   // a governance report marked internal only (it may name people and can never be sent to staff)
   const [values, setValues] = useState<Record<string, string | number>>({})
   const [note, setNote] = useState('')
-  const [staff, setStaff] = useState<StaffOption[] | null>(null)
   const [sign, setSign] = useState(false)
   const [ack, setAck] = useState<boolean | null>(null)   // ask the person to confirm they have read it (the template's default unless the administrator changes it)
   const [docStatus, setDocStatus] = useState<{ letterhead_ready: boolean; trading_name: string; missing: string[]; signature: boolean } | null>(null)
   const [paper, setPaper] = useState<{ html: string; css: string } | null>(null)
   const [showPaper, setShowPaper] = useState(false)
   const [live, setLive] = useState<string | null>(null)   // the designed newsletter for the text being edited
-  const [photoStaff, setPhotoStaff] = useState<StaffOption[] | null>(null)
   const [photoPick, setPhotoPick] = useState<string | null>(null)
   const [photoAgreed, setPhotoAgreed] = useState(false)
   const [photoState, setPhotoState] = useState<{ chosen: boolean; name?: string | null; consent?: boolean; has_picture?: boolean } | null>(null)
   const photoUser = d?.data?.photo?.user_id ?? null
   const photoStaffList = useStaff(token, d?.type === 'newsletter' && !!d?.actions.edit)
   const viewer = useExpandViewer()
-  const [picking, setPicking] = useState(false), [audience, setAudience] = useState<'all' | 'selected'>('all'), [chosen, setChosen] = useState<Set<string>>(new Set()), [q, setQ] = useState('')
 
   const load = useCallback(async () => {
     try { const r = await ask.document(token, id); setD(r.document); setTitle(r.document.title); setBody(r.document.body); setValues(r.document.values ?? {}); setInternal(r.document.internal_only === true); setTicked(false); setError('') }
@@ -74,7 +70,6 @@ export function DocumentPanel({ token, id, onClose, onChanged }: { token: string
   const isFinal = d?.status === 'approved' || d?.status === 'shared'   // anything else is a DRAFT copy: stamped DRAFT on every page, never recorded as shared
   const letter = d?.type === 'letter', report = d?.type === 'report', news = d?.type === 'newsletter' || report, flow = !!d?.actions.needs_approval
   const st = d ? STATUS[d.status] ?? STATUS.draft : null
-  const people = useMemo(() => (staff ?? []).filter(s => !q || s.name.toLowerCase().includes(q.toLowerCase())), [staff, q])
 
   // How the letter is to be shared: in their hub, by email, hub and email, or print only (which stays with me and is never shown to the staff member).
   const intent: ShareIntent = d?.share_intent ?? { hub: false, email: false, print_only: false }
@@ -85,17 +80,6 @@ export function DocumentPanel({ token, id, onClose, onChanged }: { token: string
     else if (next.hub || next.email) n = { ...n, print_only: false }
     if (!n.hub && !n.email && !n.print_only) { setError('Choose at least one way to share it: in their hub, by email, or print only.'); return }
     await run('intent', () => ask.setShareIntent(token, d.id, n))
-  }
-  async function printIt() {
-    if (!d) return
-    setBusy('print'); setError('')
-    try {
-      const url = await ask.pdfBlobUrl(token, d.id, sign && letter)
-      const f = document.createElement('iframe'); f.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0'; f.src = url
-      f.onload = () => { try { f.contentWindow?.focus(); f.contentWindow?.print() } catch { window.open(url, '_blank') } setTimeout(() => { URL.revokeObjectURL(url); f.remove() }, 60_000) }
-      document.body.appendChild(f)
-      await load(); onChanged()
-    } catch (e) { setError(msg(e)) } finally { setBusy('') }
   }
   const channels = (intent.print_only ? [] : [intent.hub ? 'hub' : '', intent.email ? 'email' : ''].filter(Boolean)) as string[]
   const first = (d?.staff_name ?? 'the person').split(' ')[0]
@@ -110,7 +94,6 @@ export function DocumentPanel({ token, id, onClose, onChanged }: { token: string
   async function openViewer() { if (d && (letter || news) && showPaper && !paper) await loadPaper(); viewer.show() }
   const viewerItems: ViewerItem[] = !d ? [] : (letter || news) && showPaper && paper ? [{ kind: 'html', html: paper.html, css: paper.css }]
     : [{ kind: 'node', node: <div className="w-[680px] max-w-full p-8 text-neutral-dark">{letter ? <pre className="whitespace-pre-wrap font-sans text-sm leading-relaxed">{d.body}</pre> : <MarkdownLite text={d.body} />}</div> }]
-  async function openPicker() { setPicking(true); if (!staff) { try { setStaff((await adminNotifications.staff(token)).staff) } catch (e) { setError(msg(e)) } } }
 
   return (
     <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/30 p-3" onMouseDown={e => { if (e.target === e.currentTarget) onClose() }}>

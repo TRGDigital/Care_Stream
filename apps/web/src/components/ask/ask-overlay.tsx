@@ -21,7 +21,10 @@ import { AttachButton, UploadsBlock } from '@/components/ask/upload-panel'
 import { NewsletterPicker } from '@/components/ask/newsletter-picker'
 import { QuestionFormCard, AnsweredCard } from '@/components/ask/question-form'
 import { OptionsBlock } from '@/components/ask/options-block'
-import { parseQuestions, parseOptions, visibleText, parseAnswersMessage, parseChoiceMessage } from '@/lib/ask-blocks'
+import { parseQuestions, parseOptions, parseNextSteps, visibleText, parseAnswersMessage, parseChoiceMessage, parseNextMessage, formatNext, type NextAction, type NextStep } from '@/lib/ask-blocks'
+import { NextStepsBar } from '@/components/ask/next-steps'
+import { DraftCard, DocViewer } from '@/components/ask/draft-card'
+import { printBlob, saveBlob } from '@/lib/document-actions'
 
 export const OPEN_ASK_EVENT = 'cs:open-ask'
 const ICONS: Record<string, LucideIcon> = {
@@ -167,6 +170,8 @@ export function AskPanel({ token, layout, expanded, width, onClose }: { token: s
   const [uploads, setUploads] = useState<AskUpload[]>([])   // files attached to this chat (agents that take files)
   const [lib, setLib] = useState<{ tab: 'chats' | 'docs'; chats: AskConversation[] | null; docs: AskDocument[] | null }>({ tab: 'chats', chats: null, docs: null })
   const [docId, setDocId] = useState<string | null>(null)
+  const [viewDocId, setViewDocId] = useState<string | null>(null)   // the designed version of a draft, in the large viewer
+  const [savedMsg, setSavedMsg] = useState<string | null>(null)
   const [libView, setLibView] = useState<{ title: string; items: ViewerItem[]; doc: AskDocument } | null>(null)   // a library item shown large
   const [docFilter, setDocFilter] = useState<'all' | 'waiting'>('all')
   const [waiting, setWaiting] = useState(0)   // letters, newsletters and reports waiting for THIS person's approval
@@ -228,6 +233,25 @@ export function AskPanel({ token, layout, expanded, width, onClose }: { token: s
       const r = await ask.chat(token, { agent_id: ag.id, conversation_id: forAgent ? null : convId, message: msg, context: chipOn ? toWireContext(pageCtx) : undefined })
       setConvId(r.conversation_id); setMessages(m => [...m, r.message]); if (r.actions?.length) setCards(c => ({ ...c, [r.message.id]: r.actions! }))
     } catch (e) { setError(e instanceof AskError ? e.message : 'Something went wrong. Please try again.') } finally { setBusy(false) }
+  }
+  /** HOUSE RULE 7: a next step button that runs a screen action. A draft the agent just saved has its own id on the message; anything else is asked of the agent instead. */
+  async function nextAction(action: NextAction, step: NextStep, m: AskMessage) {
+    const doc = (m.sources ?? []).find(x => x.document_id)?.document_id ?? null
+    const ask_ = () => send(formatNext(step))
+    try {
+      if (action === 'edit' || action === 'share' || action === 'choose_who' || action === 'send') { if (doc) setDocId(doc); else ask_(); return }
+      if (action === 'preview') { if (doc) setViewDocId(doc); else ask_(); return }
+      if (action === 'save_pdf' || action === 'print') {
+        if (!doc) { ask_(); return }
+        const d = (await ask.document(token, doc)).document, draft = !(d.status === 'approved' || d.status === 'shared')
+        const blob = await ask.documentBlob(token, doc, 'pdf', { draft }); if (action === 'save_pdf') saveBlob(blob, d.title, 'pdf'); else printBlob(blob); return
+      }
+      if (action === 'save_library') {
+        if (doc) { setSavedMsg(m.id); return }   // a draft is already in the library
+        const text = withoutDraftBlock(visibleText(m.content)); await ask.save(token, { type: 'answer', title: (text.split('\n')[0] ?? '').slice(0, 80) || 'Saved answer', body: text, sources: m.sources }); setSavedMsg(m.id); return
+      }
+      ask_()   // back_to_layouts and show_working go back to the agent
+    } catch (e) { setError(e instanceof Error ? e.message : 'That could not be done just now.') }
   }
   const loadLib = useCallback(async () => {
     try { const [c, d] = await Promise.all([ask.conversations(token), ask.documents(token)]); setLib(l => ({ ...l, chats: c.conversations, docs: d.documents })) } catch (e) { setError(e instanceof Error ? e.message : 'Could not load the library.') }
@@ -338,8 +362,9 @@ export function AskPanel({ token, layout, expanded, width, onClose }: { token: s
                   </div>
                 )}
                 {messages.map((m, mi) => m.role === 'user' ? (
-                  (() => { const ans = parseAnswersMessage(m.content), pick = parseChoiceMessage(m.content)
-                    return ans ? <AnsweredCard key={m.id} title={ans.title} pairs={ans.pairs} />
+                  (() => { const ans = parseAnswersMessage(m.content), pick = parseChoiceMessage(m.content), nx = parseNextMessage(m.content)
+                    return nx ? <div key={m.id} className="ml-auto max-w-[85%] rounded-2xl rounded-br-sm bg-teal px-4 py-2.5 text-[15px] text-white">{nx.label}</div>
+                      : ans ? <AnsweredCard key={m.id} title={ans.title} pairs={ans.pairs} />
                       : pick ? <div key={m.id} className="ml-auto max-w-[85%] rounded-2xl rounded-br-sm bg-teal px-4 py-2.5 text-[15px] text-white">You chose: {pick.title}</div>
                       : <div key={m.id} className="ml-auto max-w-[85%] rounded-2xl rounded-br-sm bg-teal px-4 py-2.5 text-[15px] text-white">{m.content}</div> })()
                 ) : (
@@ -347,10 +372,13 @@ export function AskPanel({ token, layout, expanded, width, onClose }: { token: s
                     <MarkdownLite text={visibleText(agent.id === 'notifications' ? withoutDraftBlock(m.content) : agent.id === 'newsletter' ? withoutLayoutsBlock(m.content) : m.content)} />
                     {(() => { const form = parseQuestions(m.content), opts = parseOptions(m.content), nxt = messages[mi + 1], last = mi === messages.length - 1
                       const answered = !!(nxt && nxt.role === 'user' && parseAnswersMessage(nxt.content)); const chosen = nxt && nxt.role === 'user' ? parseChoiceMessage(nxt.content)?.id ?? null : null
-                      return <>{form && !answered && last && <QuestionFormCard token={token} form={form} disabled={busy} onSend={t => send(t)} />}{opts && token && (last || chosen) && <OptionsBlock token={token} set={opts} disabled={busy || !last} chosenId={chosen} onChoose={t => send(t)} />}</> })()}
+                      return <>{form && !answered && last && <QuestionFormCard token={token} form={form} typed={messages.filter(x => x.role === 'user' && !parseAnswersMessage(x.content) && !parseChoiceMessage(x.content) && !parseNextMessage(x.content)).map(x => x.content)} disabled={busy} onSend={t => send(t)} />}{opts && token && (last || chosen) && <OptionsBlock token={token} set={opts} disabled={busy || !last} chosenId={chosen} onChoose={t => send(t)} />}</> })()}
                     {agent.id === 'newsletter' && token && parseNewsletterLayouts(m.content) && <LayoutThumbs token={token} type={parseNewsletterLayouts(m.content)!} disabled={busy} onPick={d => send(`I would like the ${d.layout} layout (${d.id}).`)} />}
                     {agent.id === 'notifications' && parseNotificationDraft(m.content) && (() => { const d = parseNotificationDraft(m.content)!; return <div className="mt-3 rounded-lg border border-teal/30 bg-teal/5 p-3 text-sm"><p className="font-semibold text-neutral-dark">{d.title}</p><p className="mt-1 whitespace-pre-line text-neutral-dark">{d.body}</p></div> })()}
+                    {(m.sources ?? []).filter(x => x.document_id).map(x => <DraftCard key={x.document_id} token={token} id={x.document_id!} onOpenViewer={setViewDocId} onEdit={setDocId} />)}
                     {(cards[m.id] ?? []).map(c => <ActionCard key={c.id} token={token} card={c} />)}
+                    {(() => { const ns = parseNextSteps(m.content); return ns && mi === messages.length - 1 && !busy ? <NextStepsBar steps={ns.steps} disabled={busy} onAsk={t => send(t)} onAction={(a, st) => nextAction(a, st, m)} /> : null })()}
+                    {savedMsg === m.id && <p role="status" className="mt-2 text-xs font-semibold text-green-800">Saved to your library.</p>}
                     <SourcesFooter sources={m.sources ?? []} />
                     <AnswerActions m={m} token={token} agentId={agent.id} />
                   </div>
@@ -417,6 +445,7 @@ export function AskPanel({ token, layout, expanded, width, onClose }: { token: s
             </span>
           </div>
         )}
+        {viewDocId && token && <DocViewer token={token} id={viewDocId} onClose={() => setViewDocId(null)} />}
         {docId && <DocumentPanel token={token} id={docId} onClose={() => setDocId(null)} onChanged={loadLib} />}
         {libView && token && <ExpandViewer open onClose={() => setLibView(null)} title={libView.title} items={libView.items}
           pdf={['letter', 'newsletter', 'report'].includes(libView.doc.type) ? (() => { const draft = !(libView.doc.status === 'approved' || libView.doc.status === 'shared'); return { getPdf: () => ask.documentBlob(token, libView.doc.id, 'pdf', { draft }), getDocx: () => ask.documentBlob(token, libView.doc.id, 'docx', { draft }), draft } })() : undefined} />}

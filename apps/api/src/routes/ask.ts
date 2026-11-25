@@ -99,7 +99,9 @@ askRouter.post('/chat', async (req: Request, res: Response) => {
     const pageContext = await resolveContext(tenantId, req.body?.context, contextLookups)   // a pointer only: account checked, labels built here, never the browser's words
     const mgr = roleOf(req) === 'manager'
     const r = await runAgent({ agentId: agent.id, ctx: { tenantId, userId, today: ukToday(), role: roleOf(req), moneyOk: mgr ? await managersMayUseMoney(tenantId) : true }, orgName: tenant?.name ?? 'this organisation', history, message, pageContext, conversationId: convId })
-    const saved = await store.addMessage(tenantId, convId, 'assistant', r.answer, r.sources)
+    // A draft the agent saved is shown in the chat as its DESIGNED version: it travels with the message as a source entry that names the document.
+    const withDrafts = [...r.sources, ...r.documents.map(d => ({ label: `Draft ${d.type}`, as_of: null, document_id: d.id, doc_type: d.type }))]
+    const saved = await store.addMessage(tenantId, convId, 'assistant', r.answer, withDrafts as any)
     // Any proposals the agent made are tied to this answer and returned as cards (nothing has been done: the administrator confirms on the card).
     let actions: any[] = []
     if (r.proposals.length) {
@@ -107,7 +109,7 @@ askRouter.post('/chat', async (req: Request, res: Response) => {
       const settings = await loadAskSettings(tenantId)
       for (const id of r.proposals) { const a = await actionStore.getProposal(tenantId, id); if (a) actions.push(await buildCard(tenantId, a, settings)) }
     }
-    ok(res, { conversation_id: convId, message: { id: saved.id, role: 'assistant', content: r.answer, sources: r.sources, created_at: saved.created_at }, actions, tools_used: r.tools_used })
+    ok(res, { conversation_id: convId, message: { id: saved.id, role: 'assistant', content: r.answer, sources: withDrafts, created_at: saved.created_at }, actions, tools_used: r.tools_used })
   } catch (e: any) {
     if (e instanceof PlanLimitError) { err(res, e.code, e.message, 402); return }
     if (store.notReady(e)) { notReady(res); return }

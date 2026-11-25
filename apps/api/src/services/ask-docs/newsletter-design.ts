@@ -16,6 +16,10 @@ export interface DesignInput {
   templateId?: string | null; title: string; body: string; brand: Brand; sentBy?: string; monthText?: string
   /** A person's photo, only when the administrator ticked to include it. Never shown in email. */
   photo?: { dataUrl: string; name?: string; inHub?: boolean } | null
+  /** The featured people (employees of the month, a story, new starters), each only with a recorded agreement. One or more; `photo` above is the old single person and is read as a list of one. */
+  people?: Array<{ dataUrl: string; name?: string; inHub?: boolean }>
+  /** An optional gift for the featured people: words, and a picture only on the screen, PDF and hub (never in email, which shows the gift icon and the words). */
+  gift?: { text: string; dataUrl?: string | null } | null
   /** Where a button may point (the staff hub); without one the call to action is a plain panel, never a button that goes nowhere. */
   links?: { holiday?: string | null }
   sample?: boolean
@@ -24,7 +28,7 @@ export interface DesignInput {
 }
 export interface Block { t: 'p' | 'li'; text: string }
 export interface Sec { key: string | null; title: string; role: Role; icon: IconName; blocks: Block[]; first?: boolean }
-export interface Row { kind: 'hero' | 'full' | 'pair' | 'quote' | 'cta' | 'footer'; cells: Sec[] }
+export interface Row { kind: 'hero' | 'full' | 'pair' | 'quote' | 'cta' | 'footer' | 'gift'; cells: Sec[] }
 export interface Look { id: string; label: string; accent: string; accent2: string | null; radius: number; headFont: string; cardStyle: 'soft' | 'rule' | 'plain' | 'outline'; iconShape: 'circle' | 'square' }
 
 const esc = (s: unknown) => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c] as string))
@@ -159,7 +163,12 @@ export function arrange(secs: Sec[], layout: 'short' | 'standard' | 'detailed'):
 
 export interface Design {
   tpl: NewsletterTemplate | null; look: Look; pal: Palette; layout: 'short' | 'standard' | 'detailed'; title: string; month: string; kicker: string
-  intro: Block[]; rows: Row[]; brand: Brand; sentBy: string; photo: DesignInput['photo']; links: NonNullable<DesignInput['links']>; sample: boolean
+  intro: Block[]; rows: Row[]; brand: Brand; sentBy: string; photo: DesignInput['photo']; people: NonNullable<DesignInput['people']>; gift: DesignInput['gift']; links: NonNullable<DesignInput['links']>; sample: boolean
+}
+/** More than one featured person: the wording turns plural ("Employees of the month"). One person leaves it as written. */
+export function pluralise(text: string, n: number): string {
+  if (n < 2) return text
+  return text.replace(/\bemployee of the month\b/gi, m => (m[0] === 'E' ? 'Employees of the month' : 'employees of the month')).replace(/\bnew starter\b/gi, m => (m[0] === 'N' ? 'New starters' : 'new starters')).replace(/\bleaver\b/gi, m => (m[0] === 'L' ? 'Leavers' : 'leavers'))
 }
 const monthNow = () => new Date().toLocaleDateString('en-GB', { month: 'long', year: 'numeric', timeZone: 'Europe/London' })
 export function buildDesign(input: DesignInput): Design {
@@ -168,7 +177,12 @@ export function buildDesign(input: DesignInput): Design {
   const layout = tpl?.layout ?? 'standard'
   const { intro, secs } = readSections(input.body, tpl)
   const kicker = tpl ? (NEWSLETTER_CATEGORIES.find(c => c.id === tpl.category)?.title ?? look.label) : 'Staff newsletter'
-  return { tpl, look, pal: paletteFor(look, input.brand.accent), layout, title: String(input.title || tpl?.type_title || 'Staff newsletter').slice(0, 140), month: input.monthText || monthNow(), kicker, intro, rows: arrange(secs, layout), brand: input.brand, sentBy: input.sentBy ?? '', photo: input.photo ?? null, links: input.links ?? {}, sample: !!input.sample }
+  const people = input.people ?? (input.photo ? [input.photo] : [])
+  const n = people.length
+  const rows = arrange(secs, layout).map(r => ({ ...r, cells: r.cells.map(c => ({ ...c, title: pluralise(c.title, n) })) }))
+  const giftOn = !!(input.gift && (input.gift.text.trim() || input.gift.dataUrl)) || (!!input.sample && !!tpl && /^(employee-of-the-month|staff-stories|recognition)/.test(tpl.id))
+  if (giftOn) { const at = rows.length && rows[rows.length - 1].kind === 'footer' ? rows.length - 1 : rows.length; rows.splice(at, 0, { kind: 'gift', cells: [{ key: 'gift', title: n > 1 ? 'Their gifts' : 'Their gift', role: 'plain', icon: 'gift', blocks: [{ t: 'p', text: input.gift?.text?.trim() || '[What the gift is, for example a voucher or an extra day off]' }] }] }) }
+  return { tpl, look, pal: paletteFor(look, input.brand.accent), layout, title: pluralise(String(input.title || tpl?.type_title || 'Staff newsletter'), n).slice(0, 140), month: input.monthText || monthNow(), kicker, intro, rows, brand: input.brand, sentBy: input.sentBy ?? '', photo: input.photo ?? people[0] ?? null, people, gift: input.gift ?? null, links: input.links ?? {}, sample: !!input.sample }
 }
 
 /** Example copy for a template, built from its own section titles and hints, so the layouts can be shown before anything is written. Always shown marked as a sample. */
@@ -222,13 +236,29 @@ function silhouette(d: Design, size: number): string {
   const c = d.pal.accent
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 100 100" role="img" aria-label="Sample picture of a member of staff" style="display:block;border-radius:50%;background:${d.pal.tint2};border:3px solid ${d.pal.tint}"><circle cx="50" cy="38" r="17" fill="${c}" opacity=".55"/><path d="M16 96c2-22 15-34 34-34s32 12 34 34z" fill="${c}" opacity=".55"/></svg>`
 }
-function photoSlot(d: Design, t: Target, size: number): string {
-  const name = d.photo?.name ?? ''
-  if (d.sample && t === 'web' && !d.photo?.dataUrl) return silhouette(d, size)
-  if (t === 'web' && d.photo?.dataUrl) return `<img src="${esc(d.photo.dataUrl)}" alt="${esc(name ? `Photo of ${name}` : 'Photo')}" width="${size}" height="${size}" style="display:block;width:${size}px;height:${size}px;border-radius:50%;object-fit:cover;border:3px solid ${d.pal.tint2}">`
+function photoSlot(d: Design, t: Target, size: number, who: { dataUrl: string; name?: string; inHub?: boolean } | null = d.photo ?? null): string {
+  const name = who?.name ?? ''
+  if (d.sample && t === 'web' && !who?.dataUrl) return silhouette(d, size)
+  if (t === 'web' && who?.dataUrl) return `<img src="${esc(who.dataUrl)}" alt="${esc(name ? `Photo of ${name}` : 'Photo')}" width="${size}" height="${size}" style="display:block;width:${size}px;height:${size}px;border-radius:50%;object-fit:cover;border:3px solid ${d.pal.tint2}">`
   const ini = initials(name)
-  const note = t === 'email' && d.photo?.inHub ? `<div style="font-size:11px;line-height:1.35;color:${MUTED};text-align:center;padding-top:6px;max-width:${size + 20}px">Their photo is in the hub and the PDF</div>` : ''
+  const note = t === 'email' && who?.inHub && d.people.length <= 1 ? `<div style="font-size:11px;line-height:1.35;color:${MUTED};text-align:center;padding-top:6px;max-width:${size + 20}px">Their photo is in the hub and the PDF</div>` : ''
   return `<table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr><td width="${size}" height="${size}" align="center" valign="middle" style="width:${size}px;height:${size}px;border-radius:50%;background:${d.pal.tint2};border:3px solid ${d.pal.tint};font-size:${Math.round(size / 3)}px;font-weight:700;color:${d.pal.dark};text-align:center" role="img" aria-label="${esc(name ? `Picture slot for ${name}` : 'Picture slot')}">${ini ? esc(ini) : '&#9733;'}</td></tr></table>${note}`
+}
+/** One round picture, or two to four side by side with first names, or a tidy wrapped grid beyond that. */
+function photoCluster(d: Design, t: Target): string {
+  const list = d.people.length ? d.people : [null as any]
+  if (list.length === 1) return photoSlot(d, t, 140, list[0])
+  const size = list.length === 2 ? 104 : list.length <= 4 ? 84 : 68
+  const cells = list.map((p: any) => `<td align="center" valign="top" style="padding:0 6px 8px">${photoSlot(d, t, size, p)}<div style="font-size:12px;line-height:1.3;color:${INK};padding-top:4px;max-width:${size + 12}px;text-align:center">${esc(String(p?.name ?? '').split(' ')[0])}</div></td>`)
+  const per = list.length <= 4 ? list.length : 4
+  const rows: string[] = []; for (let i = 0; i < cells.length; i += per) rows.push(`<tr>${cells.slice(i, i + per).join('')}</tr>`)
+  return `<table role="presentation" cellpadding="0" cellspacing="0" border="0" align="right">${rows.join('')}</table>${t === 'email' && list.some((p: any) => p?.inHub) ? `<div style="clear:both;font-size:11px;line-height:1.35;color:${MUTED};text-align:right;padding-top:4px">Their photos are in the hub and the PDF</div>` : ''}`
+}
+/** The optional gift card: the picture (screen, PDF and hub) or a gift icon, and the words. Email shows the icon and the words, never an uploaded picture. */
+function giftCard(d: Design, s: Sec, t: Target): string {
+  const img = t === 'web' && d.gift?.dataUrl ? `<img src="${esc(d.gift.dataUrl)}" alt="The gift" width="96" height="96" style="display:block;width:96px;height:96px;border-radius:${Math.min(d.look.radius, 16)}px;object-fit:cover;border:3px solid ${d.pal.tint2}">` : ''
+  const lead = img || iconBubble(d, 'gift', t, 52)
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${d.pal.tint};border:2px solid ${d.pal.tint2};border-radius:${d.look.radius}px"><tr><td style="padding:16px 18px"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td valign="middle" width="${img ? 110 : 66}" style="padding-right:14px">${lead}</td><td valign="middle"><h2 style="margin:0 0 4px;font-family:${d.look.headFont};font-size:18px;line-height:1.25;color:${d.pal.dark}">${esc(s.title)}</h2>${paras(s.blocks, 15)}</td></tr></table></td></tr></table>`
 }
 function cardShell(d: Design, inner: string, tinted = false, extra = ''): string {
   const r = d.look.radius
@@ -251,10 +281,12 @@ function body(d: Design, s: Sec, big = false): string {
 
 function cell(d: Design, s: Sec, t: Target, kind: Row['kind']): string {
   if (kind === 'hero') {
-    const person = s.role === 'person' && (!!d.photo || (d.sample && (s.key === 'who' || s.key === 'story')))
+    const person = s.role === 'person' && (d.people.length > 0 || !!d.photo || (d.sample && (s.key === 'who' || s.key === 'story')))
     const left = `${head(d, s, t, true)}${body(d, s, true)}`
+    const n = Math.max(1, d.people.length)
     const inner = person
-      ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td valign="top">${left}</td><td valign="top" align="right" width="156" style="padding-left:14px">${photoSlot(d, t, 140)}</td></tr></table>`
+      ? (n >= 3 ? `${left}<div style="padding-top:6px">${photoCluster(d, t)}</div><div style="clear:both"></div>`
+        : `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td valign="top">${left}</td><td valign="top" align="right" width="${n === 2 ? 240 : 156}" style="padding-left:14px">${photoCluster(d, t)}</td></tr></table>`)
       : left
     return cardShell(d, inner, true)
   }
@@ -278,6 +310,7 @@ function cell(d: Design, s: Sec, t: Target, kind: Row['kind']): string {
 }
 
 function rowHtml(d: Design, r: Row, t: Target): string {
+  if (r.kind === 'gift') return giftCard(d, r.cells[0], t)
   if (r.kind === 'pair') {
     return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>${r.cells.map((c, i) => `<td class="nl-col" width="50%" valign="top" style="width:50%;padding:${i === 0 ? '0 6px 0 0' : '0 0 0 6px'}">${cell(d, c, t, 'full')}</td>`).join('')}</tr></table>`
   }
@@ -307,9 +340,12 @@ export const htmlToText = (html: string) => html.replace(/<style[\s\S]*?<\/style
 
 // ── PDF: the same design model drawn with pdfkit ───────────────────────────────────────
 const pdfSafe = (s: string) => String(s ?? '').normalize('NFC').replace(/[‘’]/g, '’').replace(/[^\u0009\u000A -~ -ÿ’“”…•€]/g, '')
-export async function renderNewsletterPdf(input: DesignInput, logoPng?: Buffer | null, photoPng?: Buffer | null): Promise<Buffer> {
+export async function renderNewsletterPdf(input: DesignInput, logoPng?: Buffer | null, photoPngs?: Buffer | null | Array<Buffer | null>, giftPng?: Buffer | null): Promise<Buffer> {
   const { default: PDFDocument } = await import('pdfkit')
   const d = buildDesign(input)
+  const photos: Array<Buffer | null> = Array.isArray(photoPngs) ? photoPngs : photoPngs ? [photoPngs] : []
+  const photoPng = photos[0] ?? null
+  const multi = d.people.length > 1
   const W = 595.28, H = 841.89, M = 36, CW = W - M * 2, G = 10
   const doc = new PDFDocument({ size: 'A4', margin: M, bufferPages: true, info: { Title: pdfSafe(d.title), Author: pdfSafe(d.brand.name) } })
   const chunks: Buffer[] = []
@@ -368,22 +404,34 @@ export async function renderNewsletterPdf(input: DesignInput, logoPng?: Buffer |
 
   const cardInner = (s: Sec, w: number, big: boolean) => ({ size: big ? 11.5 : 10.5, hw: w - 28, titleSize: big ? 14 : 12.5 })
   const cardHeight = (s: Sec, w: number, big: boolean, withPhoto = false) => {
-    const c = cardInner(s, w, big); const textW = withPhoto ? c.hw - 120 : c.hw
+    const c = cardInner(s, w, big); const textW = withPhoto && !multi ? c.hw - 120 : c.hw
     const h = 14 + Math.max(34, 4) + 6 + bodyH(s, textW, c.size) + 8
-    return withPhoto ? Math.max(h, 150) : h   // room for the round picture
+    return withPhoto ? (multi ? h + 104 : Math.max(h, 150)) : h   // room for the round picture, or a row of them
   }
   const drawCard = (s: Sec, x: number, yy: number, w: number, h: number, big: boolean, tinted: boolean, withPhoto = false) => {
     const bg = tinted || d.look.cardStyle === 'soft' ? d.pal.tint : '#FFFFFF'
     fillBox(x, yy, w, h, bg, d.look.cardStyle === 'outline' ? d.pal.tint2 : LINE, d.look.cardStyle === 'rule' ? d.pal.accent : undefined)
     const c = cardInner(s, w, big); const px = x + 14
     bubble(s.icon, px, yy + 12, 28)
-    doc.fillColor(d.pal.dark).font('Helvetica-Bold').fontSize(c.titleSize).text(pdfSafe(s.title), px + 38, yy + 12 + (28 - c.titleSize) / 2 - 1, { width: c.hw - 38 - (withPhoto ? 112 : 0), lineBreak: false, ellipsis: true })
+    doc.fillColor(d.pal.dark).font('Helvetica-Bold').fontSize(c.titleSize).text(pdfSafe(s.title), px + 38, yy + 12 + (28 - c.titleSize) / 2 - 1, { width: c.hw - 38 - (withPhoto && !multi ? 112 : 0), lineBreak: false, ellipsis: true })
     const stat = statValues(s)
     if (stat) {
       const cw = (c.hw - (stat.length - 1) * 6) / stat.length
       stat.forEach((st, i) => { const sx = px + i * (cw + 6); doc.save(); doc.roundedRect(sx, yy + 50, cw, 52, 8).fillColor(d.pal.tint).fill(); doc.restore(); doc.fillColor(d.pal.accent).font('Helvetica-Bold').fontSize(22).text(st.n, sx, yy + 56, { width: cw, align: 'center' }); doc.fillColor(MUTED).font('Helvetica').fontSize(8.5).text(pdfSafe(st.label), sx + 4, yy + 84, { width: cw - 8, align: 'center' }) })
-    } else drawBody(s, px, yy + 50, withPhoto ? c.hw - 120 : c.hw, c.size)
-    if (withPhoto) {
+    } else drawBody(s, px, yy + 50, withPhoto && !multi ? c.hw - 120 : c.hw, c.size)
+    if (withPhoto && multi) {
+      // two or more featured people: a row of round pictures (or initials) with first names, along the bottom of the card, wrapping if there are many
+      const D = d.people.length <= 4 ? 64 : 52, gap = 18, per = Math.max(1, Math.floor((c.hw + gap) / (D + gap)))
+      d.people.forEach((pp, i) => {
+        const col = i % per, row = Math.floor(i / per), cx = px + col * (D + gap), cy = yy + h - 96 + row * (D + 24)
+        const buf = photos[i]
+        if (buf && buf.length) { try { doc.save(); doc.circle(cx + D / 2, cy + D / 2, D / 2).clip(); doc.image(buf, cx, cy, { cover: [D, D], align: 'center', valign: 'center' }); doc.restore() } catch { /* no photo */ } doc.save(); doc.circle(cx + D / 2, cy + D / 2, D / 2).lineWidth(2).strokeColor(d.pal.tint2).stroke(); doc.restore() }
+        else if (d.sample && !pp.name) { doc.save(); doc.circle(cx + D / 2, cy + D / 2, D / 2).fillColor(d.pal.tint2).fill(); doc.restore() }
+        else { doc.save(); doc.circle(cx + D / 2, cy + D / 2, D / 2).fillColor(d.pal.tint2).fill(); doc.restore(); doc.fillColor(d.pal.dark).font('Helvetica-Bold').fontSize(18).text(initials(pp.name ?? '') || '*', cx, cy + D / 2 - 10, { width: D, align: 'center', lineBreak: false }) }
+        doc.fillColor(INK).font('Helvetica').fontSize(8.5).text(pdfSafe(String(pp.name ?? '').split(' ')[0]), cx - 6, cy + D + 3, { width: D + 12, align: 'center', lineBreak: false, ellipsis: true })
+      })
+    }
+    if (withPhoto && !multi) {
       const D = 84, cx = x + w - 14 - D, cy = yy + 50
       if (photoPng) { try { doc.save(); doc.circle(cx + D / 2, cy + D / 2, D / 2).clip(); doc.image(photoPng, cx, cy, { cover: [D, D], align: 'center', valign: 'center' }); doc.restore() } catch { /* no photo */ } doc.save(); doc.circle(cx + D / 2, cy + D / 2, D / 2).lineWidth(2).strokeColor(d.pal.tint2).stroke(); doc.restore() }
       else if (d.sample && !d.photo) {
@@ -397,7 +445,7 @@ export async function renderNewsletterPdf(input: DesignInput, logoPng?: Buffer |
     const li = s.blocks.filter(b => b.t === 'li'); const m = li.map(b => /^(\d{1,4})\s+(.{2,60})$/.exec(b.text)).filter(Boolean) as RegExpExecArray[]
     return m.length >= 2 && m.length === li.length && m.length <= 4 ? m.map(x => ({ n: x[1], label: x[2] })) : null
   }
-  const personHero = (s: Sec) => s.role === 'person' && (!!d.photo || (d.sample && (s.key === 'who' || s.key === 'story')))
+  const personHero = (s: Sec) => s.role === 'person' && (d.people.length > 0 || !!d.photo || (d.sample && (s.key === 'who' || s.key === 'story')))
   const need = (h: number) => { if (y + h > BOTTOM) newPage() }
   for (const r of d.rows) {
     if (r.kind === 'pair') {
@@ -422,6 +470,14 @@ export async function renderNewsletterPdf(input: DesignInput, logoPng?: Buffer |
       if (linked) doc.fillColor(d.pal.accent).fill(); else doc.fillColor('#FFFFFF').fill().roundedRect(M + 14, y + h - 40, bw, 28, 8).lineWidth(1.6).strokeColor(d.pal.accent).stroke()
       doc.restore()
       doc.fillColor(linked ? '#FFFFFF' : d.pal.dark).font('Helvetica-Bold').fontSize(12).text(pdfSafe(label), M + 14, y + h - 32, { width: bw, align: 'center', lineBreak: false })
+      y += h + G
+    } else if (r.kind === 'gift') {
+      const s = r.cells[0], txt = s.blocks.map(b => b.text).join(' '), lead = giftPng ? 74 : 62
+      const h = Math.max(82, 40 + textH(txt, CW - 28 - lead, 11.5))
+      need(h + G); fillBox(M, y, CW, h, d.pal.tint, d.pal.tint2)
+      if (giftPng) { try { doc.save(); doc.roundedRect(M + 14, y + 12, 58, 58, 8).clip(); doc.image(giftPng, M + 14, y + 12, { cover: [58, 58], align: 'center', valign: 'center' }); doc.restore() } catch { bubble('gift', M + 14, y + 14, 44) } } else bubble('gift', M + 14, y + 14, 44)
+      doc.fillColor(d.pal.dark).font('Helvetica-Bold').fontSize(14).text(pdfSafe(s.title), M + 14 + lead, y + 14, { width: CW - 28 - lead, lineBreak: false })
+      doc.fillColor(INK).font('Helvetica').fontSize(11.5).text(pdfSafe(txt), M + 14 + lead, y + 36, { width: CW - 28 - lead, lineGap: 2.5 })
       y += h + G
     } else if (r.kind === 'footer') {
       const s = r.cells[0]; const h = cardHeight(s, CW, false)

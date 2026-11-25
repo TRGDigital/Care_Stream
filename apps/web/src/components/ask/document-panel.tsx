@@ -9,6 +9,7 @@ import { MarkdownLite } from './markdown-lite'
 import { StaffPicker, useStaff } from '@/components/ask/staff-picker'
 import { DocumentActions } from '@/components/ask/document-actions'
 import { SharePanel } from '@/components/ask/share-panel'
+import { GiftBox } from '@/components/ask/gift-box'
 import { ExpandViewer, Expandable, useExpandViewer, type ViewerItem } from './expand-viewer'
 import { FitHtml } from './fit-html'
 
@@ -151,6 +152,7 @@ export function DocumentPanel({ token, id, onClose, onChanged }: { token: string
                     : <StaffPicker people={photoStaffList} mode="single" noneLabel="No picture" label="Picture of the person" selected={photoPick ? [photoPick] : (d.data?.photo?.user_id ? [d.data.photo.user_id] : [])}
                         onChange={ids => { const v = ids[0] ?? ''; setPhotoPick(v || null); setPhotoAgreed(false); if (!v) run('photo', () => ask.newsletterPhoto(token, d.id, null), 'No picture.') }} />}
                 </div>
+                {(d.data?.photos?.length ?? 0) > 1 && <p className="mt-2 rounded-md bg-green-50 px-2.5 py-1.5 text-xs text-green-900" role="status">{d.data!.photos!.length} people are featured, each with their own agreement. Choosing someone here replaces them all. To change the group, ask the agent to make the newsletter again.</p>}
                 {photoPick && photoPick !== d.data?.photo?.user_id && (
                   <div className="mt-2 space-y-2">
                     <label className="flex items-start gap-2 text-sm"><input type="checkbox" className="mt-1 h-4 w-4" checked={photoAgreed} onChange={e => setPhotoAgreed(e.target.checked)} /><span>They are happy to be named and photographed</span></label>
@@ -164,6 +166,7 @@ export function DocumentPanel({ token, id, onClose, onChanged }: { token: string
                 )}
               </div>
             )}
+            {d.type === 'newsletter' && d.actions.edit && /^(employee-of-the-month|staff-stories|recognition)/.test(String(d.data?.template_id ?? '')) && <GiftBox token={token} docId={d.id} gift={d.data?.gift} onSaved={() => { void load(); onChanged() }} />}
             {flow && d.checklist.length > 0 && (d.status === 'draft' || d.status === 'pending') && (
               <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-950">
                 <p className="flex items-center gap-1.5 font-semibold"><AlertTriangle size={14} aria-hidden="true" /> Before you send</p>

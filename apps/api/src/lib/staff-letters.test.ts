@@ -220,7 +220,7 @@ test('HUB: the notification about a letter offers Open the letter', () => {
 test('ADMIN: the document panel asks how the letter is shared, offers Share now for the chosen way, shows hub status and can withdraw', () => {
   const p = web('components/ask/document-panel.tsx')
   assert.match(p, /How will this letter be shared\?/); assert.match(p, /Print only\./); assert.match(p, /never sees it/)
-  assert.match(p, /Share now/); assert.match(p, /method: 'now'/); assert.match(p, /Withdraw/); assert.match(p, /window\.confirm\(`Withdraw this letter/)
+  assert.match(p, /<SharePanel/); assert.match(web('components/ask/share-panel.tsx'), /Yes, send it to/); assert.match(p, /Withdraw/)   // sending moved into the one Share this panel (summary, then Send); assert.match(p, /window\.confirm\(`Withdraw this letter/)
   assert.match(p, /Shared in their hub/); assert.match(p, /Waiting for them to acknowledge it/)
   const c = web('lib/ask-client.ts'); assert.match(c, /setShareIntent/); assert.match(c, /withdrawHubShare/); assert.match(c, /'now'/)
 })

@@ -71,8 +71,8 @@ test('EMAIL: never carries the picture or a staff picture address; it shows init
   const html = renderNewsletterHtml({ templateId: 'employee-of-the-month-standard', title: 'Employee of the month', body: EOM, brand: BRAND, photo: { dataUrl, name: 'Helen Thomas', inHub: true } }, 'email')
   assert.doesNotMatch(html, /data:image\/jpeg/); assert.doesNotMatch(html, /staff-photo|photo\.jpg|<img[^>]+Photo of/); assert.match(html, /Their photo is in the hub and the PDF/); assert.match(html, />HT</)
   const doc = src('./newsletter-design-doc.ts')
-  assert.match(doc, /o\.target === 'web' \? await photoFor/)
-  assert.match(doc, /ph\.consent !== true/)
+  assert.match(doc, /peopleFor\(o\.tenantId, o\.doc, web\)/)
+  assert.match(fs.readFileSync(path.resolve(__dirname, 'newsletter-photo.ts'), 'utf8'), /x\.consent === true/)   // featuredOf drops anyone without a recorded agreement
   assert.match(doc, /staffHasPicture/)
 })
 

@@ -6,7 +6,7 @@
 // to where it was. On a phone it is the whole screen. The rules (zoom limits, paging, keys, focus) are in lib/expand-viewer-logic.ts and tested there.
 import { createPortal } from 'react-dom'
 import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState, type KeyboardEvent as RKeyboardEvent, type ReactNode } from 'react'
-import { DocumentActions } from '@/components/ask/document-actions'
+import { DocumentActions } from './document-actions'
 import { ChevronLeft, ChevronRight, Download, Maximize2, Printer, X, ZoomIn, ZoomOut } from 'lucide-react'
 import { canZoomIn, canZoomOut, clampPage, clampZoom, fitScale, hasNext, hasPrev, isActivateKey, pageLabel, stepPage, trapTab, viewerKey, zoomIn, zoomLabel, zoomOut } from '../../lib/expand-viewer-logic'
 

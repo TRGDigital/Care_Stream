@@ -215,3 +215,13 @@ export function askUploadMiddleware(req: Request, res: Response, next: NextFunct
     err(res, 'UPLOAD_ERROR', 'The upload failed. Please try again.', 500)
   })
 }
+
+// The optional gift picture for an Employee of the month newsletter: png, jpg or webp, at most 1 MB. Field "file". The type is checked on the real bytes in the route.
+const giftMulter = multer({ storage: multer.memoryStorage(), limits: { fileSize: 1024 * 1024, files: 1, fields: 2, fieldSize: 200 } })
+export function giftImageMiddleware(req: Request, res: Response, next: NextFunction): void {
+  giftMulter.single('file')(req, res, (multerErr) => {
+    if (!multerErr) { next(); return }
+    if ((multerErr as any).code === 'LIMIT_FILE_SIZE') { err(res, 'FILE_TOO_LARGE', 'That picture is over 1 MB. Please use a smaller one.', 413); return }
+    err(res, 'UPLOAD_ERROR', 'The upload failed. Please try again.', 500)
+  })
+}

@@ -5,7 +5,10 @@
 // The PDF stays at /ask/documents/:id/pdf (now also on the letterhead, and ?sign=1 adds MY signature).
 // A signature is used only for the signed in person, and only when they ask for it in this request. Pilot account and administrators only.
 
-import { photoAllowedFor, photoChoice, resolvePerson, staffHasPicture } from '../services/ask-docs/newsletter-photo'
+import { photoAllowedFor, photoChoice, resolvePerson, staffHasPicture, featuredOf, detectGiftImage, giftAllowedFor, lintGift, giftKey, GIFT_IMAGE_ID } from '../services/ask-docs/newsletter-photo'
+import { randomUUID } from 'crypto'
+import { putPrivateObject } from '../services/storage/s3'
+import { giftImageMiddleware } from '../middleware/upload'
 import { Router, Request, Response, NextFunction } from 'express'
 import { getTenantId } from '../db/tenant-context'
 import { ok, err } from '../lib/response'
@@ -76,7 +79,7 @@ askDocsRouter.post('/:id/newsletter-photo', async (req: Request, res: Response) 
     if (!ch.ok) { err(res, 'CONSENT_REQUIRED', ch.reason, 400); return }
     photo = ch.photo as unknown as Record<string, unknown>
   }
-  const data = { ...(d.data ?? {}), photo }
+  const data = { ...(d.data ?? {}), photo, photos: photo ? [photo] : [] }   // the old single choice is a list of one
   await store.updateDocumentContent(t, d.id, { data })
   void writeAuditLog({ tenant_id: t, user_id: u, event_type: 'ask_newsletter_photo_set', entity_type: 'ask_document', entity_id: d.id, metadata: { included: !!uid, consent: !!uid } })
   ok(res, { saved: true, photo_user_id: uid, has_picture: uid ? await staffHasPicture(t, uid) : false })
@@ -85,10 +88,40 @@ askDocsRouter.post('/:id/newsletter-photo', async (req: Request, res: Response) 
 askDocsRouter.get('/:id/newsletter-photo', async (req: Request, res: Response) => {
   const t = getTenantId(), u = req.user!.sub
   const d = await store.getDocumentFor(t, u, String(req.params.id)); if (!d || d.type !== 'newsletter') { notFound(res); return }
-  const ph = d.data?.photo
-  if (!ph?.user_id) { ok(res, { chosen: false }); return }
-  const who = await resolvePerson(t, { user_id: String(ph.user_id) })
-  ok(res, { chosen: true, name: who.ok ? who.name : null, consent: ph.consent === true, has_picture: who.ok ? await staffHasPicture(t, who.id) : false })
+  const list = featuredOf(d.data)
+  if (!list.length) { ok(res, { chosen: false }); return }
+  const people: Array<{ name: string | null; has_picture: boolean }> = []
+  for (const ph of list) { const who = await resolvePerson(t, { user_id: String(ph.user_id) }); people.push({ name: who.ok ? who.name : null, has_picture: who.ok ? await staffHasPicture(t, who.id) : false }) }
+  ok(res, { chosen: true, name: people[0].name, consent: true, has_picture: people[0].has_picture, people })
+})
+
+// The optional GIFT picture for an Employee of the month style newsletter: png, jpg or webp, at most 1 MB, checked on its real bytes, kept privately for this account only. Returns the id to
+// use in the newsletter. Without a picture the newsletter shows a gift icon.
+askDocsRouter.post('/gift-image', giftImageMiddleware, async (req: Request, res: Response) => {
+  const t = getTenantId(), u = req.user!.sub
+  const file = (req as any).file as Express.Multer.File | undefined
+  if (!file) { err(res, 'NO_FILE', 'No picture was sent.', 400); return }
+  const kind = detectGiftImage(file.buffer)
+  if (!kind) { err(res, 'INVALID_FILE', 'That is not a png, jpg or webp picture.', 400); return }
+  const image_id = `${randomUUID()}.${kind.ext}`
+  try { await putPrivateObject(giftKey(t, image_id), file.buffer, kind.mime) } catch { err(res, 'UPLOAD_FAILED', 'The picture could not be stored just now. Please try again.', 500); return }
+  void writeAuditLog({ tenant_id: t, user_id: u, event_type: 'ask_gift_image_uploaded', entity_type: 'ask_document', entity_id: image_id, metadata: { size: file.size, type: kind.ext } })
+  ok(res, { image_id }, 201)
+})
+// Sets or clears the gift on a newsletter draft: words (a pound value is allowed here) and the picture id from the upload above. Both empty removes the gift.
+askDocsRouter.put('/:id/gift', async (req: Request, res: Response) => {
+  const t = getTenantId(), u = req.user!.sub
+  const d = await store.getDocumentFor(t, u, String(req.params.id)); if (!d || d.type !== 'newsletter') { notFound(res); return }
+  const ed = canEdit(d, u); if (!ed.ok) { err(res, 'NOT_ALLOWED', ed.reason, 409); return }
+  const text = String(req.body?.text ?? '').trim(), imageId = req.body?.image_id == null ? '' : String(req.body.image_id)
+  if ((text || imageId) && !giftAllowedFor(d.data?.template_id)) { err(res, 'INVALID', 'A gift can only go in an employee of the month, staff story or recognition newsletter.', 400); return }
+  const problems = lintGift(text); if (problems.length) { err(res, 'INVALID', problems[0], 400); return }
+  if (imageId && !GIFT_IMAGE_ID.test(imageId)) { err(res, 'INVALID', 'That picture id is not valid.', 400); return }
+  const data = { ...(d.data ?? {}) }
+  if (text || imageId) data.gift = { text, image_id: imageId || null }; else delete data.gift
+  await store.updateDocumentContent(t, d.id, { data })
+  void writeAuditLog({ tenant_id: t, user_id: u, event_type: 'ask_newsletter_gift_set', entity_type: 'ask_document', entity_id: d.id, metadata: { gift: !!(text || imageId), picture: !!imageId } })
+  ok(res, { saved: true, gift: data.gift ?? null })
 })
 
 // A SAMPLE of one option an agent offers (a newsletter layout, a letter, a report, a notification, an email), with the organisation's own logo and colour and placeholder words only.

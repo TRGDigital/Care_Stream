@@ -36,7 +36,7 @@ export interface AskDocFull {
   id: string; type: string; title: string; body: string; status: string; version: number; updated_at: string | null; mine: boolean; created_by: string
   staff_name: string | null; internal_only?: boolean; checklist: string[]; references: Array<{ label: string; url: string }>; shared: Array<{ method: string; at: string }>
   share_intent?: ShareIntent | null; share_intent_text?: string; ack_default?: boolean; hub_shares?: HubShare[]
-  values?: Record<string, string | number>; fields?: AskDocField[]; actions: AskDocActions; data?: { review_note?: { note: string; at: string }; photo?: { user_id: string; include: boolean } | null; template_id?: string | null } | null
+  values?: Record<string, string | number>; fields?: AskDocField[]; actions: AskDocActions; data?: { review_note?: { note: string; at: string }; photo?: { user_id: string; include: boolean } | null; photos?: Array<{ user_id: string; include: boolean }>; gift?: { text?: string; image_id?: string | null } | null; template_id?: string | null } | null
 }
 export type UploadRetention = 'chat_end' | '30d' | 'keep'
 export interface MatchRowView { row: number; file_name: string; status: 'matched' | 'ambiguous' | 'unmatched'; staff_id: string | null; candidates: Array<{ id: string; name: string }>; chosen?: string | null }
@@ -96,6 +96,15 @@ export const ask = {
   previewDraft: (t: string, id: string, b: { title?: string; body?: string }) => call<{ html: string }>(`/ask-docs/${encodeURIComponent(id)}/preview-draft`, t, { method: 'POST', body: JSON.stringify(b) }),
   /** Include one person's staff photo in the newsletter (null removes it). */
   newsletterPhoto: (t: string, id: string, userId: string | null, consent = false) => call<{ saved: boolean; photo_user_id: string | null; has_picture: boolean }>(`/ask-docs/${encodeURIComponent(id)}/newsletter-photo`, t, { method: 'POST', body: JSON.stringify({ user_id: userId, consent }) }),
+  /** The optional gift picture (png, jpg or webp, up to 1 MB): kept privately for this account; returns the id to use. */
+  giftImage: async (t: string, file: File): Promise<{ image_id: string }> => {
+    const fd = new FormData(); fd.append('file', file)
+    const res = await fetch(`${API_URL}/ask-docs/gift-image`, { method: 'POST', headers: { Authorization: `Bearer ${t}` }, body: fd })
+    let body: any = null; try { body = await res.json() } catch { /* not json */ }
+    if (!res.ok || !body?.success) throw new AskError(body?.error?.code ?? 'ERROR', body?.error?.message ?? `That picture could not be added (${res.status}).`, res.status)
+    return body.data
+  },
+  setGift: (t: string, id: string, b: { text: string; image_id: string | null }) => call<{ saved: boolean; gift: { text: string; image_id: string | null } | null }>(`/ask-docs/${encodeURIComponent(id)}/gift`, t, { method: 'PUT', body: JSON.stringify(b) }),
   newsletterPhotoStatus: (t: string, id: string) => call<{ chosen: boolean; name?: string | null; consent?: boolean; has_picture?: boolean }>(`/ask-docs/${encodeURIComponent(id)}/newsletter-photo`, t),
   documents: (t: string) => call<{ documents: AskDocument[] }>('/ask/documents', t),
   document: (t: string, id: string) => call<{ document: AskDocFull }>(`/ask/documents/${encodeURIComponent(id)}`, t),

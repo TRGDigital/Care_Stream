@@ -2,15 +2,15 @@
 // Preview and a Choose button). Pure functions, no screen code, so they are tested on their own. A block that cannot be read is NEVER shown half made: the answer is shown as
 // plain text instead (the fences are taken off and the words kept), so a slip by the model never hides what it said.
 
-export type QuestionKind = 'text' | 'longtext' | 'choice' | 'people' | 'date'
+export type QuestionKind = 'text' | 'longtext' | 'choice' | 'people' | 'date' | 'image'
 export interface Question { id: string; label: string; hint: string; required: boolean; kind: QuestionKind; choices: string[]; /** A people question: more than one person may be picked. Without it exactly ONE person. */ multiple?: boolean; /** How many people the administrator said (two employees of the month). A hint: they may choose more or fewer. */ expected?: number }
 export interface QuestionForm { title: string; questions: Question[] }
 export type PreviewKind = 'newsletter' | 'letter' | 'report' | 'notification' | 'email' | 'other'
 export interface OptionItem { id: string; title: string; description: string; preview: { kind: PreviewKind; template_id: string | null; layout: string | null } }
 export interface OptionSet { title: string; options: OptionItem[] }
-export interface AnswerValue { text: string; people?: Array<{ id: string; name: string }> }
+export interface AnswerValue { text: string; people?: Array<{ id: string; name: string }>; /** An uploaded picture (a gift picture): its id travels in the message, never shown. */ imageId?: string | null; imageName?: string | null }
 
-const KINDS: QuestionKind[] = ['text', 'longtext', 'choice', 'people', 'date']
+const KINDS: QuestionKind[] = ['text', 'longtext', 'choice', 'people', 'date', 'image']
 const PREVIEW_KINDS: PreviewKind[] = ['newsletter', 'letter', 'report', 'notification', 'email', 'other']
 export const MAX_QUESTIONS = 8, MAX_OPTIONS = 6
 const clip = (v: unknown, n: number) => String(v ?? '').replace(/\s+/g, ' ').trim().slice(0, n)
@@ -119,22 +119,25 @@ export const visibleText = (text: string) => withoutNextStepsBlock(withoutOption
 // ── Answering ───────────────────────────────────────────────────────────────────────
 /** Which required questions have no answer. A people question is answered ONLY by picking from the staff list (a typed name is never a guess the agent has to resolve). */
 export function missingAnswers(form: QuestionForm, values: Record<string, AnswerValue>): string[] {
-  return form.questions.filter(q => q.required && (q.kind === 'people' ? !(values[q.id]?.people?.length) : !(values[q.id]?.text ?? '').trim())).map(q => q.id)
+  return form.questions.filter(q => q.required && (q.kind === 'people' ? !(values[q.id]?.people?.length) : q.kind === 'image' ? !values[q.id]?.imageId : !(values[q.id]?.text ?? '').trim())).map(q => q.id)
 }
 export const ANSWERS_MARK = '[answers]'
 export const CHOICE_MARK = '[choice]'
 export const IDS_MARK = 'Staff ids:'
+export const IMAGE_MARK = 'Image id:'
 /** The one message the answers go back as. Each question is paired with its answer, so there is nothing to guess. A question left empty says so. */
 export function formatAnswers(form: QuestionForm, values: Record<string, AnswerValue>): string {
   const lines = [`${ANSWERS_MARK}${form.title ? ' ' + form.title : ''}`]
   form.questions.forEach((q, i) => {
     const v = values[q.id]
     const picked = q.kind === 'people' ? (v?.people ?? []).slice(0, q.multiple ? 500 : 1) : []
-    const typed = q.kind === 'people' ? '' : (v?.text ?? '').trim()
-    const answer = [picked.map(p => p.name).join(', '), typed].filter(Boolean).join('; ') || '(no answer)'
+    const typed = q.kind === 'people' || q.kind === 'image' ? '' : (v?.text ?? '').trim()
+    const pic = q.kind === 'image' && v?.imageId ? 'A picture was added' : ''
+    const answer = [picked.map(p => p.name).join(', '), typed, pic].filter(Boolean).join('; ') || '(no answer)'
     lines.push(`${i + 1}. ${q.label}`, `   Answer: ${answer}`)
     // The staff ids travel in the message so the agent can use them in its tools; they are never shown (the answered card drops this line).
     if (picked.length) lines.push(`   ${IDS_MARK} ${picked.map(p => p.id).join(', ')}`)
+    if (q.kind === 'image' && v?.imageId) lines.push(`   ${IMAGE_MARK} ${v.imageId}`)
   })
   return lines.join('\n')
 }
@@ -145,7 +148,7 @@ export function parseAnswersMessage(content: string): { title: string; pairs: Ar
   const pairs: Array<{ question: string; answer: string }> = []
   for (let i = 1; i < lines.length; i++) {
     const q = /^\d+\.\s+(.+)$/.exec(lines[i]); const a = /^\s+Answer:\s*(.*)$/.exec(lines[i + 1] ?? '')
-    if (q && a) { pairs.push({ question: q[1], answer: a[1] }); i++; if (new RegExp('^\\s+' + IDS_MARK).test(lines[i + 1] ?? '')) i++ }
+    if (q && a) { pairs.push({ question: q[1], answer: a[1] }); i++; while (new RegExp('^\\s+(' + IDS_MARK + '|' + IMAGE_MARK + ')').test(lines[i + 1] ?? '')) i++ }
   }
   return pairs.length ? { title: lines[0].slice(ANSWERS_MARK.length).trim(), pairs } : null
 }

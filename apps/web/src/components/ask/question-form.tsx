@@ -6,6 +6,7 @@
 import { useId, useMemo, useState } from 'react'
 import { Check, Loader2, Send } from 'lucide-react'
 import { StaffPicker, useStaff } from '@/components/ask/staff-picker'
+import { ask } from '@/lib/ask-client'
 import { prefillForm } from '@/lib/ask-prefill'
 import { formatAnswers, missingAnswers, type AnswerValue, type Question, type QuestionForm as Form } from '@/lib/ask-blocks'
 
@@ -24,6 +25,25 @@ function PeopleField({ token, q, value, onChange, disabled, boxId }: { token: st
         : <StaffPicker people={staff} selected={ids} onChange={pick} mode={multiple ? 'multi' : 'single'} disabled={disabled} label={q.label} bulk={multiple} />}
       {q.expected && q.expected > 1 && <p className="mt-1.5 text-xs text-neutral-mid">You said {q.expected}: choose {q.expected} people (you can choose more or fewer).</p>}
       {(value.people ?? []).length > 0 && <p className="mt-1.5 text-xs font-medium text-neutral-dark" aria-live="polite">Chosen: {(value.people ?? []).map(p => p.name).join(', ')}</p>}
+    </div>
+  )
+}
+
+/** An optional picture (the gift): a small file picker that uploads straight away. The id travels with the answers and is never shown. */
+function ImageField({ token, value, onChange, disabled, boxId }: { token: string; value: AnswerValue; onChange: (v: AnswerValue) => void; disabled: boolean; boxId: string }) {
+  const [busy, setBusy] = useState(false), [err, setErr] = useState('')
+  async function pick(f: File | undefined) {
+    if (!f) return
+    if (!/^image\/(png|jpeg|webp)$/.test(f.type) || f.size > 1024 * 1024) { setErr('Use a png, jpg or webp picture up to 1 MB.'); return }
+    setBusy(true); setErr('')
+    try { const r = await ask.giftImage(token, f); onChange({ ...value, imageId: r.image_id, imageName: f.name }) } catch (e) { setErr(e instanceof Error ? e.message : 'That picture could not be added.') } finally { setBusy(false) }
+  }
+  return (
+    <div>
+      <input id={boxId} type="file" accept="image/png,image/jpeg,image/webp" disabled={disabled || busy} onChange={e => pick(e.target.files?.[0])} className="block w-full text-sm text-neutral-dark file:mr-3 file:rounded-lg file:border-0 file:bg-teal file:px-3 file:py-2 file:text-sm file:font-semibold file:text-white" aria-describedby={`${boxId}-hint`} />
+      {busy && <p className="mt-1 flex items-center gap-1.5 text-xs text-neutral-mid" role="status"><Loader2 size={12} className="animate-spin" aria-hidden="true" />Adding the picture</p>}
+      {value.imageId && <p className="mt-1 text-xs font-medium text-green-800">Added: {value.imageName ?? 'a picture'} <button type="button" className="ml-2 font-semibold underline" onClick={() => onChange({ ...value, imageId: null, imageName: null })}>Remove</button></p>}
+      {err && <p role="alert" className="mt-1 text-xs text-red-700">{err}</p>}
     </div>
   )
 }
@@ -53,6 +73,7 @@ export function QuestionFormCard({ token, form: given, typed = [], disabled, onS
               {q.hint && <p id={`${id}-hint`} className="mb-1 text-xs text-neutral-mid">{q.hint}</p>}
               {q.kind === 'longtext' ? <textarea id={id} rows={3} className={`${inp} resize-y`} value={v.text} disabled={disabled} onChange={e => set(q.id, { ...v, text: e.target.value })} aria-invalid={bad} aria-describedby={q.hint ? `${id}-hint` : undefined} />
                 : q.kind === 'date' ? <input id={id} type="date" className={`${inp} sm:w-auto`} value={v.text} disabled={disabled} onChange={e => set(q.id, { ...v, text: e.target.value })} aria-invalid={bad} />
+                : q.kind === 'image' ? <ImageField token={token} value={v} onChange={nv => set(q.id, nv)} disabled={!!disabled} boxId={id} />
                 : q.kind === 'people' ? <PeopleField token={token} q={q} value={v} onChange={nv => set(q.id, nv)} disabled={!!disabled} boxId={id} />
                 : <>
                   {q.kind === 'choice' && <div className="mb-1.5 flex flex-wrap gap-1.5" role="group" aria-label={`Quick answers for: ${q.label}`}>{q.choices.map(c => <button key={c} type="button" disabled={disabled} onClick={() => set(q.id, { ...v, text: c })} aria-pressed={v.text === c} className={`inline-flex min-h-[32px] items-center gap-1 rounded-full border px-3 text-xs font-semibold ${v.text === c ? 'border-teal bg-teal text-white' : 'border-gray-300 bg-white text-neutral-dark hover:border-teal'}`}>{v.text === c && <Check size={12} aria-hidden="true" />}{c}</button>)}</div>}

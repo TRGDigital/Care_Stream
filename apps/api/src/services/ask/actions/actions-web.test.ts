@@ -7,7 +7,7 @@ const web = (f: string) => fs.readFileSync(path.resolve(__dirname, '../../../../
 test('the action card: Confirm is the only way to run it, with a picker, an editable message and no scroll bars', () => {
   const c = web('components/ask/action-card.tsx')
   assert.match(c, /ask\.actions\.confirm\(/); assert.match(c, /Nothing has happened yet\. Check the people and the wording, then press Confirm\./)
-  assert.match(c, /All active staff/); assert.match(c, /Find a person/); assert.match(c, /Suggested/); assert.match(c, /no-scrollbar/); assert.doesNotMatch(c, /overflow-y-scroll|overflow-scroll/)
+  assert.match(c, /<StaffPicker/); assert.match(c, /bulk/); assert.match(web('components/ask/staff-picker.tsx'), /Everyone/); assert.match(web('components/ask/staff-picker.tsx'), /Find a person/); assert.match(web('components/ask/staff-picker.tsx'), /Suggested/); assert.doesNotMatch(c, /overflow-y-scroll|overflow-scroll/)
   assert.match(c, /Preview for/); assert.match(c, /Each person gets their own figures/); assert.match(c, /Withdraw/); assert.match(c, /cannot be recalled/)
   assert.doesNotMatch(c, /[–—]/, 'no dashes in copy')
 })

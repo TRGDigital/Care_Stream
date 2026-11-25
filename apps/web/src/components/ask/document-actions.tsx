@@ -4,7 +4,7 @@
 // two separate buttons, Word as a third where it exists, and Expand where it applies. A draft is stamped DRAFT and a sample SAMPLE; neither is recorded as shared.
 import { useState } from 'react'
 import { Download, FileText, Loader2, Maximize2, Printer } from 'lucide-react'
-import { copyNote, printBlob, saveBlob } from '@/lib/document-actions'
+import { copyNote, printBlob, saveBlob } from '../../lib/document-actions'
 
 const btn = 'inline-flex min-h-[36px] items-center gap-1.5 rounded-lg border border-teal px-3 text-sm font-semibold text-teal hover:bg-teal/5 disabled:opacity-50'
 

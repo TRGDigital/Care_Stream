@@ -6,7 +6,8 @@ import { loadNewStarters, loadBirthdaysThisMonth, loadAnniversariesThisMonth, lo
 import { loadEnrolments } from './tools-people'
 import { dueAndOverdue } from './people-calc'
 import { saveDocument } from './store'
-import { photoAllowedFor, photoChoice, resolvePerson, staffHasPicture, CONSENT_QUESTION } from '../ask-docs/newsletter-photo'
+import { photoAllowedFor, photoChoice, resolvePerson, staffHasPicture, CONSENT_QUESTION, MAX_FEATURED, giftAllowedFor, lintGift, giftKey, GIFT_IMAGE_ID } from '../ask-docs/newsletter-photo'
+import { downloadFile } from '../storage/s3'
 import { NEWSLETTER_TEMPLATES, NEWSLETTER_CHECKLIST, NEWSLETTER_CATEGORIES, newsletterTemplate, newsletterMenu, matchNewsletterTypes, lintNewsletter, lintOptionsFor } from '../ask-docs/newsletter-templates'
 
 const OWN = (label: string, today: string) => ownSource(`${label} (CareStream records)`, today)
@@ -68,7 +69,7 @@ export const NEWSLETTER_TOOLS: AskTool[] = [
   {
     name: 'save_newsletter_draft',
     description: 'Save the finished newsletter as a DRAFT in the library for approval. body is plain text: ## for a heading, - for a bullet, blank lines between paragraphs. It is refused if it breaks the house rules (dashes, health or pay content, superlatives): fix and try again. Nothing is sent from here.',
-    input_schema: { type: 'object', properties: { title: { type: 'string' }, template_id: { type: 'string' }, body: { type: 'string' }, photo_user_id: { type: 'string', description: 'The staff id of the person whose picture goes in the newsletter (the staff id from the question form answer). Only for employee of the month, staff stories, new starters and leavers.' }, photo_person_name: { type: 'string', description: 'Their full name, only if you have no staff id.' }, photo_consent: { type: 'boolean', description: 'true ONLY when the administrator answered yes to "They are happy to be named and photographed" in the question form. Never guess it.' } }, required: ['title', 'body'] },
+    input_schema: { type: 'object', properties: { title: { type: 'string' }, template_id: { type: 'string' }, body: { type: 'string' }, photo_user_id: { type: 'string', description: 'The staff id of the person whose picture goes in the newsletter (the staff id from the question form answer). Only for employee of the month, staff stories, new starters and leavers.' }, photo_person_name: { type: 'string', description: 'Their full name, only if you have no staff id.' }, photo_consent: { type: 'boolean', description: 'true ONLY when the administrator answered yes to "They are happy to be named and photographed" in the question form. Never guess it.' }, featured: { type: 'array', maxItems: 8, description: 'Use this when MORE THAN ONE person is featured (two employees of the month): one entry per person with their staff id (from the Staff ids line) and consent true ONLY if that person agreed. Each person needs their own yes. Replaces photo_user_id.', items: { type: 'object', properties: { user_id: { type: 'string' }, consent: { type: 'boolean' } }, required: ['user_id', 'consent'] } }, gift_text: { type: 'string', description: 'OPTIONAL. What the gift is, in a few words (for example "A £25 voucher and a day of extra leave"). A pound value is allowed here. Only for employee of the month, staff stories and recognition. Leave it out when there is no gift.' }, gift_image_id: { type: 'string', description: 'OPTIONAL. The id of a gift picture the administrator uploaded in the form (png, jpg or webp, up to 1 MB). Without one the newsletter shows a gift icon.' } }, required: ['title', 'body'] },
     async run(ctx, input) {
       const title = String(input?.title ?? '').trim().slice(0, 120), body = String(input?.body ?? '').trim()
       if (!title || body.length < 40) return { data: { saved: false, message: 'Please give a title and the newsletter text.' }, sources: [] }
@@ -76,21 +77,35 @@ export const NEWSLETTER_TOOLS: AskTool[] = [
       if (problems.length) return { data: { saved: false, problems, message: 'Not saved. Fix these and try again.' }, sources: [] }
       const tpl = newsletterTemplate(String(input?.template_id ?? ''))
       // A picture of one person: only for the types that carry one, only with a recorded yes, only an active member of staff of this account. Refused BEFORE anything is saved.
-      let photo: Record<string, unknown> | null = null, photoInfo: Record<string, unknown> | undefined
-      if (input?.photo_user_id || input?.photo_person_name) {
+      let photos: Record<string, unknown>[] = [], photoInfo: Record<string, unknown> | undefined
+      const asked: Array<{ user_id?: unknown; name?: unknown; consent: unknown }> = Array.isArray(input?.featured) && input.featured.length
+        ? input.featured.slice(0, MAX_FEATURED).map((f: any) => ({ user_id: f?.user_id, consent: f?.consent }))
+        : (input?.photo_user_id || input?.photo_person_name) ? [{ user_id: input.photo_user_id, name: input.photo_person_name, consent: input.photo_consent }] : []
+      if (asked.length) {
         if (!photoAllowedFor(tpl?.id)) return { data: { saved: false, message: 'A person\'s picture can only go in an employee of the month, staff story, new starters or leavers newsletter.' }, sources: [] }
-        const ch0 = photoChoice({ userId: 'x', consent: input?.photo_consent, actorId: ctx.userId })
-        if (!ch0.ok) return { data: { saved: false, message: `Not saved. ${ch0.reason}` }, sources: [] }
-        const who = await resolvePerson(ctx.tenantId, { user_id: input?.photo_user_id, name: input?.photo_person_name })
-        if (!who.ok) return { data: { saved: false, message: `Not saved. ${who.reason}` }, sources: [] }
-        const ch = photoChoice({ userId: who.id, consent: true, actorId: ctx.userId })
-        if (ch.ok) photo = ch.photo as unknown as Record<string, unknown>
-        const has = await staffHasPicture(ctx.tenantId, who.id)
-        photoInfo = has
-          ? { person: who.name, picture: 'included', note: 'Their staff picture is in the designed newsletter, the PDF and the hub. Email shows their initials and says the photo is in the hub and the PDF.' }
-          : { person: who.name, picture: 'none_on_file', note: `${who.name} has no staff picture yet, so the newsletter shows their initials. Tell the administrator that plainly, and offer two choices: carry on with initials, or add a picture first (Staff, open their profile, Picture) and it then appears in the newsletter by itself. Do not say a picture is included.` }
+        const people: Array<{ name: string; picture: string }> = []
+        for (const a of asked) {   // each person needs their own recorded yes, and nothing is saved if any one is missing
+          const ch0 = photoChoice({ userId: 'x', consent: a.consent, actorId: ctx.userId })
+          if (!ch0.ok) return { data: { saved: false, message: `Not saved. ${ch0.reason} Each featured person needs their own yes.` }, sources: [] }
+          const who = await resolvePerson(ctx.tenantId, { user_id: a.user_id, name: a.name })
+          if (!who.ok) return { data: { saved: false, message: `Not saved. ${who.reason}` }, sources: [] }
+          const ch = photoChoice({ userId: who.id, consent: true, actorId: ctx.userId })
+          if (ch.ok && !photos.some(x => x.user_id === who.id)) { photos.push(ch.photo as unknown as Record<string, unknown>); people.push({ name: who.name, picture: (await staffHasPicture(ctx.tenantId, who.id)) ? 'included' : 'none_on_file' }) }
+        }
+        const missing = people.filter(x => x.picture === 'none_on_file').map(x => x.name)
+        photoInfo = { people, note: `Their staff pictures are in the designed newsletter, the PDF and the hub, large and round, side by side. Email shows initials and says the photos are in the hub and the PDF.${missing.length ? ` ${missing.join(' and ')} ${missing.length === 1 ? 'has' : 'have'} no staff picture yet, so initials show. Tell the administrator plainly, and offer two choices: carry on with initials, or add a picture first (Staff, open their profile, Picture): it then appears by itself.` : ''}` }
       }
-      const id = await saveDocument(ctx.tenantId, ctx.userId, { type: 'newsletter', title, body, data: { template_id: tpl?.id ?? null, checklist: NEWSLETTER_CHECKLIST, ...(photo ? { photo } : {}) } })
+      // The optional gift: only for the types that carry one, the words follow the newsletter rules (a pound value is allowed here), the picture must be one this account uploaded.
+      let gift: Record<string, unknown> | null = null
+      const giftText = String(input?.gift_text ?? '').trim(), giftImage = String(input?.gift_image_id ?? '').trim()
+      if (giftText || giftImage) {
+        if (!giftAllowedFor(tpl?.id)) return { data: { saved: false, message: 'A gift can only go in an employee of the month, staff story or recognition newsletter.' }, sources: [] }
+        const gp = lintGift(giftText); if (gp.length) return { data: { saved: false, problems: gp, message: 'Not saved. Fix the gift description and try again.' }, sources: [] }
+        if (giftImage) { if (!GIFT_IMAGE_ID.test(giftImage)) return { data: { saved: false, message: 'That gift picture id is not valid. Ask the administrator to upload the picture again.' }, sources: [] }
+          try { await downloadFile(giftKey(ctx.tenantId, giftImage)) } catch { return { data: { saved: false, message: 'That gift picture was not found for this account. Ask the administrator to upload it again.' }, sources: [] } } }
+        gift = { text: giftText, image_id: giftImage || null }
+      }
+      const id = await saveDocument(ctx.tenantId, ctx.userId, { type: 'newsletter', title, body, data: { template_id: tpl?.id ?? null, checklist: NEWSLETTER_CHECKLIST, ...(photos.length ? { photos, photo: photos[0] } : {}), ...(gift ? { gift } : {}) } })
       return { data: { saved: true, document_id: id, status: 'draft', ...(photoInfo ? { photo: photoInfo } : {}), next: 'Open it in the library to review, edit, submit for approval and then share it with your staff.' }, sources: [] }
     },
   },

@@ -56,7 +56,7 @@ test('VIEWER: one shared component with a dialog, a visible Close, Print, Downlo
 test('VIEWER: it is wired to thumbnails, the designed preview, the document panel, the library, tables and the hub', () => {
   assert.match(webSrc('components/ask/layout-thumbs.tsx'), /<Expandable[\s\S]*<ExpandViewer/)
   assert.match(webSrc('components/ask/newsletter-picker.tsx'), /<LayoutThumbs/); assert.match(webSrc('components/ask/ask-overlay.tsx'), /<LayoutThumbs/)
-  const dp = webSrc('components/ask/document-panel.tsx'); assert.match(dp, /<Expandable/); assert.match(dp, /<ExpandViewer/); assert.match(dp, /switcher=/); assert.match(dp, /downloads=/); assert.match(dp, /Expand<\/button>/)
+  const dp = webSrc('components/ask/document-panel.tsx'); assert.match(dp, /<Expandable/); assert.match(dp, /<ExpandViewer/); assert.match(dp, /switcher=/); assert.match(dp, /pdf=\{/); assert.match(dp, /Expand<\/button>/)
   assert.match(webSrc('components/ask/ask-overlay.tsx'), /expandDoc\(d\)/); assert.match(webSrc('components/ask/markdown-lite.tsx'), /<Expandable label="A table"/)
   assert.match(webSrc('components/hub/views/notification-detail-view.tsx'), /<Expandable label="The newsletter"/)
 })

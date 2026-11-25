@@ -48,7 +48,7 @@ test('QUESTIONS: required answers are checked, and the answers go back as one me
   const values = { person: { text: '', people: [{ id: 'u1', name: 'Helen Thomas' }] }, about: { text: 'Six years here.\nLoves gardening.' }, author: { text: 'Len' } }
   assert.deepEqual(B.missingAnswers(form, values), [])
   const msg = B.formatAnswers(form, { ...values, about: { text: 'Six years here. Loves gardening.' } })
-  assert.match(msg, /^\[answers\] About the newsletter/); assert.match(msg, /1\. Who is the employee of the month\?\n   Answer: Helen Thomas \(staff id u1\)/); assert.match(msg, /4\. How should it sound\?\n   Answer: \(no answer\)/)
+  assert.match(msg, /^\[answers\] About the newsletter/); assert.match(msg, /1\. Who is the employee of the month\?\n   Answer: Helen Thomas\n   Staff ids: u1/); assert.match(msg, /4\. How should it sound\?\n   Answer: \(no answer\)/)
   const back = B.parseAnswersMessage(msg)
   assert.equal(back.pairs.length, 4); assert.equal(back.pairs[1].answer, 'Six years here. Loves gardening.'); assert.equal(back.title, 'About the newsletter')
   assert.equal(B.parseAnswersMessage('A normal message'), null)
@@ -185,7 +185,7 @@ test('SCREEN: the form and the option cards are wired into the panel for every a
   const o = webSrc('components/ask/ask-overlay.tsx'), q = webSrc('components/ask/question-form.tsx'), b = webSrc('components/ask/options-block.tsx')
   assert.match(o, /QuestionFormCard/); assert.match(o, /OptionsBlock/); assert.match(o, /AnsweredCard/); assert.match(o, /visibleText/)
   assert.doesNotMatch(o, /agent\.id === 'newsletter' && token && parseOptions/)   // not tied to one agent
-  assert.match(q, /htmlFor=\{id\}/); assert.match(q, /Send answers/); assert.match(q, /\(required\)/); assert.match(q, /type="submit"/); assert.match(q, /loadStaff/); assert.match(q, /role="alert"/)
+  assert.match(q, /htmlFor=\{id\}/); assert.match(q, /Send answers/); assert.match(q, /\(required\)/); assert.match(q, /type="submit"/); assert.match(q, /useStaff/); assert.match(q, /role="alert"/)
   assert.match(b, /Preview/); assert.match(b, /Choose/); assert.match(b, /ExpandViewer/); assert.match(b, /aria-label=\{`Preview/)
   for (const f of [q, b]) { assert.doesNotMatch(f, /overflow-y-scroll|overflow-scroll/); assert.doesNotMatch(f, /[–—]/) }
 })

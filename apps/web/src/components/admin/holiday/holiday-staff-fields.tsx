@@ -61,17 +61,17 @@ export function HolidayStaffFields({ token, userId, saveRef }: { token: string; 
         </div>
         <div>
           <label className={lbl} htmlFor="hol-alloc">Full yearly annual leave allocation ({unit})</label>
-          <input id="hol-alloc" type="number" min={0} step="0.5" inputMode="decimal" className={inp} value={allowance} onChange={on(setAllowance)} placeholder={unit === 'hours' ? 'For example 224' : 'For example 28'} />
+          <input id="hol-alloc" type="number" min={0} step="0.01" inputMode="decimal" className={inp} value={allowance} onChange={on(setAllowance)} placeholder={unit === 'hours' ? 'For example 224' : 'For example 28'} />
           <p className="mt-1 text-xs text-neutral-mid">What they get for a whole holiday year.</p>
         </div>
         <div>
           <label className={lbl} htmlFor="hol-first">Allocation for the rest of this year ({unit})</label>
-          <input id="hol-first" type="number" min={0} step="0.5" inputMode="decimal" className={inp} value={firstYear} onChange={on(setFirstYear)} placeholder={unit === 'hours' ? 'For example 112' : 'For example 14'} />
+          <input id="hol-first" type="number" min={0} step="0.01" inputMode="decimal" className={inp} value={firstYear} onChange={on(setFirstYear)} placeholder={unit === 'hours' ? 'For example 112' : 'For example 14'} />
           <p className="mt-1 text-xs text-neutral-mid">For someone who starts part way through the year. Used only for the year of their start date; after that the full yearly allocation applies. Leave empty if they start at the beginning of the year.</p>
         </div>
         <div>
           <label className={lbl} htmlFor="hol-hours">Contracted hours a week</label>
-          <input id="hol-hours" type="number" min={0} max={168} step="0.5" inputMode="decimal" className={inp} value={contracted} onChange={on(setContracted)} placeholder="For example 40" />
+          <input id="hol-hours" type="number" min={0} max={168} step="0.01" inputMode="decimal" className={inp} value={contracted} onChange={on(setContracted)} placeholder="For example 40" />
         </div>
         <div>
           <label className={lbl} htmlFor="hol-start">Start date</label>

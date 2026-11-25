@@ -12,7 +12,7 @@ import { uploadPromptMeta } from './agents-uploads'
 import { HOUSE_RULES_FORMS_USAGE, DEFAULT_HOUSE_RULES_FORMS, HOUSE_RULES_FORMS_LABEL } from './house-rules-forms'
 
 export const ASK_GROUP = 'Ask CareStream'
-export const ASK_PROMPT_MAX = 16000   // the shared house rules entry is long (ten rules with examples), so there is room to edit it
+export const ASK_PROMPT_MAX = 18000   // the shared house rules entry is long (ten rules with examples), so there is room to edit it
 const CACHE_MS = 60_000
 
 export interface AskPromptMeta { usage: string; label: string; note: string; default: string }

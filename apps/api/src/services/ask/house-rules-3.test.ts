@@ -176,11 +176,11 @@ test('EVERY AGENT: the composed prompt carries rule 9 (editable, after the job a
       assert.ok(p.indexOf('RULE 9, A GENTLE CHECK') < p.indexOf(LOCKED_RULES.slice(0, 40)), `${a.id}: before the locked rules`)
     }
   } finally { __setPromptTestHooks({ reader: null }) }
-  assert.deepEqual(HOUSE_RULES_SUMMARY.map(r => r.n), [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12])
+  assert.deepEqual(HOUSE_RULES_SUMMARY.map(r => r.n), [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13])
   const nine = HOUSE_RULES_SUMMARY[8]
   assert.equal(nine.locked, false); assert.ok(nine.line.length < 100); assert.doesNotMatch(`${nine.title} ${nine.line}`, /[–—]/)
   const page = webSrc('app/(platform)/platform/prompts/page.tsx')
-  assert.match(page, /The ten house rules/); assert.match(page, /Rules 1 to 5 and 7 to 10 are editable/)
+  assert.match(page, /The house rules/); assert.match(page, /Every rule except rule 6 is editable/)
 })
 
 test('SCREEN: the form and the option cards use the check line, nothing is blocked, and the answers carry the confirmation', () => {
@@ -202,4 +202,12 @@ test('AUDIT: the check changes nothing on the server: no new audit event and no 
   assert.doesNotMatch(audit, /ask_check|ask_gentle/)
   const routes = fs.readFileSync(path.resolve(__dirname, '../../routes/ask.ts'), 'utf8')
   assert.doesNotMatch(routes, /\/checks?\b/)
+})
+
+test('RULE 13: keep it uncluttered is in the shared prompt of every agent, editable, and says internal checks are never shown to the tenant', async () => {
+  const r = HOUSE_RULES_SUMMARY[12]
+  assert.equal(r.n, 13); assert.equal(r.locked, false); assert.ok(r.line.length < 100); assert.doesNotMatch(`${r.title} ${r.line}`, /[–—]/)
+  assert.ok(DEFAULT_HOUSE_RULES_FORMS.includes(r.phrase)); assert.match(DEFAULT_HOUSE_RULES_FORMS, /Never show CareStream's internal checks/)
+  __setPromptTestHooks({ reader: async () => null })
+  try { for (const a of AGENTS) assert.ok((await buildSystemPrompt(a, '2026-11-26', 'Ferndale', '')).includes('RULE 13, KEEP IT UNCLUTTERED'), a.id) } finally { __setPromptTestHooks({ reader: null }) }
 })

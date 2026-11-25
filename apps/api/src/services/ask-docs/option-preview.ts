@@ -10,12 +10,16 @@ import { layoutToHtml, PREVIEW_CSS, type LayoutDoc } from '../letters/layout'
 import { reportTemplate } from '../ask/report-templates'
 import { renderNewsletterHtml, sampleBody, contrast } from './newsletter-design'
 import { renderNewsletterSheet } from './newsletter-sheet'
+import { designInputFor } from './newsletter-design-doc'
+import { PALETTES } from './newsletter-edit'
+import { getDocumentFor } from '../ask/store'
 import { newsletterTemplate, NEWSLETTER_TEMPLATES } from './newsletter-templates'
 
-export const PREVIEW_KINDS = ['newsletter', 'letter', 'report', 'notification', 'email', 'other'] as const
+export const PREVIEW_KINDS = ['newsletter', 'letter', 'report', 'notification', 'email', 'other', 'newsletter_palette'] as const
 export type PreviewKind = (typeof PREVIEW_KINDS)[number]
-export interface PreviewRequest { kind: PreviewKind; template_id?: string | null; layout?: string | null }
-export interface PreviewResult { kind: PreviewKind; title: string; html: string; css: string; /** For a newsletter: the A4 sheet, the same page Save PDF prints (the viewer shows this one). */ sheet?: string; sample: true; has_logo: boolean; brand_colour: string | null; note: string | null }
+/** newsletter_palette: the administrator's OWN newsletter draft (document_id) shown in one colour set (template_id is a palette id, brand or category). */
+export interface PreviewRequest { kind: PreviewKind; template_id?: string | null; layout?: string | null; document_id?: string | null }
+export interface PreviewResult { kind: PreviewKind; title: string; html: string; css: string; /** For a newsletter: the A4 sheet, the same page Save PDF prints (the viewer shows this one). */ sheet?: string; sample: boolean; has_logo: boolean; brand_colour: string | null; note: string | null }
 
 const esc = (s: unknown) => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c] as string))
 export const SAMPLE_LINE = 'SAMPLE: placeholder words only. Your real names and details are not shown here.'
@@ -27,7 +31,10 @@ export function cleanRequest(q: any): PreviewRequest | null {
   const id = String(q?.template_id ?? '').trim(); const layout = String(q?.layout ?? '').trim().toLowerCase()
   if (id && !/^[a-z0-9][a-z0-9_-]{0,80}$/.test(id)) return null
   if (layout && !['short', 'standard', 'detailed'].includes(layout)) return null
-  return { kind, template_id: id || null, layout: layout || null }
+  const docId = String(q?.document_id ?? '').trim()
+  if (docId && !/^[A-Za-z0-9][A-Za-z0-9_-]{0,80}$/.test(docId)) return null
+  if (kind === 'newsletter_palette' && !docId) return null
+  return { kind, template_id: id || null, layout: layout || null, ...(docId ? { document_id: docId } : {}) }
 }
 
 /** The organisation's brand colour when one is saved and readable on white. Defensive: the column may not exist yet (the brand colour setting is a separate update), then there is none. */
@@ -57,13 +64,27 @@ export function sampleLetterValues(fields: Array<{ key: string; label: string; t
 
 /** `deps` lets a test supply the letterhead and the brand colour instead of the database. */
 export interface PreviewDeps { letterhead?: (tenantId: string) => Promise<{ head: Awaited<ReturnType<typeof loadLetterhead>>['head'] }>; brand?: (tenantId: string) => Promise<string | null> }
-export async function renderOptionPreview(tenantId: string, req: PreviewRequest, deps: PreviewDeps = {}): Promise<PreviewResult> {
+export async function renderOptionPreview(tenantId: string, req: PreviewRequest, deps: PreviewDeps = {}, userId?: string | null): Promise<PreviewResult> {
   const l = await (deps.letterhead ?? loadLetterhead)(tenantId)
   const logo = l.head.logoDataUrl ?? null
   const accent = (await (deps.brand ?? brandColourFor)(tenantId)) ?? '#0F766E'
   const brand = accent !== '#0F766E' ? accent : null
   const base = { sample: true as const, has_logo: !!logo, brand_colour: brand }
 
+  if (req.kind === 'newsletter_palette') {
+    // The administrator's OWN draft in one colour set. Not a sample (it is their newsletter), and nothing is saved: the colour is only applied when they press Choose.
+    const d = userId && req.document_id ? await getDocumentFor(tenantId, userId, req.document_id) : null
+    if (!d || d.type !== 'newsletter') return { ...base, sample: false, kind: 'newsletter_palette', title: 'Colour preview', css: '', html: plain(accent, 'Colour preview', 'That newsletter could not be found.', logo, l.head.name), note: 'Newsletter not found.' }
+    const id = String(req.template_id ?? '').toLowerCase()
+    const pal = PALETTES.find(x => x.id === id)
+    const chosen = pal ? pal.accent : id === 'brand' ? (deps.brand ? await deps.brand(tenantId) : await brandColourFor(tenantId)) : null   // category: no override, the category colour
+    const label = pal ? pal.label : id === 'brand' ? 'your brand colour' : 'the category colour'
+    const { input } = await designInputFor({ tenantId, doc: { id: d.id, type: d.type, title: d.title, body: d.body as string, data: d.data ?? {} }, target: 'web' })
+    const html = renderNewsletterHtml({ ...input, brand: { ...input.brand, accent: chosen } }, 'web')
+    const note = `PREVIEW: your own newsletter in ${label}. Nothing changes until you press Choose.`
+    const banner = `<div style="font:700 11px/1.4 ${SANS};letter-spacing:.06em;text-transform:uppercase;color:${chosen ?? accent};background:#FFF;border:1px dashed ${chosen ?? accent};border-radius:6px;padding:6px 10px;margin:0 0 12px;text-align:center">${esc(note)}</div>`
+    return { ...base, sample: false, kind: 'newsletter_palette', title: `${d.title} in ${label}`, css: '', html: banner + html, note: null }
+  }
   if (req.kind === 'newsletter') {
     const tpl = (req.template_id && newsletterTemplate(req.template_id))
       || (req.template_id && NEWSLETTER_TEMPLATES.find(t => t.type === req.template_id && t.layout === (req.layout ?? 'standard')))

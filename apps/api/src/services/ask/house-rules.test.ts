@@ -54,12 +54,12 @@ test('QUESTIONS: required answers are checked, and the answers go back as one me
   assert.equal(B.parseAnswersMessage('A normal message'), null)
 })
 
-test('OPTIONS: the example is valid, ids and kinds are cleaned, at most 6, and a choice goes back as a structured message', async () => {
+test('OPTIONS: the example is valid, ids and kinds are cleaned, at most 10, and a choice goes back as a structured message', async () => {
   const B = await web('lib/ask-blocks')
   const set = B.parseOptions(block(DEFAULT_HOUSE_RULES_FORMS, 'options'))
   assert.ok(set); assert.equal(set.options.length, 2); assert.equal(set.options[0].preview.kind, 'newsletter'); assert.equal(set.options[0].preview.template_id, 'employee-of-the-month-short')
-  const odd = B.parseOptions('```options\n{"options":[{"title":"A","preview":{"kind":"hologram","layout":"huge"}},{"title":"B","id":"x y!"},{"title":"C"},{"title":"D"},{"title":"E"},{"title":"F"},{"title":"G"}]}\n```')
-  assert.equal(odd.options.length, 6); assert.equal(odd.options[0].preview.kind, 'other'); assert.equal(odd.options[0].preview.layout, null); assert.match(odd.options[1].id, /^[A-Za-z0-9_-]+$/)
+  const odd = B.parseOptions('```options\n{"options":[{"title":"A","preview":{"kind":"hologram","layout":"huge"}},{"title":"B","id":"x y!"},{"title":"C"},{"title":"D"},{"title":"E"},{"title":"F"},{"title":"G"},{"title":"H"},{"title":"I"},{"title":"J"},{"title":"K"},{"title":"L"}]}\n```')
+  assert.equal(odd.options.length, 10); assert.equal(odd.options[0].preview.kind, 'other'); assert.equal(odd.options[0].preview.layout, null); assert.match(odd.options[1].id, /^[A-Za-z0-9_-]+$/)
   assert.equal(B.parseOptions('```options\nnot json\n```'), null)
   const msg = B.formatChoice(set.options[1]); assert.deepEqual(B.parseChoiceMessage(msg), { title: 'Standard', id: 'employee-of-the-month-standard' })
   assert.equal(B.parseChoiceMessage('Standard please'), null)

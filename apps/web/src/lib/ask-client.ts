@@ -61,7 +61,7 @@ export interface AskUpload {
 }
 export interface AskApproval { id: string; type: string; title: string; staff_name: string | null; mine: boolean; can_approve?: boolean; updated_at: string | null }
 
-export interface OptionPreview { kind: string; title: string; html: string; css: string; sheet?: string; sample: true; has_logo: boolean; brand_colour: string | null; note: string | null }
+export interface OptionPreview { kind: string; title: string; html: string; css: string; sheet?: string; sample: boolean; has_logo: boolean; brand_colour: string | null; note: string | null }
 export interface NewsletterSample { id: string; layout: 'short' | 'standard' | 'detailed' | string; title: string; html: string }
 export interface NewsletterLibrary {
   categories: Array<{ id: string; title: string; blurb: string; types: Array<{ type: string; title: string; purpose: string; layouts: Array<{ id: string; layout: 'short' | 'standard' | 'detailed'; sections: number }> }> }>
@@ -103,7 +103,7 @@ export const ask = {
   newsletterTemplates: (t: string) => call<NewsletterLibrary>('/ask/newsletter-templates', t),
   /** Sample designs (marked SAMPLE) of every layout of one newsletter type, for choosing a layout by its looks. */
   /** A SAMPLE of one option an agent offers (placeholder words, the organisation's own logo and colour). Never reads real records. */
-  optionPreview: (t: string, p: { kind: string; template_id: string | null; layout: string | null }) => call<OptionPreview>(`/ask-docs/option-preview?kind=${encodeURIComponent(p.kind)}${p.template_id ? `&template_id=${encodeURIComponent(p.template_id)}` : ''}${p.layout ? `&layout=${encodeURIComponent(p.layout)}` : ''}`, t),
+  optionPreview: (t: string, p: { kind: string; template_id: string | null; layout: string | null; document_id?: string | null }) => call<OptionPreview>(`/ask-docs/option-preview?kind=${encodeURIComponent(p.kind)}${p.template_id ? `&template_id=${encodeURIComponent(p.template_id)}` : ''}${p.layout ? `&layout=${encodeURIComponent(p.layout)}` : ''}${p.document_id ? `&document_id=${encodeURIComponent(p.document_id)}` : ''}`, t),
   newsletterSamples: (t: string, type: string) => call<{ designs: NewsletterSample[] }>(`/ask-docs/newsletter-samples/${encodeURIComponent(type)}`, t),
   /** The designed newsletter for text that is being edited and is not saved yet. */
   previewDraft: (t: string, id: string, b: { title?: string; body?: string }) => call<{ html: string; sheet?: string; orientation?: 'portrait' | 'landscape'; pages?: 'one' | 'two' }>(`/ask-docs/${encodeURIComponent(id)}/preview-draft`, t, { method: 'POST', body: JSON.stringify(b) }),

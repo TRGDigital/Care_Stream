@@ -30,7 +30,7 @@ test('RULES 3, 4, 5, 7 and 8 are in the composed prompt of EVERY agent (all of t
   } finally { __setPromptTestHooks({ reader: null }) }
   assert.doesNotMatch(DEFAULT_HOUSE_RULES_FORMS, /[–—]/)
   // the default next steps for each kind of output are spelled out
-  for (const k of ['After a newsletter or letter draft', 'After an answer with figures', 'After a list of people', 'After a quality, audit or governance report', 'After a notification, reminder or training allocation proposal', 'After an upload', 'After a Knowledge answer', 'Something else']) assert.match(DEFAULT_HOUSE_RULES_FORMS, new RegExp(k))
+  for (const k of ['After a newsletter or letter draft', 'After an answer with figures', 'After a list of people', 'After a quality or governance report', 'After a notification, reminder or training proposal', 'After an upload match table', 'a Knowledge answer', 'Something else']) assert.match(DEFAULT_HOUSE_RULES_FORMS, new RegExp(k))
 })
 
 test('RULE 7: after a draft or a proposal is saved the tool result itself tells the agent to end with next_steps (tool level), and the runner applies it', () => {

@@ -5,14 +5,14 @@
 export type QuestionKind = 'text' | 'longtext' | 'choice' | 'people' | 'date' | 'image'
 export interface Question { id: string; label: string; hint: string; required: boolean; kind: QuestionKind; choices: string[]; /** A people question: more than one person may be picked. Without it exactly ONE person. */ multiple?: boolean; /** How many people the administrator said (two employees of the month). A hint: they may choose more or fewer. */ expected?: number; /** HOUSE RULE 9: how many people this question may take. one (the safe default), some (a small group: a shared award) or many (any number: who gets a message). Letters, pay and holiday decisions are always one. */ mode?: 'one' | 'some' | 'many' }
 export interface QuestionForm { title: string; questions: Question[] }
-export type PreviewKind = 'newsletter' | 'letter' | 'report' | 'notification' | 'email' | 'other'
-export interface OptionItem { id: string; title: string; description: string; preview: { kind: PreviewKind; template_id: string | null; layout: string | null } }
+export type PreviewKind = 'newsletter' | 'letter' | 'report' | 'notification' | 'email' | 'other' | 'newsletter_palette'
+export interface OptionItem { id: string; title: string; description: string; preview: { kind: PreviewKind; template_id: string | null; layout: string | null; document_id?: string | null } }
 export interface OptionSet { title: string; options: OptionItem[] }
 export interface AnswerValue { text: string; people?: Array<{ id: string; name: string }>; /** An uploaded picture (a gift picture): its id travels in the message, never shown. */ imageId?: string | null; imageName?: string | null }
 
 const KINDS: QuestionKind[] = ['text', 'longtext', 'choice', 'people', 'date', 'image']
-const PREVIEW_KINDS: PreviewKind[] = ['newsletter', 'letter', 'report', 'notification', 'email', 'other']
-export const MAX_QUESTIONS = 8, MAX_OPTIONS = 6
+const PREVIEW_KINDS: PreviewKind[] = ['newsletter', 'letter', 'report', 'notification', 'email', 'other', 'newsletter_palette']
+export const MAX_QUESTIONS = 8, MAX_OPTIONS = 10
 const clip = (v: unknown, n: number) => String(v ?? '').replace(/\s+/g, ' ').trim().slice(0, n)
 const slug = (v: unknown, fallback: string) => { const s = String(v ?? '').toLowerCase().replace(/[^a-z0-9_-]+/g, '_').replace(/^_+|_+$/g, '').slice(0, 40); return s || fallback }
 
@@ -68,7 +68,8 @@ export function parseOptions(text: string): OptionSet | null {
     const pk = String(o?.preview?.kind ?? '').toLowerCase() as PreviewKind
     const tid = clip(o?.preview?.template_id, 80).replace(/[^a-zA-Z0-9_-]/g, '')
     const lay = clip(o?.preview?.layout, 20).toLowerCase()
-    options.push({ id, title, description: clip(o?.description, 200), preview: { kind: PREVIEW_KINDS.includes(pk) ? pk : 'other', template_id: tid || null, layout: ['short', 'standard', 'detailed'].includes(lay) ? lay : null } })
+    const did = clip(o?.preview?.document_id, 80).replace(/[^a-zA-Z0-9_-]/g, '')
+    options.push({ id, title, description: clip(o?.description, 200), preview: { kind: PREVIEW_KINDS.includes(pk) ? pk : 'other', template_id: tid || null, layout: ['short', 'standard', 'detailed'].includes(lay) ? lay : null, ...(did ? { document_id: did } : {}) } })
   }
   return options.length ? { title: clip(j?.title, 100), options } : null
 }
@@ -80,6 +81,22 @@ export const withoutOptionsBlock = (text: string) => withoutBlock(text, 'options
 export type NextKind = 'action' | 'ask' | 'link'
 export const NEXT_ACTIONS = ['save_library', 'save_pdf', 'print', 'preview', 'edit', 'share', 'choose_who', 'send', 'back_to_layouts', 'show_working', 'colours', 'add_block'] as const
 export type NextAction = (typeof NEXT_ACTIONS)[number]
+/** A button that names one of these is ALWAYS a screen action, whatever kind the model wrote: a document action is never sent back to the model as typed text. */
+const ACTION_ALIASES: Record<string, NextAction> = {
+  colours: 'colours', colors: 'colours', change_colours: 'colours', change_colors: 'colours', changecolours: 'colours', change_the_colours: 'colours',
+  add_block: 'add_block', add_a_block: 'add_block', addblock: 'add_block',
+  edit: 'edit', edit_content: 'edit', edit_the_content: 'edit', editcontent: 'edit',
+  preview: 'preview', designed: 'preview', see_designed: 'preview', see_the_designed_version: 'preview', designed_version: 'preview',
+  save_pdf: 'save_pdf', savepdf: 'save_pdf', pdf: 'save_pdf', print: 'print',
+  share: 'share', send_or_share: 'share', share_this: 'share', choose_who: 'choose_who', send: 'send',
+  save_library: 'save_library', save_to_library: 'save_library', library: 'save_library',
+}
+export const actionForStep = (id: unknown, payload: unknown): NextAction | null => {
+  const p = String(payload ?? '').trim(); if ((NEXT_ACTIONS as readonly string[]).includes(p)) return p as NextAction
+  const k = String(id ?? '').toLowerCase().replace(/[^a-z0-9_]/g, '')
+  if ((NEXT_ACTIONS as readonly string[]).includes(k)) return k as NextAction
+  return ACTION_ALIASES[k] ?? null
+}
 export interface NextStep { id: string; label: string; kind: NextKind; payload: string | null }
 export interface NextSteps { steps: NextStep[] }
 export const MAX_NEXT = 5
@@ -95,7 +112,9 @@ export function parseNextSteps(text: string): NextSteps | null {
     const label = clip(x?.label, 60); if (!label) continue
     let kind: NextKind = x?.kind === 'action' || x?.kind === 'link' ? x.kind : 'ask'
     let payload = x?.payload == null ? null : clip(x.payload, 300) || null
-    if (kind === 'action' && !(NEXT_ACTIONS as readonly string[]).includes(String(payload))) kind = 'ask'   // an action the screen does not know becomes a plain ask
+    const known = kind === 'link' ? null : actionForStep(x?.id ?? label, payload) ?? actionForStep(slug(label, ''), null)
+    if (known) { kind = 'action'; payload = known }   // a document action is run on the screen, never typed to the model (the model may have left the kind or payload off)
+    else if (kind === 'action') kind = 'ask'   // an action the screen does not know becomes a plain ask
     if (kind === 'link' && !/^\/[a-zA-Z0-9/_?=&#.-]*$/.test(payload ?? '')) kind = 'ask'              // only our own pages, never an outside address
     let id = clip(x?.id, 60).replace(/[^a-zA-Z0-9_-]/g, '') || slug(label, `n${steps.length + 1}`)
     while (seen.has(id)) id += '_'

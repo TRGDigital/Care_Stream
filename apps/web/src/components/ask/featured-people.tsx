@@ -14,6 +14,7 @@ export function FeaturedPeople({ token, docId, version, onChanged }: { token: st
   const [selected, setSelected] = useState<string[]>([])
   const [agreed, setAgreed] = useState<Record<string, boolean>>({})
   const [busy, setBusy] = useState(false), [err, setErr] = useState(''), [ok, setOk] = useState('')
+  const [open, setOpen] = useState(false)   // once people are chosen the box folds down to their names; Change opens the list
   const load = useCallback(async () => {
     try { const r = await ask.newsletterPeople(token, docId); setPeople(r.people); setSelected(r.people.map(p => p.user_id)); setAgreed({}) }
     catch (e) { setErr(e instanceof Error ? e.message : 'Could not load the people.') }
@@ -31,6 +32,17 @@ export function FeaturedPeople({ token, docId, version, onChanged }: { token: st
     } catch (e) { setErr(e instanceof AskError || e instanceof Error ? e.message : 'That could not be saved. Please try again.') } finally { setBusy(false) }
   }
   const noPic = (people ?? []).filter(p => !p.has_picture)
+  const folded = (people?.length ?? 0) > 0 && !open && !change.changed
+  if (folded) return (
+    <div className="rounded-lg border border-gray-200 p-3 text-sm text-neutral-dark" id="ask-nl-people">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="min-w-0"><span id="ask-nl-people-label" className="font-semibold">People in this newsletter:</span> {(people ?? []).map(p => p.name ?? nameOf(p.user_id)).join(', ')}</p>
+        <button type="button" aria-expanded={false} onClick={() => setOpen(true)} className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-semibold text-neutral-dark hover:bg-neutral-light">Change</button>
+      </div>
+      {noPic.length > 0 && <p className="mt-2 rounded-md bg-amber-50 px-2.5 py-1.5 text-xs text-amber-950" role="status">{noPic.map(p => p.name ?? 'Someone').join(', ')} {noPic.length === 1 ? 'has' : 'have'} no staff picture yet, so initials show.</p>}
+      {ok && <p role="status" className="mt-2 text-xs font-semibold text-green-800">{ok}</p>}
+    </div>
+  )
   return (
     <div className="rounded-lg border border-gray-200 p-3 text-sm text-neutral-dark" id="ask-nl-people">
       <p id="ask-nl-people-label" className="font-semibold">People in this newsletter</p>

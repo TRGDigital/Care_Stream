@@ -78,7 +78,7 @@ test('CLICK TO ENLARGE: a designed page is an iframe, so a clear layer over it t
   assert.match(e, /role="button" tabIndex=\{0\}/); assert.match(e, /isActivateKey\(e\.key\)/)   // Enter and Space still work from the keyboard
   const sf = web('components/ask/sheet-frame.tsx'); assert.doesNotMatch(sf, /pointer-events-none|pointerEvents/)
   const dp = web('components/ask/document-panel.tsx'); assert.match(dp, /<Expandable label=\{d\.type === 'newsletter' \? 'The designed newsletter'[^]*?<SheetFrame/)
-  assert.match(dp, /onClick=\{openViewer\} className=\{`\$\{btn\} border border-gray-200 text-neutral-dark hover:bg-neutral-light`\}><Maximize2/)   // the toolbar Expand button
+  assert.match(dp, /aria-label="Expand" title="Expand" onClick=\{openViewer\}[^>]*><Maximize2/)   // the toolbar Expand button
 })
 
 test('BLOCK LIST: the summary has no formatting marks and is cut at a word with an ellipsis; the block panel has no inner scroll', () => {

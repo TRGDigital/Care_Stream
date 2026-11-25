@@ -207,10 +207,13 @@ export function DocumentPanel({ token, id, onClose, onChanged, focus }: { token:
   // what sits in the left column (tools and words) and what sits with the page
   // Every notice, checklist and warning sits in ONE band under the toolbar, across the whole panel, above the editing and page columns (never squeezed into the left column).
   const noticeBand = d ? (<>
-    {flow && docStatus && !docStatus.letterhead_ready && (
+    {flow && d.type !== 'newsletter' && docStatus && !docStatus.letterhead_ready && (
       <p className="rounded-lg border border-gray-200 bg-neutral-light/60 px-3 py-2 text-xs text-neutral-dark">To make this look like a complete company letter, finish your <strong>Letterhead and company details</strong> in Settings{docStatus.missing.length ? ': ' + docStatus.missing.join(', ') : ''}.</p>
     )}
-    {showChecklist && (
+    {showChecklist && d.type === 'newsletter' && d.status === 'pending' && d.actions.approve !== undefined && (
+      <label className="flex w-full items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm font-medium text-amber-950"><input type="checkbox" className="mt-0.5 h-4 w-4" checked={ticked} onChange={e => setTicked(e.target.checked)} /> I have checked this is ready to share.</label>
+    )}
+    {showChecklist && d.type !== 'newsletter' && (
       <div className="w-full rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-950">
         <button type="button" aria-expanded={noticeOpen} aria-controls="ask-before-send" onClick={toggleNotice} className="flex w-full items-center justify-between gap-2 text-left font-semibold focus:outline-none focus-visible:ring-2 focus-visible:ring-teal">
           <span className="flex items-center gap-1.5"><AlertTriangle size={14} aria-hidden="true" /> Before you send <span className="rounded-full bg-amber-200/70 px-2 py-0.5 text-xs">{d.checklist.length + 1} checks</span></span>
@@ -316,8 +319,8 @@ export function DocumentPanel({ token, id, onClose, onChanged, focus }: { token:
               <button type="button" aria-expanded={tool === 'blocks'} onClick={() => setTool(tool === 'blocks' ? null : 'blocks')} className={tool === 'blocks' ? tbOn : tbOff}><Plus size={14} aria-hidden="true" /> Add a block</button>
             </>}
               {flow && (letter || report) && <button type="button" onClick={() => setShowPaper(v => !v)} className={`${btn} border border-gray-200 text-neutral-dark hover:bg-neutral-light`}><FileText size={14} /> {showPaper ? 'Show the text' : 'Preview on letterhead'}</button>}
-              <button type="button" onClick={() => navigator.clipboard?.writeText(d.body).catch(() => undefined)} className={`${btn} border border-gray-200 text-neutral-dark hover:bg-neutral-light`}><Copy size={14} /> Copy</button>
-              <button type="button" onClick={openViewer} className={`${btn} border border-gray-200 text-neutral-dark hover:bg-neutral-light`}><Maximize2 size={14} aria-hidden="true" /> Expand</button>
+              <button type="button" aria-label="Copy the text" title="Copy the text" onClick={() => navigator.clipboard?.writeText(d.body).catch(() => undefined)} className={`${tb} border-gray-200 bg-white px-2.5 text-neutral-dark hover:bg-neutral-light`}><Copy size={14} aria-hidden="true" /></button>
+              <button type="button" aria-label="Expand" title="Expand" onClick={openViewer} className={`${tb} border-gray-200 bg-white px-2.5 text-neutral-dark hover:bg-neutral-light`}><Maximize2 size={14} aria-hidden="true" /></button>
           </div>
           <div className="flex flex-wrap items-start gap-2">
               {(letter || news) && <DocumentActions title={d.title} draft={!isFinal} disabled={!!busy} getPdf={getPdfBlob} tooLong={d.type === 'newsletter' ? { orientation, canTwoPages: canTwo, onSwitch: o => setLayout({ orientation: o }), onShorten: () => setEditing(true), onTwoPages: canTwo ? () => setLayout({ pages: 'two' }) : undefined } : undefined} getDocx={() => ask.documentBlob(token, d.id, 'docx', { sign: sign && letter, draft: !isFinal })}

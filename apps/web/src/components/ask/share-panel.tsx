@@ -56,7 +56,7 @@ export function SharePanel({ token, doc, sign, needsAck, onPreview, onSent }: {
     <div className="w-full rounded-lg border border-teal/40 bg-teal/5 p-3 text-sm text-neutral-dark">
       <div className="flex flex-wrap items-center gap-2">
         <button type="button" aria-expanded={open} onClick={() => setOpen(o => !o)} className="inline-flex min-h-[36px] items-center gap-1.5 rounded-lg bg-teal px-3 text-sm font-semibold text-white hover:bg-teal-dark"><Send size={14} aria-hidden="true" /> {open ? 'Close sharing' : 'Share this'}</button>
-        <span className="text-xs text-neutral-mid">Choose how and who, check the summary, then send. Nothing goes until you press Send.</span>
+        <span className="text-xs text-neutral-mid">Nothing goes until you press Send.</span>
         {done && <span role="status" className="inline-flex items-center gap-1 text-xs font-semibold text-green-800"><Check size={12} aria-hidden="true" />{done}</span>}
       </div>
       {open && (

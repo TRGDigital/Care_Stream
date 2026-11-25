@@ -24,7 +24,8 @@ function Summary({ s }: { s: DataSourceRow }) {
       {v.upcoming?.length > 0 && <span className="block text-xs text-neutral-mid">Announced from {dayOf(v.upcoming[0].from)}: 21 and over {gbp(v.upcoming[0].age21)}, 18 to 20 {gbp(v.upcoming[0].age18to20)}</span>}
     </span>
   )
-  if (s.key === 'cpi' || s.key === 'cpih') return <span><strong>{v.latest?.rate}%</strong> for {v.latest?.period}{v.next_release && <span className="block text-xs text-neutral-mid">Next release {dayOf(v.next_release)}</span>}</span>
+  if (s.key === 'cpi' || s.key === 'cpih' || s.key === 'cpi_food') return <span><strong>{v.latest?.rate}%</strong> for {v.latest?.period}{v.next_release && <span className="block text-xs text-neutral-mid">Next release {dayOf(v.next_release)}</span>}</span>
+  if (s.key === 'care_food_cost') return <span><strong>{gbp(v.low_gbp_week)} to {gbp(v.high_gbp_week)}</strong> per resident per week, {v.price_year} prices{v.councils ? `, ${v.councils} councils` : ''}{v.kent_gbp_week ? `. Kent ${gbp(v.kent_gbp_week)}, West Sussex ${gbp(v.west_sussex_gbp_week)}` : ''}</span>
   if (s.key === 'bank_holidays') return <span>{v.events?.length ?? 0} dates, {v.first_year} to {v.last_year}</span>
   if (s.key === 'ssp') return <span><strong>{gbp(v.weekly_rate_gbp)}</strong> a week{v.maximum_weeks ? `, up to ${v.maximum_weeks} weeks` : ''}</span>
   if (s.key === 'mileage') return <span>Cars and vans <strong>{v.cars_vans_first_10000_pence}p</strong> for the first 10,000 miles then {v.cars_vans_after_10000_pence}p, motorcycles {v.motorcycle_pence}p, bikes {v.bike_pence}p</span>
@@ -41,7 +42,8 @@ function Chip({ s }: { s: DataSourceRow }) {
 
 const EXAMPLE: Record<string, string> = {
   nlw: '{"current":{"from":"2026-04-01","label":"April 2026","age21":12.71,"age18to20":10.85,"under18":8,"apprentice":8},"upcoming":[]}',
-  cpi: '{"latest":{"period":"2026-10","rate":3.6}}', cpih: '{"latest":{"period":"2026-10","rate":3.7}}',
+  cpi: '{"latest":{"period":"2026-10","rate":3.6}}', cpih: '{"latest":{"period":"2026-10","rate":3.7}}', cpi_food: '{"latest":{"period":"2026-10","rate":0.9}}',
+  care_food_cost: '{"low_gbp_week":29.05,"high_gbp_week":37.73,"price_year":"2022/23","councils":10}',
   ssp: '{"weekly_rate_gbp":123.25}',
   mileage: '{"cars_vans_first_10000_pence":55,"cars_vans_after_10000_pence":25,"motorcycle_pence":24,"bike_pence":20}',
   real_living_wage: '{"hourly_rate_gbp":14.20,"london_hourly_rate_gbp":15.40}',

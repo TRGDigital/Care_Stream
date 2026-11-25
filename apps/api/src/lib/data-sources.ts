@@ -121,6 +121,15 @@ export function validateRate(v: any): string | null {
   return null
 }
 
+// ── Care home food cost per resident per week (manual: from the councils' published cost of care exercises, as held by Orrery) ──
+export function validateFoodCost(v: any): string | null {
+  if (!inRange(v?.low_gbp_week, 10, 80)) return `The low figure ${v?.low_gbp_week} is outside 10 to 80 pounds a week.`
+  if (!inRange(v?.high_gbp_week, 10, 80)) return `The high figure ${v?.high_gbp_week} is outside 10 to 80 pounds a week.`
+  if (v.low_gbp_week > v.high_gbp_week) return 'The low figure is above the high figure.'
+  if (!/^\d{4}(\/\d{2})?$/.test(String(v?.price_year ?? ''))) return 'Say which prices these are, for example 2022/23.'
+  return null
+}
+
 // ── Bank holidays (GOV.UK, England and Wales) ───────────────────────────────────────────
 export function parseBankHolidays(json: any): Fetched {
   const ew = json?.['england-and-wales']
@@ -201,6 +210,13 @@ export const SOURCES: SourceDef[] = [
   { key: 'cpih', name: 'CPIH annual inflation rate (all items)', publisher: 'Office for National Statistics', source_url: 'https://www.ons.gov.uk/economy/inflationandpriceindices/timeseries/l55o/mm23', fetch_url: 'https://www.ons.gov.uk/economy/inflationandpriceindices/timeseries/l55o/mm23/data',
     update_frequency: 'Monthly (ONS release, mid month)', stale_after_days: 62, data_stale_after_days: 75, weekly: false,
     fetch: async get => parseOnsRate(await get('https://www.ons.gov.uk/economy/inflationandpriceindices/timeseries/l55o/mm23/data'), 'L55O'), validate: validateRate },
+  { key: 'cpi_food', name: 'CPI annual inflation rate, food and non-alcoholic beverages', publisher: 'Office for National Statistics', source_url: 'https://www.ons.gov.uk/economy/inflationandpriceindices/timeseries/d7g8/mm23', fetch_url: 'https://www.ons.gov.uk/economy/inflationandpriceindices/timeseries/d7g8/mm23/data',
+    update_frequency: 'Monthly (ONS release, mid month)', stale_after_days: 62, data_stale_after_days: 75, weekly: false,
+    fetch: async get => parseOnsRate(await get('https://www.ons.gov.uk/economy/inflationandpriceindices/timeseries/d7g8/mm23/data'), 'D7G8'), validate: validateRate,
+    note: 'The same ONS food series Orrery uses for its running costs section. Use it to bring an older food cost forward to today.' },
+  { key: 'care_food_cost', name: 'Care home food cost per resident per week (cost of care exercises)', publisher: 'Councils\' cost of care exercises, as held by Orrery Intelligence', source_url: 'https://www.orreryintelligence.com', fetch_url: null,
+    update_frequency: 'When councils publish new cost of care exercises (every one to three years)', stale_after_days: 1100, data_stale_after_days: null, weekly: false, fetch: null, validate: validateFoodCost,
+    note: 'Entered by hand from Orrery: median food supplies per resident per week, residential care for people aged 65 and over, in the prices of the exercise year. It is a council benchmark, not a supplier price list. Bring it to today with the food CPI rate.' },
   { key: 'bank_holidays', name: 'Bank holidays in England and Wales', publisher: 'GOV.UK', source_url: 'https://www.gov.uk/bank-holidays', fetch_url: 'https://www.gov.uk/bank-holidays.json',
     update_frequency: 'Yearly (dates announced ahead)', stale_after_days: 365, data_stale_after_days: null, weekly: true,
     fetch: async get => parseBankHolidays(await get('https://www.gov.uk/bank-holidays.json')), validate: v => validateBankHolidays(v) },
@@ -228,7 +244,7 @@ export function stable(v: Json): string {
 export function essence(key: string, v: any): Json {
   if (!v) return v
   if (key === 'nlw') return { current: v.current, upcoming: v.upcoming }
-  if (key === 'cpi' || key === 'cpih') return { latest: v.latest }
+  if (key === 'cpi' || key === 'cpih' || key === 'cpi_food') return { latest: v.latest }
   return v
 }
 export const sameFigure = (key: string, a: Json, b: Json) => stable(essence(key, a)) === stable(essence(key, b))
@@ -355,11 +371,12 @@ export async function checkAll(deps: RunDeps, opts: { force?: boolean; only?: st
 export function brief(key: string, v: any): string {
   if (v == null) return 'nothing recorded'
   if (key === 'nlw') return `${v.current?.label ?? '?'}: 21 and over £${v.current?.age21}, 18 to 20 £${v.current?.age18to20}, under 18 £${v.current?.under18}, apprentice £${v.current?.apprentice}`
-  if (key === 'cpi' || key === 'cpih') return `${v.latest?.rate}% for ${v.latest?.period}`
+  if (key === 'cpi' || key === 'cpih' || key === 'cpi_food') return `${v.latest?.rate}% for ${v.latest?.period}`
   if (key === 'ssp') return `£${v.weekly_rate_gbp} a week`
   if (key === 'mileage') return `cars and vans ${v.cars_vans_first_10000_pence}p then ${v.cars_vans_after_10000_pence}p, motorcycles ${v.motorcycle_pence}p, bikes ${v.bike_pence}p`
   if (key === 'bank_holidays') return `${(v.events ?? []).length} dates, ${v.first_year} to ${v.last_year}`
   if (key === 'real_living_wage') return `£${v.hourly_rate_gbp}`
+  if (key === 'care_food_cost') return `£${v.low_gbp_week} to £${v.high_gbp_week} per resident per week (${v.price_year} prices${v.councils ? ', ' + v.councils + ' councils' : ''})`
   return stable(v).slice(0, 120)
 }
 

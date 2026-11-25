@@ -173,8 +173,8 @@ export const TOOLS: AskTool[] = [
   // ── Pay and inflation ────────────────────────────────────────────────────────────────
   {
     name: 'get_figures',
-    description: 'Official reference figures, each with the date it applies from and a warning if it is out of date or could not be confirmed. keys: nlw (National Living Wage and minimum wage by age band, with the next rate if announced), cpi, cpih (inflation), ssp (statutory sick pay), mileage (HMRC mileage rates), bank_holidays, real_living_wage.',
-    input_schema: { type: 'object', properties: { keys: { type: 'array', items: { type: 'string', enum: ['nlw', 'cpi', 'cpih', 'ssp', 'mileage', 'bank_holidays', 'real_living_wage'] } } }, required: ['keys'] },
+    description: 'Official reference figures, each with the date it applies from and a warning if it is out of date or could not be confirmed. keys: nlw (National Living Wage and minimum wage by age band, with the next rate if announced), cpi, cpih (inflation), cpi_food (food price inflation, the annual rate), care_food_cost (council cost of care benchmark for food per resident per week, in the prices of the exercise year: bring it to today with cpi_food and say so), ssp (statutory sick pay), mileage (HMRC mileage rates), bank_holidays, real_living_wage.',
+    input_schema: { type: 'object', properties: { keys: { type: 'array', items: { type: 'string', enum: ['nlw', 'cpi', 'cpih', 'cpi_food', 'care_food_cost', 'ssp', 'mileage', 'bank_holidays', 'real_living_wage'] } } }, required: ['keys'] },
     async run(_ctx, input) {
       const keys: string[] = Array.isArray(input?.keys) ? input.keys.map(String) : []
       const r = await figuresFor(keys)

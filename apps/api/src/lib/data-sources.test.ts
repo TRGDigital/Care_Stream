@@ -161,6 +161,7 @@ function harness(pages: Record<string, any>) {
 const PAGES = () => ({
   'https://www.gov.uk/api/content/national-minimum-wage-rates': fx('gov-nlw.json'),
   'https://www.ons.gov.uk/economy/inflationandpriceindices/timeseries/d7g7/mm23/data': fx('ons-cpi.json'),
+  'https://www.ons.gov.uk/economy/inflationandpriceindices/timeseries/d7g8/mm23/data': fx('ons-cpi-food.json'),
   'https://www.ons.gov.uk/economy/inflationandpriceindices/timeseries/l55o/mm23/data': fx('ons-cpih.json'),
   'https://www.gov.uk/bank-holidays.json': fx('gov-bank-holidays.json'),
   'https://www.gov.uk/api/content/statutory-sick-pay': fx('gov-ssp.json'),
@@ -204,4 +205,15 @@ test('a manual figure is left alone by the weekly run, and the notify failure do
   const bad = harness({}); const d = bad.deps('2026-11-24T07:00:00Z'); d.notify = async () => { throw new Error('mail down') }
   const r = await checkAll(d)
   assert.ok(r.failed >= 5); assert.equal(r.emailed, false)   // everything failed (no pages), the email also failed, and the run still finished
+})
+
+test('FOOD: the food inflation series reads from ONS D7G8, and the council food cost benchmark is a checked manual entry', () => {
+  assert.ok(sourceByKey('cpi_food')!.fetch)
+  const f = parseOnsRate({ description: { cdid: 'D7G8', title: 'food', releaseDate: '2026-11-18T00:00:00.000Z', nextRelease: '16 December 2026' }, months: [{ date: '2026 SEP', value: '1.3' }, { date: '2026 OCT', value: '0.9' }] }, 'D7G8')
+  assert.equal(f.value.latest.rate, 0.9)
+  const def = sourceByKey('care_food_cost')!
+  assert.equal(def.fetch, null)
+  assert.equal(def.validate({ low_gbp_week: 29.05, high_gbp_week: 37.73, price_year: '2022/23' }), null)
+  assert.match(def.validate({ low_gbp_week: 40, high_gbp_week: 30, price_year: '2022/23' })!, /above/)
+  assert.match(def.validate({ low_gbp_week: 29, high_gbp_week: 37 })!, /prices/)
 })

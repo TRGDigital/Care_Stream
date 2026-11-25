@@ -269,6 +269,24 @@ export async function pendingClaimPolicies(tenantId: string): Promise<Array<{ id
   return sources.filter(s => !have.has(s.id))
 }
 
+/** For an account switched on for no cap: a policy longer than one read had only its FIRST part read before, so its stored claims are dropped here (once) and it is read again in full by the run that follows.
+ *  Shorter policies, and every account not switched on, are left alone. */
+export async function dropStaleClaims(tenantId: string): Promise<number> {
+  if (!(await noCapFor(tenantId))) return 0
+  const sources = await claimSourcePolicies(tenantId)
+  if (!sources.length) return 0
+  const rows: any[] = await (prisma as any).policyClaim.findMany({ where: { tenant_id: tenantId, policy_id: { in: sources.map(s => s.id) } }, select: { policy_id: true, content_hash: true } })
+  let dropped = 0
+  await mapLimit(rows, 6, async (r: any) => {
+    const t = await downloadExtractedText(tenantId, r.policy_id).catch(() => null)
+    if (!t || t.length <= CLAIM_READ_CHARS) return
+    if (r.content_hash === createHash('sha256').update(`${t}|all-parts`).digest('hex')) return
+    await (prisma as any).policyClaim.deleteMany({ where: { tenant_id: tenantId, policy_id: r.policy_id } }).catch(() => undefined)
+    dropped++
+  })
+  return dropped
+}
+
 export async function extractClaimsBatch(tenantId: string, batch: Array<{ id: string; name: string }>): Promise<void> {
   await mapLimit(batch, 3, (p) => extractPolicyClaims(tenantId, p).catch(() => []))
 }

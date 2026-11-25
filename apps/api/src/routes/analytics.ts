@@ -18,7 +18,7 @@ import { getGapDetail, viewOfDetail } from '../services/analytics/gap-detail'
 import { scanTenantPolicies, getTenantLint } from '../services/analytics/policy-lint'
 import { addIgnore, removeIgnore, listIgnores, ALL_POLICIES } from '../services/analytics/lint-ignores'
 import { resolveSection, reopenSection, clearResolutions, listResolutions } from '../services/analytics/review-resolutions'
-import { buildAndCacheSets, getCachedSets, pendingClaimPolicies, extractClaimsBatch, runDetection, getConsistency, dismissConflict, resolveConflict, consistencyRunState } from '../services/analytics/policy-consistency'
+import { buildAndCacheSets, dropStaleClaims, getCachedSets, pendingClaimPolicies, extractClaimsBatch, runDetection, getConsistency, dismissConflict, resolveConflict, consistencyRunState } from '../services/analytics/policy-consistency'
 import { getReadinessScore } from '../services/analytics/readiness'
 import { adoptSuggestion, getPolicyDocument, getAdoptionContext, revertChange, editChange, publishDocument, repropagatePolicy, summariseDocuments, approvalsOverview, submitForApproval, managerApprove, rejectPolicy, getApprovalState, setExternalRecipient, revokeExternalLink, reissueExternalLink, remindApproval, getPolicyVersions, getPolicyVersionContent, getPolicyMatrix, policiesDueForReview, detectPolicySection } from '../services/analytics/policy-adoption'
 import { qualityStatementCoverage, safAlignment, startPolicyWordingAlignment, wordingAlignmentBatch, getPolicyWordingAlignment, wordingRunState } from '../services/analytics/saf'
@@ -806,6 +806,7 @@ analyticsRouter.post('/consistency/scan/start', requireAdmin, async (_req: Reque
   try {
     await assertFreeRerun(tenantId, 'consistency')
     const sets = await buildAndCacheSets(tenantId)
+    await dropStaleClaims(tenantId)   // no cap accounts only: long policies stored from their first part alone are read again in full
     const pending = await pendingClaimPolicies(tenantId)
     await stampSectionRun(tenantId, 'consistency')
     ok(res, { sets: sets.length, duplicate_sets: sets.filter(s => s.type === 'duplicate').length, topic_sets: sets.filter(s => s.type === 'topic').length, to_extract: pending.length })

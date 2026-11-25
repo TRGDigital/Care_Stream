@@ -66,3 +66,9 @@ test('GATED: each place that lifted a cap keeps the old limit for accounts that 
   assert.match(saf, /if \(!open\) cues = cues\.slice\(0, 20\)/); assert.match(saf, /if \(!open\) keepTerms = keepTerms\.slice\(0, 30\)/); assert.match(saf, /await noCapFor\(tenantId\)/)
   assert.match(pc, /open && text\.length > CLAIM_READ_CHARS/); assert.match(pc, /open \? splitForComparison\(g\.map\(i => claims\[i\]\), MAX_GROUP_CLAIMS\) : \[g\.slice\(0, MAX_GROUP_CLAIMS\)/)
 })
+test('CROSS-POLICY RE-RUN: a no cap account drops the stored claims of policies longer than one read at the start of a run, so they are read in full; others are untouched', () => {
+  const r = (f: string) => fs.readFileSync(path.resolve(__dirname, f), 'utf8')
+  const pc = r('policy-consistency.ts'), rt = r('../../routes/analytics.ts')
+  assert.match(pc, /export async function dropStaleClaims[^]*?if \(!\(await noCapFor\(tenantId\)\)\) return 0/); assert.match(pc, /t\.length <= CLAIM_READ_CHARS\) return/)
+  assert.match(rt, /await dropStaleClaims\(tenantId\)[^]*?await pendingClaimPolicies\(tenantId\)/)
+})

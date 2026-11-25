@@ -79,13 +79,15 @@ export const withoutOptionsBlock = (text: string) => withoutBlock(text, 'options
 // After an agent has produced anything it ends with a next_steps block: 3 to 5 buttons for the next stage, the most likely first (the primary button). An `ask` button sends a structured choice
 // back to the agent (no typing), an `action` button runs a screen action (save, print, share, edit...) and a `link` opens a page. A "Something else" box is always there too.
 export type NextKind = 'action' | 'ask' | 'link'
-export const NEXT_ACTIONS = ['save_library', 'save_pdf', 'print', 'preview', 'edit', 'share', 'choose_who', 'send', 'back_to_layouts', 'show_working', 'colours', 'add_block'] as const
+export const NEXT_ACTIONS = ['save_library', 'save_pdf', 'print', 'preview', 'edit', 'share', 'choose_who', 'send', 'back_to_layouts', 'show_working', 'colours', 'add_block', 'follow_up'] as const
 export type NextAction = (typeof NEXT_ACTIONS)[number]
 /** A button that names one of these is ALWAYS a screen action, whatever kind the model wrote: a document action is never sent back to the model as typed text. */
 const ACTION_ALIASES: Record<string, NextAction> = {
   colours: 'colours', colors: 'colours', change_colours: 'colours', change_colors: 'colours', changecolours: 'colours', change_the_colours: 'colours',
   add_block: 'add_block', add_a_block: 'add_block', addblock: 'add_block',
   edit: 'edit', edit_content: 'edit', edit_the_content: 'edit', editcontent: 'edit',
+  change: 'edit', change_something: 'edit', changesomething: 'edit', make_changes: 'edit', make_a_change: 'edit', make_some_changes: 'edit', edit_it: 'edit', amend: 'edit', modify: 'edit',
+  follow_up: 'follow_up', ask_a_follow_up: 'follow_up', followup: 'follow_up', ask_follow_up: 'follow_up',
   preview: 'preview', designed: 'preview', see_designed: 'preview', see_the_designed_version: 'preview', designed_version: 'preview',
   save_pdf: 'save_pdf', savepdf: 'save_pdf', pdf: 'save_pdf', print: 'print',
   share: 'share', send_or_share: 'share', share_this: 'share', choose_who: 'choose_who', send: 'send',

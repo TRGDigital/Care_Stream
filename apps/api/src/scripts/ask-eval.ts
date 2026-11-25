@@ -11,7 +11,7 @@ import { ukToday } from '../lib/holiday-math'
 import { QUALITY_QUESTIONS } from './ask-eval-quality'
 import { CONFIDENTIALITY_PROBES, LEAK_MARKERS } from '../services/ask/confidentiality-probes'
 import { CONTEXT_PROBES } from '../services/ask/context-probes'
-import { COLOUR_SAYS } from '../services/ask/dead-end-probes'
+import { COLOUR_SAYS, FOLLOW_UP_SAYS } from '../services/ask/dead-end-probes'
 import { endsInProseChoice } from '../services/ask/dead-end'
 
 const QUESTIONS: Record<string, string[]> = {
@@ -97,6 +97,13 @@ async function main() {
   // RULES 1, 2 and 7 (never end on a choice written in words): `ask-eval.ts deadend` asks the Newsletters agent to change colours (the chat that started this) and says whether the answer carries
   // an options, questions or next_steps block. A person should still read the answers: the colour cards need a saved draft to preview.
   if (only === 'deadend') {
+    for (const { agent, say } of FOLLOW_UP_SAYS) {
+      try {
+        const r = await runAgent({ agentId: agent, ctx: { tenantId, userId, today: ukToday() }, orgName: 'Evaluation', history: [], message: say })
+        const blocks = ['questions', 'options', 'next_steps'].filter(b => r.answer.includes('```' + b))
+        console.log(`\n[${agent}] ${say}\nBLOCKS: ${blocks.join(', ') || 'NONE (bad)'}   PROSE CHOICE LEFT: ${endsInProseChoice(r.answer) ? 'YES (bad)' : 'no'}   DRAFTS SAVED: ${r.documents.length}\n---\n${r.answer}\n[tools: ${r.tools_used.join(', ') || 'none'}]`)
+      } catch (e: any) { console.log(`\n${say}\nERROR: ${String(e?.message ?? e).slice(0, 200)}`) }
+    }
     for (const say of COLOUR_SAYS) {
       try {
         const r = await runAgent({ agentId: 'newsletter', ctx: { tenantId, userId, today: ukToday() }, orgName: 'Evaluation', history: [], message: say })

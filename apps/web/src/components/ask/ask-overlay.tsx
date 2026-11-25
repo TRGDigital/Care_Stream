@@ -248,6 +248,7 @@ export function AskPanel({ token, layout, expanded, width, locked = false, onClo
     const ask_ = () => send(formatNext(step))
     const noDoc = () => setError('Open or make a draft first, then use this button. Nothing has been sent.')
     try {
+      if (action === 'follow_up') { const el = document.getElementById('ask-input') as HTMLTextAreaElement | null; el?.focus(); el?.scrollIntoView({ block: 'nearest' }); return }   // a follow up is typed in the box: focus it, send nothing
       if (action === 'colours' || action === 'add_block') { if (doc) { setDocFocus(action === 'colours' ? 'colours' : 'blocks'); setDocId(doc) } else noDoc(); return }
       if (action === 'edit' || action === 'share' || action === 'choose_who' || action === 'send') { if (doc) setDocId(doc); else ask_(); return }
       if (action === 'preview') { if (doc) setViewDocId(doc); else ask_(); return }

@@ -10,6 +10,7 @@ import { DEFAULT_HOUSE_RULES_FORMS } from './house-rules-forms'
 import { ASK_PROMPT_MAX } from './prompt-register'
 import { endsInProseChoice, withDeadEndFallback, fallbackSteps } from './dead-end'
 import { DEAD_ENDS, NOT_DEAD_ENDS, COLOUR_SAYS } from './dead-end-probes'
+import { isChangeQuestion } from './dead-end'
 import { colourOptions, colourOptionsBlock } from '../ask-docs/newsletter-colours'
 import { PALETTES } from '../ask-docs/newsletter-edit'
 import { cleanRequest, PREVIEW_KINDS } from '../ask-docs/option-preview'
@@ -98,11 +99,17 @@ test('SAFETY NET: buttons are appended after the model\'s words, never inside or
   for (const t of DEAD_ENDS) {
     const r = withDeadEndFallback(t, { agentId: 'newsletter' })
     assert.equal(r.appended, true); assert.ok(r.text.startsWith(t.trimEnd()), 'the words are unchanged')
+    if (isChangeQuestion(t)) { const q = b.parseQuestions(r.text); assert.ok(q && q.questions.length === 2, 'an open change question becomes the Change form'); assert.equal(withDeadEndFallback(r.text, { agentId: 'newsletter' }).appended, false); continue }
     const ns = b.parseNextSteps(r.text); assert.ok(ns && ns.steps.length >= 2 && ns.steps.length <= 5, 'the screen reads the buttons')
     assert.equal(withDeadEndFallback(r.text, { agentId: 'newsletter' }).appended, false)      // a second pass adds nothing
     assert.doesNotMatch(r.text.slice(t.length), /[–—]/)
   }
-  for (const t of NOT_DEAD_ENDS) assert.deepEqual(withDeadEndFallback(t), { text: t, appended: false })
+  for (const t of NOT_DEAD_ENDS) {
+    const r = withDeadEndFallback(t)
+    if (!r.appended) { assert.equal(r.text, t); continue }
+    // a long plain answer is not a dead end, but it still gets the small default row (catch all): the words are untouched and only buttons are added
+    assert.ok(r.text.startsWith(t.trimEnd())); const ns = b.parseNextSteps(r.text); assert.ok(ns && ns.steps.length >= 1 && ns.steps.length <= 3)
+  }
   // the stage decides the buttons
   const colour = fallbackSteps(DEAD_ENDS[0], { agentId: 'newsletter' }); assert.ok(colour.some(s => /colour/i.test(s.label)))
   const draft = fallbackSteps(DEAD_ENDS[1], { agentId: 'letters', drafts: 1 }); assert.deepEqual(draft.map(s => s.payload), ['edit', 'preview', 'save_library', 'save_pdf', 'share'])
@@ -114,7 +121,7 @@ test('SAFETY NET: buttons are appended after the model\'s words, never inside or
 
 test('SAFETY NET: it runs on every finished answer in the runner, only when the run finished normally', () => {
   const r = apiSrc('services/ask/runner.ts')
-  assert.match(r, /if \(stopped === 'done'\) answer = withDeadEndFallback\(answer, \{ agentId: agent\.id, drafts: documents\.length \}\)\.text/)
+  assert.match(r, /if \(stopped === 'done'\) answer = withDeadEndFallback\(answer, \{ agentId: agent\.id, drafts: documents\.length, saveTools: agent\.tools\.filter\(t => t in DRAFT_TOOL_TYPE\) \}\)\.text/)
   assert.match(r, /import \{ withDeadEndFallback \} from '\.\/dead-end'/)
 })
 

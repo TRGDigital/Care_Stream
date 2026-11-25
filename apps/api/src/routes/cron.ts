@@ -196,7 +196,7 @@ cronRouter.get('/generate-audit-images', (req, res) =>
 cronRouter.get('/check-data-sources', (req, res) =>
   job('check-data-sources', req, res, () => checkDataSources({
     db: dataSourcesDb, now: () => new Date(),
-    get: async (url: string) => { const r = await fetch(url, { headers: { Accept: 'application/json', 'User-Agent': 'CareStream data check (support@carestreamai.com)' } }); if (!r.ok) throw new Error(`HTTP ${r.status} from ${new URL(url).host}`); return r.json() },
+    get: async (url: string) => { const r = await fetch(url, { headers: { Accept: 'application/json, text/csv, */*', 'User-Agent': 'CareStream data check (support@carestreamai.com)' } }); if (!r.ok) throw new Error(`HTTP ${r.status} from ${new URL(url).host}`); const text = await r.text(); try { return JSON.parse(text) } catch { return text } },
     notify: o => sendDataSourcesEmail(o),
   }, { force: req.query.force === '1', only: req.query.key ? String(req.query.key) : undefined })))
 

@@ -3,10 +3,12 @@ import assert from 'node:assert/strict'
 import fs from 'fs'
 import path from 'path'
 import {
+  fuelCsvUrl, parseFuel, validateFuel,
   parseNlw, validateNlw, parseOnsRate, validateRate, parseBankHolidays, validateBankHolidays, parseSsp, validateSsp, parseMileage, validateMileage,
   validateRealLivingWage, applyCheck, applyManual, checkAll, toFigure, isStale, asOfText, sameFigure, sourceByKey, SOURCES, type Row, type Db, type RunDeps,
 } from './data-sources'
 
+const fxText = (n: string) => fs.readFileSync(path.join(__dirname, '__fixtures__', n), 'utf8')
 const fx = (n: string) => JSON.parse(fs.readFileSync(path.join(__dirname, '__fixtures__', n), 'utf8'))
 const TODAY = '2026-11-24'
 
@@ -161,9 +163,12 @@ function harness(pages: Record<string, any>) {
 const PAGES = () => ({
   'https://www.gov.uk/api/content/national-minimum-wage-rates': fx('gov-nlw.json'),
   'https://www.ons.gov.uk/economy/inflationandpriceindices/timeseries/d7g7/mm23/data': fx('ons-cpi.json'),
+  'https://www.ons.gov.uk/economy/inflationandpriceindices/timeseries/d7g8/mm23/data': fx('ons-cpi-food.json'),
   'https://www.ons.gov.uk/economy/inflationandpriceindices/timeseries/l55o/mm23/data': fx('ons-cpih.json'),
   'https://www.gov.uk/bank-holidays.json': fx('gov-bank-holidays.json'),
   'https://www.gov.uk/api/content/statutory-sick-pay': fx('gov-ssp.json'),
+  'https://www.gov.uk/api/content/government/statistics/weekly-road-fuel-prices': fx('gov-fuel.json'),
+  'https://assets.publishing.service.gov.uk/media/x/CSV__2018_-__.csv': fxText('fuel.csv'),
   'https://www.gov.uk/api/content/expenses-and-benefits-business-travel-mileage': fx('gov-mileage.json'),
 })
 test('the first run fills the register and sends no email; a quiet week sends no email', async () => {
@@ -204,4 +209,35 @@ test('a manual figure is left alone by the weekly run, and the notify failure do
   const bad = harness({}); const d = bad.deps('2026-11-24T07:00:00Z'); d.notify = async () => { throw new Error('mail down') }
   const r = await checkAll(d)
   assert.ok(r.failed >= 5); assert.equal(r.emailed, false)   // everything failed (no pages), the email also failed, and the run still finished
+})
+
+test('FOOD: the food inflation series reads from ONS D7G8, and the council food cost benchmark is a checked manual entry', () => {
+  assert.ok(sourceByKey('cpi_food')!.fetch)
+  const f = parseOnsRate({ description: { cdid: 'D7G8', title: 'food', releaseDate: '2026-11-18T00:00:00.000Z', nextRelease: '16 December 2026' }, months: [{ date: '2026 SEP', value: '1.3' }, { date: '2026 OCT', value: '0.9' }] }, 'D7G8')
+  assert.equal(f.value.latest.rate, 0.9)
+  const def = sourceByKey('care_food_cost')!
+  assert.equal(def.fetch, null)
+  assert.equal(def.validate({ low_gbp_week: 29.05, high_gbp_week: 37.73, price_year: '2022/23' }), null)
+  assert.match(def.validate({ low_gbp_week: 40, high_gbp_week: 30, price_year: '2022/23' })!, /above/)
+  assert.match(def.validate({ low_gbp_week: 29, high_gbp_week: 37 })!, /prices/)
+})
+
+test('FUEL: the weekly CSV is found through the page, read to the latest week, range checked, and a weekly change does not email the owner', async () => {
+  assert.equal(fuelCsvUrl(fx('gov-fuel.json')), 'https://assets.publishing.service.gov.uk/media/x/CSV__2018_-__.csv')
+  const f = parseFuel(fxText('fuel.csv'))
+  assert.equal(f.effective_from, '2026-11-23'); assert.equal(f.value.latest.petrol, 161.96); assert.equal(f.value.previous.diesel, 196.77)
+  assert.equal(validateFuel(f.value), null)
+  assert.match(validateFuel({ latest: { petrol: 16.1, diesel: 190, date: '2026-11-23' } })!, /petrol/)
+  assert.throws(() => parseFuel('Date,a,b\n'), /No weekly/)
+  assert.equal(sourceByKey('road_fuel')!.routine, true)
+  const h = harness(PAGES()); await checkAll(h.deps('2026-11-24T07:00:00Z'))
+  assert.equal(h.rows.get('road_fuel')!.status, 'ok')
+})
+test('HOME CARE: three manual hourly figures are checked', () => {
+  for (const k of ['homecare_private_rate', 'homecare_min_price', 'council_homecare_rate']) {
+    const d = sourceByKey(k)!; assert.equal(d.fetch, null)
+    assert.equal(d.validate({ hourly_gbp: 31, basis: 'median' }), null)
+    assert.match(d.validate({ hourly_gbp: 3, basis: 'median' })!, /outside/)
+    assert.match(d.validate({ hourly_gbp: 31 })!, /basis/)
+  }
 })

@@ -16,6 +16,7 @@ import { closeAsk, initAskUi, openAsk, registerAskTrigger, setAskEnabled, setAsk
 import { DocumentPanel } from '@/components/ask/document-panel'
 import { ActionCard } from '@/components/ask/action-card'
 import { LayoutThumbs } from '@/components/ask/layout-thumbs'
+import { ThinkingLine } from '@/components/ask/thinking-line'
 import { ExpandViewer, type ViewerItem } from '@/components/ask/expand-viewer'
 import { AttachButton, UploadsBlock } from '@/components/ask/upload-panel'
 import { NewsletterPicker } from '@/components/ask/newsletter-picker'
@@ -395,7 +396,7 @@ export function AskPanel({ token, layout, expanded, width, locked = false, onClo
                   </div>
                 ))}
                 {agent.uploads && <UploadsBlock token={token} uploads={uploads} onChange={u => setUploads(l => l.map(x => x.id === u.id ? u : x))} onRemoved={id => setUploads(l => l.filter(x => x.id !== id))} onError={setError} />}
-                {busy && <p className="flex items-center gap-2 text-sm text-neutral-mid" role="status"><Loader2 size={16} className="animate-spin" /> Working it out from your records</p>}
+                {busy && <ThinkingLine agentId={agent?.id} />}
                 {error && <p role="alert" className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
                 <div ref={end} />
               </div>

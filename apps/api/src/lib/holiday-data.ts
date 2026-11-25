@@ -102,6 +102,14 @@ export async function holidayTablesReady(): Promise<boolean> {
 export interface RosterPerson {
   id: string; name: string; email: string | null; job_role: string | null; role: string
   unit: Unit; allowance: number | null; contracted: number | null; start_date: string | null
+  /** Allocation for the rest of the year they start in (same unit). Used only for the holiday year containing start_date. */
+  first_year_allowance?: number | null
+}
+/** The allowance that applies to one holiday year: the part year figure in the year a person starts, otherwise the full yearly allocation. */
+export function allowanceForYear(person: { allowance: number | null; first_year_allowance?: number | null; start_date: string | null }, range: { from: string; to: string }): number | null {
+  const f = person.first_year_allowance
+  if (f != null && person.start_date && person.start_date >= range.from && person.start_date <= range.to) return f
+  return person.allowance
 }
 /** Active staff (not archived, not a shared tablet, not agency) with their holiday allowance and unit from the staff record. Pay rates are NOT here. */
 export async function loadRoster(tenantId: string): Promise<RosterPerson[]> {
@@ -111,12 +119,14 @@ export async function loadRoster(tenantId: string): Promise<RosterPerson[]> {
   try { details = await p().staffDetail.findMany({ where: { user_id: { in: ids } }, select: { user_id: true, holiday_entitlement: true, holiday_unit: true, contract_hours_per_week: true } }) } catch { details = [] }
   try { hs = await p().holidayStaff.findMany({ where: { user_id: { in: ids } }, select: { user_id: true, start_date: true } }) } catch { hs = [] }
   const d = new Map<string, any>(details.map(x => [x.user_id, x])), h = new Map<string, any>(hs.map(x => [x.user_id, x]))
+  const fy = new Map<string, number>((await rawRows('select user_id, first_year_allowance from holiday_staff where user_id = any($1::text[]) and first_year_allowance is not null', ids)).map((r: any) => [r.user_id, Number(r.first_year_allowance)]))
   return users.map((u: any) => ({
     id: u.id, name: u.name, email: u.email ?? null, job_role: u.job_role ?? null, role: u.role,
     unit: d.get(u.id)?.holiday_unit === 'hours' ? 'hours' : 'days',
     allowance: d.get(u.id)?.holiday_entitlement != null ? Number(d.get(u.id).holiday_entitlement) : null,
     contracted: d.get(u.id)?.contract_hours_per_week != null ? Number(d.get(u.id).contract_hours_per_week) : null,
     start_date: h.get(u.id)?.start_date ? new Date(h.get(u.id).start_date).toISOString().slice(0, 10) : null,
+    first_year_allowance: fy.get(u.id) ?? null,
   }))
 }
 
@@ -180,7 +190,7 @@ export async function buildMatrix(tenantId: string, year: number, settings: Holi
     const days = by.get(r.id) ?? []
     const figs = totals.get(r.id) ?? []
     const carry = carryInFor({ year, allowance: r.allowance, unit: r.unit, days, month, day, carryOver: settings.carry_over, monthly: figs })
-    const b = balanceFor({ allowance: r.allowance, unit: r.unit, carryIn: carry, days, range, today, monthly: figs })
+    const b = balanceFor({ allowance: allowanceForYear(r, range), unit: r.unit, carryIn: carry, days, range, today, monthly: figs })
     const imported: Record<string, { taken: number; booked: number }> = {}
     for (const f of figs) if (f.key in b.by_month_taken) imported[f.key] = { taken: f.taken, booked: f.booked }
     return {
@@ -198,7 +208,7 @@ export async function personBalance(tenantId: string, person: RosterPerson, year
   const days = (await approvedDays(tenantId, yearRange(year - 3, month, day).from, range.to, [person.id])).map(d => ({ day: d.day, hours: d.hours, ...(d.part ? { part: d.part } : {}) }))
   const figs = (await monthTotals(tenantId, [person.id])).get(person.id) ?? []
   const carry = carryInFor({ year, allowance: person.allowance, unit: person.unit, days, month, day, carryOver: settings.carry_over, monthly: figs })
-  const balance = balanceFor({ allowance: person.allowance, unit: person.unit, carryIn: carry, days, range, today, monthly: figs })
+  const balance = balanceFor({ allowance: allowanceForYear(person, range), unit: person.unit, carryIn: carry, days, range, today, monthly: figs })
   const pending = Math.round((await pendingDays(tenantId, person.id, range.from, range.to)).reduce((sum, d) => sum + valueOf(d, person.unit), 0) * 100) / 100
   return { range, balance, pending, available: Math.max(0, Math.round((balance.remaining - pending) * 100) / 100) }
 }
@@ -212,7 +222,7 @@ export async function yearStateFor(tenantId: string, person: RosterPerson, year:
   const figs = (await monthTotals(tenantId, [person.id])).get(person.id) ?? []
   // Carry over for a year that has not started cannot be known yet: only the basic allowance counts there.
   const carry = year > current ? 0 : carryInFor({ year, allowance: person.allowance, unit: person.unit, days: approved, month, day, carryOver: settings.carry_over, monthly: figs })
-  const bal = balanceFor({ allowance: person.allowance, unit: person.unit, carryIn: carry, days: approved, range, today, monthly: figs })
+  const bal = balanceFor({ allowance: allowanceForYear(person, range), unit: person.unit, carryIn: carry, days: approved, range, today, monthly: figs })
   const pend = await pendingDays(tenantId, person.id, range.from, range.to, excludeRequestId)
   return { year, label: range.label, allowance_set: person.allowance != null, entitlement: bal.entitlement, used: bal.used, pending: Math.round(pend.reduce((sum, d) => sum + valueOf(d, person.unit), 0) * 100) / 100, future: year > current }
 }

@@ -448,8 +448,10 @@ holidayAdminRouter.get('/staff/:userId', async (req: Request, res: Response) => 
       p().staffDetail.findUnique({ where: { user_id: userId } }).catch(() => null),
       p().holidayStaff.findUnique({ where: { user_id: userId } }),
     ])
+    const fyRow: any[] = await p().$queryRawUnsafe('select first_year_allowance from holiday_staff where user_id = $1', userId).catch(() => [])
     ok(res, {
       name: u.name, unit: d?.holiday_unit === 'hours' ? 'hours' : 'days', allowance: d?.holiday_entitlement != null ? Number(d.holiday_entitlement) : null,
+      first_year_allowance: fyRow[0]?.first_year_allowance != null ? Number(fyRow[0].first_year_allowance) : null,
       contracted_hours: d?.contract_hours_per_week != null ? Number(d.contract_hours_per_week) : null,
       start_date: h?.start_date ? ymd(h.start_date) : null, weekday_rate: h?.weekday_rate != null ? Number(h.weekday_rate) : null, weekend_rate: h?.weekend_rate != null ? Number(h.weekend_rate) : null,
     })
@@ -467,7 +469,11 @@ holidayAdminRouter.put('/staff/:userId', async (req: Request, res: Response) => 
     const start = b.start_date ? String(b.start_date).slice(0, 10) : null
     if (start && !/^\d{4}-\d{2}-\d{2}$/.test(start)) { err(res, 'INVALID', 'The start date is not valid.', 400); return }
     const data = { start_date: start ? dayDate(start) : null, weekday_rate: wd, weekend_rate: we }
+    let fy: number | null | undefined
+    if ('first_year_allowance' in b) { fy = b.first_year_allowance === '' || b.first_year_allowance == null ? null : Number(b.first_year_allowance); if (fy !== null && (!isFinite(fy) || fy < 0 || fy > 3000)) { err(res, 'INVALID', 'The allocation for the rest of this year must be a number.', 400); return } }
     await p().holidayStaff.upsert({ where: { user_id: userId }, create: { user_id: userId, tenant_id: tenantId, ...data }, update: data })
+    // Its own column, written on its own so a database that has not had the new column yet still saves everything else.
+    if (fy !== undefined) await p().$executeRawUnsafe('update holiday_staff set first_year_allowance = $1 where user_id = $2', fy, userId).catch(() => {})
     // The allowance, its unit and contracted hours stay on the staff record (staff_details), where the Compliance register also reads them.
     // Only the fields sent are changed, so the contract type and probation date that live there are never touched.
     const detail: Record<string, unknown> = {}

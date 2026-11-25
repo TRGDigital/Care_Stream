@@ -16,6 +16,7 @@ export function HolidayStaffFields({ token, userId, saveRef }: { token: string; 
   const { meta } = useHolidayMeta()
   const [unit, setUnit] = useState<Unit>('hours')
   const [allowance, setAllowance] = useState('')
+  const [firstYear, setFirstYear] = useState('')
   const [contracted, setContracted] = useState('')
   const [start, setStart] = useState('')
   const [weekday, setWeekday] = useState('')
@@ -28,7 +29,7 @@ export function HolidayStaffFields({ token, userId, saveRef }: { token: string; 
     let live = true
     holiday.admin.staff(token, userId).then(r => {
       if (!live) return
-      setUnit(r.unit); setAllowance(r.allowance != null ? String(r.allowance) : ''); setContracted(r.contracted_hours != null ? String(r.contracted_hours) : '')
+      setUnit(r.unit); setAllowance(r.allowance != null ? String(r.allowance) : ''); setFirstYear(r.first_year_allowance != null ? String(r.first_year_allowance) : ''); setContracted(r.contracted_hours != null ? String(r.contracted_hours) : '')
       setStart(r.start_date ?? ''); setWeekday(r.weekday_rate != null ? String(r.weekday_rate) : ''); setWeekend(r.weekend_rate != null ? String(r.weekend_rate) : ''); setLoaded(true)
     }).catch(() => setLoaded(true))
     return () => { live = false }
@@ -38,10 +39,10 @@ export function HolidayStaffFields({ token, userId, saveRef }: { token: string; 
     saveRef.current = async (id: string) => {
       if (!(meta?.enabled || meta?.staff_fields) || (!touched.current && !userId)) return    // nothing typed on a new person: leave their record as it is
       if (!touched.current) return
-      await holiday.admin.saveStaff(token, id, { start_date: start || null, weekday_rate: weekday, weekend_rate: weekend, unit, allowance: allowance === '' ? null : allowance, contracted_hours: contracted === '' ? null : contracted })
+      await holiday.admin.saveStaff(token, id, { start_date: start || null, weekday_rate: weekday, weekend_rate: weekend, unit, allowance: allowance === '' ? null : allowance, first_year_allowance: firstYear === '' ? null : firstYear, contracted_hours: contracted === '' ? null : contracted })
     }
     return () => { saveRef.current = null }
-  }, [token, userId, meta?.enabled, meta?.staff_fields, start, weekday, weekend, unit, allowance, contracted, saveRef])
+  }, [token, userId, meta?.enabled, meta?.staff_fields, start, weekday, weekend, unit, allowance, firstYear, contracted, saveRef])
 
   if (!(meta?.enabled || meta?.staff_fields) || !meta.is_admin) return null
   const on = (set: (v: string) => void) => (e: React.ChangeEvent<HTMLInputElement>) => { touched.current = true; set(e.target.value) }
@@ -59,9 +60,14 @@ export function HolidayStaffFields({ token, userId, saveRef }: { token: string; 
           </select>
         </div>
         <div>
-          <label className={lbl} htmlFor="hol-alloc">Annual leave allocation ({unit}) for the year</label>
+          <label className={lbl} htmlFor="hol-alloc">Full yearly annual leave allocation ({unit})</label>
           <input id="hol-alloc" type="number" min={0} step="0.5" inputMode="decimal" className={inp} value={allowance} onChange={on(setAllowance)} placeholder={unit === 'hours' ? 'For example 224' : 'For example 28'} />
-          <p className="mt-1 text-xs text-neutral-mid">For someone who joins part way through the year, work out their share first and type that total.</p>
+          <p className="mt-1 text-xs text-neutral-mid">What they get for a whole holiday year.</p>
+        </div>
+        <div>
+          <label className={lbl} htmlFor="hol-first">Allocation for the rest of this year ({unit})</label>
+          <input id="hol-first" type="number" min={0} step="0.5" inputMode="decimal" className={inp} value={firstYear} onChange={on(setFirstYear)} placeholder={unit === 'hours' ? 'For example 112' : 'For example 14'} />
+          <p className="mt-1 text-xs text-neutral-mid">For someone who starts part way through the year. Used only for the year of their start date; after that the full yearly allocation applies. Leave empty if they start at the beginning of the year.</p>
         </div>
         <div>
           <label className={lbl} htmlFor="hol-hours">Contracted hours a week</label>

@@ -10,7 +10,7 @@ import type { LucideIcon } from 'lucide-react'
 import { AlertTriangle, ArrowLeft, Award, BarChart3, Bell, BookOpen, CalendarDays, Check, ClipboardCheck, Copy, FileText, GraduationCap, Library, Loader2, Lock, Newspaper, PoundSterling, Send, Shield, Sparkles, Trash2, UserPlus, Users, Wallet, X, Pencil, ShieldCheck, BadgeCheck, FileBarChart, Maximize2, Minimize2, Heart } from 'lucide-react'
 import { ask, AskError, parseNotificationDraft, withoutDraftBlock, notificationsLink, parseNewsletterLayouts, withoutLayoutsBlock, type AskAgent, type AskConversation, type AskDocument, type AskMessage, type AskSource, type AskActionCard, type AskUpload } from '@/lib/ask-client'
 import { MarkdownLite } from '@/components/ask/markdown-lite'
-import { type AskPageContext, agentForPage, clampWidth, contextStarters, layoutFor, toWireContext, MAX_W, MIN_W, type PanelLayout } from '@/lib/ask-panel-state'
+import { type AskPageContext, agentForPage, clampWidth, contextStarters, editWidthFor, layoutFor, toWireContext, MAX_W, MIN_W, type PanelLayout } from '@/lib/ask-panel-state'
 import { useAskContext } from '@/lib/ask-context'
 import { closeAsk, initAskUi, openAsk, registerAskTrigger, setAskEnabled, setAskExpanded, setAskWidth, toggleAsk, useAskUi } from '@/lib/ask-ui-store'
 import { DocumentPanel } from '@/components/ask/document-panel'
@@ -80,10 +80,13 @@ export function AskPanelHost() {
   }, [])
   const layout = layoutFor(vw)
   // The panel is ALWAYS an overlay on top of the page (it never moves or resizes the page). The support chat bubble moves left of it so both stay reachable (the bubble reads this).
-  const dock = ui.enabled && ui.open && !ui.expanded && layout !== 'phone' ? clampWidth(ui.width, vw) : 0
+  // While a draft is open for editing the panel is wider (about half the screen, or the full width, as the person chose), and goes back to their usual width when it is closed.
+  const editW = ui.editing && !ui.expanded && layout !== 'phone' ? editWidthFor(ui.editMode, vw, ui.width) : null
+  const panelW = editW ?? clampWidth(ui.width, vw)
+  const dock = ui.enabled && ui.open && !ui.expanded && layout !== 'phone' ? panelW : 0
   useEffect(() => { document.documentElement.style.setProperty('--ask-dock', `${dock}px`); return () => { document.documentElement.style.removeProperty('--ask-dock') } }, [dock])
   if (!ui.enabled || !ui.open || !token) return null
-  return <AskPanel token={token} layout={layout} expanded={ui.expanded} width={clampWidth(ui.width, vw)} onClose={closeAsk} />
+  return <AskPanel token={token} layout={layout} expanded={ui.expanded} width={panelW} locked={editW !== null && ui.editMode !== 'narrow'} onClose={closeAsk} />
 }
 
 const timeAgo = (iso: string | null) => (iso ? new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '')
@@ -156,7 +159,8 @@ function ContextCard({ ctx, agents, onDismiss, onAsk }: { ctx: AskPageContext; a
   )
 }
 
-export function AskPanel({ token, layout, expanded, width, onClose }: { token: string; layout: PanelLayout; expanded: boolean; width: number; onClose: () => void }) {
+export function AskPanel({ token, layout, expanded, width, locked = false, onClose }: { token: string; layout: PanelLayout; expanded: boolean; width: number; locked?: boolean; onClose: () => void }) {
+  const ui = useAskUi()
   const [view, setView] = useState<View>('picker')
   const [agents, setAgents] = useState<AskAgent[] | null>(null)
   const [ready, setReady] = useState(true)
@@ -202,7 +206,7 @@ export function AskPanel({ token, layout, expanded, width, onClose }: { token: s
       if (e.key === 'Escape') {
         // Collapse the large view first, then close a document, then (docked) close the panel only when focus is inside it.
         if (expanded) { e.preventDefault(); setAskExpanded(false); return }
-        if (docId) { e.preventDefault(); setDocId(null); return }
+        if (docId) { e.preventDefault(); window.dispatchEvent(new Event('cs:ask-doc-close')); return }   // the document asks "Save your changes?" first when there are unsaved changes
         if (layout === 'phone' || dlg.current?.contains(document.activeElement)) { e.preventDefault(); onClose() }
         return
       }
@@ -301,7 +305,7 @@ export function AskPanel({ token, layout, expanded, width, onClose }: { token: s
   return (
     <div className={rootCls} onMouseDown={e => { if (expanded && e.target === e.currentTarget) setAskExpanded(false) }}>
       <div ref={dlg} id="ask-panel" tabIndex={-1} role={modal ? 'dialog' : 'complementary'} aria-modal={modal ? true : undefined} aria-labelledby="ask-title" className={boxCls} style={boxStyle}>
-        {!expanded && layout !== 'phone' && (
+        {!expanded && layout !== 'phone' && !locked && (
           <div role="separator" aria-orientation="vertical" aria-label="Resize Ask CareStream. Use the left and right arrow keys." aria-valuemin={MIN_W} aria-valuemax={MAX_W} aria-valuenow={width} tabIndex={0}
             onPointerDown={startResize} onKeyDown={resizeKey} className="absolute left-0 top-0 z-20 h-full w-1.5 cursor-col-resize bg-transparent hover:bg-teal/30 focus:bg-teal/40 focus:outline-none" />
         )}
@@ -442,7 +446,7 @@ export function AskPanel({ token, layout, expanded, width, onClose }: { token: s
           </div>
         )}
 
-        {docId && !expanded && layout !== 'phone' && expandHint !== docId && (
+        {docId && !expanded && !ui.editing && layout !== 'phone' && expandHint !== docId && (
           <div className="absolute inset-x-0 top-0 z-20 flex items-center justify-between gap-2 border-b border-teal/30 bg-teal/10 px-4 py-2 text-xs text-neutral-dark" role="status">
             <span>This is easier to read and edit in the larger view.</span>
             <span className="flex items-center gap-2">

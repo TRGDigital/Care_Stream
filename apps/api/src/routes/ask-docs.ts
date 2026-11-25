@@ -5,7 +5,7 @@
 // The PDF stays at /ask/documents/:id/pdf (now also on the letterhead, and ?sign=1 adds MY signature).
 // A signature is used only for the signed in person, and only when they ask for it in this request. Pilot account and administrators only.
 
-import { photoAllowedFor, photoChoice, resolvePerson, staffHasPicture, featuredOf, detectGiftImage, giftAllowedFor, lintGift, giftKey, GIFT_IMAGE_ID } from '../services/ask-docs/newsletter-photo'
+import { photoAllowedFor, photoChoice, resolvePerson, staffHasPicture, featuredOf, featuredFromChoices, detectGiftImage, giftAllowedFor, lintGift, giftKey, GIFT_IMAGE_ID } from '../services/ask-docs/newsletter-photo'
 import { randomUUID } from 'crypto'
 import { listItems, applyOp, PALETTES, BLOCK_TYPES, CALLOUT_ICONS, MAX_CUSTOM, blockImageKey, type Op } from '../services/ask-docs/newsletter-edit'
 import { lintForTemplate } from '../services/ask/newsletter-tools'
@@ -97,6 +97,35 @@ askDocsRouter.get('/:id/newsletter-photo', async (req: Request, res: Response) =
   const people: Array<{ name: string | null; has_picture: boolean }> = []
   for (const ph of list) { const who = await resolvePerson(t, { user_id: String(ph.user_id) }); people.push({ name: who.ok ? who.name : null, has_picture: who.ok ? await staffHasPicture(t, who.id) : false }) }
   ok(res, { chosen: true, name: people[0].name, consent: true, has_picture: people[0].has_picture, people })
+})
+
+// Everyone featured in the newsletter, with whether each has a staff picture, and the way to change the group: the whole list is sent, someone already featured keeps their recorded agreement,
+// someone new needs the tick, and removing one person removes only that person.
+askDocsRouter.get('/:id/newsletter-people', async (req: Request, res: Response) => {
+  const t = getTenantId(), u = req.user!.sub
+  const d = await store.getDocumentFor(t, u, String(req.params.id)); if (!d || d.type !== 'newsletter') { notFound(res); return }
+  const people: Array<{ user_id: string; name: string | null; has_picture: boolean; agreed_at: string }> = []
+  for (const ph of featuredOf(d.data)) { const who = await resolvePerson(t, { user_id: String(ph.user_id) }); people.push({ user_id: String(ph.user_id), name: who.ok ? who.name : null, has_picture: who.ok ? await staffHasPicture(t, who.id) : false, agreed_at: ph.consent_at }) }
+  ok(res, { allowed: photoAllowedFor(d.data?.template_id), people })
+})
+askDocsRouter.post('/:id/newsletter-people', async (req: Request, res: Response) => {
+  const t = getTenantId(), u = req.user!.sub
+  const d = await store.getDocumentFor(t, u, String(req.params.id)); if (!d || d.type !== 'newsletter') { notFound(res); return }
+  const ed = canEdit(d, u); if (!ed.ok) { err(res, 'NOT_ALLOWED', ed.reason, 409); return }
+  if (!photoAllowedFor(d.data?.template_id)) { err(res, 'INVALID', 'People can only be featured in an employee of the month, staff story, new starters or leavers newsletter.', 400); return }
+  const choices = Array.isArray(req.body?.people) ? req.body.people.slice(0, 16) : []
+  const ids: string[] = []
+  for (const c of choices) {
+    const who = await resolvePerson(t, { user_id: String(c?.user_id ?? '') })
+    if (!who.ok) { err(res, 'INVALID', 'One of those people was not found.', 400); return }
+    ids.push(who.id)
+  }
+  const r = featuredFromChoices(featuredOf(d.data), choices.map((c: any, i: number) => ({ user_id: ids[i], consent: c?.consent })), u)
+  if (!r.ok) { err(res, 'CONSENT_REQUIRED', r.reason, 400); return }
+  const data = { ...(d.data ?? {}), photos: r.list, photo: r.list[0] ?? null }
+  await store.updateDocumentContent(t, d.id, { data })
+  void writeAuditLog({ tenant_id: t, user_id: u, event_type: 'ask_newsletter_photo_set', entity_type: 'ask_document', entity_id: d.id, metadata: { included: r.list.length, consent: r.list.length } })
+  ok(res, { saved: true, count: r.list.length })
 })
 
 // The optional GIFT picture for an Employee of the month style newsletter: png, jpg or webp, at most 1 MB, checked on its real bytes, kept privately for this account only. Returns the id to

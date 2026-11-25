@@ -224,7 +224,7 @@ test('AGENT: the tools use the same checks as the panel, so a pale colour or a b
 })
 
 test('PANEL: the editor is in the document panel, saves each change, shows the reason when refused, and the next step buttons can open it', () => {
-  const panel = webSrc('components/ask/document-panel.tsx'); assert.match(panel, /<NewsletterEditor token=\{token\} docId=\{d\.id\}/); assert.match(panel, /focus=\{focus\}/)
+  const panel = webSrc('components/ask/document-panel.tsx'); assert.match(panel, /<NewsletterEditor bare open=\{tool\} onOpen=\{setTool\} token=\{token\} docId=\{d\.id\}/); assert.match(panel, /focus=\{focus\}/)
   const ed = webSrc('components/ask/newsletter-editor.tsx')
   for (const w of ['Colours', 'Blocks', 'Add a block here', 'Brand colour', 'Category colour', 'Reset to default', 'Reset all blocks', 'Your own colour', 'Move ', 'Copy', 'Delete', 'Describe the picture']) assert.ok(ed.includes(w), w)
   assert.match(ed, /newsletterOp\(token, docId, \{ op: 'accent'/); assert.match(ed, /role="alert"/)

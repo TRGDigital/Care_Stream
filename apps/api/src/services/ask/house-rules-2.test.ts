@@ -117,7 +117,7 @@ test('RULE 3: every place an administrator picks staff uses the ONE picker (no r
   assert.doesNotMatch(webSrc('components/ask/question-form.tsx'), /Type a name/)
   assert.match(webSrc('components/ask/action-card.tsx'), /<StaffPicker/)
   assert.match(webSrc('components/ask/upload-panel.tsx'), /<StaffSelect/); assert.doesNotMatch(webSrc('components/ask/upload-panel.tsx'), /<option value=\{s\.id\}/)
-  assert.match(webSrc('components/ask/document-panel.tsx'), /<StaffPicker/); assert.doesNotMatch(webSrc('components/ask/document-panel.tsx'), /adminNotifications\.staff/)
+  assert.match(webSrc('components/ask/document-panel.tsx'), /<FeaturedPeople/); assert.match(webSrc('components/ask/featured-people.tsx'), /<StaffPicker/); assert.doesNotMatch(webSrc('components/ask/document-panel.tsx'), /adminNotifications\.staff/)
   assert.match(webSrc('components/ask/share-panel.tsx'), /<StaffPicker/)
 })
 

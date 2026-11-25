@@ -2,15 +2,19 @@
 
 // One saved item in the library. A saved answer is just text. A LETTER or NEWSLETTER goes draft -> waiting for approval -> approved -> shared: this panel shows the status, lets the
 // author edit and submit, lets another administrator tick the "before you send" checklist and approve, and then shares it (PDF, email to the person, or a staff notification with the PDF).
-import { useCallback, useEffect, useMemo, useState } from 'react'
-import { AlertTriangle, Check, Copy, Download, FileText, Loader2, Mail, Maximize2, Bell, Pencil, Printer, RotateCcw, Send, Trash2, X } from 'lucide-react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { AlertTriangle, Check, Copy, Download, FileText, Loader2, Mail, Maximize2, Bell, Pencil, Palette, Plus, Printer, RotateCcw, Save, Send, Trash2, X } from 'lucide-react'
 import { ask, AskError, type AskDocFull, type ShareIntent } from '@/lib/ask-client'
-import { MarkdownLite } from './markdown-lite'
-import { StaffPicker, useStaff } from '@/components/ask/staff-picker'
+import { MarkdownLite, Marked } from './markdown-lite'
 import { DocumentActions } from '@/components/ask/document-actions'
 import { SharePanel } from '@/components/ask/share-panel'
 import { GiftBox } from '@/components/ask/gift-box'
 import { NewsletterEditor } from '@/components/ask/newsletter-editor'
+import { FeaturedPeople } from '@/components/ask/featured-people'
+import { MarkedTextarea } from '@/components/ask/marked-textarea'
+import { setAskEditing, setAskEditMode, useAskUi } from '@/lib/ask-ui-store'
+import { splitFor, type EditMode } from '@/lib/ask-panel-state'
+import { takesPeople } from '@/lib/featured-people'
 import { ExpandViewer, Expandable, useExpandViewer, type ViewerItem } from './expand-viewer'
 import { FitHtml } from './fit-html'
 import { SheetFrame, type SheetFit } from './sheet-frame'
@@ -23,25 +27,19 @@ const input = 'w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-
 const btn = 'inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-semibold disabled:opacity-50'
 
 
-/** HOUSE RULE 10: the page of a newsletter. Portrait or landscape, a note that it fits one page, and, when it does not fit at a readable size, the gentle check with buttons (never silently shrunk or cut). */
-function PageControls({ doc, fit, tooLong, busy, canEdit, onSet, onShorten }: { doc: AskDocFull; fit: SheetFit | null; tooLong: boolean; busy: boolean; canEdit: boolean; onSet: (o: { orientation?: 'portrait' | 'landscape'; pages?: 'one' | 'two' }) => void; onShorten: () => void }) {
+/** HOUSE RULE 10: the note under the toolbar about the page. A newsletter is ONE page; when it does not fit at a readable size the gentle check asks what to do (never silently shrunk or cut). Portrait or landscape is in the toolbar. */
+function PageNotice({ doc, fit, busy, canEdit, onSet, onShorten }: { doc: AskDocFull; fit: SheetFit | null; busy: boolean; canEdit: boolean; onSet: (o: { orientation?: 'portrait' | 'landscape'; pages?: 'one' | 'two' }) => void; onShorten: () => void }) {
   const orientation = doc.data?.orientation === 'landscape' ? 'landscape' : 'portrait'
   const two = doc.data?.pages === 'two'
   const canTwo = String(doc.data?.template_id ?? '').endsWith('-detailed')
-  const over = tooLong || (!!fit && !fit.fits)
+  const over = !!fit && !fit.fits
   const other = orientation === 'portrait' ? 'landscape' : 'portrait'
   const cb = 'rounded-lg border px-3 py-1.5 text-xs font-semibold disabled:opacity-50'
   return (
-    <div className="rounded-lg border border-gray-200 bg-white p-3 text-sm text-neutral-dark">
-      <div className="flex flex-wrap items-center gap-3">
-        <span className="font-semibold" id="ask-page-label">Page</span>
-        <div role="group" aria-labelledby="ask-page-label" className="inline-flex overflow-hidden rounded-lg border border-gray-200 text-xs font-semibold">
-          {(['portrait', 'landscape'] as const).map(o => <button key={o} type="button" disabled={!canEdit || busy} aria-pressed={orientation === o} onClick={() => orientation !== o && onSet({ orientation: o })} className={`px-3 py-1.5 ${orientation === o ? 'bg-teal text-white' : 'bg-white text-neutral-dark hover:bg-neutral-light'} disabled:opacity-60`}>{o === 'portrait' ? 'Portrait' : 'Landscape'}</button>)}
-        </div>
-        {!over && fit && <span role="status" className="inline-flex items-center gap-1 text-xs font-semibold text-green-800"><Check size={12} aria-hidden="true" /> {fit.pages > 1 ? `Runs to ${fit.pages} pages (two pages allowed)` : 'Fits one page'}</span>}
-      </div>
+    <div className="text-sm text-neutral-dark">
+      {!over && fit && <p role="status" className="inline-flex items-center gap-1 text-xs font-semibold text-green-800"><Check size={12} aria-hidden="true" /> {fit.pages > 1 ? `Runs to ${fit.pages} pages (two pages allowed)` : 'Fits one page'}</p>}
       {over && canEdit && (
-        <div role="alert" className="mt-2 rounded-lg border border-amber-300 bg-amber-50 p-3">
+        <div role="alert" className="rounded-lg border border-amber-300 bg-amber-50 p-3">
           <p className="text-sm text-neutral-dark">This newsletter will not fit one page at a readable size. What would you like to do?</p>
           <div className="mt-2 flex flex-wrap gap-2">
             <button type="button" disabled={busy} onClick={() => onSet({ orientation: other })} className={`${cb} border-teal bg-teal text-white hover:bg-teal-dark`}>Switch to {other}</button>
@@ -54,6 +52,7 @@ function PageControls({ doc, fit, tooLong, busy, canEdit, onSet, onShorten }: { 
     </div>
   )
 }
+
 
 export function DocumentPanel({ token, id, onClose, onChanged, focus }: { token: string; id: string; onClose: () => void; onChanged: () => void; focus?: 'colours' | 'blocks' | null }) {
   const [d, setD] = useState<AskDocFull | null>(null)
@@ -74,12 +73,20 @@ export function DocumentPanel({ token, id, onClose, onChanged, focus }: { token:
   const [tooLong, setTooLong] = useState(false)          // the PDF said it would not fit one page at a readable size
   const [showPaper, setShowPaper] = useState(false)
   const [live, setLive] = useState<{ html: string; sheet?: string; orientation?: 'portrait' | 'landscape' } | null>(null)   // the designed newsletter for the text being edited
-  const [photoPick, setPhotoPick] = useState<string | null>(null)
-  const [photoAgreed, setPhotoAgreed] = useState(false)
-  const [photoState, setPhotoState] = useState<{ chosen: boolean; name?: string | null; consent?: boolean; has_picture?: boolean } | null>(null)
-  const photoUser = d?.data?.photo?.user_id ?? null
-  const photoStaffList = useStaff(token, d?.type === 'newsletter' && !!d?.actions.edit)
   const viewer = useExpandViewer()
+  const ui = useAskUi()
+  const rootRef = useRef<HTMLDivElement>(null)
+  const [pw, setPw] = useState(0)                                  // the width the panel really has: side by side from 900px, stacked below
+  const [tool, setTool] = useState<'colours' | 'blocks' | null>(focus ?? null)   // the Colours or Add a block panel, under the toolbar and above the newsletter
+  const [savedAt, setSavedAt] = useState<Date | null>(null)
+  const [confirmClose, setConfirmClose] = useState<'panel' | 'editor' | null>(null)          // "Save your changes?" when closing with unsaved changes (never a browser dialog)
+  useEffect(() => { if (focus) { setTool(focus); setTimeout(() => document.getElementById('ask-nl-tools')?.scrollIntoView?.({ block: 'nearest' }), 50) } }, [focus])
+  useEffect(() => {
+    const el = rootRef.current; if (!el) return
+    const m = () => setPw(el.clientWidth)
+    m(); const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(m) : null
+    ro?.observe(el); return () => ro?.disconnect()
+  }, [d?.id])
 
   const load = useCallback(async () => {
     try { const r = await ask.document(token, id); setD(r.document); setTitle(r.document.title); setBody(r.document.body); setValues(r.document.values ?? {}); setInternal(r.document.internal_only === true); setTicked(false); setError('') }
@@ -99,7 +106,9 @@ export function DocumentPanel({ token, id, onClose, onChanged, focus }: { token:
     const t = setTimeout(() => { ask.previewDraft(token, id, { title, body }).then(r => setLive({ html: r.html, sheet: r.sheet, orientation: r.orientation })).catch(() => undefined) }, 500)
     return () => clearTimeout(t)
   }, [editing, d?.type, token, id, title, body])
-  useEffect(() => { if (d?.type !== 'newsletter' || !photoUser) { setPhotoState(null); return } ask.newsletterPhotoStatus(token, id).then(setPhotoState).catch(() => setPhotoState(null)) }, [d?.type, d?.updated_at, photoUser, token, id])
+  // A draft open for editing widens the panel (about half the screen, or the full width, as chosen) and it goes back to the usual width when this closes.
+  const canEditDoc = !!d?.actions.edit
+  useEffect(() => { if (!canEditDoc) return; setAskEditing(true); return () => setAskEditing(false) }, [canEditDoc])
   const msg = (e: unknown) => (e instanceof AskError || e instanceof Error ? e.message : 'Something went wrong. Please try again.')
   async function run(name: string, fn: () => Promise<unknown>, done?: string) {
     setBusy(name); setError(''); setInfo('')
@@ -108,6 +117,10 @@ export function DocumentPanel({ token, id, onClose, onChanged, focus }: { token:
   const isFinal = d?.status === 'approved' || d?.status === 'shared'   // anything else is a DRAFT copy: stamped DRAFT on every page, never recorded as shared
   const letter = d?.type === 'letter', report = d?.type === 'report', news = d?.type === 'newsletter' || report, flow = !!d?.actions.needs_approval
   const st = d ? STATUS[d.status] ?? STATUS.draft : null
+  const split = splitFor(pw) && (d?.type === 'newsletter' || letter || report)   // tools and text on the left, the designed page on the right
+  useEffect(() => { if (split && (letter || report)) setShowPaper(true) }, [split, letter, report])   // wide: the page is always beside the words
+  // Unsaved changes: the words or details being edited differ from what is saved. Everything else (colours, blocks, people, gift) is saved the moment it is changed.
+  const dirty = !!d && editing && (title !== d.title || (news && body !== d.body) || (letter && JSON.stringify(values) !== JSON.stringify(d.values ?? {})) || (report && internal !== (d.internal_only === true)))
 
   // How the letter is to be shared: in their hub, by email, hub and email, or print only (which stays with me and is never shown to the staff member).
   const intent: ShareIntent = d?.share_intent ?? { hub: false, email: false, print_only: false }
@@ -121,61 +134,66 @@ export function DocumentPanel({ token, id, onClose, onChanged, focus }: { token:
   }
   const channels = (intent.print_only ? [] : [intent.hub ? 'hub' : '', intent.email ? 'email' : ''].filter(Boolean)) as string[]
   const first = (d?.staff_name ?? 'the person').split(' ')[0]
-  async function save() {
+  async function save(closeEditor = false) {
     if (!d) return
     await run('save', async () => {
       const r = await ask.editDocument(token, d.id, letter ? { title, values } : report ? { title, body, internal_only: internal } : { title, body })
-      setEditing(false)
+      if (closeEditor) setEditing(false)
+      setSavedAt(new Date())
       if (r.missing?.length) setInfo(`Saved. Still missing: ${r.missing.join(', ')}.`)
     })
   }
+  const requestClose = () => { if (dirty) setConfirmClose('panel'); else onClose() }
+  useEffect(() => { const on = () => requestClose(); window.addEventListener('cs:ask-doc-close', on); return () => window.removeEventListener('cs:ask-doc-close', on) })   // Esc in the panel
+  const setLayout = (o: { orientation?: 'portrait' | 'landscape'; pages?: 'one' | 'two' }) => { setTooLong(false); void run('layout', () => ask.newsletterOp(token, d!.id, { op: 'layout', ...o })) }
+  const orientation: 'portrait' | 'landscape' = d?.data?.orientation === 'landscape' ? 'landscape' : 'portrait'
+  const canTwo = String(d?.data?.template_id ?? '').endsWith('-detailed')
   /** The PDF (and Print, which prints the same PDF). A newsletter that will not fit one page at a readable size is not silently shrunk or cut: the page controls ask what to do. */
   const getPdfBlob = async () => { try { return await ask.documentBlob(token, d!.id, 'pdf', { sign: sign && letter, draft: !isFinal }) } catch (e) { if (e instanceof AskError && e.code === 'TOO_LONG') setTooLong(true); throw e } }
   async function openViewer() { if (d && (letter || news) && showPaper && !paper) await loadPaper(); viewer.show() }
   const viewerItems: ViewerItem[] = !d ? [] : d.type === 'newsletter' && showPaper && paper?.sheet ? [{ kind: 'sheet', html: paper.sheet, orientation: paper.orientation ?? 'portrait' }]
     : (letter || news) && showPaper && paper ? [{ kind: 'html', html: paper.html, css: paper.css }]
-    : [{ kind: 'node', node: <div className="w-[680px] max-w-full p-8 text-neutral-dark">{letter ? <pre className="whitespace-pre-wrap font-sans text-sm leading-relaxed">{d.body}</pre> : <MarkdownLite text={d.body} />}</div> }]
+    : [{ kind: 'node', node: <div className="w-[680px] max-w-full p-8 text-neutral-dark">{letter ? <pre className="whitespace-pre-wrap font-sans text-sm leading-relaxed"><Marked text={d.body} /></pre> : <MarkdownLite text={d.body} />}</div> }]
 
-  return (
-    <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/30 p-3" onMouseDown={e => { if (e.target === e.currentTarget) onClose() }}>
-      <div role="dialog" aria-modal="true" aria-label={d?.title ?? 'Document'} className="flex max-h-[92%] w-full max-w-3xl flex-col rounded-2xl bg-white p-5 shadow-xl">
-        {!d ? (error ? <p role="alert" className="text-sm text-red-700">{error}</p> : <p className="flex items-center gap-2 text-sm text-neutral-mid"><Loader2 size={16} className="animate-spin" /> Loading</p>) : (<>
-          <div className="mb-3 flex items-start justify-between gap-3">
-            <div className="min-w-0">
-              <h3 className="truncate text-base font-bold text-neutral-dark">{d.title}</h3>
-              <p className="mt-1 flex flex-wrap items-center gap-2 text-xs text-neutral-mid">{st && <span className={`rounded-full px-2 py-0.5 font-semibold ${st.cls}`}>{st.label}</span>}{report && d.internal_only && <span className="rounded-full bg-red-100 px-2 py-0.5 font-semibold text-red-800">Internal only</span>}{flow ? (letter ? 'Letter' : report ? 'Governance report' : 'Staff newsletter') : 'Saved answer'}{d.staff_name ? `, for ${d.staff_name}` : ''}</p>
-            </div>
-            <button type="button" onClick={onClose} aria-label="Close" className="rounded p-1 text-neutral-mid hover:bg-neutral-light"><X size={18} /></button>
-          </div>
 
-          <div className="min-h-0 flex-1 space-y-3 overflow-y-auto no-scrollbar pr-1">
-            {d.type === 'newsletter' && showPaper && !editing && paper?.sheet && <PageControls doc={d} fit={fit} tooLong={tooLong} busy={!!busy} canEdit={!!d.actions.edit} onSet={(o: { orientation?: 'portrait' | 'landscape'; pages?: 'one' | 'two' }) => { setTooLong(false); void run('layout', () => ask.newsletterOp(token, d.id, { op: 'layout', ...o })) }} onShorten={() => { setTooLong(false); setEditing(true) }} />}
-            {d.data?.review_note && d.status === 'draft' && <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">Sent back: {d.data.review_note.note}</p>}
-
-            {editing && letter && d.fields ? (
+  const formNode = !d ? null : editing && letter && d.fields ? (
               <div className="space-y-3">
                 <div><label className="mb-1 block text-xs font-semibold text-neutral-mid" htmlFor="ask-doc-title">Title</label><input id="ask-doc-title" className={input} value={title} onChange={e => setTitle(e.target.value)} maxLength={160} /></div>
                 <p className="text-xs text-neutral-mid">Change a detail and save: the letter is written again from your changes. Required details are marked *.</p>
                 {d.fields.map(f => (
                   <div key={f.key}><label className="mb-1 block text-xs font-semibold text-neutral-mid" htmlFor={`ask-f-${f.key}`}>{f.label}{f.required ? ' *' : ''}</label>
                     {f.choices ? <select id={`ask-f-${f.key}`} className={input} value={String(values[f.key] ?? '')} onChange={e => setValues(v => ({ ...v, [f.key]: e.target.value }))}><option value="">Choose</option>{f.choices.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}</select>
-                      : f.type === 'longtext' || f.type === 'list' ? <textarea id={`ask-f-${f.key}`} rows={3} className={input} value={String(values[f.key] ?? '')} onChange={e => setValues(v => ({ ...v, [f.key]: e.target.value }))} />
+                      : f.type === 'longtext' || f.type === 'list' ? <MarkedTextarea id={`ask-f-${f.key}`} rows={3} value={String(values[f.key] ?? '')} onChange={v => setValues(vals => ({ ...vals, [f.key]: v }))} label={f.label} />
                       : <input id={`ask-f-${f.key}`} className={input} type={f.type === 'date' ? 'date' : 'text'} value={String(values[f.key] ?? '')} onChange={e => setValues(v => ({ ...v, [f.key]: e.target.value }))} />}</div>
                 ))}
               </div>
             ) : editing && news ? (
               <div className="space-y-3">
                 <div><label className="mb-1 block text-xs font-semibold text-neutral-mid" htmlFor="ask-doc-title">Title</label><input id="ask-doc-title" className={input} value={title} onChange={e => setTitle(e.target.value)} maxLength={160} /></div>
-                <div><label className="mb-1 block text-xs font-semibold text-neutral-mid" htmlFor="ask-doc-body">{report ? 'Report' : 'Newsletter'} (## for a heading, - for a bullet)</label><div className={d.type === 'newsletter' ? 'grid gap-3 md:grid-cols-2' : ''}><textarea id="ask-doc-body" rows={16} className={`no-scrollbar ${input} font-mono`} value={body} onChange={e => setBody(e.target.value)} />{d.type === 'newsletter' && <div><p className="mb-1 text-xs font-semibold text-neutral-mid">Designed preview (follows what you type)</p>{live ? (live.sheet ? <SheetFrame html={live.sheet} orientation={live.orientation ?? 'portrait'} className="rounded-lg border border-gray-200" /> : <FitHtml html={live.html} className="rounded-lg border border-gray-200" />) : <p className="flex items-center gap-2 text-xs text-neutral-mid"><Loader2 size={12} className="animate-spin" aria-hidden="true" />Making the preview</p>}</div>}</div></div>
+                <div><label className="mb-1 block text-xs font-semibold text-neutral-mid" htmlFor="ask-doc-body">{report ? 'Report' : 'Newsletter'} (## for a heading, - for a bullet; the buttons add bold, italic and underline)</label><MarkedTextarea id="ask-doc-body" rows={16} value={body} onChange={setBody} label="the text" className={`${input} font-mono`} /></div>
                 {report && (
                   <label className="flex items-start gap-2 rounded-lg border border-gray-200 bg-neutral-light/60 p-3 text-sm text-neutral-dark"><input type="checkbox" className="mt-0.5 h-4 w-4" checked={internal} onChange={e => setInternal(e.target.checked)} />
                     <span><span className="font-semibold">Internal only.</span> It may name people and quote pay. It can be downloaded or emailed to the administrators, and can never be sent to staff. Leave this off for a report you may share: it then uses roles and counts only.</span></label>
                 )}
               </div>
-            ) : showPaper && (letter || news) ? (paper ? <Expandable label={d.type === 'newsletter' ? 'The designed newsletter' : 'The document on letterhead'} onOpen={openViewer}>{d.type === 'newsletter' ? (paper.sheet ? <SheetFrame html={paper.sheet} orientation={paper.orientation ?? 'portrait'} onFit={setFit} className="rounded-xl border border-gray-200" /> : <FitHtml html={paper.html} className="rounded-xl border border-gray-200" />) : <div className="no-scrollbar overflow-x-auto rounded-xl bg-neutral-light p-3"><style>{paper.css}</style><div dangerouslySetInnerHTML={{ __html: paper.html }} /></div>}</Expandable> : <p className="flex items-center gap-2 text-sm text-neutral-mid"><Loader2 size={14} className="animate-spin" /> Preparing the preview</p>)
-            : <Expandable label="The text" onOpen={openViewer}>{letter ? <pre className="whitespace-pre-wrap rounded-lg border border-gray-200 bg-neutral-light/50 p-4 font-sans text-sm leading-relaxed text-neutral-dark">{d.body}</pre>
-              : <MarkdownLite text={d.body} />}</Expandable>}
+            )
+    : null
+  const paperNode = !d ? null : showPaper && (letter || news) ? (paper ? <Expandable label={d.type === 'newsletter' ? 'The designed newsletter' : 'The document on letterhead'} onOpen={openViewer}>{d.type === 'newsletter' ? (paper.sheet ? <SheetFrame html={paper.sheet} orientation={paper.orientation ?? 'portrait'} onFit={setFit} className="rounded-xl border border-gray-200" /> : <FitHtml html={paper.html} className="rounded-xl border border-gray-200" />) : <div className="no-scrollbar overflow-x-auto rounded-xl bg-neutral-light p-3"><style>{paper.css}</style><div dangerouslySetInnerHTML={{ __html: paper.html }} /></div>}</Expandable> : <p className="flex items-center gap-2 text-sm text-neutral-mid"><Loader2 size={14} className="animate-spin" /> Preparing the preview</p>)
+            : <Expandable label="The text" onOpen={openViewer}>{letter ? <pre className="whitespace-pre-wrap rounded-lg border border-gray-200 bg-neutral-light/50 p-4 font-sans text-sm leading-relaxed text-neutral-dark"><Marked text={d.body} /></pre>
+              : <MarkdownLite text={d.body} />}</Expandable>
+  const liveNode = live ? (live.sheet ? <SheetFrame html={live.sheet} orientation={live.orientation ?? 'portrait'} className="rounded-xl border border-gray-200" /> : <FitHtml html={live.html} className="rounded-xl border border-gray-200" />) : <p className="flex items-center gap-2 text-xs text-neutral-mid"><Loader2 size={12} className="animate-spin" aria-hidden="true" />Making the preview</p>
+  const tb = 'inline-flex min-h-[36px] items-center gap-1.5 rounded-lg border px-3 text-sm font-semibold disabled:opacity-50'
+  const tbOff = `${tb} border-gray-200 bg-white text-neutral-dark hover:bg-neutral-light`
+  const tbOn = `${tb} border-teal bg-teal text-white hover:bg-teal-dark`
+  const showWidth = canEditDoc && pw >= 560
+  const sheetOn = d?.type === 'newsletter' && showPaper && !!paper?.sheet
+  // what sits in the left column (tools and words) and what sits with the page
+  const notices = d ? (<>
 
+
+
+  </>) : null
+  const rest = d ? (<>
             {flow && docStatus && !docStatus.letterhead_ready && (
               <p className="rounded-lg border border-gray-200 bg-neutral-light/60 px-3 py-2 text-xs text-neutral-dark">To make this look like a complete company letter, finish your <strong>Letterhead and company details</strong> in Settings{docStatus.missing.length ? ` (${docStatus.missing.slice(0, 3).join(', ')}${docStatus.missing.length > 3 ? ' and more' : ''})` : ''}.</p>
             )}
@@ -183,32 +201,8 @@ export function DocumentPanel({ token, id, onClose, onChanged, focus }: { token:
               <label className="flex items-start gap-2 text-sm text-neutral-dark"><input type="checkbox" className="mt-0.5 h-4 w-4" checked={sign} onChange={e => setSign(e.target.checked)} disabled={!docStatus?.signature} />
                 <span><strong className="font-medium">Sign with my signature.</strong> {docStatus?.signature ? 'Your signature and your printed name and job title go at the end of the letter.' : 'You have not added a signature yet. Add one in Settings under My signature (or in the hub). Your printed name will still be used.'}</span></label>
             )}
-            {d.type === 'newsletter' && d.actions.edit && (
-              <div className="rounded-lg border border-gray-200 p-3 text-sm text-neutral-dark">
-                <p id="ask-nl-photo" className="font-semibold">Picture of the person (employee of the month, a story, new starters, a farewell)</p>
-                <p className="mt-0.5 text-xs text-neutral-mid">Pick them from your staff. Only their staff picture is used, and only when they agree. It shows large and round in the preview, the hub and the PDF. The email shows their initials and says the photo is in the hub and the PDF.</p>
-                <div className="mt-2">
-                  {photoStaffList === null
-                    ? <p className="flex items-center gap-2 text-xs text-neutral-mid" role="status"><Loader2 size={12} className="animate-spin" aria-hidden="true" />Loading your staff</p>
-                    : <StaffPicker people={photoStaffList} mode="single" noneLabel="No picture" label="Picture of the person" selected={photoPick ? [photoPick] : (d.data?.photo?.user_id ? [d.data.photo.user_id] : [])}
-                        onChange={ids => { const v = ids[0] ?? ''; setPhotoPick(v || null); setPhotoAgreed(false); if (!v) run('photo', () => ask.newsletterPhoto(token, d.id, null), 'No picture.') }} />}
-                </div>
-                {(d.data?.photos?.length ?? 0) > 1 && <p className="mt-2 rounded-md bg-green-50 px-2.5 py-1.5 text-xs text-green-900" role="status">{d.data!.photos!.length} people are featured, each with their own agreement. Choosing someone here replaces them all. To change the group, ask the agent to make the newsletter again.</p>}
-                {photoPick && photoPick !== d.data?.photo?.user_id && (
-                  <div className="mt-2 space-y-2">
-                    <label className="flex items-start gap-2 text-sm"><input type="checkbox" className="mt-1 h-4 w-4" checked={photoAgreed} onChange={e => setPhotoAgreed(e.target.checked)} /><span>They are happy to be named and photographed</span></label>
-                    <button type="button" disabled={!photoAgreed} onClick={() => run('photo', async () => { const r = await ask.newsletterPhoto(token, d.id, photoPick, true); setPhotoPick(null); return r }, 'The picture is set.')} className="inline-flex min-h-[36px] items-center rounded-lg bg-teal px-3 text-sm font-semibold text-white hover:bg-teal-dark disabled:opacity-50">Use their picture</button>
-                  </div>
-                )}
-                {d.data?.photo?.user_id && photoState?.chosen && (
-                  <p className={`mt-2 rounded-md px-2.5 py-1.5 text-xs ${photoState.has_picture ? 'bg-green-50 text-green-900' : 'bg-amber-50 text-amber-950'}`} role="status">
-                    {photoState.has_picture ? `${photoState.name ?? 'The person'}'s staff picture is in the newsletter.` : <>{photoState.name ?? 'The person'} has no staff picture yet, so their initials show. Add one in <a href="/staff" className="font-semibold underline">Staff</a> (open their profile, Picture) and it appears here by itself.</>}
-                  </p>
-                )}
-              </div>
-            )}
-            {d.type === 'newsletter' && d.actions.edit && !editing && <NewsletterEditor token={token} docId={d.id} version={d.updated_at ?? ''} focus={focus} onChanged={() => { void load(); onChanged() }} />}
-            {d.type === 'newsletter' && d.actions.edit && /^(employee-of-the-month|staff-stories|recognition)/.test(String(d.data?.template_id ?? '')) && <GiftBox token={token} docId={d.id} gift={d.data?.gift} onSaved={() => { void load(); onChanged() }} />}
+            {d.type === 'newsletter' && d.actions.edit && takesPeople(d.data?.template_id) && <FeaturedPeople token={token} docId={d.id} version={d.updated_at ?? ''} onChanged={() => { void load(); onChanged() }} />}
+
             {flow && d.checklist.length > 0 && (d.status === 'draft' || d.status === 'pending') && (
               <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-950">
                 <p className="flex items-center gap-1.5 font-semibold"><AlertTriangle size={14} aria-hidden="true" /> Before you send</p>
@@ -250,39 +244,98 @@ export function DocumentPanel({ token, id, onClose, onChanged, focus }: { token:
                 </ul>
               </div>
             )}
-            {d.shared.length > 0 && <p className="text-xs text-neutral-mid">Shared: {d.shared.map(s => `${s.method === 'pdf' ? 'PDF downloaded' : s.method === 'word' ? 'Word downloaded' : s.method === 'email' ? 'emailed' : s.method === 'hub' ? 'shared in their hub' : 'sent as a notification'} ${new Date(s.at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}`).join(', ')}</p>}
 
-            {error && <p role="alert" className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
-            {info && <p role="status" className="rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-800">{info}</p>}
+  </>) : null
+  const pageBlock = d ? (<>
+    {d.type === 'newsletter' && sheetOn && !editing && <PageNotice doc={d} fit={fit} busy={!!busy} canEdit={!!d.actions.edit} onSet={setLayout} onShorten={() => setEditing(true)} />}
+    {editing && d.type === 'newsletter' ? <div><p className="mb-1 text-xs font-semibold text-neutral-mid">Designed preview (follows what you type)</p>{liveNode}</div> : paperNode}
+  </>) : null
+
+  return (
+    <div ref={rootRef} role="dialog" aria-modal="true" aria-label={d?.title ?? 'Document'} className="absolute inset-0 z-10 flex flex-col bg-white">
+      {!d ? (<div className="p-5">{error ? <p role="alert" className="text-sm text-red-700">{error}</p> : <p className="flex items-center gap-2 text-sm text-neutral-mid"><Loader2 size={16} className="animate-spin" /> Loading</p>}</div>) : (<>
+        <header className="flex flex-shrink-0 items-start justify-between gap-3 border-b border-gray-200 px-4 py-3">
+              <div className="min-w-0">
+                <h3 className="truncate text-base font-bold text-neutral-dark">{d.title}</h3>
+                <p className="mt-1 flex flex-wrap items-center gap-2 text-xs text-neutral-mid">{st && <span className={`rounded-full px-2 py-0.5 font-semibold ${st.cls}`}>{st.label}</span>}{report && d.internal_only && <span className="rounded-full bg-red-100 px-2 py-0.5 font-semibold text-red-800">Internal only</span>}{flow ? (letter ? 'Letter' : report ? 'Governance report' : 'Staff newsletter') : 'Saved answer'}{d.staff_name ? `, for ${d.staff_name}` : ''}</p>
+              </div>
+          <div className="flex flex-shrink-0 items-center gap-2">
+            {showWidth && (
+              <div role="group" aria-label="Panel width" className="inline-flex overflow-hidden rounded-lg border border-gray-200 text-xs font-semibold">
+                {(['narrow', 'wide', 'full'] as EditMode[]).map(m => <button key={m} type="button" aria-pressed={ui.editMode === m} onClick={() => setAskEditMode(m)} className={`px-2.5 py-1.5 ${ui.editMode === m ? 'bg-teal text-white' : 'bg-white text-neutral-dark hover:bg-neutral-light'}`}>{m === 'narrow' ? 'Narrower' : m === 'wide' ? 'Wider' : 'Full width'}</button>)}
+              </div>
+            )}
+            <button type="button" onClick={requestClose} aria-label="Close" className="rounded p-1 text-neutral-mid hover:bg-neutral-light"><X size={18} /></button>
           </div>
+        </header>
 
-          <div className="mt-3 flex flex-wrap items-center justify-end gap-2 border-t border-gray-100 pt-3">
-            {editing ? (<>
-              <button type="button" disabled={!!busy} className={`${btn} bg-teal text-white hover:bg-teal-dark`} onClick={save}>{busy === 'save' ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />} Save changes</button>
-              <button type="button" className={`${btn} text-neutral-mid`} onClick={() => { setEditing(false); setTitle(d.title); setBody(d.body); setValues(d.values ?? {}); setInternal(d.internal_only === true) }}>Cancel</button>
-            </>) : (<>
+        <div role="toolbar" aria-label="Document tools" className="flex-shrink-0 space-y-2 border-b border-gray-200 bg-neutral-light/50 px-4 py-2.5">
+          <div className="flex flex-wrap items-center gap-2">
+            {d.actions.edit && (
+              <span className="inline-flex items-center gap-2">
+                <button type="button" disabled={!!busy || !dirty} onClick={() => void save(false)} className={tbOn}>{busy === 'save' ? <Loader2 size={14} className="animate-spin" aria-hidden="true" /> : dirty ? <Save size={14} aria-hidden="true" /> : <Check size={14} aria-hidden="true" />} {dirty ? 'Save' : 'Saved'}</button>
+                <span role="status" className={`text-xs ${dirty ? 'font-semibold text-amber-800' : 'text-neutral-mid'}`}>{dirty ? 'Unsaved changes' : savedAt ? `Saved ${savedAt.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}` : 'All changes saved'}</span>
+              </span>
+            )}
+            {d.actions.edit && flow && <button type="button" aria-pressed={editing} onClick={() => (editing ? (dirty ? setConfirmClose('editor') : setEditing(false)) : setEditing(true))} className={editing ? tbOn : tbOff}><Pencil size={14} aria-hidden="true" /> {editing ? 'Done editing' : 'Edit text'}</button>}
               {d.type === 'newsletter' && <div role="group" aria-label="View the newsletter" className="inline-flex overflow-hidden rounded-lg border border-gray-200 text-sm font-semibold">{[['designed', 'Designed'], ['text', 'Text']].map(([k, l]) => <button key={k} type="button" aria-pressed={(k === 'designed') === showPaper} onClick={() => setShowPaper(k === 'designed')} className={`px-3 py-2 ${(k === 'designed') === showPaper ? 'bg-teal text-white' : 'bg-white text-neutral-dark hover:bg-neutral-light'}`}>{l}</button>)}</div>}
-              <button type="button" onClick={openViewer} className={`${btn} border border-gray-200 text-neutral-dark hover:bg-neutral-light`}><Maximize2 size={14} aria-hidden="true" /> Expand</button>
+            {d.type === 'newsletter' && d.actions.edit && (
+              <div role="group" aria-label="Page shape" className="inline-flex overflow-hidden rounded-lg border border-gray-200 text-xs font-semibold">
+                {(['portrait', 'landscape'] as const).map(o => <button key={o} type="button" disabled={!!busy} aria-pressed={orientation === o} onClick={() => orientation !== o && setLayout({ orientation: o })} className={`min-h-[36px] px-3 ${orientation === o ? 'bg-teal text-white' : 'bg-white text-neutral-dark hover:bg-neutral-light'} disabled:opacity-60`}>{o === 'portrait' ? 'Portrait' : 'Landscape'}</button>)}
+              </div>
+            )}
+            {d.type === 'newsletter' && d.actions.edit && <>
+              <button type="button" aria-expanded={tool === 'colours'} onClick={() => setTool(tool === 'colours' ? null : 'colours')} className={tool === 'colours' ? tbOn : tbOff}><Palette size={14} aria-hidden="true" /> Colours</button>
+              <button type="button" aria-expanded={tool === 'blocks'} onClick={() => setTool(tool === 'blocks' ? null : 'blocks')} className={tool === 'blocks' ? tbOn : tbOff}><Plus size={14} aria-hidden="true" /> Add a block</button>
+            </>}
               {flow && (letter || report) && <button type="button" onClick={() => setShowPaper(v => !v)} className={`${btn} border border-gray-200 text-neutral-dark hover:bg-neutral-light`}><FileText size={14} /> {showPaper ? 'Show the text' : 'Preview on letterhead'}</button>}
               <button type="button" onClick={() => navigator.clipboard?.writeText(d.body).catch(() => undefined)} className={`${btn} border border-gray-200 text-neutral-dark hover:bg-neutral-light`}><Copy size={14} /> Copy</button>
-              {d.actions.edit && flow && <button type="button" onClick={() => setEditing(true)} className={`${btn} border border-gray-200 text-neutral-dark hover:bg-neutral-light`}><Pencil size={14} /> Edit</button>}
-              {d.actions.submit && <button type="button" disabled={!!busy} onClick={() => run('submit', () => ask.submit(token, d.id), 'Submitted. It is now waiting for approval.')} className={`${btn} bg-teal text-white hover:bg-teal-dark`}>{busy === 'submit' ? <Loader2 size={14} className="animate-spin" /> : <FileText size={14} />} Submit for approval</button>}
+              <button type="button" onClick={openViewer} className={`${btn} border border-gray-200 text-neutral-dark hover:bg-neutral-light`}><Maximize2 size={14} aria-hidden="true" /> Expand</button>
+          </div>
+          <div className="flex flex-wrap items-start gap-2">
+              {(letter || news) && <DocumentActions title={d.title} draft={!isFinal} disabled={!!busy} getPdf={getPdfBlob} tooLong={d.type === 'newsletter' ? { orientation, canTwoPages: canTwo, onSwitch: o => setLayout({ orientation: o }), onShorten: () => setEditing(true), onTwoPages: canTwo ? () => setLayout({ pages: 'two' }) : undefined } : undefined} getDocx={() => ask.documentBlob(token, d.id, 'docx', { sign: sign && letter, draft: !isFinal })}
+                onDone={w => { setInfo(w === 'pdf' ? 'The PDF has been saved.' : w === 'word' ? 'The Word document has been saved.' : 'Sent to your printer dialog.'); if (isFinal) { void load(); onChanged() } }} onError={m => setError(m)} />}
+              {(letter || news) && (d.actions.share.length > 0 || flow) && !(letter && intent.print_only) && <SharePanel token={token} doc={{ id: d.id, type: d.type, title: d.title, status: d.status, staff_name: d.staff_name, share_intent: d.share_intent ?? null }} sign={sign && letter} needsAck={ack ?? d.ack_default ?? false} onPreview={openViewer} onSent={() => { void load(); onChanged() }} />}
+              {d.actions.submit && <button type="button" disabled={!!busy || dirty} title={dirty ? 'Save your changes first' : undefined} onClick={() => run('submit', () => ask.submit(token, d.id), 'Submitted. It is now waiting for approval.')} className={`${btn} bg-teal text-white hover:bg-teal-dark`}>{busy === 'submit' ? <Loader2 size={14} className="animate-spin" /> : <FileText size={14} />} Submit for approval</button>}
               {d.status === 'draft' && flow && !d.actions.submit && d.actions.edit && letter && <span className="text-xs text-amber-800">Finish the missing details before submitting.</span>}
               {d.status === 'pending' && d.actions.approve && <button type="button" disabled={!ticked || !!busy} onClick={() => run('approve', () => ask.approve(token, d.id, ticked), 'Approved. You can now share it.')} className={`${btn} bg-teal text-white hover:bg-teal-dark`}>{busy === 'approve' ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />} Approve</button>}
               {d.status === 'pending' && !d.actions.approve && !d.mine && <span className="text-xs text-neutral-mid">Someone else needs to approve this.</span>}
               {d.status === 'pending' && d.actions.return && <button type="button" disabled={!!busy} onClick={() => { const n = window.prompt('Why is it going back? (optional)', note); if (n !== null) { setNote(n); run('return', () => ask.returnToDraft(token, d.id, n.trim() || undefined), 'Sent back to draft.') } }} className={`${btn} border border-gray-200 text-neutral-dark hover:bg-neutral-light`}><RotateCcw size={14} /> Send back</button>}
               {d.actions.reopen && <button type="button" disabled={!!busy} onClick={() => run('reopen', () => ask.reopen(token, d.id), 'Back to draft. It needs approving again.')} className={`${btn} border border-gray-200 text-neutral-dark hover:bg-neutral-light`}><RotateCcw size={14} /> Re-open</button>}
-              {(letter || news) && <DocumentActions title={d.title} draft={!isFinal} disabled={!!busy} getPdf={getPdfBlob} getDocx={() => ask.documentBlob(token, d.id, 'docx', { sign: sign && letter, draft: !isFinal })}
-                onDone={w => { setInfo(w === 'pdf' ? 'The PDF has been saved.' : w === 'word' ? 'The Word document has been saved.' : 'Sent to your printer dialog.'); if (isFinal) { void load(); onChanged() } }} onError={m => setError(m)} />}
-              {(letter || news) && (d.actions.share.length > 0 || flow) && !(letter && intent.print_only) && <SharePanel token={token} doc={{ id: d.id, type: d.type, title: d.title, status: d.status, staff_name: d.staff_name, share_intent: d.share_intent ?? null }} sign={sign && letter} needsAck={ack ?? d.ack_default ?? false} onPreview={openViewer} onSent={() => { void load(); onChanged() }} />}
               {letter && intent.print_only && <span className="text-xs text-neutral-mid">Print only: Save PDF or Print it from here. Nothing is sent to {first}.</span>}
-            </>)}
+            {dirty && d.actions.submit && <span className="self-center text-xs text-amber-800">Save your changes before you submit.</span>}
           </div>
-        </>)}
-      </div>
+        </div>
+
+        <div className="flex-shrink-0 space-y-2 px-4 pt-3 empty:hidden" id="ask-nl-tools">
+          {confirmClose && (
+            <div role="alert" className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-neutral-dark">
+              <p>Save your changes?</p>
+              <div className="mt-2 flex flex-wrap gap-2">
+                <button type="button" disabled={!!busy} onClick={async () => { const to = confirmClose; await save(true); setConfirmClose(null); if (to === 'panel') onClose() }} className={tbOn}>Save</button>
+                <button type="button" disabled={!!busy} onClick={() => { const to = confirmClose; setTitle(d.title); setBody(d.body); setValues(d.values ?? {}); setInternal(d.internal_only === true); setEditing(false); setConfirmClose(null); if (to === 'panel') onClose() }} className={tbOff}>Discard</button>
+                <button type="button" onClick={() => setConfirmClose(null)} className={tbOff}>Keep editing</button>
+              </div>
+            </div>
+          )}
+          {d.type === 'newsletter' && d.actions.edit && <NewsletterEditor bare open={tool} onOpen={setTool} token={token} docId={d.id} version={d.updated_at ?? ''} focus={focus} onChanged={() => { void load(); onChanged() }} />}
+        </div>
+
+        <div className={`min-h-0 flex-1 overflow-y-auto no-scrollbar px-4 py-3 ${split ? 'grid grid-cols-2 items-start gap-4' : 'space-y-3'}`}>
+          {split ? (<>
+            <div className="min-w-0 space-y-3">{notices}{editing && formNode}{rest}</div>
+            <div className="min-w-0 space-y-3">{pageBlock}</div>
+          </>) : (<>
+            {notices}
+            {editing && formNode}
+            {pageBlock}
+            {rest}
+          </>)}
+        </div>
+      </>)}
       {d && <ExpandViewer open={viewer.open} onClose={viewer.close} title={d.title} items={viewerItems}
         switcher={d.type === 'newsletter' ? { value: showPaper ? 'designed' : 'text', options: [{ id: 'designed', label: 'Designed' }, { id: 'text', label: 'Text' }], onChange: k => setShowPaper(k === 'designed') } : undefined}
-        pdf={(letter || news) ? { getPdf: getPdfBlob, getDocx: () => ask.documentBlob(token, d.id, 'docx', { sign: sign && letter, draft: !isFinal }), draft: !isFinal } : undefined} />}
+        pdf={(letter || news) ? { getPdf: getPdfBlob, getDocx: () => ask.documentBlob(token, d.id, 'docx', { sign: sign && letter, draft: !isFinal }), draft: !isFinal, tooLong: d.type === 'newsletter' && d.actions.edit ? { orientation, canTwoPages: canTwo, onSwitch: o => { viewer.close(); setLayout({ orientation: o }) }, onShorten: () => { viewer.close(); setEditing(true) }, onTwoPages: canTwo ? () => { viewer.close(); setLayout({ pages: 'two' }) } : undefined } : undefined } : undefined} />}
     </div>
   )
 }

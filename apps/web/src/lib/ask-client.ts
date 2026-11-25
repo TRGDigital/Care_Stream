@@ -129,6 +129,10 @@ export const ask = {
     if (!res.ok || !body?.success) throw new AskError(body?.error?.code ?? 'ERROR', body?.error?.message ?? `That picture could not be added (${res.status}).`, res.status)
     return body.data
   },
+  /** Everyone featured in a newsletter (each with their own recorded agreement), and whether this kind of newsletter takes people at all. */
+  newsletterPeople: (t: string, id: string) => call<{ allowed: boolean; people: Array<{ user_id: string; name: string | null; has_picture: boolean; agreed_at: string }> }>(`/ask-docs/${encodeURIComponent(id)}/newsletter-people`, t),
+  /** Sets the whole group. Someone already featured keeps their agreement; someone new needs consent true. */
+  setNewsletterPeople: (t: string, id: string, people: Array<{ user_id: string; consent?: boolean }>) => call<{ saved: boolean; count: number }>(`/ask-docs/${encodeURIComponent(id)}/newsletter-people`, t, { method: 'POST', body: JSON.stringify({ people }) }),
   newsletterPhotoStatus: (t: string, id: string) => call<{ chosen: boolean; name?: string | null; consent?: boolean; has_picture?: boolean }>(`/ask-docs/${encodeURIComponent(id)}/newsletter-photo`, t),
   documents: (t: string) => call<{ documents: AskDocument[] }>('/ask/documents', t),
   document: (t: string, id: string) => call<{ document: AskDocFull }>(`/ask/documents/${encodeURIComponent(id)}`, t),

@@ -6,7 +6,7 @@
 // to where it was. On a phone it is the whole screen. The rules (zoom limits, paging, keys, focus) are in lib/expand-viewer-logic.ts and tested there.
 import { createPortal } from 'react-dom'
 import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState, type KeyboardEvent as RKeyboardEvent, type ReactNode } from 'react'
-import { DocumentActions } from './document-actions'
+import { DocumentActions, type DocumentActionsProps } from './document-actions'
 import { SheetFrame, SHEET_PX } from './sheet-frame'
 import { ChevronLeft, ChevronRight, Download, Maximize2, Printer, X, ZoomIn, ZoomOut } from 'lucide-react'
 import { canZoomIn, canZoomOut, clampPage, clampZoom, fitScale, hasNext, hasPrev, isActivateKey, pageLabel, stepPage, trapTab, viewerKey, zoomIn, zoomLabel, zoomOut } from '../../lib/expand-viewer-logic'
@@ -32,7 +32,7 @@ export interface ViewerProps {
   /** Print is on unless turned off. */
   noPrint?: boolean
   /** HOUSE RULE 4: a real document or sample: Save PDF and Print as two separate buttons (both from the same PDF), Word where there is one. */
-  pdf?: { getPdf: () => Promise<Blob>; getDocx?: () => Promise<Blob>; draft?: boolean; sample?: boolean }
+  pdf?: { getPdf: () => Promise<Blob>; getDocx?: () => Promise<Blob>; draft?: boolean; sample?: boolean; tooLong?: DocumentActionsProps['tooLong'] }
 }
 
 const FOCUSABLE = 'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
@@ -59,6 +59,7 @@ export function ExpandViewer({ open, onClose, title, items, downloads, actions, 
   const [zoom, setZoom] = useState(1)
   const [fit, setFit] = useState(1)
   const [busy, setBusy] = useState('')
+  const [err, setErr] = useState('')   // a button that fails is never silent: the reason shows in the toolbar
   const boxRef = useRef<HTMLDivElement>(null)
   const contentRef = useRef<HTMLDivElement>(null)
   const dialogRef = useRef<HTMLDivElement>(null)
@@ -113,7 +114,7 @@ export function ExpandViewer({ open, onClose, title, items, downloads, actions, 
     e.preventDefault(); e.stopPropagation()
     if (a === 'close') onClose(); else if (a === 'prev') step(-1); else if (a === 'next') step(1); else if (a === 'zoomIn') setZoom(z => zoomIn(z)); else if (a === 'zoomOut') setZoom(z => zoomOut(z)); else setZoom(1)
   }
-  async function run(label: string, fn: () => void | Promise<void>) { setBusy(label); try { await fn() } finally { setBusy('') } }
+  async function run(label: string, fn: () => void | Promise<void>) { setBusy(label); setErr(''); try { await fn() } catch (e) { setErr(e instanceof Error ? e.message : 'That could not be done just now.') } finally { setBusy('') } }
 
   if (!open || !item) return null
   const scale = fit * clampZoom(zoom)
@@ -141,8 +142,9 @@ export function ExpandViewer({ open, onClose, title, items, downloads, actions, 
           <button type="button" className={btn} onClick={() => setZoom(z => zoomIn(z))} disabled={!canZoomIn(zoom)} aria-label="Zoom in"><ZoomIn size={16} aria-hidden="true" /></button>
         </div>
         {(actions ?? []).map(a => <button key={a.label} type="button" disabled={a.disabled || !!busy} onClick={() => run(a.label, async () => { await a.onClick() })} className={a.primary ? btnPrimary : btn}>{a.label}</button>)}
-        {pdf && <DocumentActions title={title} getPdf={pdf.getPdf} getDocx={pdf.getDocx} draft={pdf.draft} sample={pdf.sample} quiet />}
+        {pdf && <DocumentActions title={title} getPdf={pdf.getPdf} getDocx={pdf.getDocx} draft={pdf.draft} sample={pdf.sample} tooLong={pdf.tooLong} quiet />}
         {!pdf && (downloads ?? []).map(d => <button key={d.label} type="button" disabled={d.disabled || !!busy} onClick={() => run(d.label, async () => { await d.onClick() })} className={btn}><Download size={16} aria-hidden="true" />{busy === d.label ? 'Working' : d.label}</button>)}
+        {err && <p role="alert" className="basis-full rounded-md border border-red-200 bg-red-50 px-2.5 py-1.5 text-xs text-red-700">{err}</p>}
         {!noPrint && !pdf && <button type="button" className={btn} onClick={() => printItem(item, title)}><Printer size={16} aria-hidden="true" /><span className="hidden sm:inline">Print</span><span className="sm:hidden sr-only">Print</span></button>}
         <button ref={closeRef} type="button" className={`${btn} border-neutral-dark`} onClick={onClose} aria-label="Close the viewer"><X size={16} aria-hidden="true" />Close</button>
       </div>

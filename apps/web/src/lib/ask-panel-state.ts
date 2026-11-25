@@ -17,6 +17,28 @@ export function clampWidth(w: number, viewportWidth?: number): number {
   return Math.min(max, Math.max(MIN_W, n))
 }
 
+// ── Wider editing mode ─────────────────────────────────────────────────────
+// When a draft is opened for editing the panel widens by itself, so the words and the designed page sit side by side. It stays an overlay (it never pushes the page) and goes back to the
+// person's usual width when the document is closed. Three choices, remembered per person: narrower (their usual width), wider (about half the screen) and full width.
+export type EditMode = 'narrow' | 'wide' | 'full'
+export const EDIT_MODES: EditMode[] = ['narrow', 'wide', 'full']
+export const EDIT_FLOOR = DEFAULT_W          // wider is never narrower than the default panel
+export const SPLIT_FROM = 900                // from this panel width the editing tools and the designed page sit side by side; below it they stack (tools above the page)
+/** The widest "wider" may be: 960, or 60 percent of a big monitor, whichever is larger (and never more than 90 percent of the screen). */
+export const editCeiling = (vw: number): number => Math.min(Math.max(MAX_W, Math.floor(vw * 0.6)), Math.max(MIN_W, Math.floor(vw * 0.9)))
+/** How wide the panel is while a document is open for editing. `normal` is the person's usual width. */
+export function editWidthFor(mode: EditMode, vw: number, normal: number): number {
+  if (mode === 'narrow') return clampWidth(normal, vw)
+  if (mode === 'full') return Math.max(MIN_W, Math.round(vw))
+  return Math.min(editCeiling(vw), Math.max(EDIT_FLOOR, Math.round(vw * 0.5)))
+}
+/** Side by side (true) or stacked (false), from the width the panel really has. */
+export const splitFor = (panelWidth: number): boolean => panelWidth >= SPLIT_FROM
+export const editModeKey = (who: string) => `cs-ask-edit-v1:${String(who || 'guest').toLowerCase()}`
+export const parseEditMode = (raw: string | null | undefined): EditMode => (EDIT_MODES as string[]).includes(String(raw)) ? (raw as EditMode) : 'wide'
+export function loadEditMode(who: string, storage: Pick<Storage, 'getItem'> | null): EditMode { try { return parseEditMode(storage?.getItem(editModeKey(who))) } catch { return 'wide' } }
+export function saveEditMode(who: string, m: EditMode, storage: Pick<Storage, 'setItem'> | null): void { try { storage?.setItem(editModeKey(who), m) } catch { /* storage blocked */ } }
+
 export interface PanelPrefs { open: boolean; width: number }
 export const prefsKey = (who: string) => `cs-ask-panel-v2:${String(who || 'guest').toLowerCase()}`
 export function parsePrefs(raw: string | null | undefined): PanelPrefs {

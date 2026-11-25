@@ -1,12 +1,22 @@
-// A small, safe renderer for agent answers: paragraphs, bullet and numbered lists, tables, **bold** and nothing else. It builds React elements only
+// A small, safe renderer for agent answers: paragraphs, bullet and numbered lists, tables, **bold**, *italic* and __underline__ and nothing else. It builds React elements only
 // (never inserts HTML), so nothing in an answer can run as a script or a link.
 import { ExpandViewer, Expandable, useExpandViewer } from './expand-viewer'
 import React from 'react'
+import { parseMarks } from '../../lib/ask-inline-marks'
 
 function inline(text: string, key: string): React.ReactNode {
-  const parts = text.split(/(\*\*[^*]+\*\*)/g)
-  return parts.map((p, i) => (/^\*\*[^*]+\*\*$/.test(p) ? <strong key={`${key}-${i}`}>{p.slice(2, -2)}</strong> : <React.Fragment key={`${key}-${i}`}>{p}</React.Fragment>))
+  // **bold**, *italic* and __underline__ are real formatting (house rule 11); a mark that never closes is dropped, never shown as stars
+  return parseMarks(text).map((r, i) => {
+    let n: React.ReactNode = r.text
+    if (r.u) n = <u>{n}</u>
+    if (r.i) n = <em>{n}</em>
+    if (r.b) n = <strong>{n}</strong>
+    return <React.Fragment key={`${key}-${i}`}>{n}</React.Fragment>
+  })
 }
+
+/** A line of text with its marks drawn (for a plain text view that keeps its line breaks). */
+export function Marked({ text }: { text: string }) { return <>{inline(text, 'mk')}</> }
 
 export function parseBlocks(src: string): Array<{ kind: 'p' | 'ul' | 'ol' | 'table' | 'h'; lines: string[] }> {
   const lines = src.replace(/\r/g, '').split('\n')

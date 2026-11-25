@@ -55,6 +55,24 @@ export function featuredOf(data: any): PhotoChoice[] {
 }
 export const MAX_FEATURED = 8
 
+/** The featured people after the administrator changes the list in the document panel. Someone already featured keeps their recorded agreement (who agreed, and when); someone new needs the
+ *  tick "They are happy to be named and photographed". Removing one removes only that person. Order is the order given; duplicates and anything past the maximum are dropped. */
+export function featuredFromChoices(existing: PhotoChoice[], choices: Array<{ user_id?: unknown; consent?: unknown }>, actorId: string, now: Date = new Date()): { ok: true; list: PhotoChoice[] } | { ok: false; reason: string; user_id: string } {
+  const have = new Map(existing.map(x => [x.user_id, x]))
+  const out: PhotoChoice[] = []; const seen = new Set<string>()
+  for (const c of choices) {
+    const uid = typeof c?.user_id === 'string' ? c.user_id.trim() : ''
+    if (!uid || seen.has(uid)) continue
+    seen.add(uid)
+    const kept = have.get(uid)
+    if (kept) { out.push(kept); continue }
+    const ch = photoChoice({ userId: uid, consent: c?.consent, actorId, now })
+    if (!ch.ok) return { ok: false, reason: ch.reason, user_id: uid }
+    out.push(ch.photo)
+  }
+  return { ok: true, list: out.slice(0, MAX_FEATURED) }
+}
+
 // The optional GIFT for the featured people (employee of the month, a staff story, recognition): words, and a small picture kept privately per account. Optional means optional: no gift, no card.
 export const GIFT_TYPES = new Set(['employee-of-the-month', 'staff-stories', 'recognition'])
 export const giftAllowedFor = (templateId: string | null | undefined): boolean => GIFT_TYPES.has(String(templateId ?? '').replace(/-(short|standard|detailed)$/, ''))

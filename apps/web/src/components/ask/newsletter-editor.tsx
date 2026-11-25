@@ -7,6 +7,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { ArrowDown, ArrowUp, Copy, Loader2, Palette, Pencil, Plus, RotateCcw, Trash2, X } from 'lucide-react'
 import { ask, AskError, type NewsletterEditItem, type NewsletterEditState } from '@/lib/ask-client'
 import { brandProblem, normaliseHex } from '@/lib/brand-colour'
+import { MarkedTextarea } from '@/components/ask/marked-textarea'
 
 const field = 'w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-neutral-dark outline-none focus:border-teal focus:ring-2 focus:ring-teal/20'
 const btn = 'inline-flex min-h-[34px] items-center gap-1 rounded-lg border border-gray-300 bg-white px-2.5 text-xs font-semibold text-neutral-dark hover:bg-neutral-light focus:outline-none focus-visible:ring-2 focus-visible:ring-teal disabled:opacity-50'
@@ -36,21 +37,21 @@ function BlockForm({ uid, type, value, onChange, token, setErr }: { uid: string;
   }
   if (type === 'text') return (<div className="space-y-2">
     <Labelled id={`${uid}-h`} label="Heading (optional)"><input id={`${uid}-h`} className={field} maxLength={80} value={value.heading ?? ''} onChange={e => set('heading', e.target.value)} /></Labelled>
-    <Labelled id={`${uid}-t`} label="Text" hint="A blank line starts a new paragraph."><textarea id={`${uid}-t`} rows={4} maxLength={1500} className={field} value={value.text ?? ''} onChange={e => set('text', e.target.value)} /></Labelled></div>)
+    <Labelled id={`${uid}-t`} label="Text" hint="A blank line starts a new paragraph."><MarkedTextarea id={`${uid}-t`} rows={4} maxLength={1500} value={value.text ?? ''} onChange={v => set('text', v)} /></Labelled></div>)
   if (type === 'picture_text') return (<div className="space-y-2">
     <Labelled id={`${uid}-h`} label="Heading (optional)"><input id={`${uid}-h`} className={field} maxLength={80} value={value.heading ?? ''} onChange={e => set('heading', e.target.value)} /></Labelled>
     <Labelled id={`${uid}-f`} label="Picture (png, jpg or webp, up to 1 MB)"><input id={`${uid}-f`} type="file" accept="image/png,image/jpeg,image/webp" disabled={up} onChange={e => pick(e.target.files?.[0])} className="block w-full text-sm file:mr-3 file:rounded-lg file:border-0 file:bg-gray-100 file:px-3 file:py-1.5 file:text-sm file:font-semibold" /></Labelled>
     {up && <p className="flex items-center gap-1.5 text-xs text-neutral-mid" role="status"><Loader2 size={12} className="animate-spin" aria-hidden="true" />Adding the picture</p>}
     {value.image_id && !up && <p className="text-xs font-medium text-green-800" role="status">A picture is added.</p>}
     <Labelled id={`${uid}-a`} label="Describe the picture (required)" hint="A few words, for people who cannot see it. For example: The team at the summer fair."><input id={`${uid}-a`} className={field} maxLength={120} value={value.alt ?? ''} onChange={e => set('alt', e.target.value)} /></Labelled>
-    <Labelled id={`${uid}-t`} label="Words beside the picture"><textarea id={`${uid}-t`} rows={3} maxLength={800} className={field} value={value.text ?? ''} onChange={e => set('text', e.target.value)} /></Labelled>
+    <Labelled id={`${uid}-t`} label="Words beside the picture"><MarkedTextarea id={`${uid}-t`} rows={3} maxLength={800} value={value.text ?? ''} onChange={v => set('text', v)} /></Labelled>
     <Labelled id={`${uid}-s`} label="Picture on the"><select id={`${uid}-s`} className={field} value={value.side ?? 'left'} onChange={e => set('side', e.target.value)}><option value="left">Left</option><option value="right">Right</option></select></Labelled></div>)
   if (type === 'quote') return (<div className="space-y-2">
-    <Labelled id={`${uid}-t`} label="Quote"><textarea id={`${uid}-t`} rows={3} maxLength={300} className={field} value={value.text ?? ''} onChange={e => set('text', e.target.value)} /></Labelled>
+    <Labelled id={`${uid}-t`} label="Quote"><MarkedTextarea id={`${uid}-t`} rows={3} maxLength={300} value={value.text ?? ''} onChange={v => set('text', v)} /></Labelled>
     <Labelled id={`${uid}-w`} label="Who said it (optional)"><input id={`${uid}-w`} className={field} maxLength={80} value={value.who ?? ''} onChange={e => set('who', e.target.value)} /></Labelled></div>)
   if (type === 'callout') return (<div className="space-y-2">
     <Labelled id={`${uid}-h`} label="Heading (optional)"><input id={`${uid}-h`} className={field} maxLength={80} value={value.title ?? ''} onChange={e => set('title', e.target.value)} /></Labelled>
-    <Labelled id={`${uid}-t`} label="Words"><textarea id={`${uid}-t`} rows={3} maxLength={400} className={field} value={value.text ?? ''} onChange={e => set('text', e.target.value)} /></Labelled>
+    <Labelled id={`${uid}-t`} label="Words"><MarkedTextarea id={`${uid}-t`} rows={3} maxLength={400} value={value.text ?? ''} onChange={v => set('text', v)} /></Labelled>
     <Labelled id={`${uid}-i`} label="Icon"><select id={`${uid}-i`} className={field} value={value.icon ?? 'megaphone'} onChange={e => set('icon', e.target.value)}>{Object.entries(ICON_LABEL).map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select></Labelled></div>)
   if (type === 'button') return (<div className="space-y-2">
     <Labelled id={`${uid}-l`} label="What the button says"><input id={`${uid}-l`} className={field} maxLength={40} value={value.label ?? ''} onChange={e => set('label', e.target.value)} /></Labelled>
@@ -75,15 +76,19 @@ function BlockForm({ uid, type, value, onChange, token, setErr }: { uid: string;
     {r.list.length < 8 && <button type="button" className={btn} onClick={r.add}><Plus size={14} aria-hidden="true" />Add a date</button>}</div>)
 }
 
-export function NewsletterEditor({ token, docId, version, focus, onChanged }: { token: string; docId: string; version: string; focus?: 'colours' | 'blocks' | null; onChanged: () => void }) {
+type Panel = 'colours' | 'blocks' | null
+/** `bare`: the toolbar above owns the Colours and Add a block buttons and passes `open`; this then shows only the open panel, directly under the toolbar and above the newsletter. */
+export function NewsletterEditor({ token, docId, version, focus, onChanged, bare, open: openProp, onOpen }: { token: string; docId: string; version: string; focus?: Panel; onChanged: () => void; bare?: boolean; open?: Panel; onOpen?: (p: Panel) => void }) {
   const [st, setSt] = useState<NewsletterEditState | null>(null)
   const [busy, setBusy] = useState(''), [err, setErr] = useState(''), [ok, setOk] = useState('')
   const [hex, setHex] = useState('')
-  const [open, setOpen] = useState<'colours' | 'blocks' | null>(focus ?? null)
+  const [openState, setOpenState] = useState<Panel>(focus ?? null)
+  const open = bare ? (openProp ?? null) : openState
+  const setOpen = (p: Panel) => { if (bare) onOpen?.(p); else setOpenState(p) }
   const [editing, setEditing] = useState<string | null>(null)   // a block id being edited
   const [adding, setAdding] = useState<{ after: string | null; type: string | null } | null>(null)
   const [draft, setDraft] = useState<Content>({}), [secDraft, setSecDraft] = useState<{ title: string; text: string }>({ title: '', text: '' })
-  useEffect(() => { if (focus) setOpen(focus) }, [focus])
+  useEffect(() => { if (focus && !bare) setOpenState(focus) }, [focus, bare])
   const load = useCallback(async () => { try { setSt(await ask.newsletterEdit(token, docId)) } catch (e) { setErr(e instanceof Error ? e.message : 'Could not open the editor.') } }, [token, docId])
   useEffect(() => { void load() }, [load, version])
 
@@ -108,14 +113,18 @@ export function NewsletterEditor({ token, docId, version, focus, onChanged }: { 
     <div key={key} className="flex justify-center py-0.5"><button type="button" className={btn} disabled={!!busy} onClick={() => { setEditing(null); setAdding({ after, type: null }); setDraft({}); setErr(''); setOk('') }}><Plus size={13} aria-hidden="true" />Add a block here</button></div>
   )
 
+  if (bare && !open) return null
   return (
-    <div className="rounded-lg border border-gray-200 p-3 text-sm text-neutral-dark" id="ask-nl-editor">
+    <div className={bare ? 'rounded-lg border border-teal/40 bg-white p-3 text-sm text-neutral-dark' : 'rounded-lg border border-gray-200 p-3 text-sm text-neutral-dark'} id="ask-nl-editor">
+      {!bare && <>
       <div className="flex flex-wrap items-center gap-2">
         <p className="mr-auto flex items-center gap-1.5 font-semibold"><Palette size={14} aria-hidden="true" /> Change the newsletter</p>
         <button type="button" aria-expanded={open === 'colours'} className={btn} onClick={() => setOpen(open === 'colours' ? null : 'colours')}>Colours</button>
         <button type="button" aria-expanded={open === 'blocks'} className={btn} onClick={() => setOpen(open === 'blocks' ? null : 'blocks')}>Blocks</button>
       </div>
-      <p className="mt-1 text-xs text-neutral-mid">Every change is saved to the draft and the designed version above follows. Staff only see it once you share it.</p>
+      <p className="mt-1 text-xs text-neutral-mid">Every change is saved to the draft and the designed version follows. Staff only see it once you share it.</p>
+      </>}
+      {bare && <div className="mb-2 flex items-center justify-between gap-2"><p className="flex items-center gap-1.5 font-semibold"><Palette size={14} aria-hidden="true" /> {open === 'colours' ? 'Colours' : 'Add or change blocks'}</p><button type="button" className={btn} onClick={() => setOpen(null)} aria-label="Close this panel"><X size={14} aria-hidden="true" /> Close</button></div>}
 
       {open === 'colours' && (
         <div className="mt-3 space-y-3" role="group" aria-label="Colours">
@@ -189,7 +198,7 @@ export function NewsletterEditor({ token, docId, version, focus, onChanged }: { 
     if (it.kind === 'section') return (
       <div className="mt-2 space-y-2 border-t border-gray-100 pt-2">
         <Labelled id={`sec-${it.id}-h`} label="Heading"><input id={`sec-${it.id}-h`} className={field} maxLength={90} value={secDraft.title} onChange={e => setSecDraft(s => ({ ...s, title: e.target.value }))} /></Labelled>
-        <Labelled id={`sec-${it.id}-t`} label="Words" hint="A line starting with a dash is a bullet. A blank line starts a new paragraph."><textarea id={`sec-${it.id}-t`} rows={5} className={field} value={secDraft.text} onChange={e => setSecDraft(s => ({ ...s, text: e.target.value }))} /></Labelled>
+        <Labelled id={`sec-${it.id}-t`} label="Words" hint="A line starting with a dash is a bullet. A blank line starts a new paragraph."><MarkedTextarea id={`sec-${it.id}-t`} rows={5} value={secDraft.text} onChange={v => setSecDraft(s => ({ ...s, text: v }))} /></Labelled>
         <div className="flex gap-2"><button type="button" className={primary} disabled={!!busy} onClick={() => run('section', async () => { await ask.newsletterOp(token, docId, { op: 'update_section', id: it.id, title: secDraft.title, text: secDraft.text }); setEditing(null) }, 'Saved.')}>Save</button><button type="button" className={btn} onClick={() => setEditing(null)}>Cancel</button></div>
       </div>)
     return (

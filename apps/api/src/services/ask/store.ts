@@ -79,7 +79,7 @@ export async function setDocumentStatus(tenantId: string, id: string, from: stri
   }
   return Number(await q().$executeRawUnsafe("update public.ask_documents set status = $4, approved_by = case when $4 = 'draft' then null else approved_by end, approved_at = case when $4 = 'draft' then null else approved_at end, updated_at = now() where id = $1 and tenant_id = $2 and status = any($3::text[])", id, tenantId, from, to)) > 0
 }
-export async function appendShareRecord(tenantId: string, id: string, entry: { method: string; by: string; at: string; note?: string }) {
+export async function appendShareRecord(tenantId: string, id: string, entry: { method: string; by: string; at: string; note?: string; count?: number; names?: string[]; notification_id?: string }) {
   await q().$executeRawUnsafe("update public.ask_documents set data = jsonb_set(coalesce(data, '{}'::jsonb), '{shared}', coalesce(data->'shared', '[]'::jsonb) || $3::jsonb), updated_at = now() where id = $1 and tenant_id = $2", id, tenantId, JSON.stringify([entry]))
 }
 /** When this person last sent a document to staff (any channel but a PDF or Word download), for the minimum gap between sends. Null when unknown. */

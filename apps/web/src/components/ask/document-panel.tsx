@@ -7,7 +7,7 @@ import { AlertTriangle, Check, Copy, Download, FileText, Loader2, Mail, Maximize
 import { ask, AskError, type AskDocFull, type ShareIntent } from '@/lib/ask-client'
 import { MarkdownLite, Marked } from './markdown-lite'
 import { DocumentActions } from '@/components/ask/document-actions'
-import { SharePanel } from '@/components/ask/share-panel'
+import { SharePanel, SentCard } from '@/components/ask/share-panel'
 import { DatePicker } from '@/components/ask/date-picker'
 import { GiftBox } from '@/components/ask/gift-box'
 import { NewsletterEditor } from '@/components/ask/newsletter-editor'
@@ -241,7 +241,8 @@ export function DocumentPanel({ token, id, onClose, onChanged, focus }: { token:
         {d.type === 'newsletter'
           ? <label className="flex min-w-0 flex-1 items-center gap-2 text-sm font-medium"><input type="checkbox" className="h-4 w-4" checked={ticked} onChange={e => setTicked(e.target.checked)} /> I have checked this is ready to share.</label>
           : <span className="min-w-0 flex-1 text-xs">Tick the checklist above, then approve.</span>}
-        <span className="flex flex-wrap gap-2">
+        <span className="flex flex-wrap items-center gap-2">
+          {!ticked && d.type === 'newsletter' && <span className="text-xs text-neutral-mid">Tick the box first.</span>}
           <button type="button" disabled={!ticked || !!busy} onClick={() => run('approve', () => ask.approve(token, d.id, ticked), 'Approved. You can now send it.')} className={`${btn} bg-teal text-white hover:bg-teal-dark`}>{busy === 'approve' ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />} Approve</button>
           {d.actions.return && <button type="button" disabled={!!busy} onClick={() => run('return', () => ask.returnToDraft(token, d.id, undefined), 'Sent back to draft.')} className={`${btn} border border-gray-200 bg-white text-neutral-dark hover:bg-neutral-light`}><RotateCcw size={14} /> Send back to edit</button>}
         </span>
@@ -345,6 +346,7 @@ export function DocumentPanel({ token, id, onClose, onChanged, focus }: { token:
               {(letter || news) && <DocumentActions title={d.title} draft={!isFinal} disabled={!!busy} getPdf={getPdfBlob} tooLong={d.type === 'newsletter' ? { orientation, canTwoPages: canTwo, onSwitch: o => setLayout({ orientation: o }), onShorten: () => setEditing(true), onTwoPages: canTwo ? () => setLayout({ pages: 'two' }) : undefined } : undefined} getDocx={() => ask.documentBlob(token, d.id, 'docx', { sign: sign && letter, draft: !isFinal })}
                 onDone={w => { setInfo(w === 'pdf' ? 'The PDF has been saved.' : w === 'word' ? 'The Word document has been saved.' : 'Sent to your printer dialog.'); if (isFinal) { void load(); onChanged() } }} onError={m => setError(m)} />}
               {approvalNode}
+              {d.status === 'shared' && d.share_summary && d.type !== 'letter' && <SentCard token={token} docId={d.id} summary={d.share_summary} onChanged={() => { void load(); onChanged() }} />}
               {(letter || news) && (d.actions.share.length > 0 || flow) && !(letter && intent.print_only) && (!flow || isFinal) && <SharePanel token={token} doc={{ id: d.id, type: d.type, title: d.title, status: d.status, staff_name: d.staff_name, share_intent: d.share_intent ?? null }} sign={sign && letter} needsAck={ack ?? d.ack_default ?? false} onPreview={openViewer} onSent={() => { void load(); onChanged() }} />}
               {d.actions.reopen && <button type="button" disabled={!!busy} onClick={() => run('reopen', () => ask.reopen(token, d.id), 'Back to draft. It needs approving again.')} className={`${btn} border border-gray-200 text-neutral-dark hover:bg-neutral-light`}><RotateCcw size={14} /> Re-open</button>}
               {letter && intent.print_only && <span className="text-xs text-neutral-mid">Print only: Save PDF or Print it from here. Nothing is sent to {first}.</span>}

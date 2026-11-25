@@ -180,7 +180,34 @@ askRouter.get('/documents/:id', wrap(async (req, res) => {
   const hubShares = d.type === 'letter' ? await sharesOfDocument(getTenantId(), d.id).catch(() => []) : []
   const intent = d.type === 'letter' ? readShareIntent(d.data?.share_intent) : null
   const ackDefault = d.type === 'letter' ? defaultNeedsAcknowledgement(String(d.data?.template_id ?? ''), d.data?.values ?? {}) : undefined
-  ok(res, { document: { ...d, share_intent: intent, share_intent_text: d.type === 'letter' ? describeIntent(intent) : undefined, ack_default: ackDefault, hub_shares: hubShares.map(h => ({ id: h.id, person: h.person_name, shared_at: h.shared_at, read_at: h.read_at, needs_acknowledgement: h.needs_acknowledgement, acknowledged_at: h.acknowledged_at, withdrawn_at: h.withdrawn_at, signed: h.signed })), mine: d.created_by === req.user!.sub, checklist, references: d.data?.references ?? [], internal_only: d.type === 'report' ? d.data?.internal_only === true : undefined, shared: d.data?.shared ?? [], staff_name: d.data?.staff_name ?? null, values: d.type === 'letter' ? d.data?.values ?? {} : undefined, fields: d.type === 'letter' ? letterTemplate(String(d.data?.template_id ?? ''))?.fields.map(f => ({ key: f.key, label: f.label, type: f.type, required: f.required, choices: f.choices ?? null })) : undefined, actions: await actionsFor(d, req.user!.sub) } })
+  ok(res, { document: { ...d, share_intent: intent, share_intent_text: d.type === 'letter' ? describeIntent(intent) : undefined, ack_default: ackDefault, share_summary: shareSummaryOf(d), hub_shares: hubShares.map(h => ({ id: h.id, person: h.person_name, shared_at: h.shared_at, read_at: h.read_at, needs_acknowledgement: h.needs_acknowledgement, acknowledged_at: h.acknowledged_at, withdrawn_at: h.withdrawn_at, signed: h.signed })), mine: d.created_by === req.user!.sub, checklist, references: d.data?.references ?? [], internal_only: d.type === 'report' ? d.data?.internal_only === true : undefined, shared: d.data?.shared ?? [], staff_name: d.data?.staff_name ?? null, values: d.type === 'letter' ? d.data?.values ?? {} : undefined, fields: d.type === 'letter' ? letterTemplate(String(d.data?.template_id ?? ''))?.fields.map(f => ({ key: f.key, label: f.label, type: f.type, required: f.required, choices: f.choices ?? null })) : undefined, actions: await actionsFor(d, req.user!.sub) } })
+}))
+
+// What was sent and whether it can be taken back: the last notification share that has not been withdrawn. Counts and the names of ten or fewer; never anything else about the people.
+const shareSummaryOf = (d: any): { count: number; names: string[]; at: string; email: boolean; can_withdraw: boolean } | null => {
+  const list: any[] = Array.isArray(d?.data?.shared) ? d.data.shared : []
+  const taken = new Set(list.filter(x => x?.method === 'withdrawn').map(x => String(x.notification_id ?? '')))
+  const last = [...list].reverse().find(x => x?.method === 'notification' && x.notification_id && !taken.has(String(x.notification_id)))
+  const any = [...list].reverse().find(x => x?.method === 'notification' || x?.method === 'email' || x?.method === 'hub')
+  if (!any) return null
+  return { count: Number((last ?? any).count ?? 0), names: Array.isArray((last ?? any).names) ? (last ?? any).names.map(String) : [], at: String((last ?? any).at ?? ''), email: list.some(x => x?.method === 'email'), can_withdraw: !!last }
+}
+
+// Taking a sent notification back: it disappears from every recipient's hub and unread list, a record is kept, and the document goes back to approved so it can be sent again. The email, if one went, cannot be recalled.
+askRouter.post('/documents/:id/withdraw-share', wrap(async (req, res) => {
+  const t = getTenantId(), u = req.user!.sub, id = String(req.params.id)
+  const d = await store.getDocumentFor(t, u, id); if (!d || !needsApproval(d.type)) { notFound(res); return }
+  const sum = shareSummaryOf(d); const list: any[] = Array.isArray(d.data?.shared) ? d.data.shared : []
+  const target = [...list].reverse().find(x => x?.method === 'notification' && x.notification_id && !list.some(y => y?.method === 'withdrawn' && y.notification_id === x.notification_id))
+  if (!sum?.can_withdraw || !target) { err(res, 'NOT_FOUND', 'There is nothing to take back. It may already have been withdrawn.', 404); return }
+  try {
+    const w = await withdrawNotification(t, u, String(target.notification_id))
+    if (!w.ok) { err(res, w.code, w.message, w.status); return }
+    await store.appendShareRecord(t, id, { method: 'withdrawn', by: u, at: new Date().toISOString(), count: w.recipients, notification_id: String(target.notification_id) })
+    await store.setDocumentStatus(t, id, ['shared'], 'approved')
+    audit(req, 'ask_share_withdrawn', id, { type: d.type, recipients: w.recipients, read: w.read })
+    ok(res, { withdrawn: true, recipients: w.recipients, read: w.read, emailed: sum.email })
+  } catch { err(res, 'ERROR', 'It could not be taken back just now.', 500) }
 }))
 
 askRouter.patch('/documents/:id', wrap(async (req, res) => {
@@ -364,6 +391,7 @@ askRouter.post('/documents/:id/share-send', wrap(async (req, res) => {
   const sign = req.body?.sign === true
   try {
     const done: string[] = []
+    let notificationId = ''
     for (const ch of plan.channels) {
       if (ch === 'email') {
         const r = await emailLetter({ tenantId: t, actorId: u, doc: d, signerUserId: sign ? u : null })
@@ -372,16 +400,18 @@ askRouter.post('/documents/:id/share-send', wrap(async (req, res) => {
         const r = await shareInHub({ tenantId: t, actorId: u, doc: d, signerUserId: sign ? u : null, needsAcknowledgement: typeof req.body?.needs_acknowledgement === 'boolean' ? req.body.needs_acknowledgement : undefined })
         if (!r.ok) { err(res, r.code ?? 'NOT_SHARED', r.reason, r.code === 'NOT_SET_UP' ? 503 : 409); return }
         void writeAuditLog({ tenant_id: t, user_id: u, event_type: 'staff_letter_shared', entity_type: 'staff_letter', entity_id: r.letter_id, metadata: { document_id: id, needs_acknowledgement: r.needs_acknowledgement, signed: sign } })
+        notificationId = ''
       } else {
         const r = await shareAsNotification({ tenantId: t, actorId: u, doc: d, audience: plan.audience ?? 'selected', userIds: plan.user_ids, signerUserId: sign ? u : null, email: plan.notification_email })
         if (!r.ok) { err(res, r.code, r.message, r.status); return }
+        notificationId = r.id
       }
       done.push(ch)
-      await store.appendShareRecord(t, id, { method: ch, by: u, at: new Date().toISOString() })
+      await store.appendShareRecord(t, id, { method: ch, by: u, at: new Date().toISOString(), count: plan.count, ...(plan.names.length ? { names: plan.names } : {}), ...(ch === 'notification' && notificationId ? { notification_id: notificationId } : {}) })
     }
     await store.setDocumentStatus(t, id, ['approved'], 'shared')
     audit(req, 'ask_share_confirmed', id, { type: d.type, who: plan.who, how: plan.how, count: plan.count, channels: done.join(',') })   // counts and kinds only, never names or content
-    ok(res, { sent: true, count: plan.count, channels: done })
+    ok(res, { sent: true, count: plan.count, channels: done, names: plan.names, can_withdraw: done.includes('notification') })
   } catch (e: any) { console.error('[ask] share-send failed:', String(e?.message ?? e).slice(0, 160)); err(res, 'SHARE_FAILED', 'It could not be sent just now. Please try again.', 500) }
 }))
 

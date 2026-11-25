@@ -5,13 +5,41 @@
 // approval rule). Nothing is sent until the administrator presses Send and then confirms it once more. A letter goes to one person at a time and a print only letter is never sent.
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { Check, Eye, Loader2, Send, X } from 'lucide-react'
-import { ask, AskError, type SharePlan } from '@/lib/ask-client'
+import { ask, AskError, type SharePlan, type ShareSummary } from '@/lib/ask-client'
 import { StaffPicker, useStaff } from '@/components/ask/staff-picker'
 
 type How = 'email' | 'hub' | 'both'
 type Who = 'one' | 'selected' | 'all'
 const WHO_FOR: Record<string, Who[]> = { letter: ['one'], newsletter: ['one', 'selected', 'all'], report: ['one', 'selected'] }
 const WHO_LABEL: Record<Who, string> = { one: 'One person', selected: 'Chosen staff', all: 'All staff' }
+
+/** HOUSE RULE 15: after a send, where it went. "Sent to 12 people", who got it (names for ten or fewer), and a quiet way to take it back. An email, if one went, cannot be recalled and the card says so. */
+export function SentCard({ token, docId, summary, onChanged }: { token: string; docId: string; summary: ShareSummary; onChanged?: () => void }) {
+  const [who, setWho] = useState(false), [confirm, setConfirm] = useState(false), [busy, setBusy] = useState(false), [err, setErr] = useState(''), [back, setBack] = useState('')
+  async function withdraw() {
+    setBusy(true); setErr('')
+    try { const r = await ask.withdrawShare(token, docId); setBack(`Taken back. It has gone from ${r.recipients} ${r.recipients === 1 ? 'person' : 'people'}'s hub${r.emailed ? '. The email cannot be recalled' : ''}.`); setConfirm(false); onChanged?.() }
+    catch (e) { setErr(e instanceof AskError ? e.message : 'It could not be taken back just now.') } finally { setBusy(false) }
+  }
+  const n = summary.count
+  return (
+    <div className="w-full rounded-lg border border-green-300 bg-green-50 p-3 text-sm text-neutral-dark" id="ask-sent-card">
+      <p className="flex flex-wrap items-center gap-x-3 gap-y-1"><span className="inline-flex items-center gap-1.5 font-semibold text-green-900"><Check size={14} aria-hidden="true" />Sent to {n} {n === 1 ? 'person' : 'people'}</span>
+        {summary.at && <span className="text-xs text-neutral-mid">{new Date(summary.at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</span>}</p>
+      {back ? <p role="status" className="mt-1 text-xs font-semibold text-green-900">{back}</p> : (<>
+        <div className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs">
+          <button type="button" aria-expanded={who} onClick={() => setWho(v => !v)} className="font-semibold text-teal underline">{who ? 'Hide who got it' : 'View who got it'}</button>
+          {summary.can_withdraw && !confirm && <button type="button" onClick={() => setConfirm(true)} className="font-medium text-neutral-mid hover:text-neutral-dark hover:underline">Withdraw it</button>}
+        </div>
+        {who && <p className="mt-1.5 text-xs">{summary.names.length ? summary.names.join(', ') : `All ${n} people it was sent to (the list is only named for ten or fewer).`}</p>}
+        {confirm && <div className="mt-2 flex flex-wrap items-center gap-2 text-xs"><span>Take it back from everyone's hub?{summary.email ? ' The email cannot be recalled.' : ''}</span>
+          <button type="button" disabled={busy} onClick={withdraw} className="rounded-lg border border-gray-300 bg-white px-3 py-1 font-semibold text-neutral-dark hover:bg-neutral-light disabled:opacity-50">{busy ? 'Taking it back' : 'Yes, take it back'}</button>
+          <button type="button" disabled={busy} onClick={() => setConfirm(false)} className="font-medium text-neutral-mid hover:underline">No</button></div>}
+        {err && <p role="alert" className="mt-1 text-xs font-medium text-red-700">{err}</p>}
+      </>)}
+    </div>
+  )
+}
 
 export function SharePanel({ token, doc, sign, needsAck, onPreview, onSent, approval }: {
   token: string
@@ -34,6 +62,7 @@ export function SharePanel({ token, doc, sign, needsAck, onPreview, onSent, appr
   const [plan, setPlan] = useState<{ plan: SharePlan; summary: string } | null>(null)
   const [busy, setBusy] = useState(false), [confirming, setConfirming] = useState(false)
   const [error, setError] = useState(''), [done, setDone] = useState('')
+  const [sent, setSent] = useState<ShareSummary | null>(null)   // after Send the sheet stays open and shows where it went
   const staff = useStaff(token, open && !letter && who !== 'all')
   const seq = useRef(0)
   useEffect(() => { setHow(startHow) }, [intent?.hub, intent?.email, intent?.print_only])   // eslint-disable-line react-hooks/exhaustive-deps
@@ -47,7 +76,7 @@ export function SharePanel({ token, doc, sign, needsAck, onPreview, onSent, appr
   }, [open, how, who, ids, token, doc.id, doc.status])
   async function send() {
     setBusy(true); setError('')
-    try { const r = await ask.shareSend(token, doc.id, { how, who, user_ids: ids, sign, needs_acknowledgement: needsAck }); setDone(`Sent to ${r.count} ${r.count === 1 ? 'person' : 'people'}.`); setConfirming(false); setOpen(false); onSent?.() }
+    try { const r = await ask.shareSend(token, doc.id, { how, who, user_ids: ids, sign, needs_acknowledgement: needsAck }); setDone(`Sent to ${r.count} ${r.count === 1 ? 'person' : 'people'}.`); setConfirming(false); setSent({ count: r.count, names: r.names ?? [], at: new Date().toISOString(), email: r.channels.includes('email'), can_withdraw: !!r.can_withdraw }); onSent?.() }
     catch (e) { setError(e instanceof AskError ? e.message : 'It could not be sent just now.'); setConfirming(false) } finally { setBusy(false) }
   }
   if (!options.length) return null
@@ -68,6 +97,10 @@ export function SharePanel({ token, doc, sign, needsAck, onPreview, onSent, appr
             <h3 className="text-base font-bold">Share this</h3>
             <button type="button" onClick={() => setOpen(false)} aria-label="Close sharing" className="rounded p-1 text-neutral-mid hover:bg-neutral-light"><X size={18} aria-hidden="true" /></button>
           </header>
+          {sent ? (<>
+            <div className="min-h-0 flex-1 space-y-3 px-4 py-3"><SentCard token={token} docId={doc.id} summary={sent} onChanged={onSent} /></div>
+            <footer className="flex-shrink-0 border-t border-gray-200 bg-white px-4 py-3"><button type="button" onClick={() => { setSent(null); setOpen(false) }} className="inline-flex min-h-[40px] items-center gap-1.5 rounded-lg bg-teal px-4 text-sm font-semibold text-white hover:bg-teal-dark"><Check size={14} aria-hidden="true" /> Done</button></footer>
+          </>) : (<>
           <div className="min-h-0 flex-1 space-y-3 overflow-y-auto no-scrollbar px-4 py-3">
           {approval}
           <fieldset><legend className="text-xs font-semibold uppercase tracking-wide text-neutral-mid">How</legend>
@@ -116,9 +149,11 @@ export function SharePanel({ token, doc, sign, needsAck, onPreview, onSent, appr
               ? <button type="button" disabled={!p?.ok || busy} onClick={() => setConfirming(true)} className="inline-flex min-h-[40px] items-center gap-1.5 rounded-lg bg-teal px-4 text-sm font-semibold text-white hover:bg-teal-dark disabled:opacity-50"><Send size={14} aria-hidden="true" /> Send</button>
               : <><button type="button" disabled={busy} onClick={send} className="inline-flex min-h-[40px] items-center gap-1.5 rounded-lg bg-teal px-4 text-sm font-semibold text-white hover:bg-teal-dark disabled:opacity-50">{busy ? <Loader2 size={14} className="animate-spin" aria-hidden="true" /> : <Check size={14} aria-hidden="true" />} Yes, send it to {p?.count ?? 0} {p?.count === 1 ? 'person' : 'people'} now</button>
                 <button type="button" disabled={busy} onClick={() => setConfirming(false)} className="text-sm font-medium text-neutral-mid hover:text-neutral-dark">Not yet</button></>}
-            {confirming && <span className="text-xs text-neutral-mid">It cannot be taken back once sent{letter ? ', but a letter in the hub can be withdrawn' : ''}.</span>}
+            {!confirming && !p?.ok && <span className="text-xs text-neutral-mid">{!p ? 'Checking' : (p.blockers.find(b => !(approval && /has to be approved/i.test(b))) ?? 'Choose who gets it first.')}</span>}
+            {confirming && <span className="text-xs text-neutral-mid">It can be taken back from the hub afterwards{letter ? '' : ', but an email cannot be recalled'}.</span>}
           </div>
           </footer>
+          </>)}
         </div>
       )}
     </div>

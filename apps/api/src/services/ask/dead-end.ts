@@ -123,6 +123,11 @@ export function defaultSteps(agentId: string | undefined, answer: string): Step[
   steps.push({ id: 'follow_up', label: 'Ask a follow up', kind: 'action', payload: 'follow_up' })
   return steps.slice(0, 3)
 }
+const ERROR_STEPS: Step[] = [
+  { id: 'try_again', label: 'Try again', kind: 'ask', payload: 'Please try that again.' },
+  { id: 'follow_up', label: 'Ask in a different way', kind: 'action', payload: 'follow_up' },
+]
+const ACK_STEPS: Step[] = [{ id: 'follow_up', label: 'Ask a follow up', kind: 'action', payload: 'follow_up' }]
 const isAcknowledgement = (t: string) => WORD(t) < 15
 const isErrorMessage = (t: string) => /^(i could not finish|that took too long|something went wrong|sorry, i)/i.test(t.trim())
 const block = (kind: 'next_steps', steps: Step[]) => `\n\n\`\`\`next_steps\n${JSON.stringify({ steps })}\n\`\`\``
@@ -139,9 +144,11 @@ export function withDeadEndFallback(answer: string, o: { agentId?: string; draft
   if (isChangeQuestion(a)) return { text: base + '\n\n' + changeMenuBlock(o.agentId), appended: true }
   // 3) any other invitation or choice in words
   if (endsInProseChoice(a)) return { text: base + block('next_steps', fallbackSteps(a, o)), appended: true }
-  // 4) catch all: a reply with no block at all gets a small default row (not for one line acknowledgements or errors)
-  if (!isAcknowledgement(a) && !isErrorMessage(a) && (o.drafts ?? 0) === 0) return { text: base + block('next_steps', defaultSteps(o.agentId, a)), appended: true }
-  return { text: a, appended: fixed.changed }
+  // 4) every reply ends on something to press (HOUSE RULE 15, a reachable end): a reply with a draft gets the draft steps, an error gets Try again, a one line acknowledgement gets Ask a follow up, anything else a small default row
+  if ((o.drafts ?? 0) > 0) return { text: base + block('next_steps', DRAFT_STEPS), appended: true }
+  if (isErrorMessage(a)) return { text: base + block('next_steps', ERROR_STEPS), appended: true }
+  if (isAcknowledgement(a)) return { text: base + block('next_steps', ACK_STEPS), appended: true }
+  return { text: base + block('next_steps', defaultSteps(o.agentId, a)), appended: true }
 }
 
 // Option cards are for choosing between designs or documents that can be PREVIEWED. A model sometimes writes its NEXT STEPS as an options block (cards with nothing to preview, "This option has no

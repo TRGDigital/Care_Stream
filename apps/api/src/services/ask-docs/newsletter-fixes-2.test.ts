@@ -58,7 +58,7 @@ test('THE TOOLS SIT ABOVE THE NEWSLETTER: toolbar, then the Colours or Add a blo
 test('SAVE: an explicit Save with Saved or Unsaved changes, Submit waits for it, and closing asks Save your changes?', () => {
   const p = web('components/ask/document-panel.tsx')
   assert.match(p, /\{dirty \? 'Save' : 'Saved'\}/); assert.match(p, /Unsaved changes/); assert.match(p, /All changes saved/)
-  assert.match(p, /disabled=\{!!busy \|\| dirty\} title=\{dirty \? 'Save your changes first'/); assert.match(p, /Save your changes before you submit/)
+  assert.match(p, /disabled=\{!!busy \|\| dirty\} title=\{dirty \? 'Save your changes first'/); assert.match(p, /Save your changes first\./)
   assert.match(p, /Save your changes\?/); assert.match(p, /Discard/); assert.match(p, /Keep editing/); assert.doesNotMatch(p, /window\.confirm\('Save/)   // one line, no browser dialog
   assert.match(p, /const requestClose = \(\) => \{ if \(dirty\) setConfirmClose\('panel'\)/); assert.match(p, /onClick=\{requestClose\}/)
   assert.match(p, /async function save\(closeEditor = false\)/); assert.match(p, /setSavedAt\(new Date\(\)\)/)

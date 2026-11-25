@@ -24,6 +24,7 @@ import { QuestionFormCard, AnsweredCard } from '@/components/ask/question-form'
 import { OptionsBlock } from '@/components/ask/options-block'
 import { parseQuestions, parseOptions, parseNextSteps, visibleText, parseAnswersMessage, parseChoiceMessage, parseNextMessage, formatNext, type NextAction, type NextStep } from '@/lib/ask-blocks'
 import { NextStepsBar } from '@/components/ask/next-steps'
+import { statusSteps } from '@/lib/ask-status-steps'
 import { DraftCard, DocViewer } from '@/components/ask/draft-card'
 import { printBlob, saveBlob } from '@/lib/document-actions'
 
@@ -175,6 +176,9 @@ export function AskPanel({ token, layout, expanded, width, locked = false, onClo
   const [messages, setMessages] = useState<AskMessage[]>([])
   // HOUSE RULE 14: Go back. Takes away the last exchange (what they pressed and what came back) so the step before, and its buttons, are showing again. Nothing is deleted from their library.
   const canGoBack = messages.length >= 3 && messages[messages.length - 1]?.role === 'assistant' && messages[messages.length - 2]?.role === 'user'
+  // HOUSE RULE 15: the buttons follow where the document is. The latest draft in this chat has its status read again whenever the chat changes or its panel is closed.
+  const convDocId = [...messages].reverse().flatMap(x => x.sources ?? []).find(x => x.document_id)?.document_id ?? null
+  const [docStates, setDocStates] = useState<Record<string, string>>({})
   const goBack = () => setMessages(ms => (ms.length >= 3 && ms[ms.length - 1]?.role === 'assistant' && ms[ms.length - 2]?.role === 'user' ? ms.slice(0, -2) : ms))
   const [cards, setCards] = useState<Record<string, AskActionCard[]>>({})   // action cards the agent proposed, by the answer they belong to
   const [text, setText] = useState('')
@@ -183,6 +187,12 @@ export function AskPanel({ token, layout, expanded, width, locked = false, onClo
   const [uploads, setUploads] = useState<AskUpload[]>([])   // files attached to this chat (agents that take files)
   const [lib, setLib] = useState<{ tab: 'chats' | 'docs'; chats: AskConversation[] | null; docs: AskDocument[] | null }>({ tab: 'chats', chats: null, docs: null })
   const [docId, setDocId] = useState<string | null>(null)
+  useEffect(() => {
+    if (!convDocId || !token || docId) return
+    let live = true
+    ask.document(token, convDocId).then(r => { if (live) setDocStates(s => ({ ...s, [convDocId]: r.document.status })) }).catch(() => undefined)
+    return () => { live = false }
+  }, [convDocId, token, docId, messages.length])
   const [docFocus, setDocFocus] = useState<'colours' | 'blocks' | null>(null)
   const [viewDocId, setViewDocId] = useState<string | null>(null)   // the designed version of a draft, in the large viewer
   const [savedMsg, setSavedMsg] = useState<string | null>(null)
@@ -397,7 +407,7 @@ export function AskPanel({ token, layout, expanded, width, locked = false, onClo
                     {agent.id === 'notifications' && parseNotificationDraft(m.content) && (() => { const d = parseNotificationDraft(m.content)!; return <div className="mt-3 rounded-lg border border-teal/30 bg-teal/5 p-3 text-sm"><p className="font-semibold text-neutral-dark">{d.title}</p><p className="mt-1 whitespace-pre-line text-neutral-dark">{d.body}</p></div> })()}
                     {(m.sources ?? []).filter(x => x.document_id).map(x => <DraftCard key={x.document_id} token={token} id={x.document_id!} onOpenViewer={setViewDocId} onEdit={setDocId} />)}
                     {(cards[m.id] ?? []).map(c => <ActionCard key={c.id} token={token} card={c} />)}
-                    {(() => { const ns = parseNextSteps(m.content); return ns && mi === messages.length - 1 && !busy ? <NextStepsBar steps={withOpenDraft(ns.steps, !(m.sources ?? []).some(x => x.document_id) && messages.some(x => (x.sources ?? []).some(y => y.document_id)))} onBack={canGoBack ? goBack : undefined} disabled={busy} onAsk={t => send(t)} onAction={(a, st) => nextAction(a, st, m)} /> : null })()}
+                    {(() => { const ns = parseNextSteps(m.content); return ns && mi === messages.length - 1 && !busy ? <NextStepsBar steps={(() => { const own = (m.sources ?? []).find(x => x.document_id)?.document_id ?? convDocId; const st = own ? docStates[own] : undefined; return st ? statusSteps(ns.steps, st) : withOpenDraft(ns.steps, !(m.sources ?? []).some(x => x.document_id) && !!convDocId) })()} onBack={canGoBack ? goBack : undefined} disabled={busy} onAsk={t => send(t)} onAction={(a, st) => nextAction(a, st, m)} /> : null })()}
                     {savedMsg === m.id && <p role="status" className="mt-2 text-xs font-semibold text-green-800">Saved to your library.</p>}
                     <SourcesFooter sources={m.sources ?? []} />
                     <AnswerActions m={m} token={token} agentId={agent.id} />

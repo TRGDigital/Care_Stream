@@ -123,7 +123,7 @@ test('METERING: every model call is recorded, the allowance is checked first, an
     { content: [{ type: 'text', text: 'Done.' }], stop_reason: 'end_turn', usage },
   ])
   const r = await runAgent({ agentId: 'staff', ctx, orgName: 'Test', history: [], message: 'hi' }, { client: s.client, checkLimit: async () => undefined, record: (m, u) => recorded.push([m, u]), audit: a => audits.push(a) })
-  assert.equal(r.answer, 'Done.'); assert.equal(recorded.length, 2)
+  assert.match(r.answer, /^Done\./); assert.equal(recorded.length, 2)
   const resultMsg = s.calls[1].messages[s.calls[1].messages.length - 1]
   assert.match(JSON.stringify(resultMsg), /not available/); assert.equal(resultMsg.content[0].is_error, true)
   assert.equal(audits.length, 1); assert.deepEqual(Object.keys(audits[0].metadata).sort(), ['agent', 'rounds', 'tools'])   // names only, never content

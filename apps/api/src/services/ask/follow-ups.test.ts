@@ -85,7 +85,7 @@ test('DETECTION: at least 25 dead end phrasings are caught (full stops, no quest
   assert.equal(endsInProseChoice('Here is the list.\n\n```next_steps\n{"steps":[{"id":"a","label":"A","kind":"ask"}]}\n```'), false)
 })
 
-test('CATCH ALL: every agent has default buttons for a plain answer, never an invitation in words, never for a one line acknowledgement or an error', () => {
+test('CATCH ALL: every agent has default buttons for a plain answer, never an invitation in words, a one line acknowledgement or an error still ends on a button', () => {
   assert.ok(AGENTS.length >= 20)
   for (const a of AGENTS) {
     const s = defaultSteps(a.id, 'The total is 112 hours for 8 people.'); assert.ok(s.length >= 1 && s.length <= 3, a.id)
@@ -94,9 +94,9 @@ test('CATCH ALL: every agent has default buttons for a plain answer, never an in
     const r = withDeadEndFallback('The total is 112 hours for 8 people across the whole of the year to date, as held in the records.', { agentId: a.id }); assert.equal(r.appended, true, a.id)
   }
   assert.equal(defaultSteps('pay', 'Total £4,200 a month.').some(x => x.id === 'show_working'), true)
-  assert.equal(withDeadEndFallback('Done. The colours are now ocean blue.', { agentId: 'newsletter' }).appended, false)   // acknowledgement
-  assert.equal(withDeadEndFallback('I could not finish working that out. Please try asking it a little differently, or break it into smaller questions.', { agentId: 'staff' }).appended, false)   // error
-  assert.equal(withDeadEndFallback('Saved.', { agentId: 'letters', drafts: 1 }).appended, false)
+  assert.match(withDeadEndFallback('Done. The colours are now ocean blue.', { agentId: 'newsletter' }).text, /Ask a follow up/)   // a reachable end: even a one line acknowledgement has something to press
+  assert.equal(withDeadEndFallback('I could not finish working that out. Please try asking it a little differently, or break it into smaller questions.', { agentId: 'staff' }).text.includes('Try again'), true)   // an error offers Try again
+  assert.match(withDeadEndFallback('Saved.', { agentId: 'letters', drafts: 1 }).text, /Edit the content/)   // a reply with a draft gets the draft steps
 })
 
 test('THE CHANGE MENU: the form is the same wherever it comes from, per agent, and "Change something", "Edit" and "Ask a follow up" are screen actions', async () => {

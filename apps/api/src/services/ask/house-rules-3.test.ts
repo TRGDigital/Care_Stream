@@ -236,3 +236,19 @@ test('RULE 15: steps are buttons (the rule is in every agent prompt), a closing 
   for (const f of ['question-form', 'options-block', 'next-steps', 'layout-thumbs']) assert.match(webSrc(`components/ask/${f}.tsx`), /<GoBack /, f)
   const ov = webSrc('components/ask/ask-overlay.tsx'); assert.match(ov, /withOpenDraft\(ns\.steps/); assert.match(ov, /label: 'Open the draft'/)
 })
+
+test('RULE 15 (more): the buttons follow the document status with greyed reasons, a sent document shows where it went and can be taken back, and every reply ends on a button', async () => {
+  const st = await import('../../../../web/src/lib/ask-status-steps')
+  const model = [{ id: 'edit', label: 'Edit the content', kind: 'action', payload: 'edit' }, { id: 'make_another', label: 'Make something else', kind: 'ask', payload: 'x' }] as any
+  const draft = st.statusSteps(model, 'draft'); assert.deepEqual(draft.slice(0, 2).map((s: any) => s.label), ['Open the draft', 'Submit for approval'])
+  assert.equal(draft.find((s: any) => s.id === 'share_wait').reason, 'It needs approval first'); assert.ok(draft.some((s: any) => s.label === 'Make something else'))   // the model's own other buttons stay
+  assert.ok(!draft.some((s: any) => s.label === 'Edit the content'))                                                                                              // its document steps are replaced by the status ones
+  assert.equal(st.statusSteps(model, 'approved')[0].label, 'Share it'); assert.equal(st.statusSteps(model, 'shared')[0].label, 'View who got it'); assert.equal(st.statusSteps(model, 'pending')[0].label, 'Open to approve')
+  assert.equal(st.statusSteps(model, undefined), model)
+  const route = fs.readFileSync(path.resolve(__dirname, '../../routes/ask.ts'), 'utf8')
+  assert.match(route, /withdraw-share/); assert.match(route, /share_summary: shareSummaryOf\(d\)/); assert.match(route, /ask_share_withdrawn/); assert.match(route, /notification_id: notificationId/)
+  const sp = webSrc('components/ask/share-panel.tsx'); assert.match(sp, /Sent to \{n\} \{n === 1/); assert.match(sp, /View who got it/); assert.match(sp, /Withdraw it/); assert.match(sp, /The email cannot be recalled|an email cannot be recalled/)
+  const ns = webSrc('components/ask/next-steps.tsx'); assert.match(ns, /aria-disabled="true" title=\{s\.reason\}/)
+  const de = await import('./dead-end')
+  for (const [text, label] of [['Done.', 'Ask a follow up'], ['I could not finish working that out. Please try asking it a little differently, or break it into smaller questions.', 'Try again']] as const) assert.match(de.withDeadEndFallback(text, { agentId: 'staff' }).text, new RegExp(label))
+})

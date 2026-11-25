@@ -30,6 +30,8 @@ export interface AskConversation { id: string; agent_id: string; title: string; 
 export interface AskDocument { id: string; type: string; title: string; status: string; mine?: boolean; staff_name?: string | null; updated_at: string | null }
 export interface AskDocActions { needs_approval: boolean; edit: boolean; submit: boolean; approve: boolean; return: boolean; reopen: boolean; share: Array<'pdf' | 'email' | 'notification' | 'hub'> }
 export interface ShareIntent { hub: boolean; email: boolean; print_only: boolean }
+/** What was sent and whether it can be taken back (counts, and names for ten or fewer). */
+export interface ShareSummary { count: number; names: string[]; at: string; email: boolean; can_withdraw: boolean }
 export interface HubShare { id: string; person: string; shared_at: string | null; read_at: string | null; needs_acknowledgement: boolean; acknowledged_at: string | null; withdrawn_at: string | null; signed: boolean }
 export interface AskDocField { key: string; label: string; type: string; required: boolean; choices: Array<{ value: string; label: string }> | null }
 export interface NewsletterEditItem { id: string; kind: 'section' | 'custom'; type: string; title: string; summary: string; style: string | null; can_edit: boolean }
@@ -48,7 +50,7 @@ export type NewsletterOp =
 export interface AskDocFull {
   id: string; type: string; title: string; body: string; status: string; version: number; updated_at: string | null; mine: boolean; created_by: string
   staff_name: string | null; internal_only?: boolean; checklist: string[]; references: Array<{ label: string; url: string }>; shared: Array<{ method: string; at: string }>
-  share_intent?: ShareIntent | null; share_intent_text?: string; ack_default?: boolean; hub_shares?: HubShare[]
+  share_intent?: ShareIntent | null; share_intent_text?: string; ack_default?: boolean; hub_shares?: HubShare[]; share_summary?: ShareSummary | null
   values?: Record<string, string | number>; fields?: AskDocField[]; actions: AskDocActions; data?: { orientation?: 'portrait' | 'landscape'; pages?: 'one' | 'two'; template_layout?: string; custom_blocks?: Array<{ id: string; type: string; content: Record<string, any> }>; review_note?: { note: string; at: string }; photo?: { user_id: string; include: boolean } | null; photos?: Array<{ user_id: string; include: boolean }>; gift?: { text?: string; image_id?: string | null } | null; template_id?: string | null } | null
 }
 export type UploadRetention = 'chat_end' | '30d' | 'keep'
@@ -146,6 +148,8 @@ export const ask = {
   /** How a letter is to be shared: in their hub, by email, hub and email, or print only (exclusive). */
   setShareIntent: (t: string, id: string, b: ShareIntent) => call<{ share_intent: ShareIntent; share_intent_text: string }>(`/ask/documents/${encodeURIComponent(id)}/share-intent`, t, { method: 'POST', body: JSON.stringify(b) }),
   /** Takes one shared letter out of the person's hub (the record stays here). */
+  /** Take a sent notification back from everyone's hub (the document goes back to approved). */
+  withdrawShare: (t: string, id: string) => call<{ withdrawn: boolean; recipients: number; read: number; emailed: boolean }>(`/ask/documents/${encodeURIComponent(id)}/withdraw-share`, t, { method: 'POST', body: '{}' }),
   withdrawHubShare: (t: string, id: string, letterId: string) => call<{ withdrawn: boolean }>(`/ask/documents/${encodeURIComponent(id)}/hub-shares/${encodeURIComponent(letterId)}/withdraw`, t, { method: 'POST', body: '{}' }),
   /** HOUSE RULE 4: the document as a PDF or Word file. Approved: the finished copy. Not approved yet: pass draft, and it comes back stamped DRAFT on every page (nothing is recorded as shared). */
   documentBlob: async (t: string, id: string, format: 'pdf' | 'docx', o: { sign?: boolean; draft?: boolean; pages?: 'one' | 'two'; orientation?: 'portrait' | 'landscape' } = {}): Promise<Blob> => {
@@ -165,7 +169,7 @@ export const ask = {
   /** HOUSE RULE 5: what a send WOULD do (counts, names for ten or fewer, limits, approval). Sends nothing. */
   sharePlan: (t: string, id: string, b: { how: string; who: string; user_ids?: string[] }) => call<{ plan: SharePlan; summary: string }>(`/ask/documents/${encodeURIComponent(id)}/share-plan`, t, { method: 'POST', body: JSON.stringify(b) }),
   /** The send itself: only ever with confirm: true, from the Send button. */
-  shareSend: (t: string, id: string, b: { how: string; who: string; user_ids?: string[]; sign?: boolean; needs_acknowledgement?: boolean }) => call<{ sent: boolean; count: number; channels: string[] }>(`/ask/documents/${encodeURIComponent(id)}/share-send`, t, { method: 'POST', body: JSON.stringify({ ...b, confirm: true }) }),
+  shareSend: (t: string, id: string, b: { how: string; who: string; user_ids?: string[]; sign?: boolean; needs_acknowledgement?: boolean }) => call<{ sent: boolean; count: number; channels: string[]; names?: string[]; can_withdraw?: boolean }>(`/ask/documents/${encodeURIComponent(id)}/share-send`, t, { method: 'POST', body: JSON.stringify({ ...b, confirm: true }) }),
   /** The finished PDF as a blob address, for printing (an approved document only). */
   pdfBlobUrl: async (t: string, id: string, sign = false) => {
     const res = await fetch(`${API_URL}/ask/documents/${encodeURIComponent(id)}/pdf${sign ? '?sign=1' : ''}`, { headers: { Authorization: `Bearer ${t}` } })

@@ -8,6 +8,7 @@ import { AGENTS, HOUSE_RULES, type AgentDef } from './agents'
 import { LOCKED_RULES } from './safety'
 import { DEFAULT_ACTIONS_RULES, ACTION_TOOL_NAMES } from './actions/prompts'
 import { KNOWLEDGE_PROMPTS } from './agents-knowledge'
+import { uploadPromptMeta } from './agents-uploads'
 
 export const ASK_GROUP = 'Ask CareStream'
 export const ASK_PROMPT_MAX = 8000
@@ -65,6 +66,7 @@ export const ASK_PROMPTS: AskPromptMeta[] = [
   { usage: 'ask_page_context', label: 'Ask CareStream: page context line', default: DEFAULT_PAGE_CONTEXT,
     note: 'One line added when the administrator is looking at a page. Placeholders: {{label}} (what they are looking at) and {{who}} (the staff member on screen, if any, already written as a sentence).' },
 ]
+ASK_PROMPTS.push(...uploadPromptMeta())   // uploaded files (agents-uploads.ts)
 import { peoplePromptMeta } from './agents-people'; ASK_PROMPTS.push(...peoplePromptMeta())   // people development agents (training, CPD, onboarding, compliance, incentives)
 export const ASK_USAGES = ASK_PROMPTS.map(p => p.usage)
 export const isAskUsage = (u: string) => u.startsWith('ask_')
@@ -104,7 +106,8 @@ export async function buildSystemPrompt(a: AgentDef, today: string, orgName: str
     askPrompt(`ask_agent_${a.id.replace(/-/g, '_')}`),
     a.id === 'letters' ? askPrompt('ask_letter_drafting') : a.id === 'newsletter' ? askPrompt('ask_newsletter_drafting') : Promise.resolve(''),
   ])
-  const jobText = [job, drafting, actions].filter(Boolean).join('\n')
+  const uploads = a.uploads ? (await Promise.all([askPrompt('ask_uploads_rules'), askPrompt(`ask_uploads_${a.id.replace(/-/g, '_')}`)])).filter(Boolean).join('\n') : ''
+  const jobText = [job, drafting, actions, uploads].filter(Boolean).join('\n')
   return `${house}\n\nTODAY: ${today} (UK). ORGANISATION: ${orgName}.\n\nYOUR JOB: ${jobText}${pageLine}\n\n${LOCKED_RULES}`
 }
 

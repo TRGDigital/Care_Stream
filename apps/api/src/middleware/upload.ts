@@ -205,3 +205,13 @@ export function notificationFileUploadMiddleware(req: Request, res: Response, ne
     err(res, 'UPLOAD_ERROR', 'The upload failed. Please try again.', 500)
   })
 }
+
+// Files attached to an Ask CareStream chat: spreadsheets, Word and PDF, up to 5 MB. Field "file", plus the text fields agent_id and conversation_id.
+const askUploadMulter = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024, files: 1, fields: 4, fieldSize: 200 } })
+export function askUploadMiddleware(req: Request, res: Response, next: NextFunction): void {
+  askUploadMulter.single('file')(req, res, (multerErr) => {
+    if (!multerErr) { if (req.file) req.file.originalname = fixUtf8Filename(req.file.originalname); next(); return }
+    if ((multerErr as any).code === 'LIMIT_FILE_SIZE') { err(res, 'FILE_TOO_LARGE', 'That file is over 5 MB. Please send a smaller one, or only the sheet you need.', 413); return }
+    err(res, 'UPLOAD_ERROR', 'The upload failed. Please try again.', 500)
+  })
+}

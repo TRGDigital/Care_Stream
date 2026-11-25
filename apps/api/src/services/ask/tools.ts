@@ -313,3 +313,4 @@ export const toolByName = (n: string) => TOOLS.find(t => t.name === n)
 export { ukToday }
 
 import { PEOPLE_TOOLS } from './tools-people'; TOOLS.push(...PEOPLE_TOOLS)   // people development tools (training, CPD, onboarding, compliance, incentives)
+import { UPLOAD_TOOLS } from './tools-uploads'; TOOLS.push(...UPLOAD_TOOLS)   // tools that read files an administrator attached to a chat (uploads/)

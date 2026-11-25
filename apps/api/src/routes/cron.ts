@@ -19,6 +19,7 @@
 // silently stops appears as a missing row rather than as nothing at all.
 
 import { Router, Request, Response } from 'express'
+import { sweepExpired as sweepAskUploads } from '../services/ask/uploads/store'
 import { timingSafeEqual } from 'crypto'
 import { prisma } from '../db/client'
 import { ok, err } from '../lib/response'
@@ -199,6 +200,10 @@ cronRouter.get('/check-data-sources', (req, res) =>
     get: async (url: string) => { const r = await fetch(url, { headers: { Accept: 'application/json', 'User-Agent': 'CareStream data check (support@carestreamai.com)' } }); if (!r.ok) throw new Error(`HTTP ${r.status} from ${new URL(url).host}`); return r.json() },
     notify: o => sendDataSourcesEmail(o),
   }, { force: req.query.force === '1', only: req.query.key ? String(req.query.key) : undefined })))
+
+// Deletes uploaded Ask CareStream files that have passed the date the account chose (the cleaned copy in storage, then the record's content). Safe to run often (hourly).
+cronRouter.get('/sweep-ask-uploads', (req, res) =>
+  job('sweep-ask-uploads', req, res, async () => ({ deleted: await sweepAskUploads(Math.min(200, Number(req.query.limit) || 100)) })))
 
 // Makes the hero pictures for the blog drafts listed in data/blog-hero-scenes.ts that have none (limit=N, at most 4 a call; dry=1 only lists).
 cronRouter.get('/generate-blog-heroes', (req, res) =>

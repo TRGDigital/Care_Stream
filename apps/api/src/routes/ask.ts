@@ -28,6 +28,8 @@ import { lintReport } from '../services/ask/report-templates'
 import { loadStaff } from '../services/ask/data'
 import { lintNewsletter } from '../services/ask-docs/newsletter-templates'
 import { askActionsRouter } from './ask-actions'
+import { askUploadsRouter } from './ask-uploads'
+import * as uploadStore from '../services/ask/uploads/store'
 import * as actionStore from '../services/ask/actions/store'
 import { buildCard } from '../services/ask/actions/card'
 import { loadAskSettings } from '../services/ask/actions/settings'
@@ -48,6 +50,7 @@ async function guard(req: Request, res: Response, next: NextFunction) {
 const roleOf = (req: Request): AskRole => ((req as any).askRole as AskRole) ?? 'admin'
 askRouter.use(guard)
 askRouter.use('/actions', askActionsRouter)
+askRouter.use('/uploads', askUploadsRouter)   // files attached to a chat: administrators only (ask-uploads.ts)
 
 // A simple per person limit (per server instance, so soft): 12 questions a minute and 150 an hour.
 const hits = new Map<string, number[]>()
@@ -125,7 +128,13 @@ askRouter.patch('/conversations/:id', wrap(async (req, res) => {
   if (!(await store.renameConversation(getTenantId(), req.user!.sub, String(req.params.id), title))) { notFound(res); return }
   ok(res, { renamed: true })
 }))
-askRouter.delete('/conversations/:id', wrap(async (req, res) => { if (!(await store.deleteConversation(getTenantId(), req.user!.sub, String(req.params.id)))) { notFound(res); return } ok(res, { deleted: true }) }))
+askRouter.delete('/conversations/:id', wrap(async (req, res) => {
+  const t = getTenantId(), u = req.user!.sub, id = String(req.params.id)
+  if (!(await store.getConversation(t, u, id))) { notFound(res); return }
+  await uploadStore.removeForConversation(t, u, id).catch(() => undefined)   // a deleted chat takes its uploaded files with it (the person's own chat only)
+  if (!(await store.deleteConversation(t, u, id))) { notFound(res); return }
+  ok(res, { deleted: true })
+}))
 
 askRouter.get('/documents', wrap(async (req, res) => { ok(res, { documents: await store.listDocuments(getTenantId(), req.user!.sub) }) }))
 askRouter.post('/documents', wrap(async (req, res) => {

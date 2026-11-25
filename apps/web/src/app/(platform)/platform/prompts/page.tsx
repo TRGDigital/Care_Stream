@@ -38,12 +38,12 @@ type ActiveTab = 'prompt' | 'outputs' | 'history'
 type AskInfo = { group: string; usages: string[]; notes: Record<string, string>; locked_rules: string; rules?: Array<{ n: number; title: string; line: string; locked: boolean }>; max_chars: number }
 
 /** The read only panel showing the rules that can never be edited on this page (they are added after every Ask CareStream prompt). */
-/** The eight house rules in one line each. Seven are editable in the entries below; rule 6 is locked. The list comes from one constant in the API, so it matches the rule text. */
+/** The nine house rules in one line each. Eight are editable in the entries below; rule 6 is locked. The list comes from one constant in the API, so it matches the rule text. */
 function HouseRulesSummary({ rules }: { rules: Array<{ n: number; title: string; line: string; locked: boolean }> }) {
   return (
-    <div className="mx-3 mb-3 rounded-lg border border-gray-200 bg-neutral-light/60 p-3" aria-label="The eight house rules">
-      <p className="text-[11px] font-bold uppercase tracking-wide text-neutral-dark">The eight house rules</p>
-      <p className="mt-0.5 text-[10px] leading-snug text-neutral-mid">Every agent follows these. Rules 1 to 5, 7 and 8 are editable in the entries below. Rule 6 is locked and read only.</p>
+    <div className="mx-3 mb-3 rounded-lg border border-gray-200 bg-neutral-light/60 p-3" aria-label="The nine house rules">
+      <p className="text-[11px] font-bold uppercase tracking-wide text-neutral-dark">The nine house rules</p>
+      <p className="mt-0.5 text-[10px] leading-snug text-neutral-mid">Every agent follows these. Rules 1 to 5 and 7 to 9 are editable in the entries below. Rule 6 is locked and read only.</p>
       <ol className="mt-2 space-y-1.5">
         {rules.map(r => (
           <li key={r.n} className="flex items-start gap-2 text-[11px] leading-snug text-neutral-dark">

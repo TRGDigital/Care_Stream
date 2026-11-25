@@ -3,6 +3,7 @@
 // for the person to answer. This only reads their typed messages, never anything an agent wrote.
 import type { AnswerValue, Question, QuestionForm } from '@/lib/ask-blocks'
 import type { PickerPerson } from '@/lib/staff-picker'
+import { maxPeople, peopleMode, withMode } from './ask-check'
 
 const WORDS: Record<string, number> = { one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, both: 2, couple: 2, pair: 2 }
 const NOUNS = '(?:employees?|staff|people|winners?|nominees?|members|carers?|colleagues|stars?|starters?|leavers?|names?)'
@@ -44,12 +45,15 @@ export function prefillForm(form: QuestionForm, typed: string[], staff: PickerPe
   const count = countFrom(all), audience = audienceFrom(all)
   const named = staff ? peopleNamed(all, staff) : []
   const values: Record<string, AnswerValue> = {}
-  const questions: Question[] = form.questions.map(q => {
-    if (q.kind !== 'people') return q
-    const expected = q.expected ?? (count && count > 1 ? count : undefined)
-    const multiple = q.multiple || (expected ?? 0) > 1 || named.length > 1
-    const next: Question = { ...q, multiple, ...(expected ? { expected } : {}) }
-    if (named.length) values[q.id] = { text: '', people: named.slice(0, multiple ? 500 : 1).map(p => ({ id: p.id, name: p.name })) }
+  const questions: Question[] = form.questions.map(q0 => {
+    if (q0.kind !== 'people') return q0
+    // HOUSE RULE 9: how many people a question may take follows its kind (letters, pay and holiday decisions are always one), whatever was said or marked.
+    const q = withMode(q0)
+    const mode = peopleMode(q)
+    const expected = mode === 'one' ? undefined : (q.expected ?? (count && count > 1 ? count : undefined))
+    const next: Question = { ...q, ...(expected ? { expected } : {}) }
+    // Names are filled in only when they can be used for certain: one name for a one person question; for a group, all the names they typed.
+    if (named.length && !(mode === 'one' && named.length > 1)) values[q.id] = { text: '', people: named.slice(0, maxPeople(mode)).map(p => ({ id: p.id, name: p.name })) }
     return next
   })
   return { form: { ...form, questions }, values, said: { count, audience, names: named.map(p => p.name) } }

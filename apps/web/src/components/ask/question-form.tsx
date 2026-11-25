@@ -3,12 +3,13 @@
 // HOUSE RULE 1: when an agent needs information it asks in a form, not in a paragraph. Each question has its own labelled box with a free text field (a choice question also
 // offers quick buttons, a people question also offers the staff picker), a short hint, and "required" or "optional". One Send answers button sends every answer back as one
 // message that pairs each question with its answer, so nothing is ambiguous. The form stays editable until it is sent; after that the answered card shows what was sent.
-import { useId, useMemo, useState } from 'react'
+import { useId, useMemo, useRef, useState } from 'react'
 import { Check, Loader2, Send } from 'lucide-react'
 import { StaffPicker, useStaff } from '@/components/ask/staff-picker'
 import { ask } from '@/lib/ask-client'
 import { prefillForm } from '@/lib/ask-prefill'
 import { formatAnswers, missingAnswers, type AnswerValue, type Question, type QuestionForm as Form } from '@/lib/ask-blocks'
+import { checksFor, declineValue, maxPeople, peopleMode, pendingChecks, type CheckItem } from '@/lib/ask-check'
 
 const inp = 'w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-neutral-dark outline-none focus:border-teal focus:ring-2 focus:ring-teal/20'
 
@@ -16,14 +17,15 @@ const inp = 'w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm
 function PeopleField({ token, q, value, onChange, disabled, boxId }: { token: string; q: Question; value: AnswerValue; onChange: (v: AnswerValue) => void; disabled: boolean; boxId: string }) {
   const staff = useStaff(token)
   const ids = (value.people ?? []).map(p => p.id)
-  const multiple = q.multiple === true
-  const pick = (list: string[]) => onChange({ ...value, text: '', people: (staff ?? []).filter(p => list.includes(p.id)).map(p => ({ id: p.id, name: p.name })).slice(0, multiple ? 500 : 1) })
+  const mode = peopleMode(q)                                    // HOUSE RULE 9: one, some (a small group) or many
+  const multiple = mode !== 'one'
+  const pick = (list: string[]) => onChange({ ...value, text: '', people: (staff ?? []).filter(p => list.includes(p.id)).map(p => ({ id: p.id, name: p.name })).slice(0, maxPeople(mode)) })
   return (
     <div id={boxId} aria-describedby={`${boxId}-hint`}>
       {staff === null
         ? <p className="flex items-center gap-2 text-xs text-neutral-mid" role="status"><Loader2 size={12} className="animate-spin" aria-hidden="true" />Loading your staff</p>
-        : <StaffPicker people={staff} selected={ids} onChange={pick} mode={multiple ? 'multi' : 'single'} disabled={disabled} label={q.label} bulk={multiple} />}
-      {q.expected && q.expected > 1 && <p className="mt-1.5 text-xs text-neutral-mid">You said {q.expected}: choose {q.expected} people (you can choose more or fewer).</p>}
+        : <StaffPicker people={staff} selected={ids} onChange={pick} mode={multiple ? 'multi' : 'single'} disabled={disabled} label={q.label} bulk={mode === 'many'} />}
+      {multiple && q.expected && q.expected > 1 && <p className="mt-1.5 text-xs text-neutral-mid">You said {q.expected}: choose {q.expected} people (you can choose more or fewer).</p>}
       {(value.people ?? []).length > 0 && <p className="mt-1.5 text-xs font-medium text-neutral-dark" aria-live="polite">Chosen: {(value.people ?? []).map(p => p.name).join(', ')}</p>}
     </div>
   )
@@ -48,6 +50,20 @@ function ImageField({ token, value, onChange, disabled, boxId }: { token: string
   )
 }
 
+/** HOUSE RULE 9: one line, plainly what we see, and buttons. Never a warning, never repeated once answered. */
+export function CheckLine({ item, onYes, onNo, disabled }: { item: CheckItem; onYes: () => void; onNo: () => void; disabled?: boolean }) {
+  const ref = useRef<HTMLDivElement>(null)
+  return (
+    <div ref={ref} role="group" aria-label="A quick check" data-check={item.kind} className="mt-2 flex flex-wrap items-center gap-2 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2">
+      <p className="text-sm text-neutral-dark" role="status" aria-live="polite">{item.text}</p>
+      <div className="flex flex-wrap gap-1.5">
+        <button type="button" disabled={disabled} onClick={onYes} data-check-yes className="min-h-[34px] rounded-lg bg-teal px-3 text-xs font-semibold text-white hover:bg-teal-dark disabled:opacity-50">{item.yes}</button>
+        <button type="button" disabled={disabled} onClick={onNo} className="min-h-[34px] rounded-lg border border-gray-300 bg-white px-3 text-xs font-semibold text-neutral-dark hover:bg-gray-50 disabled:opacity-50">{item.no}</button>
+      </div>
+    </div>
+  )
+}
+
 export function QuestionFormCard({ token, form: given, typed = [], disabled, onSend }: { token: string; form: Form; /** What the administrator has typed so far in this chat: used to fill in what they have already said (HOUSE RULE 8). */ typed?: string[]; disabled?: boolean; onSend: (message: string) => void }) {
   const uid = useId()
   const staffForHints = useStaff(token, given.questions.some(q => q.kind === 'people'))
@@ -57,11 +73,26 @@ export function QuestionFormCard({ token, form: given, typed = [], disabled, onS
   const values = useMemo(() => ({ ...pre.values, ...edited }), [pre.values, edited])
   const setValues = (f: (s: Record<string, AnswerValue>) => Record<string, AnswerValue>) => setEdited(e => f({ ...pre.values, ...e }))
   const [tried, setTried] = useState(false)
+  // HOUSE RULE 9: the one line checks. A confirmed check is remembered for that choice, so it is never asked twice; a changed choice is asked about again.
+  const [confirmed, setConfirmed] = useState<Record<string, string>>({})
+  const today = new Date().toISOString().slice(0, 10)
+  const checks = useMemo(() => checksFor(form, values, pre.said, staffForHints ? staffForHints.length : null, today), [form, values, pre.said, staffForHints, today])
+  const pending = pendingChecks(checks, confirmed)
+  const rootRef = useRef<HTMLFormElement>(null)
   const set = (id: string, v: AnswerValue) => setValues(s => ({ ...s, [id]: v }))
   const missing = missingAnswers(form, values)
-  function send() { setTried(true); if (missing.length) return; onSend(formatAnswers(form, values)) }
+  function send() {
+    setTried(true)
+    if (missing.length) return
+    if (pending.length) { rootRef.current?.querySelector<HTMLButtonElement>('[data-check-yes]')?.focus(); return }   // answer the quick check first (nothing is blocked: one click)
+    const notes: Record<string, string> = {}
+    for (const c of checks) if (confirmed[c.id]) notes[c.qid] = confirmed[c.id]
+    onSend(formatAnswers(form, values, notes))
+  }
+  const yes = (c: CheckItem) => setConfirmed(m => ({ ...m, [c.id]: c.note }))
+  const no = (c: CheckItem) => { const q = form.questions.find(x => x.id === c.qid); if (q) set(q.id, declineValue(c, values[q.id] ?? { text: '' }, q, pre.said, staffForHints)) }
   return (
-    <form onSubmit={e => { e.preventDefault(); send() }} className="mt-3 rounded-xl border border-teal/30 bg-teal/5 p-3 sm:p-4" aria-label={form.title || 'Questions for you'}>
+    <form ref={rootRef} onSubmit={e => { e.preventDefault(); send() }} className="mt-3 rounded-xl border border-teal/30 bg-teal/5 p-3 sm:p-4" aria-label={form.title || 'Questions for you'}>
       {form.title && <p className="mb-2 text-sm font-semibold text-neutral-dark">{form.title}</p>}
       <div className="space-y-3">
         {form.questions.map(q => {
@@ -80,6 +111,7 @@ export function QuestionFormCard({ token, form: given, typed = [], disabled, onS
                   <input id={id} className={inp} value={v.text} disabled={disabled} onChange={e => set(q.id, { ...v, text: e.target.value })} aria-invalid={bad} aria-describedby={q.hint ? `${id}-hint` : undefined} placeholder={q.kind === 'choice' ? 'Or type your own answer' : undefined} />
                 </>}
               {bad && <p role="alert" className="mt-1 text-xs font-medium text-red-700">Please answer this one.</p>}
+              {pending.filter(c => c.qid === q.id).map(c => <CheckLine key={c.id} item={c} disabled={disabled} onYes={() => yes(c)} onNo={() => no(c)} />)}
             </div>
           )
         })}

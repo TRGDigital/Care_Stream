@@ -3,7 +3,7 @@
 // plain text instead (the fences are taken off and the words kept), so a slip by the model never hides what it said.
 
 export type QuestionKind = 'text' | 'longtext' | 'choice' | 'people' | 'date' | 'image'
-export interface Question { id: string; label: string; hint: string; required: boolean; kind: QuestionKind; choices: string[]; /** A people question: more than one person may be picked. Without it exactly ONE person. */ multiple?: boolean; /** How many people the administrator said (two employees of the month). A hint: they may choose more or fewer. */ expected?: number }
+export interface Question { id: string; label: string; hint: string; required: boolean; kind: QuestionKind; choices: string[]; /** A people question: more than one person may be picked. Without it exactly ONE person. */ multiple?: boolean; /** How many people the administrator said (two employees of the month). A hint: they may choose more or fewer. */ expected?: number; /** HOUSE RULE 9: how many people this question may take. one (the safe default), some (a small group: a shared award) or many (any number: who gets a message). Letters, pay and holiday decisions are always one. */ mode?: 'one' | 'some' | 'many' }
 export interface QuestionForm { title: string; questions: Question[] }
 export type PreviewKind = 'newsletter' | 'letter' | 'report' | 'notification' | 'email' | 'other'
 export interface OptionItem { id: string; title: string; description: string; preview: { kind: PreviewKind; template_id: string | null; layout: string | null } }
@@ -44,7 +44,7 @@ export function parseQuestions(text: string): QuestionForm | null {
     seen.add(id)
     const kind: QuestionKind = KINDS.includes(q?.kind) ? q.kind : 'text'
     const choices = Array.isArray(q?.choices) ? q.choices.map((c: unknown) => clip(c, 80)).filter(Boolean).slice(0, 8) : []
-    questions.push({ id, label, hint: clip(q?.hint, 220), required: q?.required === true, kind: kind === 'choice' && !choices.length ? 'text' : kind, choices, ...(kind === 'people' && (q?.multiple === true || Number(q?.expected) > 1) ? { multiple: true } : {}), ...(kind === 'people' && Number(q?.expected) >= 1 ? { expected: Math.min(20, Math.round(Number(q.expected))) } : {}) })
+    questions.push({ id, label, hint: clip(q?.hint, 220), required: q?.required === true, kind: kind === 'choice' && !choices.length ? 'text' : kind, choices, ...(kind === 'people' && (q?.multiple === true || Number(q?.expected) > 1) ? { multiple: true } : {}), ...(kind === 'people' && ['one', 'some', 'many'].includes(q?.mode) ? { mode: q.mode } : {}), ...(kind === 'people' && Number(q?.expected) >= 1 ? { expected: Math.min(20, Math.round(Number(q.expected))) } : {}) })
   }
   return questions.length ? { title: clip(j?.title, 100), questions } : null
 }
@@ -126,11 +126,12 @@ export const CHOICE_MARK = '[choice]'
 export const IDS_MARK = 'Staff ids:'
 export const IMAGE_MARK = 'Image id:'
 /** The one message the answers go back as. Each question is paired with its answer, so there is nothing to guess. A question left empty says so. */
-export function formatAnswers(form: QuestionForm, values: Record<string, AnswerValue>): string {
+export const CHECK_MARK = 'Check:'
+export function formatAnswers(form: QuestionForm, values: Record<string, AnswerValue>, checks: Record<string, string> = {}): string {
   const lines = [`${ANSWERS_MARK}${form.title ? ' ' + form.title : ''}`]
   form.questions.forEach((q, i) => {
     const v = values[q.id]
-    const picked = q.kind === 'people' ? (v?.people ?? []).slice(0, q.multiple ? 500 : 1) : []
+    const picked = q.kind === 'people' ? (v?.people ?? []).slice(0, q.multiple || q.mode === 'some' || q.mode === 'many' ? 500 : 1) : []
     const typed = q.kind === 'people' || q.kind === 'image' ? '' : (v?.text ?? '').trim()
     const pic = q.kind === 'image' && v?.imageId ? 'A picture was added' : ''
     const answer = [picked.map(p => p.name).join(', '), typed, pic].filter(Boolean).join('; ') || '(no answer)'
@@ -138,6 +139,8 @@ export function formatAnswers(form: QuestionForm, values: Record<string, AnswerV
     // The staff ids travel in the message so the agent can use them in its tools; they are never shown (the answered card drops this line).
     if (picked.length) lines.push(`   ${IDS_MARK} ${picked.map(p => p.id).join(', ')}`)
     if (q.kind === 'image' && v?.imageId) lines.push(`   ${IMAGE_MARK} ${v.imageId}`)
+    // HOUSE RULE 9: when the administrator confirmed a one line check about this answer, say so, so the agent adapts to it and does not ask again.
+    if (checks[q.id]) lines.push(`   ${CHECK_MARK} ${checks[q.id]}`)
   })
   return lines.join('\n')
 }
@@ -148,7 +151,7 @@ export function parseAnswersMessage(content: string): { title: string; pairs: Ar
   const pairs: Array<{ question: string; answer: string }> = []
   for (let i = 1; i < lines.length; i++) {
     const q = /^\d+\.\s+(.+)$/.exec(lines[i]); const a = /^\s+Answer:\s*(.*)$/.exec(lines[i + 1] ?? '')
-    if (q && a) { pairs.push({ question: q[1], answer: a[1] }); i++; while (new RegExp('^\\s+(' + IDS_MARK + '|' + IMAGE_MARK + ')').test(lines[i + 1] ?? '')) i++ }
+    if (q && a) { pairs.push({ question: q[1], answer: a[1] }); i++; while (new RegExp('^\\s+(' + IDS_MARK + '|' + IMAGE_MARK + '|' + CHECK_MARK + ')').test(lines[i + 1] ?? '')) i++ }
   }
   return pairs.length ? { title: lines[0].slice(ANSWERS_MARK.length).trim(), pairs } : null
 }

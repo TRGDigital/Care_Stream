@@ -198,8 +198,8 @@ test('RULE 5: nothing is sent without confirmation, the plan route sends nothing
   assert.doesNotMatch(webSrc('components/ask/ask-overlay.tsx'), /ask\.shareSend/)   // chat code can never call the send
 })
 
-test('PROMPTS PAGE: one list of the eight rules; each key phrase is really in the composed prompt (rule 6 in the locked rules); the entry is renamed, explained and sits under the original house rules', async () => {
-  assert.deepEqual(HOUSE_RULES_SUMMARY.map(r => r.n), [1, 2, 3, 4, 5, 6, 7, 8])
+test('PROMPTS PAGE: one list of the nine rules; each key phrase is really in the composed prompt (rule 6 in the locked rules); the entry is renamed, explained and sits under the original house rules', async () => {
+  assert.deepEqual(HOUSE_RULES_SUMMARY.map(r => r.n), [1, 2, 3, 4, 5, 6, 7, 8, 9])
   assert.deepEqual(HOUSE_RULES_SUMMARY.filter(r => r.locked).map(r => r.n), [6])
   __setPromptTestHooks({ reader: async () => null })
   try {
@@ -212,14 +212,14 @@ test('PROMPTS PAGE: one list of the eight rules; each key phrase is really in th
       assert.ok(r.line.length < 100, `rule ${r.n} is one short line`)
     }
   } finally { __setPromptTestHooks({ reader: null }) }
-  assert.deepEqual(houseRulesForPage().map(r => Object.keys(r).sort().join()), Array(8).fill('line,locked,n,title'))   // the page gets no rule text, only the one line each
+  assert.deepEqual(houseRulesForPage().map(r => Object.keys(r).sort().join()), Array(9).fill('line,locked,n,title'))   // the page gets no rule text, only the one line each
   const i = ASK_PROMPTS.findIndex(x => x.usage === 'ask_house_rules')
   assert.equal(ASK_PROMPTS[i + 1].usage, HOUSE_RULES_FORMS_USAGE)                       // directly under the original tone rules, reading as one section
   assert.equal(HOUSE_RULES_FORMS_LABEL, 'Ask CareStream: house rules for how agents work with you'); assert.equal(ASK_PROMPTS[i + 1].label, HOUSE_RULES_FORMS_LABEL)
   for (const w of ['question forms', 'option previews', 'staff list with pictures', 'Save PDF and Print', 'distribution choice', 'next step buttons', 'context awareness', 'Rule 6']) assert.ok(ASK_PROMPTS[i + 1].note.includes(w), `the note lists: ${w}`)
   assert.doesNotMatch(ASK_PROMPTS[i + 1].note, /[–—]/)
   const page = webSrc('app/(platform)/platform/prompts/page.tsx')
-  assert.match(page, /The eight house rules/); assert.match(page, /<HouseRulesSummary/); assert.match(page, /Locked/); assert.match(page, /ask\?\.usages\.indexOf/)
+  assert.match(page, /The nine house rules/); assert.match(page, /<HouseRulesSummary/); assert.match(page, /Locked/); assert.match(page, /ask\?\.usages\.indexOf/)
   assert.doesNotMatch(page, /overflow-y-(auto|scroll)[^"]*"[^>]*HouseRules/)
   assert.ok(Buffer.from(fs.readFileSync(path.resolve(__dirname, '../../routes/admin.ts'))).toString('latin1').includes('rules: houseRulesForPage()'))
 })
@@ -240,7 +240,7 @@ test('RULE 8: the form fills itself in from what the administrator has already s
   const named = pf.prefillForm(form, ['two employees of the month, Helen and Sam'], staff)
   assert.deepEqual(named.values.p.people.map((p: any) => p.name), ['Helen Thomas', 'Sam Reed']); assert.equal(named.form.questions[1].kind, 'text')
   const one = pf.prefillForm(form, ['Len is the employee of the month'], staff)
-  assert.deepEqual(one.values.p.people.map((p: any) => p.id), ['l']); assert.equal(one.form.questions[0].multiple, false)
+  assert.deepEqual(one.values.p.people.map((p: any) => p.id), ['l']); assert.equal(one.form.questions[0].mode, 'some')                                // HOUSE RULE 9: a recognition question may take a small group, with a one line check if they choose more than they said
   assert.deepEqual(pf.prefillForm(form, [], staff).values, {})                                            // nothing said, nothing filled
   const msg = b.formatAnswers(named.form, named.values); assert.match(msg, /Answer: Helen Thomas, Sam Reed/); assert.doesNotMatch(b.parseAnswersMessage(msg) && JSON.stringify(b.parseAnswersMessage(msg)), /Staff ids/)
   assert.match(webSrc('components/ask/question-form.tsx'), /prefillForm/); assert.match(webSrc('components/ask/ask-overlay.tsx'), /typed=\{messages/)

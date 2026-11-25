@@ -12,7 +12,7 @@ import { uploadPromptMeta } from './agents-uploads'
 import { HOUSE_RULES_FORMS_USAGE, DEFAULT_HOUSE_RULES_FORMS, HOUSE_RULES_FORMS_LABEL } from './house-rules-forms'
 
 export const ASK_GROUP = 'Ask CareStream'
-export const ASK_PROMPT_MAX = 12000   // the shared house rules entry is long (eight rules with examples), so there is room to edit it
+export const ASK_PROMPT_MAX = 12000   // the shared house rules entry is long (nine rules with examples), so there is room to edit it
 const CACHE_MS = 60_000
 
 export interface AskPromptMeta { usage: string; label: string; note: string; default: string }
@@ -32,7 +32,7 @@ export const ASK_PROMPTS: AskPromptMeta[] = [
   { usage: 'ask_house_rules', label: 'Ask CareStream: house rules', default: HOUSE_RULES,
     note: 'Used at the start of every answer by every Ask CareStream agent: how it answers, its tone, British English, no dashes, showing working. The privacy and safety rules are separate and locked.' },
   { usage: HOUSE_RULES_FORMS_USAGE, label: HOUSE_RULES_FORMS_LABEL, default: DEFAULT_HOUSE_RULES_FORMS,
-    note: 'Added to EVERY Ask CareStream agent after its own job and before the locked rules. It holds seven of the eight house rules: 1 question forms (one labelled box per question), 2 option previews (cards with a Preview button), 3 the staff list with pictures, 4 Save PDF and Print on every document, 5 the distribution choice (how, who, a summary, then Send), 7 next step buttons, and 8 context awareness (use what was already said). Rule 6, never reveal how CareStream works, is locked and is not here. The screen reads the three block formats (questions, options, next_steps), so keep the examples as they are.' },
+    note: 'Added to EVERY Ask CareStream agent after its own job and before the locked rules. It holds eight of the nine house rules: 1 question forms (one labelled box per question), 2 option previews (cards with a Preview button), 3 the staff list with pictures, 4 Save PDF and Print on every document, 5 the distribution choice (how, who, a summary, then Send), 7 next step buttons, 8 context awareness (use what was already said), and 9 a gentle check on unexpected choices (one line with buttons when a choice differs from what was said). Rule 6, never reveal how CareStream works, is locked and is not here. The screen reads the three block formats (questions, options, next_steps), so keep the examples as they are.' },
   { usage: 'ask_agent_staff', label: 'Ask CareStream: Staff agent', default: jobOf('staff'),
     note: 'Used after the house rules when an administrator picks the Staff agent: roster, hours, checks due, pay questions. It chooses from the Staff agent tools.' },
   { usage: 'ask_agent_holiday', label: 'Ask CareStream: Holiday agent', default: jobOf('holiday'),

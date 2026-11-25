@@ -23,6 +23,8 @@ export interface LayoutDoc {
   /** Who signs. The signature image is only ever present when that person chose to sign with their own signature. */
   signer?: { name: string; role?: string; signature?: SignatureImage | null }
   acknowledgement?: string | null
+  /** A line printed on every page when the copy is not final: 'DRAFT: not yet approved' or 'SAMPLE: placeholder words only'. */
+  stamp?: string
 }
 
 /** pdfkit's standard fonts cover Latin text; anything outside it would print as a gap, so it is dropped. Curly quotes, the pound and euro signs are kept. */

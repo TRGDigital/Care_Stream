@@ -5,6 +5,7 @@
 import { useRef, useState } from 'react'
 import { Paperclip, Trash2, FileSpreadsheet, ShieldCheck, Loader2, Check, AlertTriangle } from 'lucide-react'
 import { ask, AskError, type AskAgent, type AskUpload, type MatchRowView } from '@/lib/ask-client'
+import { StaffSelect } from '@/components/ask/staff-picker'
 
 const KIND: Record<string, string> = { payroll: 'Payroll', invoice: 'Invoices', rota: 'Rota or timesheet', holiday: 'Holiday sheet', training: 'Training list', other: 'File' }
 
@@ -97,14 +98,12 @@ function MatchTable({ token, upload, onSaved }: { token: string; upload: AskUplo
                 <p className="truncate text-sm font-medium text-neutral-dark">{r.file_name}</p>
                 <p className={`text-xs ${v === '' ? 'font-semibold text-amber-800' : 'text-neutral-mid'}`}>{v === '' ? (r.status === 'ambiguous' ? 'Needs you: more than one possible match' : 'Needs you: no match found') : v === 'skip' ? 'Left out' : r.status === 'matched' && !choice[String(r.row)] ? 'Matched' : 'Chosen by you'}{v && v !== 'skip' && (used.get(v) ?? 0) > 1 ? '. Two rows use this person.' : ''}</p>
               </div>
-              <label className="block"><span className="sr-only">Person for {r.file_name}</span>
-                <select value={v} onChange={e => setChoice(c => ({ ...c, [String(r.row)]: e.target.value === 'skip' ? null : e.target.value || (undefined as any) }))} className="w-full rounded-lg border border-gray-300 bg-white px-2 py-1.5 text-sm">
-                  <option value="">Choose a person</option>
-                  {r.candidates.length > 0 && <optgroup label="Possible matches">{r.candidates.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}</optgroup>}
-                  <optgroup label="All staff">{m.staff.filter(s => !first.includes(s.id)).map(s => <option key={s.id} value={s.id}>{s.name}</option>)}</optgroup>
-                  <option value="skip">Leave this name out</option>
-                </select>
-              </label>
+              <div>
+                {v === 'skip'
+                  ? <p className="flex items-center justify-between gap-2 rounded-lg border border-dashed border-gray-300 px-2 py-1.5 text-sm text-neutral-mid">Left out of the comparison <button type="button" className="text-xs font-semibold text-teal underline" onClick={() => setChoice(c => ({ ...c, [String(r.row)]: undefined as any }))}>Choose a person instead</button></p>
+                  : <StaffSelect token={token} label={`Person for ${r.file_name}`} value={v || null} first={first} onChange={id => setChoice(c => ({ ...c, [String(r.row)]: id ?? (undefined as any) }))}
+                      extra={<button type="button" className="mt-1.5 text-xs font-semibold text-neutral-mid underline hover:text-neutral-dark" onClick={() => setChoice(c => ({ ...c, [String(r.row)]: null }))}>Leave this name out</button>} />}
+              </div>
             </div>
           )
         })}

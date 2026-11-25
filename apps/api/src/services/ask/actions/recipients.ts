@@ -5,11 +5,15 @@ import { ELIGIBLE_WHERE } from '../../../lib/staff-notifications'
 import { staffPhotoUrls } from '../../../lib/staff-photos'
 const p = () => prisma as any
 
-export interface Eligible { id: string; name: string; job_role: string | null; has_email: boolean }
+export interface Eligible { id: string; name: string; job_role: string | null; has_email: boolean; is_admin?: boolean }
 
 export async function eligibleStaff(tenantId: string): Promise<Eligible[]> {
-  const rows: any[] = await p().user.findMany({ where: ELIGIBLE_WHERE(tenantId), orderBy: { name: 'asc' }, select: { id: true, name: true, email: true, job_role: true } })
-  return rows.map(r => ({ id: String(r.id), name: String(r.name ?? ''), job_role: r.job_role ?? null, has_email: !!r.email }))
+  const rows: any[] = await p().user.findMany({ where: ELIGIBLE_WHERE(tenantId), orderBy: { name: 'asc' }, select: { id: true, name: true, email: true, job_role: true, role: true } })
+  return rows.map(r => ({ id: String(r.id), name: String(r.name ?? ''), job_role: r.job_role ?? null, has_email: !!r.email, is_admin: r.role === 'admin' }))
+}
+/** HOUSE RULE: administrators come first, as on the Staff page, then A to Z. The sort is stable, so everyone else keeps their order. */
+export function adminsFirst<T extends { is_admin?: boolean; name: string }>(list: T[]): T[] {
+  return [...list].sort((a, b) => (b.is_admin ? 1 : 0) - (a.is_admin ? 1 : 0) || a.name.localeCompare(b.name))
 }
 export const normName = (s: string) => s.toLowerCase().replace(/[^a-z0-9 ]+/g, ' ').replace(/\s+/g, ' ').trim()
 
@@ -34,8 +38,8 @@ export function revalidate(ids: string[], people: Eligible[], needEmail: boolean
   return { kept, dropped: [...new Set(ids)].length - kept.length }
 }
 
-export async function recipientCards(tenantId: string, ids: string[], people: Eligible[]) {
+export async function recipientCards(tenantId: string, ids: string[], people: Eligible[]): Promise<Array<{ id: string; name: string; job_role: string | null; photo_url: string | null; is_admin?: boolean }>> {
   const by = new Map(people.map(x => [x.id, x]))
   const photos = ids.length ? await staffPhotoUrls(tenantId, ids).catch(() => new Map<string, string>()) : new Map<string, string>()
-  return ids.map(id => ({ id, name: by.get(id)?.name ?? 'Former member of staff', job_role: by.get(id)?.job_role ?? null, photo_url: (photos as Map<string, string>).get(id) ?? null }))
+  return ids.map(id => ({ id, name: by.get(id)?.name ?? 'Former member of staff', job_role: by.get(id)?.job_role ?? null, is_admin: by.get(id)?.is_admin ?? false, photo_url: (photos as Map<string, string>).get(id) ?? null }))
 }

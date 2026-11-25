@@ -7,6 +7,9 @@ import { AlertTriangle, Check, Copy, Download, FileText, Loader2, Mail, Maximize
 import { ask, AskError, type AskDocFull, type ShareIntent } from '@/lib/ask-client'
 import { adminNotifications, type StaffOption } from '@/lib/notifications-client'
 import { MarkdownLite } from './markdown-lite'
+import { StaffPicker, useStaff } from '@/components/ask/staff-picker'
+import { DocumentActions } from '@/components/ask/document-actions'
+import { SharePanel } from '@/components/ask/share-panel'
 import { ExpandViewer, Expandable, useExpandViewer, type ViewerItem } from './expand-viewer'
 import { FitHtml } from './fit-html'
 
@@ -40,6 +43,7 @@ export function DocumentPanel({ token, id, onClose, onChanged }: { token: string
   const [photoAgreed, setPhotoAgreed] = useState(false)
   const [photoState, setPhotoState] = useState<{ chosen: boolean; name?: string | null; consent?: boolean; has_picture?: boolean } | null>(null)
   const photoUser = d?.data?.photo?.user_id ?? null
+  const photoStaffList = useStaff(token, d?.type === 'newsletter' && !!d?.actions.edit)
   const viewer = useExpandViewer()
   const [picking, setPicking] = useState(false), [audience, setAudience] = useState<'all' | 'selected'>('all'), [chosen, setChosen] = useState<Set<string>>(new Set()), [q, setQ] = useState('')
 
@@ -67,6 +71,7 @@ export function DocumentPanel({ token, id, onClose, onChanged }: { token: string
     setBusy(name); setError(''); setInfo('')
     try { await fn(); if (done) setInfo(done); await load(); onChanged() } catch (e) { setError(msg(e)) } finally { setBusy('') }
   }
+  const isFinal = d?.status === 'approved' || d?.status === 'shared'   // anything else is a DRAFT copy: stamped DRAFT on every page, never recorded as shared
   const letter = d?.type === 'letter', report = d?.type === 'report', news = d?.type === 'newsletter' || report, flow = !!d?.actions.needs_approval
   const st = d ? STATUS[d.status] ?? STATUS.draft : null
   const people = useMemo(() => (staff ?? []).filter(s => !q || s.name.toLowerCase().includes(q.toLowerCase())), [staff, q])
@@ -155,14 +160,14 @@ export function DocumentPanel({ token, id, onClose, onChanged }: { token: string
             )}
             {d.type === 'newsletter' && d.actions.edit && (
               <div className="rounded-lg border border-gray-200 p-3 text-sm text-neutral-dark">
-                <label htmlFor="ask-nl-photo" className="font-semibold">Picture of the person (employee of the month, a story, new starters, a farewell)</label>
-                <p className="mt-0.5 text-xs text-neutral-mid">Only their staff picture is used, and only when they agree. It shows large and round in the preview, the hub and the PDF. The email shows their initials and says the photo is in the hub and the PDF.</p>
-                <select id="ask-nl-photo" className={`${input} mt-2`} value={photoPick ?? d.data?.photo?.user_id ?? ''} onFocus={async () => { if (!photoStaff) { try { setPhotoStaff((await adminNotifications.staff(token)).staff) } catch { /* the list stays empty */ } } }}
-                  onChange={e => { const v = e.target.value; setPhotoPick(v || null); setPhotoAgreed(false); if (!v) run('photo', () => ask.newsletterPhoto(token, d.id, null), 'No picture.') }}>
-                  <option value="">No picture</option>
-                  {d.data?.photo?.user_id && !(photoStaff ?? []).some(s => s.id === d.data?.photo?.user_id) && <option value={d.data.photo.user_id}>The chosen person</option>}
-                  {(photoStaff ?? []).map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-                </select>
+                <p id="ask-nl-photo" className="font-semibold">Picture of the person (employee of the month, a story, new starters, a farewell)</p>
+                <p className="mt-0.5 text-xs text-neutral-mid">Pick them from your staff. Only their staff picture is used, and only when they agree. It shows large and round in the preview, the hub and the PDF. The email shows their initials and says the photo is in the hub and the PDF.</p>
+                <div className="mt-2">
+                  {photoStaffList === null
+                    ? <p className="flex items-center gap-2 text-xs text-neutral-mid" role="status"><Loader2 size={12} className="animate-spin" aria-hidden="true" />Loading your staff</p>
+                    : <StaffPicker people={photoStaffList} mode="single" noneLabel="No picture" label="Picture of the person" selected={photoPick ? [photoPick] : (d.data?.photo?.user_id ? [d.data.photo.user_id] : [])}
+                        onChange={ids => { const v = ids[0] ?? ''; setPhotoPick(v || null); setPhotoAgreed(false); if (!v) run('photo', () => ask.newsletterPhoto(token, d.id, null), 'No picture.') }} />}
+                </div>
                 {photoPick && photoPick !== d.data?.photo?.user_id && (
                   <div className="mt-2 space-y-2">
                     <label className="flex items-start gap-2 text-sm"><input type="checkbox" className="mt-1 h-4 w-4" checked={photoAgreed} onChange={e => setPhotoAgreed(e.target.checked)} /><span>They are happy to be named and photographed</span></label>
@@ -191,8 +196,8 @@ export function DocumentPanel({ token, id, onClose, onChanged }: { token: string
               <fieldset className="rounded-lg border border-gray-200 p-3">
                 <legend className="px-1 text-sm font-semibold text-neutral-dark">How will this letter be shared?</legend>
                 <div className="space-y-1.5 text-sm text-neutral-dark">
-                  <label className="flex items-start gap-2"><input type="checkbox" className="mt-0.5 h-4 w-4" checked={intent.hub} disabled={!!busy} onChange={e => changeIntent({ hub: e.target.checked })} /> <span><strong className="font-medium">In {first}&apos;s hub.</strong> They read, print and download it under My letters. It stays there as a record.</span></label>
-                  <label className="flex items-start gap-2"><input type="checkbox" className="mt-0.5 h-4 w-4" checked={intent.email} disabled={!!busy} onChange={e => changeIntent({ email: e.target.checked })} /> <span><strong className="font-medium">By email.</strong> A PDF from you.</span></label>
+                  <label className="flex items-start gap-2"><input type="checkbox" className="mt-0.5 h-4 w-4" checked={intent.hub} disabled={!!busy} onChange={e => changeIntent({ hub: e.target.checked })} /> <span><strong className="font-medium">Hub notification.</strong> A notification, and the letter in {first}&apos;s hub under My letters. They read, print and download it there. It stays there as a record.</span></label>
+                  <label className="flex items-start gap-2"><input type="checkbox" className="mt-0.5 h-4 w-4" checked={intent.email} disabled={!!busy} onChange={e => changeIntent({ email: e.target.checked })} /> <span><strong className="font-medium">Email.</strong> A PDF from you, straight to {first}.</span></label>
                   <label className="flex items-start gap-2"><input type="checkbox" className="mt-0.5 h-4 w-4" checked={intent.print_only} disabled={!!busy} onChange={e => changeIntent({ print_only: e.target.checked })} /> <span><strong className="font-medium">Print only.</strong> It stays with you and {first} never sees it in CareStream.</span></label>
                 </div>
                 {!d.share_intent && <p className="mt-2 text-xs text-amber-900">Choose how it is to be shared before you share it.</p>}
@@ -219,23 +224,6 @@ export function DocumentPanel({ token, id, onClose, onChanged }: { token: string
             )}
             {d.shared.length > 0 && <p className="text-xs text-neutral-mid">Shared: {d.shared.map(s => `${s.method === 'pdf' ? 'PDF downloaded' : s.method === 'word' ? 'Word downloaded' : s.method === 'email' ? 'emailed' : s.method === 'hub' ? 'shared in their hub' : 'sent as a notification'} ${new Date(s.at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}`).join(', ')}</p>}
 
-            {picking && (
-              <div className="rounded-lg border border-gray-200 p-3">
-                <p className="mb-2 text-sm font-semibold text-neutral-dark">Send the {report ? 'report' : 'newsletter'} to</p>
-                <div className="mb-2 flex gap-4 text-sm">
-                  <label className="flex items-center gap-1.5"><input type="radio" name="aud" checked={audience === 'all'} onChange={() => setAudience('all')} /> All staff</label>
-                  <label className="flex items-center gap-1.5"><input type="radio" name="aud" checked={audience === 'selected'} onChange={() => setAudience('selected')} /> Choose staff</label>
-                </div>
-                {audience === 'selected' && (<>
-                  <input aria-label="Search staff" placeholder="Search staff" className={`${input} mb-2`} value={q} onChange={e => setQ(e.target.value)} />
-                  <ul className="max-h-40 divide-y divide-gray-100 overflow-y-auto no-scrollbar rounded border border-gray-200">{people.map(s => <li key={s.id}><label className="flex items-center gap-2 px-3 py-1.5 text-sm"><input type="checkbox" checked={chosen.has(s.id)} onChange={e => setChosen(c => { const n = new Set(c); e.target.checked ? n.add(s.id) : n.delete(s.id); return n })} /> {s.name}{s.job_role ? <span className="text-xs text-neutral-mid">, {s.job_role}</span> : null}</label></li>)}</ul>
-                </>)}
-                <div className="mt-2 flex gap-2">
-                  <button type="button" disabled={!!busy || (audience === 'selected' && chosen.size === 0)} className={`${btn} bg-teal text-white hover:bg-teal-dark`} onClick={() => run('share', () => ask.share(token, d.id, { method: 'notification', audience, user_ids: [...chosen], sign: false }).then(() => setPicking(false)), 'Sent to your staff as a notification with the PDF attached.')}>{busy === 'share' ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />} Send now</button>
-                  <button type="button" className={`${btn} text-neutral-mid`} onClick={() => setPicking(false)}>Cancel</button>
-                </div>
-              </div>
-            )}
             {error && <p role="alert" className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
             {info && <p role="status" className="rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-800">{info}</p>}
           </div>
@@ -256,27 +244,17 @@ export function DocumentPanel({ token, id, onClose, onChanged }: { token: string
               {d.status === 'pending' && !d.actions.approve && !d.mine && <span className="text-xs text-neutral-mid">Someone else needs to approve this.</span>}
               {d.status === 'pending' && d.actions.return && <button type="button" disabled={!!busy} onClick={() => { const n = window.prompt('Why is it going back? (optional)', note); if (n !== null) { setNote(n); run('return', () => ask.returnToDraft(token, d.id, n.trim() || undefined), 'Sent back to draft.') } }} className={`${btn} border border-gray-200 text-neutral-dark hover:bg-neutral-light`}><RotateCcw size={14} /> Send back</button>}
               {d.actions.reopen && <button type="button" disabled={!!busy} onClick={() => run('reopen', () => ask.reopen(token, d.id), 'Back to draft. It needs approving again.')} className={`${btn} border border-gray-200 text-neutral-dark hover:bg-neutral-light`}><RotateCcw size={14} /> Re-open</button>}
-              {d.actions.share.includes('pdf') && <button type="button" disabled={!!busy} onClick={() => run('pdf', () => ask.downloadPdf(token, d.id, d.title, sign && letter), 'The PDF has been downloaded.')} className={`${btn} border border-teal text-teal hover:bg-teal/5`}>{busy === 'pdf' ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />} Download PDF</button>}
-              {d.actions.share.includes('pdf') && <button type="button" disabled={!!busy} onClick={() => run('docx', () => ask.downloadDocx(token, d.id, d.title, sign && letter), 'The Word document has been downloaded.')} className={`${btn} border border-teal text-teal hover:bg-teal/5`}>{busy === 'docx' ? <Loader2 size={14} className="animate-spin" /> : <FileText size={14} />} Download as Word</button>}
-              {letter && d.actions.share.includes('pdf') && <button type="button" disabled={!!busy} onClick={printIt} className={`${btn} border border-teal text-teal hover:bg-teal/5`}>{busy === 'print' ? <Loader2 size={14} className="animate-spin" /> : <Printer size={14} />} Print</button>}
-              {letter && d.actions.share.includes('hub') && channels.length > 0 && (
-                <>
-                  {intent.hub && <label className="flex items-center gap-1.5 text-xs text-neutral-dark"><input type="checkbox" className="h-4 w-4" checked={ack ?? d.ack_default ?? false} onChange={e => setAck(e.target.checked)} /> Ask {first} to confirm they have read it</label>}
-                  <button type="button" disabled={!!busy} onClick={() => { if (window.confirm(`Share this letter ${channels.map(c => (c === 'hub' ? `in ${first}'s hub` : 'by email')).join(' and ')} now?`)) run('now', () => ask.share(token, d.id, { method: 'now', sign, ...(intent.hub ? { needs_acknowledgement: ack ?? d.ack_default ?? false } : {}) }), 'Shared.') }} className={`${btn} bg-teal text-white hover:bg-teal-dark`}>{busy === 'now' ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />} Share now</button>
-                </>
-              )}
-              {letter && intent.print_only && d.actions.share.includes('pdf') && <span className="text-xs text-neutral-mid">Print only: download or print it from here. Nothing is shared with {first}.</span>}
-              {(!letter || !d.share_intent) && d.actions.share.includes('email') && <button type="button" disabled={!!busy} onClick={() => { if (window.confirm(report ? 'Email this report to all the administrators now?' : `Email this letter to ${d.staff_name ?? 'the person'} now?`)) run('email', () => ask.share(token, d.id, { method: 'email', sign: sign && letter }), report ? 'Emailed to the administrators with the PDF attached.' : 'Emailed with the PDF attached.') }} className={`${btn} border border-teal text-teal hover:bg-teal/5`}>{busy === 'email' ? <Loader2 size={14} className="animate-spin" /> : <Mail size={14} />} {report ? 'Email to administrators' : 'Email it'}</button>}
-              {(!letter || !d.share_intent) && d.actions.share.includes('notification') && (letter
-                ? <button type="button" disabled={!!busy} onClick={() => { if (window.confirm(`Send this letter to ${d.staff_name ?? 'the person'} as a notification in their hub?`)) run('note', () => ask.share(token, d.id, { method: 'notification', sign: sign && letter }), 'Sent to their hub as a notification with the PDF attached.') }} className={`${btn} border border-teal text-teal hover:bg-teal/5`}><Bell size={14} /> Send as notification</button>
-                : <button type="button" disabled={!!busy} onClick={openPicker} className={`${btn} bg-teal text-white hover:bg-teal-dark`}><Bell size={14} /> Share with staff</button>)}
+              {(letter || news) && <DocumentActions title={d.title} draft={!isFinal} disabled={!!busy} getPdf={() => ask.documentBlob(token, d.id, 'pdf', { sign: sign && letter, draft: !isFinal })} getDocx={() => ask.documentBlob(token, d.id, 'docx', { sign: sign && letter, draft: !isFinal })}
+                onDone={w => { setInfo(w === 'pdf' ? 'The PDF has been saved.' : w === 'word' ? 'The Word document has been saved.' : 'Sent to your printer dialog.'); if (isFinal) { void load(); onChanged() } }} onError={m => setError(m)} />}
+              {(letter || news) && (d.actions.share.length > 0 || flow) && !(letter && intent.print_only) && <SharePanel token={token} doc={{ id: d.id, type: d.type, title: d.title, status: d.status, staff_name: d.staff_name, share_intent: d.share_intent ?? null }} sign={sign && letter} needsAck={ack ?? d.ack_default ?? false} onPreview={openViewer} onSent={() => { void load(); onChanged() }} />}
+              {letter && intent.print_only && <span className="text-xs text-neutral-mid">Print only: Save PDF or Print it from here. Nothing is sent to {first}.</span>}
             </>)}
           </div>
         </>)}
       </div>
       {d && <ExpandViewer open={viewer.open} onClose={viewer.close} title={d.title} items={viewerItems}
         switcher={d.type === 'newsletter' ? { value: showPaper ? 'designed' : 'text', options: [{ id: 'designed', label: 'Designed' }, { id: 'text', label: 'Text' }], onChange: k => setShowPaper(k === 'designed') } : undefined}
-        downloads={d.actions.share.includes('pdf') ? [{ label: 'PDF', onClick: () => run('pdf', () => ask.downloadPdf(token, d.id, d.title, sign && letter), 'The PDF has been downloaded.') }, { label: 'Word', onClick: () => run('docx', () => ask.downloadDocx(token, d.id, d.title, sign && letter), 'The Word document has been downloaded.') }] : undefined} />}
+        pdf={(letter || news) ? { getPdf: () => ask.documentBlob(token, d.id, 'pdf', { sign: sign && letter, draft: !isFinal }), getDocx: () => ask.documentBlob(token, d.id, 'docx', { sign: sign && letter, draft: !isFinal }), draft: !isFinal } : undefined} />}
     </div>
   )
 }

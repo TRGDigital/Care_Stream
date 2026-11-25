@@ -56,6 +56,7 @@ export async function renderLayoutDocx(d: LayoutDoc): Promise<Buffer> {
 
   const foot = footerFor(d.head)
   const footerChildren: any[] = [
+    ...(d.stamp ? [new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after: 40 }, children: [new TextRun({ text: printable(d.stamp), font: FONT, size: PT(8), bold: true, color: 'B91C1C' })] })] : []),
     ...foot.map((l, i) => new Paragraph({
       alignment: AlignmentType.CENTER, spacing: { after: 0 }, border: i === 0 ? { top: { style: BorderStyle.SINGLE, size: 4, color: 'D9D4E0', space: 4 } } : undefined,
       children: [new TextRun({ text: l, font: FONT, size: PT(7.5), color: '777777' })],

@@ -51,23 +51,25 @@ export async function buildLayout(o: { tenantId: string; doc: Doc; signerUserId?
   throw new Error('That kind of document has no printed version.')
 }
 
-export async function renderDocument(o: { tenantId: string; doc: Doc; format: 'pdf' | 'docx'; signerUserId?: string | null; sentByUserId?: string | null }): Promise<{ buffer: Buffer; filename: string; mime: string }> {
+/** A copy that is not final says so on every page: an administrator can save or print a draft, and it is stamped. */
+export const DRAFT_STAMP = 'DRAFT: not yet approved. Do not share.'
+export async function renderDocument(o: { tenantId: string; doc: Doc; format: 'pdf' | 'docx'; signerUserId?: string | null; sentByUserId?: string | null; stamp?: string }): Promise<{ buffer: Buffer; filename: string; mime: string }> {
   const b = await buildLayout(o)
   const ext = o.format
   const mime = o.format === 'pdf' ? 'application/pdf' : 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
   if (o.doc.type === 'letter') {
     const signer = b.layout.signer?.signature !== undefined && o.signerUserId ? b.layout.signer : null
     const make = o.format === 'pdf' ? letterPdf : letterDocx    // these refuse to print a letter that is not finished
-    const buffer = await make(String(o.doc.data?.template_id ?? ''), (b.values ?? {}) as any, b.head, signer ? { name: signer.name, role: signer.role, signature: signer.signature ?? null } : null)
+    const buffer = await make(String(o.doc.data?.template_id ?? ''), (b.values ?? {}) as any, b.head, signer ? { name: signer.name, role: signer.role, signature: signer.signature ?? null } : null, o.stamp)
     return { buffer, filename: `${b.file}.${ext}`, mime }
   }
   if (o.format === 'pdf' && o.doc.type === 'newsletter') {   // a newsletter is DESIGNED: the same design as the email and the screen
     const { designedPdf } = await import('./newsletter-design-doc')
-    return { buffer: await designedPdf({ tenantId: o.tenantId, doc: o.doc, sentBy: await nameOf(o.sentByUserId) }), filename: `${b.file}.pdf`, mime }
+    return { buffer: await designedPdf({ tenantId: o.tenantId, doc: o.doc, sentBy: await nameOf(o.sentByUserId), stamp: o.stamp }), filename: `${b.file}.pdf`, mime }
   }
-  if (o.format === 'pdf') { const { renderLayoutPdf } = await import('../letters/layout-pdf'); return { buffer: await renderLayoutPdf(b.layout), filename: `${b.file}.pdf`, mime } }
+  if (o.format === 'pdf') { const { renderLayoutPdf } = await import('../letters/layout-pdf'); return { buffer: await renderLayoutPdf(o.stamp ? { ...b.layout, stamp: o.stamp } : b.layout), filename: `${b.file}.pdf`, mime } }
   const { renderLayoutDocx } = await import('../letters/layout-docx')
-  return { buffer: await renderLayoutDocx(b.layout), filename: `${b.file}.docx`, mime }
+  return { buffer: await renderLayoutDocx(o.stamp ? { ...b.layout, stamp: o.stamp } : b.layout), filename: `${b.file}.docx`, mime }
 }
 
 /** The headed page as HTML and its CSS, for the preview in the Ask panel. Works on an unfinished letter (gaps show as [Label]). */

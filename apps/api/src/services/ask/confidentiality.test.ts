@@ -74,7 +74,7 @@ test('RULE 6: agent metadata given to the browser is titles, descriptions and st
 
 test('RULE 6: the chat hub and the policy gap assistant do not use the Ask locked rules module, so they are left alone', () => {
   const users: string[] = []
-  const walk = (d: string) => { for (const e of fs.readdirSync(d, { withFileTypes: true })) { const f = path.join(d, e.name); if (e.isDirectory()) { if (e.name !== 'node_modules') walk(f) } else if (/\.ts$/.test(e.name) && !/\.test\.ts$/.test(e.name) && /LOCKED_RULES/.test(fs.readFileSync(f, 'utf8'))) users.push(path.relative(path.resolve(__dirname, '../..'), f)) } }
+  const walk = (d: string) => { for (const e of fs.readdirSync(d, { withFileTypes: true })) { const f = path.join(d, e.name); if (e.isDirectory()) { if (e.name !== 'node_modules') walk(f) } else if (/\.ts$/.test(e.name) && !/\.test\.ts$/.test(e.name) && /\bLOCKED_RULES\b/.test(fs.readFileSync(f, 'utf8'))) users.push(path.relative(path.resolve(__dirname, '../..'), f)) } }
   walk(path.resolve(__dirname, '../..'))
   assert.deepEqual(users.sort(), ['services/ask/agents.ts', 'services/ask/prompt-register.ts', 'services/ask/safety.ts'])
   // the Prompts page route shows the locked text WITHOUT the confidentiality rule

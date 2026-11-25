@@ -15,7 +15,7 @@ import { loadAskSettings, saveAskSettings, missingTable } from '../services/ask/
 import { approverEmailsOn, saveApproverEmails } from '../services/ask-docs/approver-deps'
 import { buildCard } from '../services/ask/actions/card'
 import { confirmAction, mayConfirm } from '../services/ask/actions/execute'
-import { eligibleStaff, revalidate, recipientCards } from '../services/ask/actions/recipients'
+import { eligibleStaff, revalidate, recipientCards, adminsFirst } from '../services/ask/actions/recipients'
 import { fieldsIn } from '../services/ask/actions/fields'
 
 export const askActionsRouter = Router()
@@ -45,7 +45,7 @@ askActionsRouter.put('/settings', wrap(async (req, res) => {
 }))
 
 askActionsRouter.get('/staff', wrap(async (req, res) => {
-  const people = await eligibleStaff(getTenantId())
+  const people = adminsFirst(await eligibleStaff(getTenantId()))   // active staff only, administrators first, then A to Z; each with the picture the admin added (a signed, authenticated address), or none
   const cards = await recipientCards(getTenantId(), people.map(x => x.id), people)
   ok(res, { staff: cards.map((c, i) => ({ ...c, has_email: people[i].has_email })) })
 }))

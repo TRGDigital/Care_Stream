@@ -122,6 +122,7 @@ export async function renderLayoutPdf(d: LayoutDoc, opts: { compress?: boolean }
   for (let i = 0; i < range.count; i++) {
     doc.switchToPage(range.start + i)
     doc.page.margins.bottom = 0
+    if (d.stamp) doc.fillColor('#B91C1C').font('Helvetica-Bold').fontSize(8).text(printable(d.stamp), M, 14, { width, align: 'center', lineBreak: false })
     let y = H - 28 - footH
     if (foot.length) {
       doc.moveTo(M, y - 4).lineTo(W - M, y - 4).lineWidth(0.5).strokeColor(LINE).stroke()

@@ -14,12 +14,12 @@ import { askPilotEnabled } from '../lib/ask-pilot'
 import * as store from '../services/ask/store'
 import { canShare, canEdit } from '../services/ask-docs/workflow'
 import { docxFor } from '../services/ask-docs/share'
-import { previewHtml } from '../services/ask-docs/render-doc'
+import { previewHtml, DRAFT_STAMP } from '../services/ask-docs/render-doc'
 import { loadLetterhead } from '../services/letters/letterhead'
 import { prisma } from '../db/client'
 import { sampleDesignsFor } from '../services/ask-docs/newsletter-design-doc'
 import { getMeta } from '../services/letters/signatures'
-import { cleanRequest, renderOptionPreview } from '../services/ask-docs/option-preview'
+import { cleanRequest, renderOptionPreview, renderOptionPreviewPdf } from '../services/ask-docs/option-preview'
 
 export const askDocsRouter = Router()
 const notFound = (res: Response) => err(res, 'NOT_FOUND', 'Not found.', 404)
@@ -99,6 +99,19 @@ askDocsRouter.get('/option-preview', async (req: Request, res: Response) => {
   try { res.setHeader('Cache-Control', 'private, max-age=120'); ok(res, await renderOptionPreview(getTenantId(), q)) } catch { err(res, 'PREVIEW_FAILED', 'The preview could not be made just now.', 500) }
 })
 
+// The same sample as a PDF (SAMPLE printed on every page), for Save PDF and Print on a preview. Never reads staff or resident records, never calls the model.
+askDocsRouter.get('/option-preview/pdf', async (req: Request, res: Response) => {
+  const q = cleanRequest(req.query)
+  if (!q) { err(res, 'INVALID', 'That option cannot be previewed.', 400); return }
+  try {
+    const { buffer, filename } = await renderOptionPreviewPdf(getTenantId(), q)
+    void writeAuditLog({ tenant_id: getTenantId(), user_id: req.user!.sub, event_type: 'ask_option_preview_pdf', entity_type: 'ask_document', entity_id: 'option-preview', metadata: { kind: q.kind } })
+    res.setHeader('Content-Type', 'application/pdf'); res.setHeader('Cache-Control', 'private, no-store'); res.setHeader('X-Content-Type-Options', 'nosniff')
+    res.setHeader('Content-Disposition', `attachment; filename="${filename.replace(/[^a-zA-Z0-9._-]/g, '_')}"`)
+    res.send(buffer)
+  } catch { err(res, 'PDF_FAILED', 'The PDF could not be made just now. Please try again.', 500) }
+})
+
 // Sample designs (marked SAMPLE) of every layout of one newsletter type, for the thumbnails when choosing a layout.
 askDocsRouter.get('/newsletter-samples/:type', async (req: Request, res: Response) => {
   const type = String(req.params.type).replace(/[^a-z0-9-]/g, '').slice(0, 60)
@@ -108,11 +121,12 @@ askDocsRouter.get('/newsletter-samples/:type', async (req: Request, res: Respons
 askDocsRouter.get('/:id/docx', async (req: Request, res: Response) => {
   const t = getTenantId(), u = req.user!.sub
   const d = await store.getDocumentFor(t, u, String(req.params.id)); if (!d) { notFound(res); return }
-  const v = canShare(d); if (!v.ok) { err(res, 'NOT_ALLOWED', v.reason, 409); return }
+  const v = canShare(d), draft = !v.ok
+  if (draft && req.query.draft !== '1') { err(res, 'NOT_ALLOWED', v.ok ? '' : v.reason, 409); return }
   try {
-    const { buffer, filename, mime } = await docxFor(t, d, wantsSignature(req) ? u : null)
-    void writeAuditLog({ tenant_id: t, user_id: u, event_type: 'ask_document_docx_downloaded', entity_type: 'ask_document', entity_id: d.id, metadata: { type: d.type, signed: wantsSignature(req) } })
-    await store.appendShareRecord(t, d.id, { method: 'word', by: u, at: new Date().toISOString() }); await store.setDocumentStatus(t, d.id, ['approved'], 'shared')
+    const { buffer, filename, mime } = await docxFor(t, d, wantsSignature(req) ? u : null, draft ? DRAFT_STAMP : undefined)
+    if (draft) void writeAuditLog({ tenant_id: t, user_id: u, event_type: 'ask_document_draft_copy', entity_type: 'ask_document', entity_id: d.id, metadata: { type: d.type, format: 'docx' } })
+    else { void writeAuditLog({ tenant_id: t, user_id: u, event_type: 'ask_document_docx_downloaded', entity_type: 'ask_document', entity_id: d.id, metadata: { type: d.type, signed: wantsSignature(req) } }); await store.appendShareRecord(t, d.id, { method: 'word', by: u, at: new Date().toISOString() }); await store.setDocumentStatus(t, d.id, ['approved'], 'shared') }
     res.setHeader('Content-Type', mime); res.setHeader('Cache-Control', 'private, no-store'); res.setHeader('X-Content-Type-Options', 'nosniff')
     res.setHeader('Content-Disposition', `attachment; filename="${filename.replace(/[^a-zA-Z0-9._-]/g, '_')}"`)
     res.send(buffer)

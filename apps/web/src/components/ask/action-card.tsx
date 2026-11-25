@@ -12,45 +12,13 @@ import { adminNotifications } from '@/lib/notifications-client'
 const FIELD_HINTS: Array<[string, string]> = [['{first_name}', 'first name'], ['{hours_left}', 'holiday left'], ['{hours_taken}', 'holiday taken'], ['{holiday_year_end}', 'year end'], ['{training_due}', 'training due']]
 const inp = 'w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-neutral-dark outline-none focus:border-teal focus:ring-2 focus:ring-teal/20'
 
-let staffCache: { at: number; token: string; list: ActionPerson[] } | null = null
-export async function loadStaff(token: string): Promise<ActionPerson[]> {
-  if (staffCache && staffCache.token === token && Date.now() - staffCache.at < 60_000) return staffCache.list
-  const r = await ask.actions.staff(token); staffCache = { at: Date.now(), token, list: r.staff }; return r.staff
-}
+export { loadStaff } from '@/lib/staff-cache'
+import { loadStaff } from '@/lib/staff-cache'
+import { StaffPicker } from '@/components/ask/staff-picker'
 
+/** The action card's recipients: the shared staff picker (pictures, search, show more), several people. */
 export function Picker({ people, selected, suggested, onChange, max, disabled, needEmail }: { people: ActionPerson[]; selected: Set<string>; suggested: Set<string>; onChange: (ids: string[]) => void; max: number; disabled: boolean; needEmail: boolean }) {
-  const [q, setQ] = useState(''), [role, setRole] = useState('')
-  const roles = useMemo(() => [...new Set(people.map(p => p.job_role).filter(Boolean) as string[])].sort(), [people])
-  const shown = people.filter(p => (!q || p.name.toLowerCase().includes(q.toLowerCase())) && (!role || p.job_role === role))
-  const reachable = (p: ActionPerson) => !needEmail || p.has_email !== false
-  const toggle = (id: string) => { const n = new Set(selected); if (n.has(id)) n.delete(id); else n.add(id); onChange([...n]) }
-  return (
-    <div className="rounded-lg border border-gray-200 bg-white">
-      <div className="flex flex-wrap items-center gap-2 border-b border-gray-100 p-2">
-        <button type="button" disabled={disabled} onClick={() => onChange(people.filter(reachable).slice(0, max).map(p => p.id))} className="rounded-md border border-gray-300 px-2 py-1 text-xs font-semibold text-neutral-dark hover:bg-neutral-light disabled:opacity-50"><Users size={12} className="mr-1 inline" aria-hidden="true" />All active staff</button>
-        <button type="button" disabled={disabled} onClick={() => onChange(shown.filter(reachable).map(p => p.id).filter(id => !selected.has(id)).length ? [...new Set([...selected, ...shown.filter(reachable).map(p => p.id)])].slice(0, max) : [])} className="rounded-md border border-gray-300 px-2 py-1 text-xs font-semibold text-neutral-dark hover:bg-neutral-light disabled:opacity-50">Tick shown</button>
-        <button type="button" disabled={disabled} onClick={() => onChange([])} className="rounded-md px-2 py-1 text-xs font-medium text-neutral-mid hover:text-neutral-dark disabled:opacity-50">Clear</button>
-        <span className="ml-auto text-xs font-semibold text-neutral-dark">{selected.size} selected <span className="font-normal text-neutral-mid">(up to {max})</span></span>
-      </div>
-      <div className="flex gap-2 p-2">
-        <label className="relative min-w-0 flex-1"><span className="sr-only">Find a person</span><Search size={13} className="pointer-events-none absolute left-2 top-2.5 text-neutral-mid" aria-hidden="true" /><input value={q} onChange={e => setQ(e.target.value)} placeholder="Find a person" className={`${inp} pl-7`} /></label>
-        {roles.length > 1 && <label><span className="sr-only">Job role</span><select value={role} onChange={e => setRole(e.target.value)} className={`${inp} w-auto`}><option value="">All roles</option>{roles.map(r => <option key={r} value={r}>{r}</option>)}</select></label>}
-      </div>
-      <ul className="no-scrollbar max-h-64 overflow-y-auto px-1 pb-1" aria-label="Staff">
-        {shown.map(p => (
-          <li key={p.id}>
-            <label className={`flex items-center gap-2.5 rounded-md px-2 py-1.5 text-sm ${reachable(p) ? 'cursor-pointer hover:bg-neutral-light' : 'opacity-50'}`}>
-              <input type="checkbox" className="h-4 w-4" checked={selected.has(p.id)} disabled={disabled || !reachable(p)} onChange={() => toggle(p.id)} />
-              <StaffAvatar name={p.name} photoUrl={p.photo_url} size={24} />
-              <span className="min-w-0 flex-1 truncate font-medium text-neutral-dark">{p.name}{suggested.has(p.id) && <span className="ml-1.5 rounded-full bg-teal/10 px-1.5 py-px text-[10px] font-bold text-teal">Suggested</span>}</span>
-              <span className="shrink-0 text-xs text-neutral-mid">{reachable(p) ? p.job_role : 'No email on file'}</span>
-            </label>
-          </li>
-        ))}
-        {shown.length === 0 && <li className="px-2 py-3 text-sm text-neutral-mid">Nobody matches.</li>}
-      </ul>
-    </div>
-  )
+  return <StaffPicker people={people} selected={[...selected]} suggested={suggested} onChange={onChange} max={max} disabled={disabled} needEmail={needEmail} bulk label="Recipients" />
 }
 
 export function ActionCard({ token, card: initial, onChanged }: { token: string; card: AskActionCard; onChanged?: (c: AskActionCard) => void }) {

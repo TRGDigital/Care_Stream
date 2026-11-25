@@ -208,13 +208,13 @@ export function letterLayout(t: LetterTemplate, values: Values, head: Letterhead
 }
 
 /** The letter as a PDF on the service's letterhead. pdfkit and the policy PDF helpers are loaded when this is called, so everything else in this module works without them. */
-export async function renderLetterPdf(t: LetterTemplate, values: Values, head: Letterhead, signer?: Signer | null): Promise<Buffer> {
+export async function renderLetterPdf(t: LetterTemplate, values: Values, head: Letterhead, signer?: Signer | null, stamp?: string): Promise<Buffer> {
   const { renderLayoutPdf } = await import('./layout-pdf')
-  return renderLayoutPdf(letterLayout(t, values, head, signer))
+  return renderLayoutPdf({ ...letterLayout(t, values, head, signer), ...(stamp ? { stamp } : {}) })
 }
 
 /** The same letter as a Word document. */
-export async function renderLetterDocx(t: LetterTemplate, values: Values, head: Letterhead, signer?: Signer | null): Promise<Buffer> {
+export async function renderLetterDocx(t: LetterTemplate, values: Values, head: Letterhead, signer?: Signer | null, stamp?: string): Promise<Buffer> {
   const { renderLayoutDocx } = await import('./layout-docx')
-  return renderLayoutDocx(letterLayout(t, values, head, signer))
+  return renderLayoutDocx({ ...letterLayout(t, values, head, signer), ...(stamp ? { stamp } : {}) })
 }

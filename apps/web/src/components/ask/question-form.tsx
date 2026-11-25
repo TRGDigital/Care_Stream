@@ -3,26 +3,25 @@
 // HOUSE RULE 1: when an agent needs information it asks in a form, not in a paragraph. Each question has its own labelled box with a free text field (a choice question also
 // offers quick buttons, a people question also offers the staff picker), a short hint, and "required" or "optional". One Send answers button sends every answer back as one
 // message that pairs each question with its answer, so nothing is ambiguous. The form stays editable until it is sent; after that the answered card shows what was sent.
-import { useEffect, useId, useState } from 'react'
+import { useId, useState } from 'react'
 import { Check, Loader2, Send } from 'lucide-react'
-import { Picker, loadStaff } from '@/components/ask/action-card'
+import { StaffPicker, useStaff } from '@/components/ask/staff-picker'
 import { formatAnswers, missingAnswers, type AnswerValue, type Question, type QuestionForm as Form } from '@/lib/ask-blocks'
-import type { ActionPerson } from '@/lib/ask-client'
 
 const inp = 'w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-neutral-dark outline-none focus:border-teal focus:ring-2 focus:ring-teal/20'
 
+/** HOUSE RULE 3: a people question is a LIST of the account's staff with their pictures. Exactly one person unless the agent said several. There is no free text box for a name. */
 function PeopleField({ token, q, value, onChange, disabled, boxId }: { token: string; q: Question; value: AnswerValue; onChange: (v: AnswerValue) => void; disabled: boolean; boxId: string }) {
-  const [staff, setStaff] = useState<ActionPerson[] | null>(null)
-  const [open, setOpen] = useState(false)
-  useEffect(() => { let live = true; if (open && !staff) loadStaff(token).then(l => { if (live) setStaff(l) }).catch(() => { if (live) setStaff([]) }); return () => { live = false } }, [open, staff, token])
-  const ids = new Set((value.people ?? []).map(p => p.id))
-  const pick = (list: string[]) => onChange({ ...value, people: (staff ?? []).filter(p => list.includes(p.id)).map(p => ({ id: p.id, name: p.name })) })
+  const staff = useStaff(token)
+  const ids = (value.people ?? []).map(p => p.id)
+  const multiple = q.multiple === true
+  const pick = (list: string[]) => onChange({ ...value, text: '', people: (staff ?? []).filter(p => list.includes(p.id)).map(p => ({ id: p.id, name: p.name })).slice(0, multiple ? 500 : 1) })
   return (
-    <div>
-      <input id={boxId} className={inp} value={value.text} disabled={disabled} onChange={e => onChange({ ...value, text: e.target.value })} aria-describedby={`${boxId}-hint`} placeholder="Type a name, or pick from your staff" />
-      <button type="button" onClick={() => setOpen(o => !o)} aria-expanded={open} className="mt-1.5 text-xs font-semibold text-teal underline">{open ? 'Hide the staff list' : 'Pick from your staff'}</button>
-      {(value.people ?? []).length > 0 && <span className="ml-2 text-xs text-neutral-dark">{(value.people ?? []).map(p => p.name).join(', ')}</span>}
-      {open && <div className="mt-1.5">{staff === null ? <p className="flex items-center gap-2 text-xs text-neutral-mid" role="status"><Loader2 size={12} className="animate-spin" aria-hidden="true" />Loading your staff</p> : <Picker people={staff} selected={ids} suggested={new Set()} onChange={pick} max={30} disabled={disabled} needEmail={false} />}</div>}
+    <div id={boxId} aria-describedby={`${boxId}-hint`}>
+      {staff === null
+        ? <p className="flex items-center gap-2 text-xs text-neutral-mid" role="status"><Loader2 size={12} className="animate-spin" aria-hidden="true" />Loading your staff</p>
+        : <StaffPicker people={staff} selected={ids} onChange={pick} mode={multiple ? 'multi' : 'single'} disabled={disabled} label={q.label} bulk={multiple} />}
+      {(value.people ?? []).length > 0 && <p className="mt-1.5 text-xs font-medium text-neutral-dark" aria-live="polite">Chosen: {(value.people ?? []).map(p => p.name).join(', ')}</p>}
     </div>
   )
 }

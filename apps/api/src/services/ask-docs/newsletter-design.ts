@@ -19,6 +19,8 @@ export interface DesignInput {
   /** Where a button may point (the staff hub); without one the call to action is a plain panel, never a button that goes nowhere. */
   links?: { holiday?: string | null }
   sample?: boolean
+  /** Printed at the top of every PDF page when the copy is not final (a draft or a sample). */
+  stamp?: string
 }
 export interface Block { t: 'p' | 'li'; text: string }
 export interface Sec { key: string | null; title: string; role: Role; icon: IconName; blocks: Block[]; first?: boolean }
@@ -434,6 +436,7 @@ export async function renderNewsletterPdf(input: DesignInput, logoPng?: Buffer |
   const range = doc.bufferedPageRange()
   for (let i = 0; i < range.count; i++) {
     doc.switchToPage(range.start + i); doc.page.margins.bottom = 0
+    if (input.stamp) doc.fillColor('#B91C1C').font('Helvetica-Bold').fontSize(8).text(pdfSafe(input.stamp), M, 14, { width: CW, align: 'center', lineBreak: false })
     doc.moveTo(M, H - M - 26).lineTo(W - M, H - M - 26).lineWidth(0.6).strokeColor(LINE).stroke()
     const line = [d.brand.name, ...(d.brand.contact ?? []).slice(0, 2), d.sentBy ? `Sent by ${d.sentBy}` : '', 'Staff only'].filter(Boolean).join('   |   ')
     doc.fillColor(MUTED).font('Helvetica').fontSize(8).text(pdfSafe(line), M, H - M - 20, { width: CW - 70, height: 10, lineBreak: false, ellipsis: true })

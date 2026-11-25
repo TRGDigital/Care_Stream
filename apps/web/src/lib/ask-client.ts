@@ -15,7 +15,8 @@ export interface AskAgent { id: string; name: string; blurb: string; icon: strin
 export interface AskSource { label: string; as_of: string | null; warning?: string | null; url?: string | null }
 export interface AskMessage { id: string; role: 'user' | 'assistant'; content: string; sources?: AskSource[]; created_at?: string | null }
 export type ActionStatus = 'proposed' | 'confirmed' | 'cancelled' | 'expired' | 'failed' | 'done'
-export interface ActionPerson { id: string; name: string; job_role: string | null; photo_url: string | null; has_email?: boolean }
+export interface SharePlan { ok: boolean; blockers: string[]; what: string; how: string | null; who: string | null; how_text: string; who_text: string; count: number; names: string[]; more: number; left_out: number; channels: string[]; notification_email: boolean; needs_approval: boolean; preview: { doc_id: string | null; kind: string } }
+export interface ActionPerson { id: string; name: string; job_role: string | null; photo_url: string | null; has_email?: boolean; is_admin?: boolean }
 export interface AskActionCard {
   id: string; type: 'send_staff_notification' | 'remind_unread_notification' | 'allocate_training' | 'send_training_reminders'; label: string; status: ActionStatus
   expires_at: string; created_at: string; recipients: ActionPerson[]; suggested: string[]; max_recipients: number; result: any; summary: string; notes: string[]
@@ -109,6 +110,25 @@ export const ask = {
   setShareIntent: (t: string, id: string, b: ShareIntent) => call<{ share_intent: ShareIntent; share_intent_text: string }>(`/ask/documents/${encodeURIComponent(id)}/share-intent`, t, { method: 'POST', body: JSON.stringify(b) }),
   /** Takes one shared letter out of the person's hub (the record stays here). */
   withdrawHubShare: (t: string, id: string, letterId: string) => call<{ withdrawn: boolean }>(`/ask/documents/${encodeURIComponent(id)}/hub-shares/${encodeURIComponent(letterId)}/withdraw`, t, { method: 'POST', body: '{}' }),
+  /** HOUSE RULE 4: the document as a PDF or Word file. Approved: the finished copy. Not approved yet: pass draft, and it comes back stamped DRAFT on every page (nothing is recorded as shared). */
+  documentBlob: async (t: string, id: string, format: 'pdf' | 'docx', o: { sign?: boolean; draft?: boolean } = {}): Promise<Blob> => {
+    const qs = [o.sign ? 'sign=1' : '', o.draft ? 'draft=1' : ''].filter(Boolean).join('&')
+    const path = format === 'pdf' ? `/ask/documents/${encodeURIComponent(id)}/pdf` : `/ask-docs/${encodeURIComponent(id)}/docx`
+    const res = await fetch(`${API_URL}${path}${qs ? `?${qs}` : ''}`, { headers: { Authorization: `Bearer ${t}` } })
+    if (!res.ok) { let m = format === 'pdf' ? 'The PDF could not be made just now.' : 'The Word document could not be made just now.'; try { m = (await res.json())?.error?.message ?? m } catch { /* not json */ } throw new AskError(format === 'pdf' ? 'PDF_FAILED' : 'DOCX_FAILED', m, res.status) }
+    return res.blob()
+  },
+  /** A SAMPLE (an option preview) as a PDF with SAMPLE printed on every page. */
+  samplePdfBlob: async (t: string, p: { kind: string; template_id?: string | null; layout?: string | null }): Promise<Blob> => {
+    const qs = new URLSearchParams({ kind: p.kind, ...(p.template_id ? { template_id: p.template_id } : {}), ...(p.layout ? { layout: p.layout } : {}) })
+    const res = await fetch(`${API_URL}/ask-docs/option-preview/pdf?${qs}`, { headers: { Authorization: `Bearer ${t}` } })
+    if (!res.ok) throw new AskError('PDF_FAILED', 'The sample PDF could not be made just now.', res.status)
+    return res.blob()
+  },
+  /** HOUSE RULE 5: what a send WOULD do (counts, names for ten or fewer, limits, approval). Sends nothing. */
+  sharePlan: (t: string, id: string, b: { how: string; who: string; user_ids?: string[] }) => call<{ plan: SharePlan; summary: string }>(`/ask/documents/${encodeURIComponent(id)}/share-plan`, t, { method: 'POST', body: JSON.stringify(b) }),
+  /** The send itself: only ever with confirm: true, from the Send button. */
+  shareSend: (t: string, id: string, b: { how: string; who: string; user_ids?: string[]; sign?: boolean; needs_acknowledgement?: boolean }) => call<{ sent: boolean; count: number; channels: string[] }>(`/ask/documents/${encodeURIComponent(id)}/share-send`, t, { method: 'POST', body: JSON.stringify({ ...b, confirm: true }) }),
   /** The finished PDF as a blob address, for printing (an approved document only). */
   pdfBlobUrl: async (t: string, id: string, sign = false) => {
     const res = await fetch(`${API_URL}/ask/documents/${encodeURIComponent(id)}/pdf${sign ? '?sign=1' : ''}`, { headers: { Authorization: `Bearer ${t}` } })

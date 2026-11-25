@@ -82,6 +82,13 @@ export async function setDocumentStatus(tenantId: string, id: string, from: stri
 export async function appendShareRecord(tenantId: string, id: string, entry: { method: string; by: string; at: string; note?: string }) {
   await q().$executeRawUnsafe("update public.ask_documents set data = jsonb_set(coalesce(data, '{}'::jsonb), '{shared}', coalesce(data->'shared', '[]'::jsonb) || $3::jsonb), updated_at = now() where id = $1 and tenant_id = $2", id, tenantId, JSON.stringify([entry]))
 }
+/** When this person last sent a document to staff (any channel but a PDF or Word download), for the minimum gap between sends. Null when unknown. */
+export async function lastSendAt(tenantId: string, userId: string): Promise<Date | null> {
+  try {
+    const r: any[] = await q().$queryRawUnsafe("select max((s->>'at')::timestamptz) as at from public.ask_documents d, jsonb_array_elements(coalesce(d.data->'shared', '[]'::jsonb)) s where d.tenant_id = $1 and s->>'by' = $2 and s->>'method' in ('email','hub','notification')", tenantId, userId)
+    return r[0]?.at ? new Date(r[0].at) : null
+  } catch { return null }
+}
 export async function countActiveAdmins(tenantId: string): Promise<number> {
   return await q().user.count({ where: { tenant_id: tenantId, role: 'admin', is_active: true, is_shared: false } })
 }

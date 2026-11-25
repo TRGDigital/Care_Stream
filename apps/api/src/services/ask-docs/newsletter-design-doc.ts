@@ -51,9 +51,9 @@ export async function designedHtml(o: { tenantId: string; doc: Doc; target: Targ
   const { input } = await designInputFor(o)
   return renderNewsletterHtml(input, o.target)
 }
-export async function designedPdf(o: { tenantId: string; doc: Doc; sentBy?: string | null }): Promise<Buffer> {
+export async function designedPdf(o: { tenantId: string; doc: Doc; sentBy?: string | null; stamp?: string }): Promise<Buffer> {
   const { input, logoPng, photoPng } = await designInputFor({ ...o, target: 'web' })
-  return renderNewsletterPdf(input, logoPng, photoPng)
+  return renderNewsletterPdf(o.stamp ? { ...input, stamp: o.stamp } : input, logoPng, photoPng)
 }
 /** Sample designs of every layout of one newsletter type, for the thumbnails (marked SAMPLE). */
 export async function sampleDesignsFor(tenantId: string, type: string): Promise<Array<{ id: string; layout: string; title: string; html: string }>> {

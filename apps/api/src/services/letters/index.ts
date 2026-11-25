@@ -32,21 +32,21 @@ export function render(id: string, values: Values): RenderedLetter {
 }
 
 /** The letter as a PDF on the letterhead. Refuses to produce one while anything is missing, so an unfinished letter can never be printed by accident. */
-export async function renderPdf(id: string, values: Values, head: Letterhead, signer?: Signer | null): Promise<Buffer> {
+export async function renderPdf(id: string, values: Values, head: Letterhead, signer?: Signer | null, stamp?: string): Promise<Buffer> {
   const t = find(id)
   if (!t) throw new Error(`Unknown letter: ${id}`)
   const check = validateValues(t, values)
   if (!check.ok) throw new Error(`The letter is not finished: ${[...check.missing, ...check.invalid.map(i => i.label)].join(', ')}`)
-  return renderLetterPdf(t, values, head, signer)
+  return renderLetterPdf(t, values, head, signer, stamp)
 }
 
 /** The same finished letter as a Word document (.docx). Refuses while anything is missing, like the PDF. */
-export async function renderDocx(id: string, values: Values, head: Letterhead, signer?: Signer | null): Promise<Buffer> {
+export async function renderDocx(id: string, values: Values, head: Letterhead, signer?: Signer | null, stamp?: string): Promise<Buffer> {
   const t = find(id)
   if (!t) throw new Error(`Unknown letter: ${id}`)
   const check = validateValues(t, values)
   if (!check.ok) throw new Error(`The letter is not finished: ${[...check.missing, ...check.invalid.map(i => i.label)].join(', ')}`)
-  return renderLetterDocx(t, values, head, signer)
+  return renderLetterDocx(t, values, head, signer, stamp)
 }
 
 /** The letter as a layout (for the on screen preview). Works while the letter is unfinished: gaps show as [Label]. */

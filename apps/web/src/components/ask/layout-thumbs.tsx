@@ -37,7 +37,8 @@ export function LayoutThumbs({ token, type, onPick, selected, disabled }: { toke
         ))}
       </ul>
       <ExpandViewer open={viewer.open && !!big} onClose={() => { viewer.close() }} title={big ? `${big.title}: ${LABEL[big.layout] ?? big.layout} layout (sample)` : 'Layout'}
-        items={big ? [{ kind: 'html', html: big.html }] : []} noPrint
+        items={big ? [{ kind: 'html', html: big.html }] : []}
+        pdf={big ? { getPdf: () => ask.samplePdfBlob(token, { kind: 'newsletter', template_id: big.id, layout: big.layout }), sample: true } : undefined}
         actions={big ? [{ label: `Use the ${(LABEL[big.layout] ?? big.layout).toLowerCase()} layout`, primary: true, disabled, onClick: () => { const d = big; viewer.close(); onPick(d) } }] : []} />
     </div>
   )

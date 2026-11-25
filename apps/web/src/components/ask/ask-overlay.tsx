@@ -419,7 +419,7 @@ export function AskPanel({ token, layout, expanded, width, onClose }: { token: s
         )}
         {docId && <DocumentPanel token={token} id={docId} onClose={() => setDocId(null)} onChanged={loadLib} />}
         {libView && token && <ExpandViewer open onClose={() => setLibView(null)} title={libView.title} items={libView.items}
-          downloads={(libView.doc.status === 'approved' || libView.doc.status === 'shared') && libView.doc.type !== 'answer' ? [{ label: 'PDF', onClick: () => ask.downloadPdf(token, libView.doc.id, libView.doc.title) }, { label: 'Word', onClick: () => ask.downloadDocx(token, libView.doc.id, libView.doc.title) }] : undefined} />}
+          pdf={['letter', 'newsletter', 'report'].includes(libView.doc.type) ? (() => { const draft = !(libView.doc.status === 'approved' || libView.doc.status === 'shared'); return { getPdf: () => ask.documentBlob(token, libView.doc.id, 'pdf', { draft }), getDocx: () => ask.documentBlob(token, libView.doc.id, 'docx', { draft }), draft } })() : undefined} />}
       </div>
     </div>
   )

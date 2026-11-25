@@ -19,14 +19,14 @@ const safeName = (s: string) => s.replace(/[^a-zA-Z0-9 _-]/g, '').trim().replace
 const ukDate = (d = new Date()) => d.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/London' })
 
 /** The finished PDF for an approved document, on the organisation's letterhead. A letter refuses to print while anything is missing. The signature is added only for `signerUserId`. */
-export async function pdfFor(tenantId: string, doc: Doc, signerUserId?: string | null, sentByUserId?: string | null): Promise<{ buffer: Buffer; filename: string }> {
-  const r = await renderDocument({ tenantId, doc, format: 'pdf', signerUserId, sentByUserId })
+export async function pdfFor(tenantId: string, doc: Doc, signerUserId?: string | null, sentByUserId?: string | null, stamp?: string): Promise<{ buffer: Buffer; filename: string }> {
+  const r = await renderDocument({ tenantId, doc, format: 'pdf', signerUserId, sentByUserId, stamp })
   return { buffer: r.buffer, filename: r.filename }
 }
 
 /** The same document as a Word file. */
-export async function docxFor(tenantId: string, doc: Doc, signerUserId?: string | null): Promise<{ buffer: Buffer; filename: string; mime: string }> {
-  return renderDocument({ tenantId, doc, format: 'docx', signerUserId })
+export async function docxFor(tenantId: string, doc: Doc, signerUserId?: string | null, stamp?: string): Promise<{ buffer: Buffer; filename: string; mime: string }> {
+  return renderDocument({ tenantId, doc, format: 'docx', signerUserId, stamp })
 }
 
 /** Emails an approved letter to the person it is for, as a PDF, from the administrator sharing it. */
@@ -53,7 +53,7 @@ export async function emailReportToAdmins(o: { tenantId: string; actorId: string
 }
 
 /** Sends an approved document as a staff notification with its PDF attached. A letter goes to the one person it is for; a newsletter goes to everyone or the chosen staff. */
-export async function shareAsNotification(o: { tenantId: string; actorId: string; doc: Doc; audience?: unknown; userIds?: unknown; signerUserId?: string | null }) {
+export async function shareAsNotification(o: { tenantId: string; actorId: string; doc: Doc; audience?: unknown; userIds?: unknown; signerUserId?: string | null; email?: boolean }) {
   // An internal only report may name people and can NEVER go to staff, whatever the caller asked for.
   if (o.doc.type === 'report' && o.doc.data?.internal_only === true) throw new Error('An internal only report cannot be sent to staff.')
   const { buffer, filename } = await pdfFor(o.tenantId, o.doc, o.signerUserId, o.actorId)
@@ -75,7 +75,7 @@ export async function shareAsNotification(o: { tenantId: string; actorId: string
       ;[emailHtml, hubHtml] = await Promise.all([designedHtml({ tenantId: o.tenantId, doc: o.doc, target: 'email', sentBy }), designedHtml({ tenantId: o.tenantId, doc: o.doc, target: 'web', sentBy })])
     } catch { emailHtml = undefined; hubHtml = undefined }   // the plain notification and the PDF still go
   }
-  return createAndSendNotification({ tenantId: o.tenantId, userId: o.actorId, title, body, audience: isLetter ? 'selected' : (o.audience === 'selected' ? 'selected' : 'all'), userIds, files: [file], emailHtml, hubHtml })
+  return createAndSendNotification({ tenantId: o.tenantId, userId: o.actorId, title, body, audience: isLetter ? 'selected' : (o.audience === 'selected' ? 'selected' : 'all'), userIds, files: [file], emailHtml, hubHtml, ...(o.email === false ? { email: false } : {}) })
 }
 
 /**

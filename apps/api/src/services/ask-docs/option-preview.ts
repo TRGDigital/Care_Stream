@@ -102,3 +102,35 @@ function plain(accent: string, title: string, text: string, logo: string | null,
   const head = logo ? `<img src="${esc(logo)}" alt="${esc(name)} logo" style="display:block;max-height:44px;max-width:180px;margin:0 0 12px">` : ''
   return `${sampleBanner(accent)}<div style="max-width:560px;margin:0 auto;background:#fff;border:1px solid #E5E7EB;border-radius:12px;padding:22px 24px;font:15px/1.55 ${SANS};color:#1F2937">${head}<p style="margin:0 0 8px;font-weight:700">${esc(title)}</p><p style="margin:0">${esc(text)}</p></div>`
 }
+
+/** HOUSE RULE 4: a sample can be saved as a PDF or printed too. The PDF carries the same placeholder words, your logo and letterhead, and SAMPLE printed on every page. */
+export const SAMPLE_STAMP = 'SAMPLE: placeholder words only. Not a real document.'
+export async function renderOptionPreviewPdf(tenantId: string, req: PreviewRequest, deps: PreviewDeps = {}): Promise<{ buffer: Buffer; filename: string }> {
+  const l = await (deps.letterhead ?? loadLetterhead)(tenantId)
+  const brand = await (deps.brand ?? brandColourFor)(tenantId)
+  const name = `${req.kind}-${String(req.template_id ?? 'sample')}-sample`.replace(/[^a-zA-Z0-9-]/g, '-').slice(0, 80) + '.pdf'
+  if (req.kind === 'newsletter') {
+    const tpl = (req.template_id && newsletterTemplate(req.template_id)) || (req.template_id && NEWSLETTER_TEMPLATES.find(t => t.type === req.template_id && t.layout === (req.layout ?? 'standard'))) || null
+    if (tpl) {
+      let logoPng: Buffer | null = null
+      if (l.head.logoDataUrl) { try { const { logoForPdf } = await import('../policy/policy-pdf'); logoPng = await logoForPdf(l.head.logoDataUrl) } catch { logoPng = null } }
+      const { renderNewsletterPdf } = await import('./newsletter-design')
+      return { buffer: await renderNewsletterPdf({ templateId: tpl.id, title: tpl.type_title, body: sampleBody(tpl), brand: { name: l.head.name || 'Your service', accent: brand, logo: l.head.logoDataUrl ?? null, contact: [] }, sentBy: 'Your name', sample: true, stamp: SAMPLE_STAMP }, logoPng, null), filename: name }
+    }
+  }
+  let doc: LayoutDoc
+  if (req.kind === 'letter' && req.template_id && getLetterTemplate(req.template_id)) {
+    const t = getLetterTemplate(req.template_id)!
+    const values = { ...sampleLetterValues(t.fields as any), service_name: l.head.name || '[Service name]' }
+    try { doc = letterLayout(t.id, values as any, l.head, null) } catch { doc = { kind: 'letter', head: l.head, subject: t.title, date: '[Date]', recipient: { name: '[Staff member]' }, blocks: [{ t: 'p', text: t.description }], closing: 'Yours sincerely,' } }
+    doc = { ...doc, date: '[Date]', recipient: { name: '[Staff member name]', role: '[Job title]' }, signer: { name: '[Your name]', role: '[Your role]' } }
+  } else if (req.kind === 'report') {
+    const t = req.template_id ? reportTemplate(req.template_id) : undefined
+    doc = { kind: 'report', head: l.head, subject: t?.title ?? 'Report', date: '[Month and year]', subtitle: 'Sample report', blocks: (t?.sections ?? [{ title: 'Section', hint: 'The words and figures for this section go here.' }]).flatMap((s: any) => [{ t: 'h' as const, text: s.title }, { t: 'p' as const, text: `[${s.hint}]` }]) }
+  } else {
+    const text = req.kind === 'email' ? 'Hello [First name]. [Your message to the team goes here, in short paragraphs.] [Button label]' : req.kind === 'notification' ? '[Notification title]. [Your message to the team goes here. It appears in their hub the next time they sign in.] From [Your name].' : 'This option has no designed preview yet. It would look like your usual CareStream messages.'
+    doc = { kind: 'report', head: l.head, subject: `${req.kind === 'other' ? 'Sample' : req.kind === 'email' ? 'Email' : 'Notification'} (sample)`, date: '[Date]', blocks: [{ t: 'p', text }] }
+  }
+  const { renderLayoutPdf } = await import('../letters/layout-pdf')
+  return { buffer: await renderLayoutPdf({ ...doc, stamp: SAMPLE_STAMP }), filename: name }
+}

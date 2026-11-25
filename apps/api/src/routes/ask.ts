@@ -21,6 +21,8 @@ import { writeAuditLog } from '../lib/audit'
 import { render as renderLetter, validate as validateLetter, getTemplate as letterTemplate } from '../services/letters'
 import { needsApproval, canEdit, canSubmit, canApprove, canReturn, canReopen, canShare, sharesFor, SHARE_METHODS, type ShareMethod } from '../services/ask-docs/workflow'
 import { pdfFor, emailLetter, emailReportToAdmins, shareAsNotification, shareInHub } from '../services/ask-docs/share'
+import { DRAFT_STAMP } from '../services/ask-docs/render-doc'
+import { planShare, summaryLine } from '../services/ask-docs/share-plan'
 import { readShareIntent, checkShareIntent, channelsFor, describeIntent, defaultNeedsAcknowledgement } from '../services/ask-docs/share-intent'
 import { sharesOfDocument, withdraw as withdrawLetter, isMissingTable as lettersMissing } from '../lib/staff-letters'
 import { withdrawNotification } from '../lib/notification-withdraw'
@@ -34,6 +36,7 @@ import * as uploadStore from '../services/ask/uploads/store'
 import * as actionStore from '../services/ask/actions/store'
 import { buildCard } from '../services/ask/actions/card'
 import { loadAskSettings } from '../services/ask/actions/settings'
+import { eligibleStaff } from '../services/ask/actions/recipients'
 import { notifySubmitted, notifyDecided } from '../services/ask-docs/approver-notify'
 import { realDeps as approverDeps } from '../services/ask-docs/approver-deps'
 
@@ -261,11 +264,13 @@ askRouter.post('/documents/:id/reopen', wrap(async (req, res) => {
 
 askRouter.get('/documents/:id/pdf', wrap(async (req, res) => {
   const t = getTenantId(), d = await store.getDocumentFor(t, req.user!.sub, String(req.params.id)); if (!d) { notFound(res); return }
-  const v = canShare(d); if (!v.ok) { err(res, 'NOT_ALLOWED', v.reason, 409); return }
+  // HOUSE RULE: an administrator can always Save PDF or Print. A document that is not approved yet comes out as a DRAFT COPY, stamped on every page, and nothing is recorded as shared.
+  const v = canShare(d), draft = !v.ok
+  if (draft && req.query.draft !== '1') { err(res, 'NOT_ALLOWED', v.ok ? '' : v.reason, 409); return }
   try {
-    const { buffer, filename } = await pdfFor(t, d, req.query.sign === '1' ? req.user!.sub : null, req.user!.sub)   // MY signature only when I ask for it
-    audit(req, 'ask_document_pdf_downloaded', d.id, { type: d.type })
-    await store.appendShareRecord(t, d.id, { method: 'pdf', by: req.user!.sub, at: new Date().toISOString() }); await store.setDocumentStatus(t, d.id, ['approved'], 'shared')
+    const { buffer, filename } = await pdfFor(t, d, req.query.sign === '1' ? req.user!.sub : null, req.user!.sub, draft ? DRAFT_STAMP : undefined)   // MY signature only when I ask for it
+    if (draft) audit(req, 'ask_document_draft_copy', d.id, { type: d.type, format: 'pdf' })
+    else { audit(req, 'ask_document_pdf_downloaded', d.id, { type: d.type }); await store.appendShareRecord(t, d.id, { method: 'pdf', by: req.user!.sub, at: new Date().toISOString() }); await store.setDocumentStatus(t, d.id, ['approved'], 'shared') }
     res.setHeader('Content-Type', 'application/pdf'); res.setHeader('Cache-Control', 'private, no-store'); res.setHeader('X-Content-Type-Options', 'nosniff')
     res.setHeader('Content-Disposition', `attachment; filename="${filename.replace(/[^a-zA-Z0-9._-]/g, '_')}"`)
     res.send(buffer)
@@ -328,6 +333,49 @@ askRouter.post('/documents/:id/share', wrap(async (req, res) => {
     await store.setDocumentStatus(t, id, ['approved'], 'shared')
     ok(res, { shared: true, method, channels: done })
   } catch (e: any) { console.error('[ask] share failed:', String(e?.message ?? e).slice(0, 160)); err(res, 'SHARE_FAILED', 'It could not be shared just now. Please try again.', 500) }
+}))
+
+// HOUSE RULE 5, DISTRIBUTION CHOICE. Step 1: the plan. Checks how and who, counts the people (names for ten or fewer) and applies the Ask settings limits and the approval rule. Sends NOTHING.
+// Step 2: the send, only with confirm: true, and only for a plan that is allowed (it is worked out again here, never trusted from the browser). Chat text can never reach this.
+async function planFor(req: any, d: any) {
+  const t = getTenantId()
+  const [people, settings, last] = await Promise.all([eligibleStaff(t), loadAskSettings(t), store.lastSendAt(t, req.user!.sub)])
+  return planShare(d, { how: req.body?.how, who: req.body?.who, user_ids: req.body?.user_ids }, people, { max_recipients: settings.max_recipients, min_gap_minutes: settings.min_gap_minutes, emails_enabled: settings.emails_enabled }, { lastShareAt: last })
+}
+askRouter.post('/documents/:id/share-plan', wrap(async (req, res) => {
+  const t = getTenantId(), d = await store.getDocumentFor(t, req.user!.sub, String(req.params.id)); if (!d) { notFound(res); return }
+  const plan = await planFor(req, d)
+  audit(req, 'ask_share_planned', d.id, { type: d.type, who: plan.who, how: plan.how, count: plan.count, ok: plan.ok })
+  ok(res, { plan, summary: summaryLine(plan) })
+}))
+askRouter.post('/documents/:id/share-send', wrap(async (req, res) => {
+  const t = getTenantId(), u = req.user!.sub, id = String(req.params.id)
+  const d = await store.getDocumentFor(t, u, id); if (!d) { notFound(res); return }
+  if (req.body?.confirm !== true) { err(res, 'CONFIRM_REQUIRED', 'Nothing was sent. Check the summary and press Send to confirm.', 400); return }
+  const plan = await planFor(req, d)
+  if (!plan.ok) { err(res, 'NOT_ALLOWED', plan.blockers[0] ?? 'This cannot be sent.', 409); return }
+  const sign = req.body?.sign === true
+  try {
+    const done: string[] = []
+    for (const ch of plan.channels) {
+      if (ch === 'email') {
+        const r = await emailLetter({ tenantId: t, actorId: u, doc: d, signerUserId: sign ? u : null })
+        if (!(r as any).sent) { err(res, 'NOT_SENT', (r as any).reason ?? 'It could not be emailed.', 409); return }
+      } else if (ch === 'hub') {
+        const r = await shareInHub({ tenantId: t, actorId: u, doc: d, signerUserId: sign ? u : null, needsAcknowledgement: typeof req.body?.needs_acknowledgement === 'boolean' ? req.body.needs_acknowledgement : undefined })
+        if (!r.ok) { err(res, r.code ?? 'NOT_SHARED', r.reason, r.code === 'NOT_SET_UP' ? 503 : 409); return }
+        void writeAuditLog({ tenant_id: t, user_id: u, event_type: 'staff_letter_shared', entity_type: 'staff_letter', entity_id: r.letter_id, metadata: { document_id: id, needs_acknowledgement: r.needs_acknowledgement, signed: sign } })
+      } else {
+        const r = await shareAsNotification({ tenantId: t, actorId: u, doc: d, audience: plan.audience ?? 'selected', userIds: plan.user_ids, signerUserId: sign ? u : null, email: plan.notification_email })
+        if (!r.ok) { err(res, r.code, r.message, r.status); return }
+      }
+      done.push(ch)
+      await store.appendShareRecord(t, id, { method: ch, by: u, at: new Date().toISOString() })
+    }
+    await store.setDocumentStatus(t, id, ['approved'], 'shared')
+    audit(req, 'ask_share_confirmed', id, { type: d.type, who: plan.who, how: plan.how, count: plan.count, channels: done.join(',') })   // counts and kinds only, never names or content
+    ok(res, { sent: true, count: plan.count, channels: done })
+  } catch (e: any) { console.error('[ask] share-send failed:', String(e?.message ?? e).slice(0, 160)); err(res, 'SHARE_FAILED', 'It could not be sent just now. Please try again.', 500) }
 }))
 
 // Who has the letter in their hub, and taking one back. Withdrawing removes it (and its hub notification) from the person's hub; the record stays here, with the withdrawal logged.

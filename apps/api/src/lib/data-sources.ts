@@ -29,6 +29,8 @@ export interface SourceDef {
   fetch: ((get: (url: string) => Promise<any>, today: string) => Promise<Fetched>) | null
   validate: (value: any) => string | null
   note?: string
+  /** Changes every week by nature (road fuel): each new figure is recorded but does not email the owner. */
+  routine?: boolean
 }
 
 // ── small helpers ───────────────────────────────────────────────────────────────────────
@@ -130,6 +132,37 @@ export function validateFoodCost(v: any): string | null {
   return null
 }
 
+// ── Road fuel prices (DESNZ weekly, GOV.UK) ──────────────────────────────────────────────
+/** The page lists the CSV; the CSV has one row a week: date, petrol, diesel (pence a litre). */
+export function fuelCsvUrl(content: any): string {
+  const atts: any[] = content?.details?.attachments ?? []
+  const hit = atts.find(a => /csv/i.test(String(a?.title ?? '')) && /2018/.test(String(a?.title ?? '')) && typeof a?.url === 'string')
+  if (!hit) throw new Error('The weekly fuel price CSV was not found on the page.')
+  return hit.url
+}
+export function parseFuel(csv: string): Fetched {
+  const rows = String(csv ?? '').replace(/^\uFEFF/, '').split(/\r?\n/).slice(1).map(l => l.split(',')).filter(r => /^\d{2}\/\d{2}\/\d{4}$/.test(r[0] ?? ''))
+  const weeks = rows.map(r => { const [d, m, y] = r[0].split('/'); return { date: `${y}-${m}-${d}`, petrol: Number(r[1]), diesel: Number(r[2]) } }).filter(w => Number.isFinite(w.petrol) && Number.isFinite(w.diesel)).sort((a, b) => a.date.localeCompare(b.date))
+  if (!weeks.length) throw new Error('No weekly fuel prices were found in the file.')
+  const latest = weeks[weeks.length - 1]
+  const previous = weeks.length > 1 ? weeks[weeks.length - 2] : null
+  return { effective_from: latest.date, next_check_due: addDays(latest.date, 8), value: { unit: 'pence per litre', latest, previous, weeks: weeks.slice(-13), petrol_pounds_per_litre: Math.round(latest.petrol) / 100, diesel_pounds_per_litre: Math.round(latest.diesel) / 100 } }
+}
+export function validateFuel(v: any): string | null {
+  if (!inRange(v?.latest?.petrol, 80, 300)) return `The petrol price ${v?.latest?.petrol} is outside 80 to 300 pence a litre.`
+  if (!inRange(v?.latest?.diesel, 80, 320)) return `The diesel price ${v?.latest?.diesel} is outside 80 to 320 pence a litre.`
+  if (!isYmd(v?.latest?.date)) return 'The week is not a date.'
+  return null
+}
+
+// ── Home care hourly figures (manual: from Orrery's collections and published reports) ────────────────────────
+export function validateHomecareRate(v: any): string | null {
+  if (!inRange(v?.hourly_gbp, 8, 80)) return `The hourly figure ${v?.hourly_gbp} is outside 8 to 80 pounds.`
+  if (v?.low_gbp != null && v?.high_gbp != null && v.low_gbp > v.high_gbp) return 'The low figure is above the high figure.'
+  if (!String(v?.basis ?? '').trim()) return 'Say what the figure is (the basis).'
+  return null
+}
+
 // ── Bank holidays (GOV.UK, England and Wales) ───────────────────────────────────────────
 export function parseBankHolidays(json: any): Fetched {
   const ew = json?.['england-and-wales']
@@ -217,6 +250,19 @@ export const SOURCES: SourceDef[] = [
   { key: 'care_food_cost', name: 'Care home food cost per resident per week (cost of care exercises)', publisher: 'Councils\' cost of care exercises, as held by Orrery Intelligence', source_url: 'https://www.orreryintelligence.com', fetch_url: null,
     update_frequency: 'When councils publish new cost of care exercises (every one to three years)', stale_after_days: 1100, data_stale_after_days: null, weekly: false, fetch: null, validate: validateFoodCost,
     note: 'Entered by hand from Orrery: median food supplies per resident per week, residential care for people aged 65 and over, in the prices of the exercise year. It is a council benchmark, not a supplier price list. Bring it to today with the food CPI rate.' },
+  { key: 'road_fuel', name: 'Road fuel prices, petrol and diesel (weekly)', publisher: 'DESNZ (GOV.UK)', source_url: 'https://www.gov.uk/government/statistics/weekly-road-fuel-prices', fetch_url: 'https://www.gov.uk/api/content/government/statistics/weekly-road-fuel-prices',
+    update_frequency: 'Weekly (Monday figures)', stale_after_days: 16, data_stale_after_days: 21, weekly: true, routine: true,
+    fetch: async get => parseFuel(await get(fuelCsvUrl(await get('https://www.gov.uk/api/content/government/statistics/weekly-road-fuel-prices')))), validate: validateFuel,
+    note: 'Average pump prices across the UK, in pence a litre. Use with the HMRC mileage rates when looking at what home care visits cost to reach.' },
+  { key: 'homecare_private_rate', name: 'Private home care hourly rate, England (agencies\' own published prices)', publisher: 'Orrery Intelligence (collected from agency websites)', source_url: 'https://www.orreryintelligence.com', fetch_url: null,
+    update_frequency: 'Quarterly', stale_after_days: 140, data_stale_after_days: null, weekly: false, fetch: null, validate: validateHomecareRate,
+    note: 'Entered by hand from Orrery: the median weekday daytime hourly price that 102 agencies publish. Agencies that publish a price are not all agencies, and "from" prices pull it down. It is a market guide, not what any one agency charges.' },
+  { key: 'homecare_min_price', name: 'Minimum Price for Homecare (Homecare Association)', publisher: 'Homecare Association', source_url: 'https://homecareassociation.org.uk/', fetch_url: null,
+    update_frequency: 'Every year (published around December, with an update before April)', stale_after_days: 396, data_stale_after_days: null, weekly: false, fetch: null, validate: validateHomecareRate,
+    note: 'Entered by hand. The hourly price the Homecare Association says a council should pay for a sustainable service; the 2026/27 figure is from its July 2026 response to the Low Pay Commission.' },
+  { key: 'council_homecare_rate', name: 'What councils pay per hour for external home care (median across England)', publisher: 'DHSC, Adult social care finance report', source_url: 'https://www.gov.uk/government/statistics/adult-social-care-finance-report-england-2025-to-2026', fetch_url: null,
+    update_frequency: 'Every year (published in the autumn)', stale_after_days: 500, data_stale_after_days: null, weekly: false, fetch: null, validate: validateHomecareRate,
+    note: 'Entered by hand from Orrery: the median across 154 councils of the unit cost per hour of home care bought from other providers, 2025/26. Individual councils range widely.' },
   { key: 'bank_holidays', name: 'Bank holidays in England and Wales', publisher: 'GOV.UK', source_url: 'https://www.gov.uk/bank-holidays', fetch_url: 'https://www.gov.uk/bank-holidays.json',
     update_frequency: 'Yearly (dates announced ahead)', stale_after_days: 365, data_stale_after_days: null, weekly: true,
     fetch: async get => parseBankHolidays(await get('https://www.gov.uk/bank-holidays.json')), validate: v => validateBankHolidays(v) },
@@ -245,6 +291,7 @@ export function essence(key: string, v: any): Json {
   if (!v) return v
   if (key === 'nlw') return { current: v.current, upcoming: v.upcoming }
   if (key === 'cpi' || key === 'cpih' || key === 'cpi_food') return { latest: v.latest }
+  if (key === 'road_fuel') return { latest: v.latest }
   return v
 }
 export const sameFigure = (key: string, a: Json, b: Json) => stable(essence(key, a)) === stable(essence(key, b))
@@ -286,7 +333,7 @@ export function applyCheck(def: SourceDef, prev: Row | null, result: { ok: true;
   row.value = result.fetched.value
   row.effective_from = result.fetched.effective_from
   row.last_changed_at = nowIso
-  row.status = prev?.value == null ? 'ok' : 'changed'
+  row.status = prev?.value == null || def.routine ? 'ok' : 'changed'
   return { row, outcome: out(prev?.value == null ? 'first' : 'changed', prev?.value == null ? `${def.name}: first figure recorded.` : `${def.name}: the figure has changed.`, { before: prev?.value, after: result.fetched.value }), history: true }
 }
 
@@ -354,7 +401,7 @@ export async function checkAll(deps: RunDeps, opts: { force?: boolean; only?: st
     outcomes.push(r.outcome)
   }
   let emailed = false
-  const worth = outcomes.filter(o => o.result === 'changed' || o.result === 'failed' || o.result === 'needs_review')
+  const worth = outcomes.filter(o => (o.result === 'changed' && !sourceByKey(o.key)?.routine) || o.result === 'failed' || o.result === 'needs_review')
   if (worth.length) {
     const lines = worth.map(o => o.result === 'changed' ? `${o.message} Before: ${brief(o.key, o.before)}. Now: ${brief(o.key, o.after)}.` : o.message)
     try { await deps.notify({ subject: `Data sources: ${worth.length} to look at`, lines }); emailed = true } catch { /* the check still counts */ }
@@ -376,6 +423,8 @@ export function brief(key: string, v: any): string {
   if (key === 'mileage') return `cars and vans ${v.cars_vans_first_10000_pence}p then ${v.cars_vans_after_10000_pence}p, motorcycles ${v.motorcycle_pence}p, bikes ${v.bike_pence}p`
   if (key === 'bank_holidays') return `${(v.events ?? []).length} dates, ${v.first_year} to ${v.last_year}`
   if (key === 'real_living_wage') return `£${v.hourly_rate_gbp}`
+  if (key === 'road_fuel') return `petrol ${v.latest?.petrol}p, diesel ${v.latest?.diesel}p a litre (week of ${v.latest?.date})`
+  if (key === 'homecare_private_rate' || key === 'homecare_min_price' || key === 'council_homecare_rate') return `£${v.hourly_gbp} an hour${v.low_gbp != null ? ` (£${v.low_gbp} to £${v.high_gbp})` : ''}, ${v.period ?? ''}`.trim()
   if (key === 'care_food_cost') return `£${v.low_gbp_week} to £${v.high_gbp_week} per resident per week (${v.price_year} prices${v.councils ? ', ' + v.councils + ' councils' : ''})`
   return stable(v).slice(0, 120)
 }

@@ -25,6 +25,8 @@ function Summary({ s }: { s: DataSourceRow }) {
     </span>
   )
   if (s.key === 'cpi' || s.key === 'cpih' || s.key === 'cpi_food') return <span><strong>{v.latest?.rate}%</strong> for {v.latest?.period}{v.next_release && <span className="block text-xs text-neutral-mid">Next release {dayOf(v.next_release)}</span>}</span>
+  if (s.key === 'road_fuel') return <span>Petrol <strong>{v.latest?.petrol}p</strong>, diesel <strong>{v.latest?.diesel}p</strong> a litre<span className="block text-xs text-neutral-mid">Week of {dayOf(v.latest?.date)}{v.previous ? `. The week before: petrol ${v.previous.petrol}p, diesel ${v.previous.diesel}p` : ''}</span></span>
+  if (s.key === 'homecare_private_rate' || s.key === 'homecare_min_price' || s.key === 'council_homecare_rate') return <span><strong>{gbp(v.hourly_gbp)}</strong> an hour{v.low_gbp != null ? `, middle half ${gbp(v.low_gbp)} to ${gbp(v.high_gbp)}` : ''}{v.period ? `, ${v.period}` : ''}<span className="block text-xs text-neutral-mid">{v.basis}</span></span>
   if (s.key === 'care_food_cost') return <span><strong>{gbp(v.low_gbp_week)} to {gbp(v.high_gbp_week)}</strong> per resident per week, {v.price_year} prices{v.councils ? `, ${v.councils} councils` : ''}{v.kent_gbp_week ? `. Kent ${gbp(v.kent_gbp_week)}, West Sussex ${gbp(v.west_sussex_gbp_week)}` : ''}</span>
   if (s.key === 'bank_holidays') return <span>{v.events?.length ?? 0} dates, {v.first_year} to {v.last_year}</span>
   if (s.key === 'ssp') return <span><strong>{gbp(v.weekly_rate_gbp)}</strong> a week{v.maximum_weeks ? `, up to ${v.maximum_weeks} weeks` : ''}</span>
@@ -43,6 +45,8 @@ function Chip({ s }: { s: DataSourceRow }) {
 const EXAMPLE: Record<string, string> = {
   nlw: '{"current":{"from":"2026-04-01","label":"April 2026","age21":12.71,"age18to20":10.85,"under18":8,"apprentice":8},"upcoming":[]}',
   cpi: '{"latest":{"period":"2026-10","rate":3.6}}', cpih: '{"latest":{"period":"2026-10","rate":3.7}}', cpi_food: '{"latest":{"period":"2026-10","rate":0.9}}',
+  road_fuel: '{"latest":{"date":"2026-11-23","petrol":161.96,"diesel":193.29}}',
+  homecare_private_rate: '{"hourly_gbp":31,"low_gbp":25,"high_gbp":34.9,"period":"October 2026","basis":"Median weekday daytime price"}',
   care_food_cost: '{"low_gbp_week":29.05,"high_gbp_week":37.73,"price_year":"2022/23","councils":10}',
   ssp: '{"weekly_rate_gbp":123.25}',
   mileage: '{"cars_vans_first_10000_pence":55,"cars_vans_after_10000_pence":25,"motorcycle_pence":24,"bike_pence":20}',

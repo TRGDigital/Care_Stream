@@ -3,10 +3,12 @@ import assert from 'node:assert/strict'
 import fs from 'fs'
 import path from 'path'
 import {
+  fuelCsvUrl, parseFuel, validateFuel,
   parseNlw, validateNlw, parseOnsRate, validateRate, parseBankHolidays, validateBankHolidays, parseSsp, validateSsp, parseMileage, validateMileage,
   validateRealLivingWage, applyCheck, applyManual, checkAll, toFigure, isStale, asOfText, sameFigure, sourceByKey, SOURCES, type Row, type Db, type RunDeps,
 } from './data-sources'
 
+const fxText = (n: string) => fs.readFileSync(path.join(__dirname, '__fixtures__', n), 'utf8')
 const fx = (n: string) => JSON.parse(fs.readFileSync(path.join(__dirname, '__fixtures__', n), 'utf8'))
 const TODAY = '2026-11-24'
 
@@ -165,6 +167,8 @@ const PAGES = () => ({
   'https://www.ons.gov.uk/economy/inflationandpriceindices/timeseries/l55o/mm23/data': fx('ons-cpih.json'),
   'https://www.gov.uk/bank-holidays.json': fx('gov-bank-holidays.json'),
   'https://www.gov.uk/api/content/statutory-sick-pay': fx('gov-ssp.json'),
+  'https://www.gov.uk/api/content/government/statistics/weekly-road-fuel-prices': fx('gov-fuel.json'),
+  'https://assets.publishing.service.gov.uk/media/x/CSV__2018_-__.csv': fxText('fuel.csv'),
   'https://www.gov.uk/api/content/expenses-and-benefits-business-travel-mileage': fx('gov-mileage.json'),
 })
 test('the first run fills the register and sends no email; a quiet week sends no email', async () => {
@@ -216,4 +220,24 @@ test('FOOD: the food inflation series reads from ONS D7G8, and the council food 
   assert.equal(def.validate({ low_gbp_week: 29.05, high_gbp_week: 37.73, price_year: '2022/23' }), null)
   assert.match(def.validate({ low_gbp_week: 40, high_gbp_week: 30, price_year: '2022/23' })!, /above/)
   assert.match(def.validate({ low_gbp_week: 29, high_gbp_week: 37 })!, /prices/)
+})
+
+test('FUEL: the weekly CSV is found through the page, read to the latest week, range checked, and a weekly change does not email the owner', async () => {
+  assert.equal(fuelCsvUrl(fx('gov-fuel.json')), 'https://assets.publishing.service.gov.uk/media/x/CSV__2018_-__.csv')
+  const f = parseFuel(fxText('fuel.csv'))
+  assert.equal(f.effective_from, '2026-11-23'); assert.equal(f.value.latest.petrol, 161.96); assert.equal(f.value.previous.diesel, 196.77)
+  assert.equal(validateFuel(f.value), null)
+  assert.match(validateFuel({ latest: { petrol: 16.1, diesel: 190, date: '2026-11-23' } })!, /petrol/)
+  assert.throws(() => parseFuel('Date,a,b\n'), /No weekly/)
+  assert.equal(sourceByKey('road_fuel')!.routine, true)
+  const h = harness(PAGES()); await checkAll(h.deps('2026-11-24T07:00:00Z'))
+  assert.equal(h.rows.get('road_fuel')!.status, 'ok')
+})
+test('HOME CARE: three manual hourly figures are checked', () => {
+  for (const k of ['homecare_private_rate', 'homecare_min_price', 'council_homecare_rate']) {
+    const d = sourceByKey(k)!; assert.equal(d.fetch, null)
+    assert.equal(d.validate({ hourly_gbp: 31, basis: 'median' }), null)
+    assert.match(d.validate({ hourly_gbp: 3, basis: 'median' })!, /outside/)
+    assert.match(d.validate({ hourly_gbp: 31 })!, /basis/)
+  }
 })

@@ -6,6 +6,7 @@
 // No dashes in anything this file writes (the details a person types are printed as typed).
 
 import { prisma } from '../../db/client'
+import { usableBrand } from '../../lib/brand-colour'
 
 const q = () => prisma as any
 
@@ -57,6 +58,8 @@ export interface Letterhead {
   contactLines?: string[]
   footerLines?: string[]
   logoAlign?: LogoAlign
+  /** The organisation's brand colour (a readable hex), used for rules and headings only. null = the default. */
+  brandColour?: string | null
 }
 
 const TEXT_LIMITS: Record<string, number> = {
@@ -161,6 +164,23 @@ export async function saveDetails(tenantId: string, d: LetterheadDetails, userId
   await q().$executeRawUnsafe(sql, tenantId, ...vals, d.registered_in ?? 'England and Wales', d.registered_office_same, d.logo_align, userId)
 }
 
+// ── The brand colour: its own column and its own queries, so a missing column can never break the rest of the letterhead ───────────────
+export async function brandColumnReady(): Promise<boolean> {
+  try { await q().$queryRawUnsafe('select 1 from tenant_letterhead where brand_colour is null limit 1'); return true } catch { return false }
+}
+export async function getBrandColour(tenantId: string): Promise<string | null> {
+  try {
+    const r: any[] = await q().$queryRawUnsafe('select brand_colour from tenant_letterhead where tenant_id = $1', tenantId)
+    return usableBrand(r[0]?.brand_colour)
+  } catch { return null }
+}
+/** Saves (or clears with null) the brand colour. The letterhead row must exist: it is created empty when the first colour is set. */
+export async function saveBrandColour(tenantId: string, colour: string | null, userId: string): Promise<void> {
+  await q().$executeRawUnsafe(
+    `insert into tenant_letterhead (tenant_id, brand_colour, updated_by, updated_at) values ($1, $2, $3, now())
+     on conflict (tenant_id) do update set brand_colour = excluded.brand_colour, updated_by = excluded.updated_by, updated_at = now()`, tenantId, colour, userId)
+}
+
 export interface LoadedLetterhead { head: Letterhead; details: LetterheadDetails | null; missing: string[]; ready: boolean; displayName: string }
 
 /** The letterhead for a tenant. Falls back to the display name and the organisation logo when nothing is saved or the table does not exist yet. */
@@ -170,5 +190,6 @@ export async function loadLetterhead(tenantId: string): Promise<LoadedLetterhead
   const logo = typeof t?.logo_url === 'string' && /^data:image\//.test(t.logo_url) ? t.logo_url : null
   const details = await getDetails(tenantId)
   const head = toLetterhead(details, t?.name ?? 'Your service', logo)
+  head.brandColour = await getBrandColour(tenantId)
   return { head, details, missing: missingChecklist(details ?? {}, !!logo), ready: !!details, displayName: t?.name ?? 'Your service' }
 }

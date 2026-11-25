@@ -2,6 +2,7 @@
 // inline, and a footer with the legal details and page numbers. Built from the same LayoutDoc as the PDF, so the two match. The 'docx' package (pure JavaScript) is loaded when this runs.
 
 import { footerFor, printable, type LayoutDoc } from './layout'
+import { usableBrand } from '../../lib/brand-colour'
 
 const FONT = 'Arial'
 const PT = (n: number) => Math.round(n * 2)   // points to half points
@@ -15,6 +16,7 @@ function fit(w: number, h: number, maxW: number, maxH: number): { width: number;
 export async function renderLayoutDocx(d: LayoutDoc): Promise<Buffer> {
   const [docx, { logoForPdf }, sharp] = await Promise.all([import('docx'), import('../policy/policy-pdf'), import('sharp').then(m => (m as any).default ?? m)])
   const { Document, Packer, Paragraph, TextRun, ImageRun, Header, Footer, AlignmentType, PageNumber, Table, TableRow, TableCell, WidthType, BorderStyle } = docx
+  const BRAND = usableBrand(d.head.brandColour)   // header rule and headings only
   const none = { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' }
   const noBorders = { top: none, bottom: none, left: none, right: none }
 
@@ -35,7 +37,7 @@ export async function renderLayoutDocx(d: LayoutDoc): Promise<Buffer> {
     new Paragraph({ alignment: align, spacing: { after: 20 }, children: [new TextRun({ text: printable(d.head.name), bold: true, font: FONT, size: PT(12), color: '1A1530' })] }),
     ...(align === AlignmentType.CENTER ? centredLines : orgLines).map(l => new Paragraph({ alignment: align, spacing: { after: 0 }, children: [new TextRun({ text: l, font: FONT, size: PT(8.8), color: '5E4D70' })] })),
   ]
-  const rule = new Paragraph({ spacing: { before: 80, after: 0 }, border: { bottom: { style: BorderStyle.SINGLE, size: 6, color: 'D9D4E0', space: 4 } }, children: [] })
+  const rule = new Paragraph({ spacing: { before: 80, after: 0 }, border: { bottom: { style: BorderStyle.SINGLE, size: BRAND ? 10 : 6, color: BRAND ? BRAND.slice(1) : 'D9D4E0', space: 4 } }, children: [] })
   const headerChildren: any[] = centre
     ? [
         ...(logoRun ? [new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after: 40 }, children: [logoRun] })] : []),
@@ -65,7 +67,7 @@ export async function renderLayoutDocx(d: LayoutDoc): Promise<Buffer> {
     spacing: { after: o.after ?? 140, before: o.before ?? 0, line: 300 }, bullet: o.bullet ? { level: 0 } : undefined,
     children: [new TextRun({ text: printable(text), font: FONT, size: PT(o.size ?? 10.5), bold: o.bold, color: o.color ?? '1A1530' })],
   })
-  const bodyParas = d.blocks.map(b => b.t === 'li' ? para(b.text, { bullet: true, after: 60 }) : b.t === 'h' ? para(b.text, { bold: true, size: d.kind === 'letter' ? 11 : 13, color: d.kind === 'letter' ? '1A1530' : '0F766E', before: 120, after: 80 }) : para(b.text))
+  const bodyParas = d.blocks.map(b => b.t === 'li' ? para(b.text, { bullet: true, after: 60 }) : b.t === 'h' ? para(b.text, { bold: true, size: d.kind === 'letter' ? 11 : 13, color: BRAND ? BRAND.slice(1) : d.kind === 'letter' ? '1A1530' : '0F766E', before: 120, after: 80 }) : para(b.text))
 
   const children: any[] = []
   if (d.kind === 'letter') {

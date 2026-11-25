@@ -2,6 +2,7 @@
 // Pure data and string building: no database, no files. Nothing here prints a dash; a person's own text is printed as typed.
 
 import type { Letterhead } from './letterhead'
+import { usableBrand } from '../../lib/brand-colour'
 
 export type BlockKind = 'p' | 'li' | 'h'
 export interface LayoutBlock { t: BlockKind; text: string }
@@ -57,6 +58,9 @@ const esc = (s: string) => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&am
  */
 export function layoutToHtml(d: LayoutDoc, logoDataUrl?: string | null): string {
   const h = d.head
+  const brand = usableBrand(h.brandColour)   // the organisation's colour: the rule under the header and the headings, never body text
+  const rule = brand ? ` style="border-top:2px solid ${brand}"` : ''
+  const hStyle = brand ? ` style="color:${brand}"` : ''
   const head = `<div class="lh-head ${h.logoAlign === 'centre' ? 'lh-centre' : ''}">
     ${logoDataUrl ? `<img class="lh-logo" src="${esc(logoDataUrl)}" alt="">` : ''}
     <div class="lh-org"><strong>${esc(h.name)}</strong>${(h.addressLines ?? []).map(l => `<br>${esc(l)}`).join('')}${(h.contactLines ?? []).map(l => `<br>${esc(l)}`).join('')}</div>
@@ -66,7 +70,7 @@ export function layoutToHtml(d: LayoutDoc, logoDataUrl?: string | null): string 
   for (const b of d.blocks) {
     if (b.t === 'li') { if (!inList) { body.push('<ul>'); inList = true } body.push(`<li>${esc(b.text)}</li>`); continue }
     if (inList) { body.push('</ul>'); inList = false }
-    body.push(b.t === 'h' ? `<h3>${esc(b.text)}</h3>` : `<p>${esc(b.text).replace(/\n/g, '<br>')}</p>`)
+    body.push(b.t === 'h' ? `<h3${hStyle}>${esc(b.text)}</h3>` : `<p>${esc(b.text).replace(/\n/g, '<br>')}</p>`)
   }
   if (inList) body.push('</ul>')
   const sig = d.signer?.signature ? `<img class="lh-sig" src="data:image/png;base64,${d.signer.signature.png.toString('base64')}" alt="Signature">` : '<div class="lh-gap"></div>'
@@ -79,7 +83,7 @@ export function layoutToHtml(d: LayoutDoc, logoDataUrl?: string | null): string 
     ? `<p>${esc(d.closing ?? '')}</p>${sig}<p><strong>${esc(d.signer?.name ?? '')}</strong>${d.signer?.role ? `<br>${esc(d.signer.role)}` : ''}</p>${d.acknowledgement ? `<div class="lh-ack"><p>${esc(d.acknowledgement)}</p><p>Signed: ____________________ &nbsp; Date: ______________</p></div>` : ''}`
     : ''
   const foot = footerFor(h)
-  return `<div class="lh-page">${head}<hr>${top}${body.join('')}${close}${foot.length ? `<div class="lh-foot">${foot.map(l => `<div>${esc(l)}</div>`).join('')}</div>` : ''}</div>`
+  return `<div class="lh-page">${head}<hr${rule}>${top}${body.join('')}${close}${foot.length ? `<div class="lh-foot">${foot.map(l => `<div>${esc(l)}</div>`).join('')}</div>` : ''}</div>`
 }
 
 /** The styles that make layoutToHtml look like a page. The web puts these in a style tag next to the preview. */

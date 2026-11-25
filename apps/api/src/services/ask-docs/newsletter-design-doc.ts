@@ -31,7 +31,7 @@ export async function designInputFor(o: { tenantId: string; doc: Doc; target: Ta
   if (!sentBy && o.doc.data?.sent_by) sentBy = String(o.doc.data.sent_by)
   const input: DesignInput = {
     templateId: o.doc.data?.template_id ?? null, title: o.draft?.title ?? o.doc.title, body: o.draft?.body ?? o.doc.body,
-    brand: { name: l.head.name, accent: typeof o.doc.data?.accent === 'string' ? o.doc.data.accent : null, logo, contact: (l.head.contactLines ?? []).slice(0, 3) },
+    brand: { name: l.head.name, accent: typeof o.doc.data?.accent === 'string' && o.doc.data.accent ? o.doc.data.accent : (l.head.brandColour ?? null), logo, contact: (l.head.contactLines ?? []).slice(0, 3) },
     sentBy, photo: photo ? { dataUrl: photo.dataUrl, name: photo.name } : null, links: { holiday: `${siteUrl()}/chat` },
   }
   let logoPng: Buffer | null = null

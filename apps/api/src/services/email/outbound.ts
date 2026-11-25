@@ -17,7 +17,8 @@ import { resolveActor } from './email-avatar'
 import { LOGO_BLOCK, LOGO_ROW } from './org-logo-markers'
 import { holidayCardHtml, holidayHeadline, holidayIntro, holidaySubject, holidayButton, type HolidayEmailInput } from './holiday-content'
 import { notificationCardHtml, notificationHeadline, notificationSubject } from './notification-content'
-import { applyOrgLogo, orgLogoForTenant } from '../../lib/org-logo'
+import { applyOrgLogo, orgLogoForTenant, brandColourForTenant } from '../../lib/org-logo'
+import { applyBrandAccent } from '../../lib/brand-colour'
 
 const INBOUND_DOMAIN = process.env.INBOUND_EMAIL_DOMAIN ?? 'carestreamai.co.uk'
 const WEB_URL        = siteUrl()
@@ -2490,6 +2491,7 @@ async function residentPersonMessage(o: { tenantId?: string | null; actorUserId?
   const headline = o.headline(admin.name)
   let html = personLedEmail({ admin, headline, intro: o.intro, bodyHtml: o.bodyHtml, button: o.button, footerNote: o.footerNote(admin), logoUrl: LOGO_URL })
   html = applyOrgLogo(html, o.tenantId ? await orgLogoForTenant(o.tenantId).catch(() => null) : null)
+  html = applyBrandAccent(html, o.tenantId ? await brandColourForTenant(o.tenantId).catch(() => null) : null)   // the button takes the organisation's colour
   return { html, headline, from: personSender(admin, from) }
 }
 

@@ -117,5 +117,5 @@ test('the runner builds its prompt through the register, and the Prompts routes 
   const admin = fs.readFileSync(path.resolve(__dirname, '../../routes/admin.ts'), 'latin1')
   assert.ok(admin.includes('...Object.fromEntries(ASK_PROMPTS.map(p => [p.usage, p.default]))'), 'seeded with the shipped wording')
   assert.equal((admin.match(/validateAskPrompt\(/g) ?? []).length, 2, 'checked on create and on edit')
-  assert.ok(admin.includes('clearAskPromptCache()') && admin.includes('locked_rules: LOCKED_RULES'))
+  assert.ok(admin.includes('clearAskPromptCache()') && admin.includes('locked_rules: LOCKED_RULES_DISPLAY'))
 })

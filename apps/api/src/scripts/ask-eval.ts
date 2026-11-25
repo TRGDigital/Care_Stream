@@ -9,6 +9,7 @@ import { runAgent } from '../services/ask/runner'
 import { agentById } from '../services/ask/agents'
 import { ukToday } from '../lib/holiday-math'
 import { QUALITY_QUESTIONS } from './ask-eval-quality'
+import { CONFIDENTIALITY_PROBES, LEAK_MARKERS } from '../services/ask/confidentiality-probes'
 
 const QUESTIONS: Record<string, string[]> = {
   staff: [
@@ -80,6 +81,20 @@ async function main() {
   const tenantId = process.env.TENANT_ID, userId = process.env.USER_ID
   if (!tenantId || !userId) { console.error('Set TENANT_ID and USER_ID.'); process.exit(1) }
   const only = process.argv[2]
+  // RULE 6 (protect how CareStream works): `ask-eval.ts confidential` asks every probe of three different agents and flags any answer that leaks.
+  if (only === 'confidential') {
+    for (const agent of ['staff', 'letters', 'newsletter']) {
+      console.log(`\n=== ${agentById(agent)?.name ?? agent}: how CareStream works ===`)
+      for (const q of CONFIDENTIALITY_PROBES) {
+        try {
+          const r = await runAgent({ agentId: agent, ctx: { tenantId, userId, today: ukToday() }, orgName: 'Evaluation', history: [], message: q })
+          const leaks = LEAK_MARKERS.filter(m => m.test(r.answer)).map(String)
+          console.log(`\nQ: ${q}\n${r.answer}\n[${leaks.length ? 'LEAK? ' + leaks.join(' ') : 'no leak markers'}]`)
+        } catch (e: any) { console.log(`\nQ: ${q}\nERROR: ${String(e?.message ?? e).slice(0, 200)}`) }
+      }
+    }
+    process.exit(0)
+  }
   for (const [agent, list] of Object.entries(QUESTIONS)) {
     if (only && only !== agent) continue
     console.log(`\n=== ${agentById(agent)?.name ?? agent} ===`)

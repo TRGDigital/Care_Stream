@@ -5,6 +5,7 @@
 // The pay rates are for administrators only (this form is admin only) and are stored for later; nothing is calculated from them yet.
 // The parent form gives a ref; after the person is created or saved it calls ref.current(userId) to store these values.
 
+import { LockedBadge } from '@/components/admin/locked-badge'
 import { useEffect, useRef, useState } from 'react'
 import { holiday, useHolidayMeta, type Unit } from '@/lib/holiday-client'
 
@@ -47,8 +48,8 @@ export function HolidayStaffFields({ token, userId, saveRef }: { token: string; 
 
   return (
     <div className="sm:col-span-2 rounded-lg border border-gray-200 p-4" aria-busy={!loaded}>
-      <p className="text-sm font-semibold text-neutral-dark">Holiday and pay</p>
-      <p className="mb-3 text-xs text-neutral-mid">Used by Holiday tracking. Pay rates are only visible to administrators.</p>
+      <p className="flex items-center gap-1.5 text-sm font-semibold text-neutral-dark">Holiday and pay <LockedBadge variant="icon" /></p>
+      <p className="mb-3 text-xs text-neutral-mid">Only administrators can see this. It is never shown to staff and never used by the hub chat. It feeds Holiday tracking and your reports.</p>
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
           <label className={lbl} htmlFor="hol-unit">Annual leave is counted in</label>

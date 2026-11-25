@@ -45,3 +45,15 @@ test('ROLLED OUT: only the Holiday and pay boxes on the staff forms are open to 
   const web = fs.readFileSync(path.join(__dirname, '../../../web/src/components/admin/holiday/holiday-staff-fields.tsx'), 'utf8')
   assert.ok(/meta\?\.enabled \|\| meta\?\.staff_fields/.test(web)); assert.ok(/!meta\.is_admin/.test(web))
 })
+
+test('HOLIDAY AND PAY is locked on screen and the hub chat never reads it (no holiday, pay or staff detail record is loaded by the chat, retrieval or staff AI code)', () => {
+  const web = fs.readFileSync(path.join(__dirname, '../../../web/src/components/admin/holiday/holiday-staff-fields.tsx'), 'utf8')
+  assert.match(web, /Holiday and pay <LockedBadge variant="icon" \/>/); assert.match(web, /never used by the hub chat/)
+  const root = path.resolve(__dirname, '..')
+  const files: string[] = []
+  const walk = (d: string) => { for (const f of fs.readdirSync(d, { withFileTypes: true })) { const p = path.join(d, f.name); if (f.isDirectory()) walk(p); else if (/\.ts$/.test(f.name) && !/\.test\.ts$/.test(f.name)) files.push(p) } }
+  for (const d of ['services/rag', 'services/ai', 'services/knowledge']) { try { walk(path.join(root, d)) } catch { /* folder may not exist */ } }
+  for (const f of ['routes/chat.ts']) { try { if (fs.existsSync(path.join(root, f))) files.push(path.join(root, f)) } catch { /* ignore */ } }
+  assert.ok(files.length > 0, 'the chat code was found')
+  for (const f of files) assert.doesNotMatch(fs.readFileSync(f, 'utf8'), /holidayStaff|holiday_staff|staffDetail|weekday_rate|weekend_rate|holiday_entitlement/, path.relative(root, f))
+})

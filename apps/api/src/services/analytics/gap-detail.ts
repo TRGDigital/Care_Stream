@@ -14,6 +14,7 @@
 // cached verdict to "covered".
 
 import { GAP_VIEWS_VERSION } from './gap-views'
+import { inBatches as inBatchesOf } from './in-batches'
 import { prisma } from '../../db/client'
 import { embedTexts } from '../rag/embedder'
 import { queryVectors, getTenantNamespace } from '../vector/pinecone'
@@ -21,7 +22,12 @@ import { callClaude } from '../ai/claude'
 import { downloadExtractedText } from '../storage/s3'
 
 const SONNET = 'claude-sonnet-4-5'
+// NO CAP on how many points a regulation's curated checklist can have: every point is assessed. A long checklist is simply worked through in several AI calls of at most BATCH points
+// each (the size the prompts and reply limits were tuned on), so no point is ever dropped or a reply cut off. MAX_REQUIREMENTS applies ONLY to the model-derived fallback for a
+// regulation that has no curated checklist at all.
+const BATCH = 8
 const MAX_REQUIREMENTS = 8
+const inBatches = <T, R>(items: T[], run: (chunk: T[]) => Promise<R[]>) => inBatchesOf(items, BATCH, run)
 // Matches the cap in regulation-coverage.ts. At the old 12,000 the deep read saw only the
 // first few pages of a long policy and reported requirements as missing that were addressed
 // later in the same document — and this verdict overwrites the summary row.
@@ -165,7 +171,13 @@ const parseJson = (text: string): any => {
 // curated checklist do we fall back to model-derived requirements — and even then we
 // bind the model strictly to the regulation description, not outside knowledge.
 async function identify(reg: any, evidenceText: string | null): Promise<{ requirements: { requirement: string; in_policy: boolean }[] }> {
-  const curated: string[] = Array.isArray(reg.required_elements) ? reg.required_elements.filter(Boolean).slice(0, MAX_REQUIREMENTS) : []
+  const curated: string[] = Array.isArray(reg.required_elements) ? reg.required_elements.filter(Boolean) : []
+
+  // ── Partial with a curated checklist: assess the evidence policy against EVERY point, BATCH points per call. ──
+  if (evidenceText && curated.length > BATCH) {
+    const parts = await inBatches(curated, async chunk => (await identify({ ...reg, required_elements: chunk }, evidenceText)).requirements)
+    return { requirements: parts }
+  }
 
   // ── Partial: check the evidence policy against the requirement checklist. ──
   if (evidenceText) {
@@ -226,6 +238,9 @@ Respond with ONLY minified JSON:
 type LocationHit = { quote: string; is_heading: boolean }
 
 async function findLocations(policyText: string, missing: string[]): Promise<LocationHit[]> {
+  return inBatches(missing, chunk => findLocationsChunk(policyText, chunk))
+}
+async function findLocationsChunk(policyText: string, missing: string[]): Promise<LocationHit[]> {
   const empty = (): LocationHit[] => missing.map(() => ({ quote: '', is_heading: false }))
   if (!missing.length || !policyText) return empty()
   const user = `Here is a UK care-home policy:
@@ -295,6 +310,13 @@ async function refineAmendments(
   glossary: GlossaryTerm[],
   voiceSample: string,
 ): Promise<string[]> {
+  return inBatches(items, chunk => refineAmendmentsChunk(chunk, glossary, voiceSample))
+}
+async function refineAmendmentsChunk(
+  items: { requirement: string; existing: string; suggestion: string | null }[],
+  glossary: GlossaryTerm[],
+  voiceSample: string,
+): Promise<string[]> {
   if (!items.length) return []
   const payload = items.map((it, i) =>
     `[${i + 1}]\nEXISTING POLICY WORDING: "${it.existing}"\nMUST ALSO MEET THIS REQUIREMENT: ${it.requirement}${it.suggestion ? `\nDRAFT ADDITION (reference only): ${it.suggestion}` : ''}`
@@ -360,6 +382,9 @@ Return ONLY compact JSON: {"care_setting":"...","policy_should_cover":"..."}. Us
 }
 
 async function titleNewSections(requirements: string[]): Promise<string[]> {
+  return inBatches(requirements, chunk => titleNewSectionsChunk(chunk))
+}
+async function titleNewSectionsChunk(requirements: string[]): Promise<string[]> {
   const fallback = (r: string) => r.replace(/[.:;].*$/, '').split(/\s+/).slice(0, 6).join(' ')
   if (!requirements.length) return []
   const user = `For each requirement below, write a SHORT policy section heading (2 to 6 words, Title Case, no full stop) that a care home could use as an H2 in their policy. Plain and descriptive, not a sentence.
@@ -381,6 +406,16 @@ Respond with ONLY minified JSON, an array in the same order:
 // ── Step 2: verify each candidate-missing requirement against the WHOLE corpus, ──
 //            and for the genuinely-absent ones, draft example wording.
 async function verifyAndSuggest(
+  reg: any,
+  candidates: string[],
+  namespace: string,
+  nameById: Map<string, string>,
+  glossary: GlossaryTerm[],
+  voiceSample: string,
+): ReturnType<typeof verifyAndSuggestChunk> {
+  return inBatches(candidates, chunk => verifyAndSuggestChunk(reg, chunk, namespace, nameById, glossary, voiceSample))
+}
+async function verifyAndSuggestChunk(
   reg: any,
   candidates: string[],
   namespace: string,

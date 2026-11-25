@@ -33,6 +33,7 @@
 //
 // Results are cached in regulation_coverage and read by GET /analytics/gaps.
 
+import { inBatches as inBatchesOf } from './in-batches'
 import { prisma } from '../../db/client'
 import { embedTexts } from '../rag/embedder'
 import { queryVectors, getTenantNamespace } from '../vector/pinecone'
@@ -185,7 +186,9 @@ const CHUNKS_PER_DOC = 2    // best-matching passages per shortlisted document
 // match is itself a strong signal — and the subject question applies the precision.
 const RELEVANCE_FLOOR = 0.3
 const COVERAGE_BATCH = 12   // regulations analysed per batched request
-const MAX_ELEMENTS = 12     // curated required_elements assessed per regulation
+// NO CAP on how many curated points a regulation has: every one is assessed. A long checklist is worked through in several calls of up to ELEMENTS_PER_CALL points (the size the prompt and its
+// reply limit were tuned on), so none is dropped or cut off.
+const ELEMENTS_PER_CALL = 12
 
 // Resolve the regulations that actually apply to THIS service — scoped by the tenant's
 // care setting and its self-declared service profile. Out-of-scope regs never become
@@ -229,8 +232,13 @@ type ElementFinding = { requirement: string; met: boolean; note: string }
 // Returns [] when there are no curated elements or the call fails; the caller treats that as
 // "the policy exists and is on the subject", never as evidence of a gap.
 async function assessElements(reg: Reg, policyName: string, policyText: string): Promise<ElementFinding[]> {
-  const elements = (reg.required_elements ?? []).filter(Boolean).slice(0, MAX_ELEMENTS)
+  const elements = (reg.required_elements ?? []).filter(Boolean)
   if (!elements.length || !policyText.trim()) return []
+  let failed = false
+  const out = await inBatchesOf(elements, ELEMENTS_PER_CALL, async chunk => { if (failed) return []; const part = await assessElementsChunk(reg, policyName, policyText, chunk); if (!part.length) failed = true; return part })
+  return failed ? [] : out   // any call failing keeps the safe answer: never a verdict from half a checklist
+}
+async function assessElementsChunk(reg: Reg, policyName: string, policyText: string, elements: string[]): Promise<ElementFinding[]> {
   const user = `REGULATION: ${reg.official_name}
 WHAT IT REQUIRES: ${String(reg.summary ?? '').slice(0, 1500)}
 

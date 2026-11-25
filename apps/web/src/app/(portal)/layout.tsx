@@ -12,7 +12,6 @@ import { ViewAsBanner } from '@/components/view-as/view-as-banner'
 import { SuperUserNotice } from '@/components/hub/super-user-notice'
 import { TabletBar, TabletLock } from '@/components/hub/tablet-bar'
 import { NotificationOverlay } from '@/components/hub/notification-overlay'
-import { AskPanelHost } from '@/components/ask/ask-overlay'
 import type { Metadata } from 'next'
 
 // Logged-in app route: never meant for search results. robots.txt already disallows these paths,
@@ -50,8 +49,6 @@ export default async function PortalLayout({ children }: { children: React.React
         <main className="flex flex-1 flex-col overflow-hidden">
           {children}
         </main>
-        {/* Ask CareStream for managers (when their account allows it) and administrators on the pilot: a panel over the page, hidden for everyone else. */}
-        <AskPanelHost />
       </div>
     </AuthSessionProvider>
   )

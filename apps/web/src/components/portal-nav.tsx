@@ -8,7 +8,6 @@ import { Menu, X } from 'lucide-react'
 import { SiteImage } from '@/components/site-image'
 import { IncentiveTracker } from '@/components/hub/incentive-tracker'
 import { HeaderAvatar } from '@/components/hub/my-photo'
-import { AskButton } from '@/components/ask/ask-overlay'
 
 interface Props {
   userName: string
@@ -38,7 +37,6 @@ export function PortalNav({ userName, userRole }: Props) {
       {/* Desktop nav */}
       <nav className="hidden items-center gap-5 md:flex">
         <IncentiveTracker token={token} userId={session?.user?.email ?? 'guest'} />
-        <AskButton />   {/* shows only for managers on an account that lets them use Ask CareStream (and administrators on the pilot) */}
         {links.map(l => (
           <Link key={l.href} href={l.href} className="flex items-center gap-1.5 text-sm font-medium text-neutral-mid hover:text-teal">
             {l.label}
@@ -54,7 +52,7 @@ export function PortalNav({ userName, userRole }: Props) {
       </nav>
 
       {/* Mobile: the tracker stays in the header (not inside the menu) */}
-      <div className="ml-auto mr-2 flex items-center gap-2 md:hidden"><AskButton /><IncentiveTracker token={token} userId={session?.user?.email ?? 'guest'} compact /></div>
+      <div className="ml-auto mr-2 flex items-center gap-2 md:hidden"><IncentiveTracker token={token} userId={session?.user?.email ?? 'guest'} compact /></div>
 
       {/* Mobile hamburger */}
       <button

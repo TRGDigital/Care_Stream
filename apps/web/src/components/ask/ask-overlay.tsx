@@ -227,7 +227,7 @@ export function AskPanel({ token, layout, expanded, width, onClose }: { token: s
   const boxCls = expanded
     ? 'flex h-[92vh] w-full max-w-[1400px] flex-col overflow-hidden rounded-2xl bg-white shadow-2xl outline-none sm:w-[90vw]'
     : layout === 'phone' ? 'fixed inset-0 z-[75] flex flex-col overflow-hidden bg-white outline-none'
-    : 'fixed bottom-0 right-0 top-14 z-[55] flex max-w-full flex-col overflow-hidden border-l border-gray-200 bg-white shadow-[-12px_0_32px_rgba(23,18,31,0.12)] outline-none ask-slide-in'
+    : 'fixed bottom-0 right-0 top-0 z-[75] flex max-w-full flex-col overflow-hidden border-l border-gray-200 bg-white shadow-[-12px_0_32px_rgba(23,18,31,0.12)] outline-none ask-slide-in'
   const boxStyle = !expanded && layout !== 'phone' ? { width } : undefined
   const startResize = (e: React.PointerEvent) => {
     e.preventDefault()

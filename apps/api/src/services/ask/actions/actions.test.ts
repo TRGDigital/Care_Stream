@@ -128,7 +128,7 @@ test('confirm checks only the proposer in the source, and the store claim is a s
 test('Tier C is unreachable: no action type, no tool, no execute path for pay, holiday decisions, removing staff, permissions, sickness or money', () => {
   for (const t of ACTION_TYPES) assert.doesNotMatch(t, /pay|salary|approve|reject|archive|remove|delete|permission|sick|fee|invoice|payment/i)
   const names = [...TOOLS.map(t => t.name), ...ACTION_TOOLS.map(t => t.name)]
-  for (const n of names) if (/^(propose|set|update|change|approve|reject|delete|remove|archive|send)_/.test(n)) assert.ok(/^propose_(staff_notification|unread_reminder|training_allocation|training_reminders)$/.test(n), `unexpected write style tool: ${n}`)
+  for (const n of names) if (/^(propose|set|update|change|approve|reject|delete|remove|archive|send)_/.test(n)) assert.ok(/^(propose_(staff_notification|unread_reminder|training_allocation|training_reminders)|set_share_intent)$/.test(n), `unexpected write style tool: ${n}`)
   assert.match(tierCNote('please raise Sam\'s pay')?.link ?? '', /staff/); assert.match(tierCNote('approve her holiday')?.link ?? '', /holiday/); assert.equal(tierCNote('what is the weather'), null)
   assert.ok(TIER_C.length >= 6)
   assert.doesNotMatch(src('execute.ts'), /holiday_requests|holidayRequest|holiday_staff|weekday_rate|staffDetail|sick_|archiv|is_active: false|role: 'admin'/)

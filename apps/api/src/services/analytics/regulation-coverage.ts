@@ -231,7 +231,7 @@ type ElementFinding = { requirement: string; met: boolean; note: string }
 // question the old judge could never answer honestly from a 700-character excerpt.
 // Returns [] when there are no curated elements or the call fails; the caller treats that as
 // "the policy exists and is on the subject", never as evidence of a gap.
-async function assessElements(reg: Reg, policyName: string, policyText: string): Promise<ElementFinding[]> {
+export async function assessElements(reg: Reg, policyName: string, policyText: string): Promise<ElementFinding[]> {
   const elements = (reg.required_elements ?? []).filter(Boolean)
   if (!elements.length || !policyText.trim()) return []
   // A policy longer than the read limit is read in overlapping parts, and a point is met if ANY part meets it. A policy within the limit is one part: the same single read as before.

@@ -15,6 +15,7 @@ import { useFundingMeta } from '@/lib/funding-client'
 import { FinanceSettingsBody } from '@/components/admin/residents/finance-settings'
 import { AskSettingsBody } from '@/components/ask/ask-settings'
 import { ask as askApi } from '@/lib/ask-client'
+import { downloadElementAsPdf } from '@/lib/download-pdf'
 import { LetterheadSettingsBody } from '@/components/admin/settings/letterhead-settings'
 import { SignatureSettingsBody } from '@/components/admin/settings/signature-settings'
 import { useLetterheadAvailable } from '@/lib/letterhead-client'
@@ -454,33 +455,16 @@ export default function SettingsPage() {
   })
 
   // "Champions" sheet: every named position with who holds it today, so it can be filled in
-  // offline. A CSV with a byte order mark opens cleanly in Excel. Built in the browser from
-  // what the page already holds, so nothing extra is fetched or stored.
-  function downloadChampions() {
-    const q = (v: string) => `"${v.replace(/"/g, '""')}"`
-    const rows: string[][] = [
-      ['Position', 'Named in your policies', 'Held today (from staff records)', 'Added names', 'Name or names to add (write here)'],
-    ]
-    for (const rh of orgContext.role_holders) {
-      const mention = roleScan?.mentions.find(m => m.key === rh.key)
-      const added = roleManual(rh.key).filter(n => !rh.derived.some(d => d.toLowerCase() === n.toLowerCase()))
-      rows.push([
-        rh.role,
-        mention && mention.policies > 0 ? `In ${mention.policies} ${mention.policies === 1 ? 'policy' : 'policies'}` : '',
-        rh.derived.join('; '),
-        added.join('; '),
-        '',
-      ])
-    }
-    const csv = '\uFEFF' + rows.map(r => r.map(q).join(',')).join('\r\n')
-    const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }))
-    const a = document.createElement('a')
-    a.href = url
-    a.download = 'champions.csv'
-    document.body.appendChild(a)
-    a.click()
-    a.remove()
-    URL.revokeObjectURL(url)
+  // offline. Same branded layout as the face-to-face sign-in sheet (logo, teal rule, home
+  // name), captured from the hidden printable below. Built from what the page already holds.
+  const championsRef = useRef<HTMLDivElement>(null)
+  const [champBusy, setChampBusy] = useState(false)
+  async function downloadChampions() {
+    if (!championsRef.current) return
+    setChampBusy(true)
+    try { await downloadElementAsPdf(championsRef.current, 'champions.pdf', 760) }
+    catch { /* the button simply stops spinning; nothing is stored */ }
+    finally { setChampBusy(false) }
   }
 
   async function loadRoleScan() {
@@ -1209,8 +1193,8 @@ export default function SettingsPage() {
             <div className="mt-6">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <p className="text-xs font-bold uppercase tracking-wide text-neutral-mid">Role-holders</p>
-                <Button onClick={downloadChampions} size="md" variant="secondary">
-                  <Download size={14} className="mr-1.5" />Download champions
+                <Button onClick={downloadChampions} disabled={champBusy} size="md" variant="secondary">
+                  {champBusy ? <Loader2 size={14} className="mr-1.5 animate-spin" /> : <Download size={14} className="mr-1.5" />}Download champions
                 </Button>
               </div>
               <p className="mt-1 text-xs text-neutral-mid">Names appear here automatically when you give a staff member the matching position or specialist role (for example a <strong>Care Manager</strong> becomes the registered manager). You can add extra names too. Where a role is shared, you pick which person when you adopt text into a policy.</p>
@@ -1304,6 +1288,43 @@ export default function SettingsPage() {
                     </div>
                   )
                 })}
+              </div>
+ {/* Hidden printable, captured by html2pdf. Same look as the face-to-face sign-in sheet. */}
+              <div style={{ position: 'fixed', left: 0, top: 0, width: 0, height: 0, overflow: 'hidden', zIndex: -1 }} aria-hidden="true">
+                <div ref={championsRef} style={{ width: 760, padding: 24, fontFamily: 'Arial, Helvetica, sans-serif', color: '#1f2937', background: '#fff' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '2px solid #0d9488', paddingBottom: 10, marginBottom: 10 }}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src="/logo-color.png" alt="CareStream" style={{ height: 40 }} />
+                    <div style={{ textAlign: 'right', fontSize: 12, color: '#374151' }}><strong>{orgContext.home_name}</strong></div>
+                  </div>
+                  <h1 style={{ fontSize: 19, fontWeight: 800, margin: '2px 0 4px' }}>Champions and named positions</h1>
+                  <p style={{ fontSize: 12, color: '#6b7280', margin: '0 0 12px' }}>Write the name or names against each position, then enter them in Settings, Organisation details, Role-holders.</p>
+                  <div style={{ fontSize: 12 }}>
+                    <div style={{ display: 'flex', fontWeight: 700, borderBottom: '2px solid #e5e7eb' }}>
+                      <div style={{ width: 28, padding: '6px 8px' }}>#</div>
+                      <div style={{ width: 210, padding: '6px 8px' }}>Position</div>
+                      <div style={{ width: 200, padding: '6px 8px' }}>Held today</div>
+                      <div style={{ flex: 1, padding: '6px 8px' }}>Name or names to add</div>
+                    </div>
+                    {orgContext.role_holders.map((rh, i) => {
+                      const mention = roleScan?.mentions.find(m => m.key === rh.key)
+                      const added = roleManual(rh.key).filter(n => !rh.derived.some(d => d.toLowerCase() === n.toLowerCase()))
+                      const held = [...rh.derived, ...added]
+                      return (
+                        <div key={rh.key} className="avoid-break" style={{ display: 'flex', borderBottom: '1px solid #e5e7eb' }}>
+                          <div style={{ width: 28, padding: '10px 8px' }}>{i + 1}</div>
+                          <div style={{ width: 210, padding: '10px 8px' }}>
+                            <strong>{rh.role}</strong>
+                            {mention && mention.policies > 0 && <div style={{ fontSize: 10, color: '#6b7280' }}>In {mention.policies} {mention.policies === 1 ? 'policy' : 'policies'}</div>}
+                          </div>
+                          <div style={{ width: 200, padding: '10px 8px' }}>{held.length ? held.join(', ') : <span style={{ color: '#9ca3af' }}>No one yet</span>}</div>
+                          <div style={{ flex: 1, padding: '10px 8px' }} />
+                        </div>
+                      )
+                    })}
+                  </div>
+                  <p style={{ marginTop: 14, fontSize: 10, color: '#9ca3af' }}>Completed by: ______________________   Date: ______________</p>
+                </div>
               </div>
               {orgSaved && <p className="mt-3 flex items-center gap-1 text-sm font-medium text-green-600"><Check size={14} /> Saved</p>}
             </div>

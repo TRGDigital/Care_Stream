@@ -432,9 +432,12 @@ function highlightSearch(root: HTMLElement, term: string): number {
   return count
 }
 
-export function GapDetailModal({ token, referenceKey, officialName, acknowledged, disclaimer, onAcknowledged, onClose, onVerdictCovered, onCompleted }: {
+export function GapDetailModal({ token, referenceKey, viewKey = null, viewName = null, officialName, acknowledged, disclaimer, onAcknowledged, onClose, onVerdictCovered, onCompleted }: {
   token:            string
   referenceKey:     string
+  /** The policy this row is for (its id, or 'new:<name>') and its name: the window shows THAT policy's items only. */
+  viewKey?:         string | null
+  viewName?:        string | null
   officialName:     string
   acknowledged:     boolean
   disclaimer:       string
@@ -446,7 +449,7 @@ export function GapDetailModal({ token, referenceKey, officialName, acknowledged
   const [completing, setCompleting] = useState(false)
   const { data: gapSess } = useSession()
   const gUid = gapSess?.user?.email ?? 'guest'
-  const detailKey = `admin-gap-detail-${gUid}-${referenceKey}`
+  const detailKey = `admin-gap-detail-${gUid}-${referenceKey}-${viewKey ?? 'first'}`
   const adoptionKey = `admin-adoption-context-${gUid}`
   const d0 = persistentCache.get<Detail>(detailKey)
   const previewKeyFor = (pid: string) => `admin-gap-preview-${gUid}-${pid}`
@@ -709,7 +712,7 @@ export function GapDetailModal({ token, referenceKey, officialName, acknowledged
       for (const dec of ((cachedD as any).decisions ?? [])) m0[dec.requirement] = { decision: dec.decision, section_title: dec.section_title }
       setDecisions(m0)
     }
-    createApiClient(token).analytics.gapDetail(referenceKey)
+    createApiClient(token).analytics.gapDetail(referenceKey, false, { key: viewKey, name: viewName })
       .then(d => {
         if (!live) return
         persistentCache.set(detailKey, d)
@@ -722,7 +725,7 @@ export function GapDetailModal({ token, referenceKey, officialName, acknowledged
       .catch(e => { if (live && !cachedD) setError(e.message ?? 'Could not build the detail.') })
       .finally(() => { if (live) setLoading(false) })
     return () => { live = false }
-  }, [token, referenceKey, accepted, detailKey]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [token, referenceKey, viewKey, viewName, accepted, detailKey]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Load the target policy preview (right pane) as soon as the detail is ready.
   useEffect(() => {

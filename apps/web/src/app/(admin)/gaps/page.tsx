@@ -186,7 +186,7 @@ export default function GapsPage() {
   const [analysing, setAnalysing] = useState(false)
   const [analyseProgress, setAnalyseProgress] = useState<{ done: number; total: number } | null>(null)
   // Deep-dive modal + client-side verdict corrections (reg keys the drill-in found covered).
-  const [detailReg, setDetailReg] = useState<{ reference_key: string; official_name: string } | null>(null)
+  const [detailReg, setDetailReg] = useState<{ reference_key: string; official_name: string; view_key: string | null; view_name: string | null } | null>(null)
   const [correctedToCovered, setCorrectedToCovered] = useState<Set<string>>(new Set())
   const [ackOverride, setAckOverride] = useState(false)   // set true once the disclaimer is accepted this session
   const [analysisAckOverride, setAnalysisAckOverride] = useState(false)   // set true once the credits notice is confirmed this session
@@ -833,7 +833,7 @@ export default function GapsPage() {
                           {reg.status === 'gap' ? 'Gap' : 'Elements to add'}
                         </span>
                         <button
-                          onClick={() => setDetailReg({ reference_key: reg.reference_key, official_name: reg.official_name })}
+                          onClick={() => setDetailReg({ reference_key: reg.reference_key, official_name: reg.official_name, view_key: policy ? (policy.id ?? `new:${policy.name.toLowerCase()}`) : null, view_name: policy?.name ?? null })}   // this row's own policy: the window opens for it and nothing else
                           className="inline-flex items-center gap-1.5 rounded-btn border border-teal/30 bg-white px-2.5 py-1.5 text-xs font-semibold text-teal hover:bg-teal-light/30"
                         >
                           <Wand2 size={12} /> {reg.status === 'gap' ? 'See what to add' : 'Show coverage'}
@@ -986,6 +986,8 @@ export default function GapsPage() {
         <GapDetailModal
           token={session.accessToken}
           referenceKey={detailReg.reference_key}
+          viewKey={detailReg.view_key}
+          viewName={detailReg.view_name}
           officialName={detailReg.official_name}
           acknowledged={data.remediation_acknowledged || ackOverride}
           disclaimer={data.remediation_disclaimer}

@@ -13,6 +13,7 @@
 // it already holds elsewhere. If every requirement turns out covered, we correct the
 // cached verdict to "covered".
 
+import { GAP_VIEWS_VERSION } from './gap-views'
 import { prisma } from '../../db/client'
 import { embedTexts } from '../rag/embedder'
 import { queryVectors, getTenantNamespace } from '../vector/pinecone'
@@ -100,6 +101,17 @@ export type GapRequirement = {
   target_policy_name?: string | null
 }
 
+/** One policy a regulation's missing wording routes to, with its OWN requirements, numbering and highlights worked out against THAT policy's text. Each row on /gaps opens its own view. */
+export type PolicyView = {
+  key:                string                                   // the policy id, or 'new:<name>' when no policy exists yet (matches target_policies)
+  policy:             { id: string | null; name: string }
+  requirements:       GapRequirement[]                         // only the missing items routed to this policy
+  highlight_quotes:   string[]
+  highlight_placements: Placement[]
+  highlight_labels:   string[]
+}
+
+export { GAP_VIEWS_VERSION, viewOfDetail } from './gap-views'
 export type GapDetail = {
   reference_key:     string
   official_name:     string
@@ -114,6 +126,8 @@ export type GapDetail = {
   evidence_policy:   { id: string; name: string } | null
   target_policy:     { id: string; name: string } | null   // primary policy to add to (back-compat / main preview)
   target_policies:   Array<{ id: string | null; name: string; count: number }>  // all policies the missing requirements route to
+  policy_views?:     PolicyView[]                                // one per routed policy; the detail is read through viewOfDetail() so a row only ever shows its own policy
+  views_version?:    number
   suggested_new_policy_title: string | null                // when there's no existing policy to add to
   highlight_quotes:  string[]                               // policy passages to highlight = where to add/amend (document order)
   highlight_placements: Placement[]                          // aligned to highlight_quotes: 'amend' | 'add_under_heading'
@@ -423,12 +437,100 @@ Respond with ONLY minified JSON — an array in the same order:
   })
 }
 
+/** Where in a policy to add or amend each missing requirement (house numbering in document order). Used once per policy a regulation routes to, so every row on /gaps has its own correct list.
+ *  Mutates the requirements it is given (match_index, placement, location_quote, section_title, rewritten wording) and returns the aligned highlight arrays. */
+async function placeMissing(targetText: string | null, missingReqs: GapRequirement[], glossary: GlossaryTerm[], voiceSample: string): Promise<{ highlightQuotes: string[]; highlightPlacements: Placement[]; highlightLabels: string[] }> {
+  const highlightQuotes: string[] = []
+  const highlightPlacements: Placement[] = []
+  const highlightLabels: string[] = []
+  if (missingReqs.length && targetText) {
+    const hits = await findLocations(targetText, missingReqs.map(r => r.requirement))
+    const lower = targetText.toLowerCase()
+    const norm = (s: string) => s.toLowerCase().replace(/\s+/g, ' ').trim()
+    // Keep only anchors that are ACTUALLY present in the policy (pos >= 0), so a number
+    // never points at nothing. Dedupe AMEND anchors (two rewrites of one sentence makes
+    // no sense) while allowing several items under the same heading. Whatever is left
+    // over becomes a proper "new section" instead of a phantom highlight.
+    const seenAmend = new Set<string>()
+    const located = missingReqs
+      .map((r, i) => ({ r, hit: hits[i] }))
+      .filter(x => x.hit && x.hit.quote)
+      .map(x => ({ r: x.r, hit: x.hit, pos: lower.indexOf(x.hit.quote.toLowerCase()) }))
+      .filter(x => x.pos >= 0)
+      .filter(x => {
+        if (x.hit.is_heading) return true
+        const k = norm(x.hit.quote)
+        if (seenAmend.has(k)) return false
+        seenAmend.add(k)
+        return true
+      })
+      .sort((a, b) => a.pos - b.pos)
+    // Assign sequential numbers in document order and build the aligned highlight arrays.
+    located.forEach((x, k) => {
+      const placement: Placement = x.hit.is_heading ? 'add_under_heading' : 'amend'
+      x.r.match_index = k + 1
+      x.r.placement   = placement
+      // Ground the rewrite (and what the tenant replaces) on the FULL paragraph/bullet the
+      // anchor sits in, not just the short matching phrase, so the suggestion is a complete
+      // drop-in replacement for the whole block and nothing already in it is lost.
+      x.r.location_quote = placement === 'amend' ? expandToBlock(targetText, x.pos, x.hit.quote.length) : x.hit.quote
+      highlightQuotes.push(x.hit.quote)   // short anchor: reliable to locate; the UI highlights the whole block it sits in
+      highlightPlacements.push(placement)
+      highlightLabels.push(x.r.requirement.slice(0, 90))
+    })
+    // Anything without a kept anchor is a brand-new section. Number these too, CONTINUING
+    // the sequence after the located items, and emit an aligned (empty-quote) entry so the
+    // UI can show them a destination (a callout at the end of the policy) instead of
+    // leaving them off the numbered plan entirely.
+    const newReqs = missingReqs.filter(r => r.match_index == null)
+    const newTitles = await titleNewSections(newReqs.map(r => r.requirement))
+    newReqs.forEach((r, j) => {
+      r.match_index    = located.length + j + 1
+      r.location_quote = null
+      r.placement      = 'new_section'
+      r.section_title  = newTitles[j] ?? null
+      highlightQuotes.push('')
+      highlightPlacements.push('new_section')
+      highlightLabels.push(newTitles[j] || r.requirement.slice(0, 90))
+    })
+
+    // Combine-and-expand: rewrite each AMEND target from its existing wording so nothing
+    // already in the policy is lost and the missing requirement is folded in, guarded by
+    // the key-terminology glossary. Heading/new-section items keep their fresh wording.
+    const amendReqs = located.filter(x => x.r.placement === 'amend').map(x => x.r)
+    if (amendReqs.length) {
+      const rewrites = await refineAmendments(
+        amendReqs.map(r => ({ requirement: r.requirement, existing: r.location_quote as string, suggestion: r.suggested_addition ?? null })),
+        glossary,
+        voiceSample,
+      )
+      amendReqs.forEach((r, i) => { if (rewrites[i]) r.suggested_addition = rewrites[i] })
+    }
+  } else {
+    // No target policy text to anchor against: everything is a numbered new section.
+    const newTitles = await titleNewSections(missingReqs.map(r => r.requirement))
+    missingReqs.forEach((r, j) => {
+      r.match_index = j + 1
+      r.placement   = 'new_section'
+      r.section_title = newTitles[j] ?? null
+      highlightQuotes.push('')
+      highlightPlacements.push('new_section')
+      highlightLabels.push(newTitles[j] || r.requirement.slice(0, 90))
+    })
+  }
+  return { highlightQuotes, highlightPlacements, highlightLabels }
+}
+
 // ── Public entry point ───────────────────────────────────────────────────────
 export async function getGapDetail(tenantId: string, referenceKey: string, force = false): Promise<GapDetail> {
   if (!force) {
     const cached = await (prisma as any).gapDetailCache.findUnique({
       where: { tenant_id_reference_key: { tenant_id: tenantId, reference_key: referenceKey } },
     }).catch((e: any) => { console.error('[gap-detail] cache read failed', referenceKey, e?.message); return null })
+    // A detail cached before per-policy views existed (views_version 2) is rebuilt on open, so it never shows one policy's list under another policy's name.
+    if (cached?.payload && (cached.payload as GapDetail).views_version !== GAP_VIEWS_VERSION && Array.isArray((cached.payload as GapDetail).requirements) && (cached.payload as GapDetail).requirements.some(r => r.status === 'missing')) {
+      return getGapDetail(tenantId, referenceKey, true)
+    }
     if (cached?.payload) {
       const payload = cached.payload as GapDetail
       // Self-heal payloads cached before the primary-target promotion: if the
@@ -627,84 +729,23 @@ export async function getGapDetail(tenantId: string, referenceKey: string, force
   //    sees down the policy run 1, 2, 3, ... rather than in requirement order. A heading
   //    anchor is flagged so the UI can show "add a subsection below this heading" instead
   //    of implying the heading title itself is the fix.
-  const highlightQuotes: string[] = []
-  const highlightPlacements: Placement[] = []
-  const highlightLabels: string[] = []
-  if (missingReqs.length && targetText) {
-    const hits = await findLocations(targetText, missingReqs.map(r => r.requirement))
-    const lower = targetText.toLowerCase()
-    const norm = (s: string) => s.toLowerCase().replace(/\s+/g, ' ').trim()
-    // Keep only anchors that are ACTUALLY present in the policy (pos >= 0), so a number
-    // never points at nothing. Dedupe AMEND anchors (two rewrites of one sentence makes
-    // no sense) while allowing several items under the same heading. Whatever is left
-    // over becomes a proper "new section" instead of a phantom highlight.
-    const seenAmend = new Set<string>()
-    const located = missingReqs
-      .map((r, i) => ({ r, hit: hits[i] }))
-      .filter(x => x.hit && x.hit.quote)
-      .map(x => ({ r: x.r, hit: x.hit, pos: lower.indexOf(x.hit.quote.toLowerCase()) }))
-      .filter(x => x.pos >= 0)
-      .filter(x => {
-        if (x.hit.is_heading) return true
-        const k = norm(x.hit.quote)
-        if (seenAmend.has(k)) return false
-        seenAmend.add(k)
-        return true
-      })
-      .sort((a, b) => a.pos - b.pos)
-    // Assign sequential numbers in document order and build the aligned highlight arrays.
-    located.forEach((x, k) => {
-      const placement: Placement = x.hit.is_heading ? 'add_under_heading' : 'amend'
-      x.r.match_index = k + 1
-      x.r.placement   = placement
-      // Ground the rewrite (and what the tenant replaces) on the FULL paragraph/bullet the
-      // anchor sits in, not just the short matching phrase, so the suggestion is a complete
-      // drop-in replacement for the whole block and nothing already in it is lost.
-      x.r.location_quote = placement === 'amend' ? expandToBlock(targetText, x.pos, x.hit.quote.length) : x.hit.quote
-      highlightQuotes.push(x.hit.quote)   // short anchor: reliable to locate; the UI highlights the whole block it sits in
-      highlightPlacements.push(placement)
-      highlightLabels.push(x.r.requirement.slice(0, 90))
-    })
-    // Anything without a kept anchor is a brand-new section. Number these too, CONTINUING
-    // the sequence after the located items, and emit an aligned (empty-quote) entry so the
-    // UI can show them a destination (a callout at the end of the policy) instead of
-    // leaving them off the numbered plan entirely.
-    const newReqs = missingReqs.filter(r => r.match_index == null)
-    const newTitles = await titleNewSections(newReqs.map(r => r.requirement))
-    newReqs.forEach((r, j) => {
-      r.match_index    = located.length + j + 1
-      r.location_quote = null
-      r.placement      = 'new_section'
-      r.section_title  = newTitles[j] ?? null
-      highlightQuotes.push('')
-      highlightPlacements.push('new_section')
-      highlightLabels.push(newTitles[j] || r.requirement.slice(0, 90))
-    })
-
-    // Combine-and-expand: rewrite each AMEND target from its existing wording so nothing
-    // already in the policy is lost and the missing requirement is folded in, guarded by
-    // the key-terminology glossary. Heading/new-section items keep their fresh wording.
-    const amendReqs = located.filter(x => x.r.placement === 'amend').map(x => x.r)
-    if (amendReqs.length) {
-      const rewrites = await refineAmendments(
-        amendReqs.map(r => ({ requirement: r.requirement, existing: r.location_quote as string, suggestion: r.suggested_addition ?? null })),
-        glossary,
-        voiceSample,
-      )
-      amendReqs.forEach((r, i) => { if (rewrites[i]) r.suggested_addition = rewrites[i] })
-    }
-  } else {
-    // No target policy text to anchor against: everything is a numbered new section.
-    const newTitles = await titleNewSections(missingReqs.map(r => r.requirement))
-    missingReqs.forEach((r, j) => {
-      r.match_index = j + 1
-      r.placement   = 'new_section'
-      r.section_title = newTitles[j] ?? null
-      highlightQuotes.push('')
-      highlightPlacements.push('new_section')
-      highlightLabels.push(newTitles[j] || r.requirement.slice(0, 90))
-    })
+  // One placement run PER POLICY the missing wording routes to (HOUSE: a row on /gaps names its policy, and opening it shows that policy's items, preview and highlights, never another policy's).
+  const keyOf = (id: string | null, name: string) => id ?? `new:${name.toLowerCase()}`
+  const policyViews: PolicyView[] = []
+  for (const tp of targetPolicies) {
+    const mine = missingReqs.filter(r => keyOf(r.target_policy_id ?? null, r.target_policy_name ?? (suggestedNewPolicyTitle ?? 'New policy needed')) === keyOf(tp.id, tp.name))
+    if (!mine.length) continue
+    const text = tp.id === null ? null : tp.id === targetPolicy?.id ? targetText : await downloadExtractedText(tenantId, tp.id).catch(() => null)
+    const placed = await placeMissing(text, mine, glossary, buildVoiceSample(text) || voiceSample)
+    policyViews.push({ key: keyOf(tp.id, tp.name), policy: { id: tp.id, name: tp.name }, requirements: mine, highlight_quotes: placed.highlightQuotes, highlight_placements: placed.highlightPlacements, highlight_labels: placed.highlightLabels })
   }
+  // The primary (back-compat) policy is one that really has items routed to it: a title match with nothing routed to it is never offered.
+  if (policyViews.length && !policyViews.some(v => v.policy.id && v.policy.id === targetPolicy?.id)) {
+    const first = policyViews.find(v => v.policy.id)
+    if (first?.policy.id) { targetPolicy = { id: first.policy.id, name: first.policy.name }; suggestedNewPolicyTitle = null }
+  }
+  const lead = policyViews.find(v => v.policy.id && v.policy.id === targetPolicy?.id) ?? policyViews[0]
+  const highlightQuotes: string[] = lead?.highlight_quotes ?? [], highlightPlacements: Placement[] = lead?.highlight_placements ?? [], highlightLabels: string[] = lead?.highlight_labels ?? []
 
   // Verdict: nothing left to add → covered across the library.
   //
@@ -741,6 +782,8 @@ export async function getGapDetail(tenantId: string, referenceKey: string, force
     evidence_policy:  evidencePolicy,
     target_policy:    targetPolicy,
     target_policies:  targetPolicies,
+    policy_views:     policyViews,
+    views_version:    GAP_VIEWS_VERSION,
     suggested_new_policy_title: suggestedNewPolicyTitle,
     highlight_quotes: highlightQuotes,
     highlight_placements: highlightPlacements,

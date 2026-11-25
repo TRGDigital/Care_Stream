@@ -14,7 +14,7 @@ import { assertFreeRerun, assertFreeDetailAllowed } from '../services/analytics/
 import { generateAnnualModuleDraft } from '../services/training/moduleGenerator'
 import { getKnowledgeGapData } from '../lib/knowledge-gaps'
 import { analyseRegulationCoverage, startCoverageAnalysis, analyseCoverageBatch, coverageRunState } from '../services/analytics/regulation-coverage'
-import { getGapDetail } from '../services/analytics/gap-detail'
+import { getGapDetail, viewOfDetail } from '../services/analytics/gap-detail'
 import { scanTenantPolicies, getTenantLint } from '../services/analytics/policy-lint'
 import { addIgnore, removeIgnore, listIgnores, ALL_POLICIES } from '../services/analytics/lint-ignores'
 import { resolveSection, reopenSection, clearResolutions, listResolutions } from '../services/analytics/review-resolutions'
@@ -1320,7 +1320,7 @@ analyticsRouter.post('/gaps/:reference_key/detail', requireAdmin, async (req: Re
   try {
     await assertFreeDetailAllowed(tenantId, String(req.params.reference_key), req.query.force === '1')
     const detail = await getGapDetail(tenantId, String(req.params.reference_key), req.query.force === '1')
-    ok(res, { ...detail, decisions: await coverageDecisionsFor(tenantId, String(req.params.reference_key)) })
+    ok(res, { ...viewOfDetail(detail, typeof req.query.view === 'string' ? req.query.view.slice(0, 200) : null, typeof req.query.view_name === 'string' ? req.query.view_name.slice(0, 200) : null), decisions: await coverageDecisionsFor(tenantId, String(req.params.reference_key)) })
   } catch (e: any) {
     if (e instanceof PlanLimitError) { err(res, e.code, e.message, 402); return }
     err(res, 'DETAIL_FAILED', e.message ?? 'Could not build the coverage detail.', 500)

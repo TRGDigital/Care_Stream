@@ -1686,7 +1686,8 @@ export function createApiClient(token: string) {
       reReviewPolicies: (policyIds: string[]) => apiFetch<{ rescanned: number }>('/analytics/policies/re-review', token, { method: 'POST', body: JSON.stringify({ policy_ids: policyIds }) }),
       acknowledgeAnalysis: () => apiFetch<{ acknowledged: boolean }>('/analytics/gaps/acknowledge-analysis', token, { method: 'POST' }),
       detectPolicySection: (policyId: string, anchor: string, opts?: { context?: string; granularity?: 'section' | 'sentence' }) => apiFetch<{ section_text: string; found: boolean; reason?: string | null }>('/analytics/gaps/detect-section', token, { method: 'POST', body: JSON.stringify({ policy_id: policyId, anchor, ...opts }) }),
-      gapDetail: (referenceKey: string, force = false) => apiFetch<{
+      /** `view` is the policy this row is for (its id, or 'new:<name>'), and `viewName` its name: the detail comes back for THAT policy only. */
+      gapDetail: (referenceKey: string, force = false, view?: { key?: string | null; name?: string | null }) => apiFetch<{
         reference_key:    string
         official_name:    string
         original_status:  'partial' | 'gap'
@@ -1706,7 +1707,7 @@ export function createApiClient(token: string) {
         requirements:     Array<{ requirement: string; status: 'missing' | 'already_covered'; already_covered_in?: string | null; suggested_addition?: string | null; location_quote?: string | null; match_index?: number | null; placement?: 'amend' | 'add_under_heading' | 'new_section' | null; section_title?: string | null; target_policy_id?: string | null; target_policy_name?: string | null }>
         disclaimer:       string
         generated_at:     string
-      }>(`/analytics/gaps/${encodeURIComponent(referenceKey)}/detail${force ? '?force=1' : ''}`, token, { method: 'POST' }),
+      }>(`/analytics/gaps/${encodeURIComponent(referenceKey)}/detail${(() => { const q = new URLSearchParams(); if (force) q.set('force', '1'); if (view?.key) q.set('view', view.key); if (view?.name) q.set('view_name', view.name); const t = q.toString(); return t ? `?${t}` : '' })()}`, token, { method: 'POST' }),
       gapTrainingModule: (referenceKey: string) => apiFetch<{ module: { id: string; name: string; slug: string } }>(`/analytics/gaps/${encodeURIComponent(referenceKey)}/training-module`, token, { method: 'POST' }),
       gapOnboarding: (referenceKey: string) => apiFetch<{ flow: { id: string; name: string }; already: boolean }>(`/analytics/gaps/${encodeURIComponent(referenceKey)}/onboarding`, token, { method: 'POST' }),
       safAlignment: (referenceKey: string, policyId: string, force = false) => apiFetch<{ statements: Array<{ reference_key: string; name: string; we_statement: string }>; target_policy: { id: string; name: string } | null; alignments: Array<{ focus: string; placement: 'amend' | 'add_under_heading' | 'new_section'; anchor: string; section_title: string; wording: string }>; message: string }>(`/analytics/gaps/${encodeURIComponent(referenceKey)}/saf-alignment`, token, { method: 'POST', body: JSON.stringify({ policy_id: policyId, force }) }),

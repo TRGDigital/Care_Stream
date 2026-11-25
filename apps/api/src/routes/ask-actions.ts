@@ -12,6 +12,7 @@ import { cleanTitle, cleanBody } from '../lib/staff-notifications'
 import { NOTIFICATION_TITLE_MAX, NOTIFICATION_BODY_MAX } from '../services/email/notification-content'
 import * as store from '../services/ask/actions/store'
 import { loadAskSettings, saveAskSettings, missingTable } from '../services/ask/actions/settings'
+import { approverEmailsOn, saveApproverEmails } from '../services/ask-docs/approver-deps'
 import { buildCard } from '../services/ask/actions/card'
 import { confirmAction, mayConfirm } from '../services/ask/actions/execute'
 import { eligibleStaff, revalidate, recipientCards } from '../services/ask/actions/recipients'
@@ -28,7 +29,7 @@ const YMD = /^\d{4}-\d{2}-\d{2}$/
 
 askActionsRouter.get('/settings', wrap(async (req, res) => {
   if (req.user!.role !== 'admin') { notFound(res); return }
-  ok(res, { settings: await loadAskSettings(getTenantId()), ready: await store.tablesReady() })
+  ok(res, { settings: { ...(await loadAskSettings(getTenantId())), approver_emails: await approverEmailsOn(getTenantId()) }, ready: await store.tablesReady() })
 }))
 askActionsRouter.put('/settings', wrap(async (req, res) => {
   if (req.user!.role !== 'admin') { notFound(res); return }
@@ -36,7 +37,9 @@ askActionsRouter.put('/settings', wrap(async (req, res) => {
   const patch: any = {}
   for (const k of ['actions_enabled', 'notifications_enabled', 'training_enabled', 'emails_enabled', 'managers_can_use']) if (typeof b[k] === 'boolean') patch[k] = b[k]
   for (const k of ['max_recipients', 'min_gap_minutes']) if (b[k] != null && Number.isFinite(Number(b[k]))) patch[k] = Number(b[k])
-  const next = await saveAskSettings(getTenantId(), patch)
+  const next: any = await saveAskSettings(getTenantId(), patch)
+  if (typeof b.approver_emails === 'boolean') { try { await saveApproverEmails(getTenantId(), b.approver_emails); patch.approver_emails = b.approver_emails } catch { err(res, 'NOT_READY', 'That switch is not available yet. Please try again later.', 409); return } }
+  next.approver_emails = await approverEmailsOn(getTenantId())
   void writeAuditLog({ tenant_id: getTenantId(), user_id: req.user!.sub, event_type: 'ask_settings_changed', entity_type: 'tenant', entity_id: getTenantId(), metadata: { changed: Object.keys(patch) } })
   ok(res, { settings: next })
 }))

@@ -163,6 +163,12 @@ export function AskPanel({ token, layout, expanded, width, onClose }: { token: s
   const [lib, setLib] = useState<{ tab: 'chats' | 'docs'; chats: AskConversation[] | null; docs: AskDocument[] | null }>({ tab: 'chats', chats: null, docs: null })
   const [docId, setDocId] = useState<string | null>(null)
   const [docFilter, setDocFilter] = useState<'all' | 'waiting'>('all')
+  const [waiting, setWaiting] = useState(0)   // letters, newsletters and reports waiting for THIS person's approval
+  useEffect(() => {
+    let live = true
+    ask.approvals(token).then(r => { if (live) setWaiting(r.waiting_for_me ?? (r.approvals ?? []).filter(a => a.can_approve ?? !a.mine).length) }).catch(() => { if (live) setWaiting(0) })
+    return () => { live = false }
+  }, [token, view, docId])
   const dlg = useRef<HTMLDivElement>(null)
   const end = useRef<HTMLDivElement>(null)
   const pageCtx = useAskContext()
@@ -263,7 +269,7 @@ export function AskPanel({ token, layout, expanded, width, onClose }: { token: s
             <h2 id="ask-title" className="truncate text-lg font-bold text-neutral-dark">{view === 'chat' && agent ? `Ask CareStream: ${agent.name}` : view === 'library' ? 'Your library' : 'Ask CareStream'}</h2>
           </div>
           <div className="flex items-center gap-2">
-            <button type="button" onClick={() => setView(view === 'library' ? 'picker' : 'library')} className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 px-2.5 py-1.5 text-sm font-medium text-neutral-dark hover:bg-neutral-light"><Library size={15} aria-hidden="true" /> Library</button>
+            <button type="button" onClick={() => setView(view === 'library' ? 'picker' : 'library')} className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 px-2.5 py-1.5 text-sm font-medium text-neutral-dark hover:bg-neutral-light"><Library size={15} aria-hidden="true" /> Library{waiting > 0 && <span className="ml-0.5 inline-flex min-w-[1.25rem] items-center justify-center rounded-full bg-teal px-1.5 text-xs font-bold text-white" aria-label={`${waiting} waiting for your approval`}>{waiting}</span>}</button>
             {layout !== 'phone' && <button type="button" onClick={() => setAskExpanded(!expanded)} aria-pressed={expanded} aria-label={expanded ? 'Back to the side panel' : 'Expand to a larger view'} title={expanded ? 'Back to the side panel' : 'Expand'} className="rounded-lg p-1.5 text-neutral-mid hover:bg-neutral-light">{expanded ? <Minimize2 size={18} /> : <Maximize2 size={18} />}</button>}
             <button type="button" onClick={onClose} aria-label="Close" className="rounded-lg p-1.5 text-neutral-mid hover:bg-neutral-light"><X size={20} /></button>
           </div>
@@ -273,6 +279,12 @@ export function AskPanel({ token, layout, expanded, width, onClose }: { token: s
 
         {view === 'picker' && (
           <div className={`min-h-0 flex-1 overflow-y-auto no-scrollbar px-4 py-5 ${expanded ? 'sm:px-6' : ''}`}>
+            {waiting > 0 && (
+              <button type="button" onClick={() => { setLib(l => ({ ...l, tab: 'docs' })); setDocFilter('waiting'); setView('library') }} className="mb-4 flex w-full max-w-3xl items-center gap-3 rounded-xl border border-teal/40 bg-teal/5 px-4 py-3 text-left hover:bg-teal/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal/40">
+                <span className="flex h-8 min-w-[2rem] items-center justify-center rounded-full bg-teal px-2 text-sm font-bold text-white">{waiting}</span>
+                <span className="text-sm font-semibold text-neutral-dark">Awaiting approval<span className="block text-xs font-normal text-neutral-mid">{waiting === 1 ? 'One document is' : `${waiting} documents are`} waiting for you to check and approve. Open the library to see {waiting === 1 ? 'it' : 'them'}.</span></span>
+              </button>
+            )}
             {chipOn && pageCtx && <ContextCard ctx={pageCtx} agents={agents} onDismiss={() => setChipOff(ctxKey)} onAsk={pickAndAsk} />}
             <p className="mb-4 max-w-3xl text-sm text-neutral-mid">Choose an agent, then ask it anything about that part of your service. It reads your CareStream records and official figures, shows its working and where each figure comes from, and never sends or changes anything without you.</p>
             {!agents ? <p className="flex items-center gap-2 text-sm text-neutral-mid"><Loader2 size={16} className="animate-spin" /> Loading</p> : (

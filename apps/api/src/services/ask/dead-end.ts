@@ -61,7 +61,26 @@ export function fallbackSteps(answer: string, o: { agentId?: string; drafts?: nu
 
 /** The answer, with a next_steps block added only when it would otherwise dead end. `appended` says whether it did. */
 export function withDeadEndFallback(answer: string, o: { agentId?: string; drafts?: number } = {}): { text: string; appended: boolean } {
-  if (!endsInProseChoice(answer)) return { text: answer, appended: false }
+  const fixed = optionsUsedAsNextSteps(answer); if (fixed.changed) answer = fixed.text   // option cards with nothing to preview are next steps: show them as buttons
+  if (!endsInProseChoice(answer)) return { text: answer, appended: fixed.changed }
   const steps = fallbackSteps(answer, o)
   return { text: `${String(answer).trimEnd()}\n\n\`\`\`next_steps\n${JSON.stringify({ steps })}\n\`\`\``, appended: true }
+}
+
+// Option cards are for choosing between designs or documents that can be PREVIEWED. A model sometimes writes its NEXT STEPS as an options block (cards with nothing to preview, "This option has no
+// designed preview yet"). When no option in a block has a real preview kind, this rewrites that block as a next_steps block so the administrator gets buttons, not empty cards. Plain code, no model.
+const REAL_PREVIEW = new Set(['newsletter', 'letter', 'report', 'notification', 'email', 'newsletter_palette'])
+export function optionsUsedAsNextSteps(answer: string): { text: string; changed: boolean } {
+  let changed = false
+  const text = String(answer ?? '').replace(/```\s*options\b[^\n]*\n([\s\S]*?)```/gi, (whole, raw: string) => {
+    let j: any; try { j = JSON.parse(String(raw).trim()) } catch { return whole }
+    const list: any[] | null = Array.isArray(j) ? j : Array.isArray(j?.options) ? j.options : null
+    if (!list || !list.length) return whole
+    if (list.some(o => REAL_PREVIEW.has(String(o?.preview?.kind ?? '').toLowerCase()))) return whole
+    const steps = list.slice(0, 5).map((o, i) => ({ id: String(o?.id ?? `n${i + 1}`).replace(/[^a-zA-Z0-9_-]/g, '') || `n${i + 1}`, label: String(o?.title ?? o?.label ?? '').trim().slice(0, 60), kind: 'ask', payload: String(o?.description ?? '').trim().slice(0, 200) })).filter(x => x.label)
+    if (!steps.length) return whole
+    changed = true
+    return '```next_steps\n' + JSON.stringify({ steps }) + '\n```'
+  })
+  return { text, changed }
 }

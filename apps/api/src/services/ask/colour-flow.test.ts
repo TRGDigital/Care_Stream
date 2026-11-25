@@ -133,3 +133,16 @@ test('EVAL: the chat that started this is in the manual eval, with the colour ph
   assert.ok(COLOUR_SAYS.includes('Change colours') && COLOUR_SAYS.length >= 5)
   const e = apiSrc('scripts/ask-eval.ts'); assert.match(e, /only === 'deadend'/); assert.match(e, /COLOUR_SAYS/)
 })
+
+test('NEXT STEPS WRITTEN AS OPTION CARDS (nothing to preview) become next step buttons; real previews are left alone', () => {
+  const { optionsUsedAsNextSteps, withDeadEndFallback } = require('./dead-end')
+  const bad = 'Saved as a draft.\n\n```options\n{"options":[{"id":"review","title":"Review the draft","description":"Open the newsletter in your library","preview":{"kind":"other"}},{"id":"colours","title":"Change colours","description":"Choose a different colour scheme"},{"id":"changes","title":"Make changes","description":"Edit the content"},{"id":"done","title":"All done","description":"Ready to submit for approval"}]}\n```'
+  const r = optionsUsedAsNextSteps(bad)
+  assert.equal(r.changed, true); assert.doesNotMatch(r.text, /```options/); assert.match(r.text, /```next_steps/)
+  const steps = JSON.parse(/```next_steps\n([\s\S]*?)\n```/.exec(r.text)![1]).steps
+  assert.deepEqual(steps.map((x: any) => x.label), ['Review the draft', 'Change colours', 'Make changes', 'All done'])
+  assert.match(r.text, /^Saved as a draft\./)
+  const good = 'Pick one.\n\n```options\n{"options":[{"id":"short","title":"Short","preview":{"kind":"newsletter","template_id":"employee-of-the-month-short","layout":"short"}}]}\n```'
+  assert.equal(optionsUsedAsNextSteps(good).changed, false); assert.equal(optionsUsedAsNextSteps(good).text, good)
+  assert.equal(withDeadEndFallback(bad, { agentId: 'newsletter', drafts: 1 }).appended, true)
+})

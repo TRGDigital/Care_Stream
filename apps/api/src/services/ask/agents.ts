@@ -12,6 +12,7 @@ export interface AgentDef {
   starters: string[]         // four clickable starter prompts
   prompt: string             // what this agent is for and how it answers
   shell_message?: string     // for shells: what it will do and when
+  uploads?: { kinds: Array<'payroll' | 'invoice' | 'rota' | 'holiday' | 'training' | 'other'>; hint: string }   // set by agents-uploads.ts: this agent accepts attached files
 }
 
 /** The EDITABLE house rules (tone, how to answer). The locked privacy and safety rules are in safety.ts and are always added after this. */
@@ -71,7 +72,7 @@ for (const q of QUALITY_AGENTS) { const i = AGENTS.findIndex(x => x.id === q.id)
 registerFinanceAgents(AGENTS)   // Finance and pay, Complaints and incidents (agents-finance.ts)
 registerKnowledgeAgents(AGENTS)   // the Knowledge and Residents agents (agents-knowledge.ts)
 export const agentById = (id: string) => AGENTS.find(a => a.id === id)
-export const publicAgent = (a: AgentDef) => ({ id: a.id, name: a.name, blurb: a.blurb, icon: a.icon, status: a.status, starters: a.starters, shell_message: a.shell_message ?? null })
+export const publicAgent = (a: AgentDef) => ({ id: a.id, name: a.name, blurb: a.blurb, icon: a.icon, status: a.status, starters: a.starters, shell_message: a.shell_message ?? null, uploads: a.uploads ?? null })
 
 /** The system prompt for one run: the house rules, this agent's job, and today's date. */
 export function systemPromptFor(a: AgentDef, today: string, orgName: string): string {
@@ -79,3 +80,4 @@ export function systemPromptFor(a: AgentDef, today: string, orgName: string): st
 }
 
 import { applyPeopleAgents } from './agents-people'; applyPeopleAgents(AGENTS)   // people development agents (training, CPD, onboarding, compliance, incentives)
+import { applyUploadAgents } from './agents-uploads'; applyUploadAgents(AGENTS)   // agents that accept attached files (agents-uploads.ts)

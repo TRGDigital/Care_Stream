@@ -98,6 +98,14 @@ export const POLICY_CLUSTERS: ProductCluster[] = [
     note: 'The Equality Act in care delivery and employment, and the duties beside it.',
     items: ['equality-and-diversity', 'accessible-information', 'reasonable-adjustments',
             'dignity-and-respect', 'modern-slavery', 'anti-bribery-gifts'] },
+  { key: 'absence-and-attendance', label: 'Sickness, absence and attendance', kind: 'policies',
+    note: 'Absence and return to work, and the rota, hours and supervision duties around them.',
+    items: ['sickness-absence-return-to-work', 'working-time', 'staffing-rota',
+            'supervision-appraisal', 'disciplinary-grievance', 'lone-working'] },
+  { key: 'risk-assessment-policies', label: 'Risk assessment', kind: 'policies',
+    note: 'How risk is assessed and managed: the service, the home, positive risk taking and health and safety.',
+    items: ['risk-management', 'home-environment-risk-assessment', 'positive-risk-taking',
+            'health-and-safety', 'oxygen-smoking-fire-risk-in-the-home', 'business-continuity'] },
 ]
 
 export const TRAINING_CLUSTERS: ProductCluster[] = [
@@ -110,6 +118,11 @@ export const TRAINING_CLUSTERS: ProductCluster[] = [
     items: ['std-safeguarding-adults-and-children', 'std-moving-and-handling-of-people',
             'std-infection-prevention-and-control', 'std-fire-safety',
             'std-first-aid-basic-life-support', 'std-food-hygiene'] },
+  { key: 'fire-safety-training', label: 'Fire and premises safety', kind: 'training',
+    note: 'Fire safety first, with the premises and emergency training that sits beside it.',
+    items: ['std-fire-safety', 'std-general-health-and-safety-awareness', 'std-electrical-safety',
+            'std-kitchen-and-laundry-safety', 'std-first-aid-basic-life-support',
+            'std-coshh-control-of-substances-hazardous-to-health'] },
   { key: 'medication-training', label: 'Medication', kind: 'training',
     note: 'Administration, competency and the safety checks around prescribing.',
     items: ['std-medication-administration-and-competency', 'std-repeat-prescribing-and-medicines-safety',

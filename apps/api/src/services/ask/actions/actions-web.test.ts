@@ -20,7 +20,7 @@ test('Settings has an Ask CareStream section with every switch off by default, a
   for (const k of ['actions_enabled', 'notifications_enabled', 'training_enabled', 'emails_enabled', 'managers_can_use', 'max_recipients', 'min_gap_minutes']) assert.match(s, new RegExp(k))
   assert.match(s, /Let Ask CareStream take actions/); assert.match(s, /Let managers use Ask CareStream/); assert.match(p, /AskSettingsBody/); assert.doesNotMatch(s, /[–—]/)
 })
-test('Ask CareStream is not in the staff hub (removed on request); the panel still hides itself for everyone it is not for', () => {
+test('Ask CareStream is NOT in the staff hub (admin area only); the panel still hides itself for everyone else', () => {
   assert.doesNotMatch(web('components/portal-nav.tsx'), /AskButton/); assert.doesNotMatch(web('app/(portal)/layout.tsx'), /AskPanelHost/)
   assert.match(web('components/ask/ask-overlay.tsx'), /cs-ask-off/)
 })

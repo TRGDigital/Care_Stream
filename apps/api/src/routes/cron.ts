@@ -19,6 +19,7 @@
 // silently stops appears as a missing row rather than as nothing at all.
 
 import { Router, Request, Response } from 'express'
+import { sweepExpired as sweepAskUploads } from '../services/ask/uploads/store'
 import { timingSafeEqual } from 'crypto'
 import { prisma } from '../db/client'
 import { ok, err } from '../lib/response'
@@ -199,6 +200,31 @@ cronRouter.get('/check-data-sources', (req, res) =>
     get: async (url: string) => { const r = await fetch(url, { headers: { Accept: 'application/json, text/csv, */*', 'User-Agent': 'CareStream data check (support@carestreamai.com)' } }); if (!r.ok) throw new Error(`HTTP ${r.status} from ${new URL(url).host}`); const text = await r.text(); try { return JSON.parse(text) } catch { return text } },
     notify: o => sendDataSourcesEmail(o),
   }, { force: req.query.force === '1', only: req.query.key ? String(req.query.key) : undefined })))
+
+// Deletes uploaded Ask CareStream files that have passed the date the account chose (the cleaned copy in storage, then the record's content). Safe to run often (hourly).
+cronRouter.get('/sweep-ask-uploads', (req, res) =>
+  job('sweep-ask-uploads', req, res, async () => ({ deleted: await sweepAskUploads(Math.min(200, Number(req.query.limit) || 100)) })))
+
+// Once a day: the ONE reminder for any letter, newsletter or report that has waited 3 days for approval (the pilot account only). Safe to run more often: a document is stamped before
+// anything is sent, so it can never be reminded twice. dry=1 only counts.
+cronRouter.get('/ask-approval-reminders', (req, res) =>
+  job('ask-approval-reminders', req, res, async () => {
+    const { listPendingOlderThan } = await import('../services/ask/store')
+    const { sendReminders } = await import('../services/ask-docs/approver-notify')
+    const { realDeps } = await import('../services/ask-docs/approver-deps')
+    const { askPilotEnabled } = await import('../lib/ask-pilot')
+    const rows = await listPendingOlderThan(3)
+    const byTenant = new Map<string, typeof rows>(); for (const r of rows) byTenant.set(r.tenant_id, [...(byTenant.get(r.tenant_id) ?? []), r])
+    if (req.query.dry === '1') return { dry_run: true, documents: rows.length, accounts: byTenant.size }
+    let docs = 0, messages = 0
+    for (const [tenantId, pending] of byTenant) {
+      if (!(await askPilotEnabled(tenantId))) continue
+      const r = await sendReminders(realDeps, { tenantId, pending })
+      docs += r.reminded_docs; messages += r.messages
+      if (r.reminded_docs) void (await import('../lib/audit')).writeAuditLog({ tenant_id: tenantId, user_id: pending[0].created_by, event_type: 'ask_approval_reminded', entity_type: 'tenant', entity_id: tenantId, metadata: { documents: r.reminded_docs, messages: r.messages } })
+    }
+    return { documents: docs, messages }
+  }))
 
 // Makes the hero pictures for the blog drafts listed in data/blog-hero-scenes.ts that have none (limit=N, at most 4 a call; dry=1 only lists).
 cronRouter.get('/generate-blog-heroes', (req, res) =>

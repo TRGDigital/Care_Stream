@@ -89,7 +89,7 @@ const webSrc = async (rel: string) => (await import('fs')).readFileSync(path.res
 
 test('the panel is always an overlay: fixed on the right at every width, never part of the page layout', async () => {
   const src = await webSrc('components/ask/ask-overlay.tsx')
-  assert.ok(src.includes('fixed bottom-0 right-0 top-14 z-[55]'), 'docked panel is fixed on the right under the header')
+  assert.ok(src.includes('fixed bottom-0 right-0 top-0 z-[75]'), 'docked panel is fixed on the right and covers the top banner')
   assert.ok(!src.includes('relative h-full flex-shrink-0'), 'no flex child that would push the page across')
   assert.ok(!/layout === 'wide'/.test(src), 'no special wide layout')
   assert.ok(src.includes("const rootCls = expanded ? 'fixed inset-0 z-[75]") && src.includes(": 'contents'"), 'the root takes no space when docked')

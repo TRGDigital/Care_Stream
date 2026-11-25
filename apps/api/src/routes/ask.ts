@@ -29,9 +29,13 @@ import { loadStaff } from '../services/ask/data'
 import { lintForTemplate } from '../services/ask/newsletter-tools'
 import { NEWSLETTER_TEMPLATES, newsletterMenu } from '../services/ask-docs/newsletter-templates'
 import { askActionsRouter } from './ask-actions'
+import { askUploadsRouter } from './ask-uploads'
+import * as uploadStore from '../services/ask/uploads/store'
 import * as actionStore from '../services/ask/actions/store'
 import { buildCard } from '../services/ask/actions/card'
 import { loadAskSettings } from '../services/ask/actions/settings'
+import { notifySubmitted, notifyDecided } from '../services/ask-docs/approver-notify'
+import { realDeps as approverDeps } from '../services/ask-docs/approver-deps'
 
 export const askRouter = Router()
 const notFound = (res: Response) => err(res, 'NOT_FOUND', 'Not found.', 404)
@@ -49,6 +53,7 @@ async function guard(req: Request, res: Response, next: NextFunction) {
 const roleOf = (req: Request): AskRole => ((req as any).askRole as AskRole) ?? 'admin'
 askRouter.use(guard)
 askRouter.use('/actions', askActionsRouter)
+askRouter.use('/uploads', askUploadsRouter)   // files attached to a chat: administrators only (ask-uploads.ts)
 
 // A simple per person limit (per server instance, so soft): 12 questions a minute and 150 an hour.
 const hits = new Map<string, number[]>()
@@ -126,7 +131,13 @@ askRouter.patch('/conversations/:id', wrap(async (req, res) => {
   if (!(await store.renameConversation(getTenantId(), req.user!.sub, String(req.params.id), title))) { notFound(res); return }
   ok(res, { renamed: true })
 }))
-askRouter.delete('/conversations/:id', wrap(async (req, res) => { if (!(await store.deleteConversation(getTenantId(), req.user!.sub, String(req.params.id)))) { notFound(res); return } ok(res, { deleted: true }) }))
+askRouter.delete('/conversations/:id', wrap(async (req, res) => {
+  const t = getTenantId(), u = req.user!.sub, id = String(req.params.id)
+  if (!(await store.getConversation(t, u, id))) { notFound(res); return }
+  await uploadStore.removeForConversation(t, u, id).catch(() => undefined)   // a deleted chat takes its uploaded files with it (the person's own chat only)
+  if (!(await store.deleteConversation(t, u, id))) { notFound(res); return }
+  ok(res, { deleted: true })
+}))
 
 // The staff newsletter library for the template picker: categories, types and each layout's sections (what each one is, which are filled from your records). Static, no account data.
 askRouter.get('/newsletter-templates', wrap(async (_req, res) => { ok(res, { categories: newsletterMenu(), templates: NEWSLETTER_TEMPLATES.map(t => ({ id: t.id, type: t.type, layout: t.layout, title: t.title, heads_up: t.heads_up, sections: t.sections.map(x => ({ key: x.key, title: x.title, from_data: x.from_data, needs_ticks: x.needs_ticks })) })) }) }))
@@ -151,7 +162,12 @@ async function actionsFor(d: NonNullable<Awaited<ReturnType<typeof store.getDocu
   }
 }
 
-askRouter.get('/approvals', wrap(async (req, res) => { ok(res, { approvals: (await store.listPendingApprovals(getTenantId())).map(x => ({ ...x, mine: x.created_by === req.user!.sub })) }) }))
+askRouter.get('/approvals', wrap(async (req, res) => {
+  // can_approve: the same rule as approving (not your own, unless you are the only administrator), so the badge only counts what this person can act on.
+  const list = await store.listPendingApprovals(getTenantId()), admins = await store.countActiveAdmins(getTenantId())
+  const approvals = list.map(x => ({ ...x, mine: x.created_by === req.user!.sub, can_approve: canApprove({ type: x.type, status: 'pending', created_by: x.created_by }, req.user!.sub, admins, true).ok }))
+  ok(res, { approvals, waiting_for_me: approvals.filter(a => a.can_approve).length })
+}))
 
 askRouter.get('/documents/:id', wrap(async (req, res) => {
   const d = await store.getDocumentFor(getTenantId(), req.user!.sub, String(req.params.id)); if (!d) { notFound(res); return }
@@ -203,7 +219,11 @@ askRouter.post('/documents/:id/submit', wrap(async (req, res) => {
   const v = canSubmit(d, u); if (!v.ok) { err(res, 'NOT_ALLOWED', v.reason, 409); return }
   if (d.type === 'letter') { const c = validateLetter(String(d.data?.template_id ?? ''), d.data?.values ?? {}); if (!c.ok) { err(res, 'INCOMPLETE', `The letter is not finished: ${[...c.missing, ...c.invalid.map(i => i.label)].join(', ')}.`, 409); return } }
   if (!(await store.setDocumentStatus(t, id, ['draft'], 'pending'))) { err(res, 'NOT_ALLOWED', 'It has already been submitted.', 409); return }
-  audit(req, 'ask_document_submitted', id, { type: d.type }); ok(res, { status: 'pending' })
+  audit(req, 'ask_document_submitted', id, { type: d.type })
+  // One notice to the other approvers for this submit (never for an edit). A failure here never undoes the submit.
+  const told = await notifySubmitted(approverDeps, { tenantId: t, docId: id, type: d.type, authorId: u })
+  if (told.notified) audit(req, 'ask_approver_notified', id, { type: d.type, recipients: told.notified, emailed: told.emailed })
+  ok(res, { status: 'pending', approvers_notified: told.notified })
 }))
 
 askRouter.post('/documents/:id/approve', wrap(async (req, res) => {
@@ -211,7 +231,10 @@ askRouter.post('/documents/:id/approve', wrap(async (req, res) => {
   const d = await store.getDocumentFor(t, u, id); if (!d) { notFound(res); return }
   const v = canApprove(d, u, await store.countActiveAdmins(t), req.body?.checklist_confirmed === true); if (!v.ok) { err(res, 'NOT_ALLOWED', v.reason, 409); return }
   if (!(await store.setDocumentStatus(t, id, ['pending'], 'approved', u))) { err(res, 'NOT_ALLOWED', 'It is no longer waiting for approval.', 409); return }
-  audit(req, 'ask_document_approved', id, { type: d.type, by_author: d.created_by === u }); ok(res, { status: 'approved' })
+  audit(req, 'ask_document_approved', id, { type: d.type, by_author: d.created_by === u })
+  const told = await notifyDecided(approverDeps, { tenantId: t, type: d.type, authorId: d.created_by, deciderId: u, decision: 'approved' })
+  if (told.notified) audit(req, 'ask_author_notified', id, { type: d.type, decision: 'approved', emailed: told.emailed })
+  ok(res, { status: 'approved' })
 }))
 
 askRouter.post('/documents/:id/return', wrap(async (req, res) => {
@@ -221,7 +244,11 @@ askRouter.post('/documents/:id/return', wrap(async (req, res) => {
   if (!(await store.setDocumentStatus(t, id, ['pending'], 'draft'))) { err(res, 'NOT_ALLOWED', 'It is no longer waiting for approval.', 409); return }
   const note = String(req.body?.note ?? '').trim().slice(0, 300)
   if (note) await store.updateDocumentContent(t, id, { data: { ...d.data, review_note: { note, by: u, at: new Date().toISOString() } } })
-  audit(req, 'ask_document_returned', id, { type: d.type }); ok(res, { status: 'draft' })
+  audit(req, 'ask_document_returned', id, { type: d.type, has_note: !!note })
+  // Sent back by someone else: the author is told. If the author withdrew it themselves there is nothing to tell.
+  const told = await notifyDecided(approverDeps, { tenantId: t, type: d.type, authorId: d.created_by, deciderId: u, decision: 'returned' })
+  if (told.notified) audit(req, 'ask_author_notified', id, { type: d.type, decision: 'returned', emailed: told.emailed })
+  ok(res, { status: 'draft' })
 }))
 
 askRouter.post('/documents/:id/reopen', wrap(async (req, res) => {

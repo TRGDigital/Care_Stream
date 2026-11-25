@@ -11,7 +11,7 @@ async function call<T>(path: string, token: string, init: RequestInit = {}): Pro
 }
 
 export type AgentStatus = 'ready' | 'shell' | 'soon'
-export interface AskAgent { id: string; name: string; blurb: string; icon: string; status: AgentStatus; starters: string[]; shell_message: string | null }
+export interface AskAgent { id: string; name: string; blurb: string; icon: string; status: AgentStatus; starters: string[]; shell_message: string | null; uploads?: { kinds: string[]; hint: string } | null }
 export interface AskSource { label: string; as_of: string | null; warning?: string | null; url?: string | null }
 export interface AskMessage { id: string; role: 'user' | 'assistant'; content: string; sources?: AskSource[]; created_at?: string | null }
 export type ActionStatus = 'proposed' | 'confirmed' | 'cancelled' | 'expired' | 'failed' | 'done'
@@ -24,7 +24,7 @@ export interface AskActionCard {
   notification_title?: string; courses?: string[]; due_date?: string | null; skipped?: Array<{ user_id: string; name: string; course: string; reason: string }>
   scope?: string; within_days?: number; items?: Array<{ user_id: string; name: string; courses: string[] }>
 }
-export interface AskSettingsView { actions_enabled: boolean; notifications_enabled: boolean; training_enabled: boolean; emails_enabled: boolean; max_recipients: number; min_gap_minutes: number; managers_can_use: boolean }
+export interface AskSettingsView { actions_enabled: boolean; notifications_enabled: boolean; training_enabled: boolean; emails_enabled: boolean; max_recipients: number; min_gap_minutes: number; managers_can_use: boolean; approver_emails?: boolean }
 export interface AskConversation { id: string; agent_id: string; title: string; updated_at: string | null }
 export interface AskDocument { id: string; type: string; title: string; status: string; mine?: boolean; staff_name?: string | null; updated_at: string | null }
 export interface AskDocActions { needs_approval: boolean; edit: boolean; submit: boolean; approve: boolean; return: boolean; reopen: boolean; share: Array<'pdf' | 'email' | 'notification' | 'hub'> }
@@ -37,7 +37,15 @@ export interface AskDocFull {
   share_intent?: ShareIntent | null; share_intent_text?: string; ack_default?: boolean; hub_shares?: HubShare[]
   values?: Record<string, string | number>; fields?: AskDocField[]; actions: AskDocActions; data?: { review_note?: { note: string; at: string }; photo?: { user_id: string; include: boolean } | null; template_id?: string | null } | null
 }
-export interface AskApproval { id: string; type: string; title: string; staff_name: string | null; mine: boolean; updated_at: string | null }
+export type UploadRetention = 'chat_end' | '30d' | 'keep'
+export interface MatchRowView { row: number; file_name: string; status: 'matched' | 'ambiguous' | 'unmatched'; staff_id: string | null; candidates: Array<{ id: string; name: string }>; chosen?: string | null }
+export interface AskUpload {
+  id: string; filename: string; agent_id: string; conversation_id: string; doc_kind: 'payroll' | 'invoice' | 'rota' | 'holiday' | 'training' | 'other'; kind: string; row_count: number; status: 'ready' | 'needs_match' | 'deleted'
+  columns: Array<{ name: string; meaning: string | null }>; dropped: Array<{ column: string; reason: string }>; sheet_name: string | null; sheets_found: number | null
+  text_totals?: Array<{ label: string; amount: number }>; created_at: string | null; expires_at: string | null; retention_note: string
+  match: null | { confirmed: boolean; matched: number; ambiguous: number; unmatched: number; total: number; rows: MatchRowView[]; staff: Array<{ id: string; name: string }> }
+}
+export interface AskApproval { id: string; type: string; title: string; staff_name: string | null; mine: boolean; can_approve?: boolean; updated_at: string | null }
 
 export interface NewsletterSample { id: string; layout: 'short' | 'standard' | 'detailed' | string; title: string; html: string }
 export interface NewsletterLibrary {
@@ -62,6 +70,21 @@ export const ask = {
     confirm: (t: string, id: string) => call<{ card: AskActionCard; result: any }>(`/ask/actions/${encodeURIComponent(id)}/confirm`, t, { method: 'POST', body: '{}' }),
     cancel: (t: string, id: string) => call<{ cancelled: boolean }>(`/ask/actions/${encodeURIComponent(id)}/cancel`, t, { method: 'POST', body: '{}' }),
   },
+  uploads: {
+    config: (t: string) => call<{ retention: UploadRetention; retentions: Array<{ id: UploadRetention; label: string; note: string }>; max_mb: number; accept: string; per_chat: number }>('/ask/uploads/config', t),
+    saveConfig: (t: string, retention: UploadRetention) => call<{ retention: UploadRetention }>('/ask/uploads/config', t, { method: 'PUT', body: JSON.stringify({ retention }) }),
+    list: (t: string, conversationId: string) => call<{ uploads: AskUpload[] }>(`/ask/uploads?conversation_id=${encodeURIComponent(conversationId)}`, t),
+    /** One file, as multipart (the browser sets the content type). The reply carries the chat it belongs to (a new one when the file was the first thing in the chat). */
+    add: async (t: string, file: File, agentId: string, conversationId: string | null): Promise<{ upload: AskUpload }> => {
+      const fd = new FormData(); fd.append('agent_id', agentId); if (conversationId) fd.append('conversation_id', conversationId); fd.append('file', file)
+      const res = await fetch(`${API_URL}/ask/uploads`, { method: 'POST', headers: { Authorization: `Bearer ${t}` }, body: fd })
+      let body: any = null; try { body = await res.json() } catch { /* not json */ }
+      if (!res.ok || !body?.success) throw new AskError(body?.error?.code ?? 'ERROR', body?.error?.message ?? `That file could not be added (${res.status}).`, res.status)
+      return body.data
+    },
+    match: (t: string, id: string, choices: Record<string, string | null>, confirm: boolean) => call<{ upload: AskUpload }>(`/ask/uploads/${encodeURIComponent(id)}/match`, t, { method: 'POST', body: JSON.stringify({ choices, confirm }) }),
+    remove: (t: string, id: string) => call<{ deleted: boolean }>(`/ask/uploads/${encodeURIComponent(id)}`, t, { method: 'DELETE' }),
+  },
   newsletterTemplates: (t: string) => call<NewsletterLibrary>('/ask/newsletter-templates', t),
   /** Sample designs (marked SAMPLE) of every layout of one newsletter type, for choosing a layout by its looks. */
   newsletterSamples: (t: string, type: string) => call<{ designs: NewsletterSample[] }>(`/ask-docs/newsletter-samples/${encodeURIComponent(type)}`, t),
@@ -71,7 +94,7 @@ export const ask = {
   newsletterPhoto: (t: string, id: string, userId: string | null) => call<{ saved: boolean; photo_user_id: string | null }>(`/ask-docs/${encodeURIComponent(id)}/newsletter-photo`, t, { method: 'POST', body: JSON.stringify({ user_id: userId }) }),
   documents: (t: string) => call<{ documents: AskDocument[] }>('/ask/documents', t),
   document: (t: string, id: string) => call<{ document: AskDocFull }>(`/ask/documents/${encodeURIComponent(id)}`, t),
-  approvals: (t: string) => call<{ approvals: AskApproval[] }>('/ask/approvals', t),
+  approvals: (t: string) => call<{ approvals: AskApproval[]; waiting_for_me?: number }>('/ask/approvals', t),
   editDocument: (t: string, id: string, b: { title?: string; body?: string; internal_only?: boolean; values?: Record<string, string | number> }) => call<{ saved: boolean; missing?: string[]; unreadable?: string[]; body?: string }>(`/ask/documents/${encodeURIComponent(id)}`, t, { method: 'PATCH', body: JSON.stringify(b) }),
   submit: (t: string, id: string) => call<{ status: string }>(`/ask/documents/${encodeURIComponent(id)}/submit`, t, { method: 'POST', body: '{}' }),
   approve: (t: string, id: string, checklist_confirmed: boolean) => call<{ status: string }>(`/ask/documents/${encodeURIComponent(id)}/approve`, t, { method: 'POST', body: JSON.stringify({ checklist_confirmed }) }),

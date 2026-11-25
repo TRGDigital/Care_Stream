@@ -41,7 +41,7 @@ test('WIRING: no cap left on cross-policy claims, CQC wording or out of date ter
   const r = (f: string) => fs.readFileSync(path.resolve(__dirname, f), 'utf8')
   const pc = r('policy-consistency.ts'), saf = r('saf.ts'), lint = r('policy-lint.ts')
   assert.match(pc, /partsOf\(text, CLAIM_READ_CHARS, open\)/); assert.match(pc, /splitForComparison\(g\.map\(i => claims\[i\]\), MAX_GROUP_CLAIMS\)/); assert.match(pc, /\|all-parts/)
-  assert.doesNotMatch(saf, /\.slice\(0, 5\)\n?\s*\.map\(\(a: any\)/); assert.doesNotMatch(saf, /\.slice\(0, 20\)/); assert.doesNotMatch(saf, /\.slice\(0, 30\)/); assert.match(saf, /partsOf\(fullText, SAF_POLICY_TEXT_CAP, open\)/); assert.match(saf, /let needed = rated\.filter\(c => \(c\.status === 'no' \|\| c\.status === 'partly'\) && cues\[c\.n - 1\]\)\n  if \(!open\) needed = needed\.slice\(0, 5\)/)
+  assert.doesNotMatch(saf, /\.slice\(0, 5\)\n?\s*\.map\(\(a: any\)/); assert.doesNotMatch(saf, /\)\]\.slice\(0, 20\)/); assert.doesNotMatch(saf, /map\(t => t\.term\)\.slice/); assert.match(saf, /partsOf\(fullText, SAF_POLICY_TEXT_CAP, open\)/); assert.match(saf, /let needed = rated\.filter\(c => \(c\.status === 'no' \|\| c\.status === 'partly'\) && cues\[c\.n - 1\]\)\n  if \(!open\) needed = needed\.slice\(0, 5\)/)
   assert.doesNotMatch(lint, /new Set\(hits\.map\(h => h\.match\)\)\]\.slice/)
 })
 

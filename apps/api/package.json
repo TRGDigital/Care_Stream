@@ -21,7 +21,6 @@
     "@pinecone-database/pinecone": "^4.0.0",
     "@prisma/client": "^5.22.0",
     "@sendgrid/mail": "^8.1.4",
-    "@sparticuz/chromium": "^158.0.0",
     "@types/adm-zip": "^0.5.8",
     "@types/pdfkit": "^0.17.6",
     "adm-zip": "^0.5.17",
@@ -43,7 +42,6 @@
     "openai": "^4.73.0",
     "pdf-parse": "^1.1.1",
     "pdfkit": "^0.20.2",
-    "puppeteer-core": "^25.18.1",
     "sharp": "^0.34.5",
     "stripe": "^17.3.1",
     "twilio": "^6.0.2",
@@ -52,6 +50,7 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
+    "@sparticuz/chromium": "^158.0.0",
     "@types/bcrypt": "^5.0.2",
     "@types/cors": "^2.8.17",
     "@types/express": "^5.0.0",
@@ -65,6 +64,7 @@
     "@typescript-eslint/parser": "^8.13.0",
     "eslint": "^8.57.1",
     "prisma": "^5.22.0",
+    "puppeteer-core": "^25.18.1",
     "tsx": "^4.19.2",
     "typescript": "^5.6.3"
   }

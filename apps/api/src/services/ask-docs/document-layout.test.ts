@@ -218,6 +218,6 @@ test('BROWSER: an over-long newsletter is flagged as not fitting (and shown uncu
     assert.equal(two.fit!.scale, 1); assert.equal(two.fit!.fits, true); assert.ok(two.pages >= 2 && two.pages <= 3, `two pages mode made ${two.pages}`)
     const ok = await htmlToPdf(renderNewsletterSheet(input(t.id), { orientation: 'landscape' }), { orientation: 'landscape' })
     assert.equal(ok.pages, 1); assert.equal(ok.fit!.fits, true)
-    assert.equal(pdfEngine(), 'auto')
+    assert.equal(pdfEngine(), 'pdfkit')   // the live default: no browser is shipped (it would take the function over Vercel's 250 MB limit)
   } finally { await browser.close() }
 })

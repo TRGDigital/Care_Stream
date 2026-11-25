@@ -12,8 +12,6 @@
           "node_modules/pdfkit/js/standard-fonts/**",
           "../../node_modules/ffmpeg-static/ffmpeg",
           "node_modules/ffmpeg-static/ffmpeg",
-          "../../node_modules/@sparticuz/chromium/bin/**",
-          "node_modules/@sparticuz/chromium/bin/**",
           "../../node_modules/@fontsource/lora/files/lora-latin-*.woff2",
           "node_modules/@fontsource/lora/files/lora-latin-*.woff2"
         ]

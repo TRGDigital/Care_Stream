@@ -10,10 +10,11 @@ export interface ChromiumPdf { buffer: Buffer; pages: number; fit: FitInfo | nul
 const LAUNCH_TIMEOUT_MS = 25_000
 const RENDER_TIMEOUT_MS = 40_000
 
-/** The engine to use: "auto" (Chromium, then pdfkit if it cannot start), "pdfkit" (never start a browser) or "chromium" (no fallback, for tests). */
+/** The engine to use: "pdfkit" (the default: the server draws the same one page layout, no browser), "auto" (Chromium, then pdfkit if it cannot start) or "chromium" (no fallback, for tests).
+ *  Chromium is not shipped with the live API (it takes the function over Vercel's 250 MB limit), so "auto" and "chromium" only work where the browser packages are installed. */
 export const pdfEngine = (): 'auto' | 'pdfkit' | 'chromium' => {
-  const v = String(process.env.CS_PDF_ENGINE ?? 'auto').toLowerCase()
-  return v === 'pdfkit' || v === 'chromium' ? v : 'auto'
+  const v = String(process.env.CS_PDF_ENGINE ?? 'pdfkit').toLowerCase()
+  return v === 'auto' || v === 'chromium' ? v : 'pdfkit'
 }
 
 /** The number of pages in a PDF made by Chromium (its page objects are written in plain text). */
@@ -38,12 +39,15 @@ export function embeddedFontCss(): string {
 
 const withTimeout = <T>(p: Promise<T>, ms: number, what: string): Promise<T> => new Promise<T>((resolve, reject) => { const t = setTimeout(() => reject(new Error(`${what} took longer than ${ms / 1000} seconds`)), ms); p.then(v => { clearTimeout(t); resolve(v) }, e => { clearTimeout(t); reject(e) }) })
 
+// Held in variables so the build does not follow them: these packages are dev only and are not bundled into the live function.
+const BROWSER_PKG: string = ['puppeteer', 'core'].join('-')
+const CHROMIUM_PKG: string = ['@sparticuz', 'chromium'].join('/')
 async function launch(): Promise<any> {
-  const pptr: any = await import('puppeteer-core')
+  const pptr: any = await import(/* webpackIgnore: true */ BROWSER_PKG)
   const launcher = pptr.launch ? pptr : pptr.default
   const exe = process.env.CHROME_EXECUTABLE_PATH
   if (exe) return launcher.launch({ executablePath: exe, headless: true, args: ['--no-sandbox', '--disable-gpu', '--font-render-hinting=none'] })
-  const mod: any = await import('@sparticuz/chromium')
+  const mod: any = await import(/* webpackIgnore: true */ CHROMIUM_PKG)
   const chromium = mod.default ?? mod
   return launcher.launch({ args: chromium.args, executablePath: await chromium.executablePath(), headless: 'shell' })
 }

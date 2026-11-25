@@ -9,7 +9,7 @@ import { LOCKED_RULES } from './safety'
 import { DEFAULT_ACTIONS_RULES, ACTION_TOOL_NAMES } from './actions/prompts'
 import { KNOWLEDGE_PROMPTS } from './agents-knowledge'
 import { uploadPromptMeta } from './agents-uploads'
-import { HOUSE_RULES_FORMS_USAGE, DEFAULT_HOUSE_RULES_FORMS } from './house-rules-forms'
+import { HOUSE_RULES_FORMS_USAGE, DEFAULT_HOUSE_RULES_FORMS, HOUSE_RULES_FORMS_LABEL } from './house-rules-forms'
 
 export const ASK_GROUP = 'Ask CareStream'
 export const ASK_PROMPT_MAX = 8000
@@ -31,8 +31,8 @@ export const DEFAULT_PAGE_CONTEXT = 'The administrator is currently looking at {
 export const ASK_PROMPTS: AskPromptMeta[] = [
   { usage: 'ask_house_rules', label: 'Ask CareStream: house rules', default: HOUSE_RULES,
     note: 'Used at the start of every answer by every Ask CareStream agent: how it answers, its tone, British English, no dashes, showing working. The privacy and safety rules are separate and locked.' },
-  { usage: HOUSE_RULES_FORMS_USAGE, label: 'Ask CareStream: house rules for questions and choices', default: DEFAULT_HOUSE_RULES_FORMS,
-    note: 'Added to EVERY Ask CareStream agent after its own job and before the locked rules: when an agent needs information it asks in a question form (one labelled box per question), and when it offers templates or designs it shows option cards with a Preview button. The two block formats are read by the screen, so keep the examples as they are.' },
+  { usage: HOUSE_RULES_FORMS_USAGE, label: HOUSE_RULES_FORMS_LABEL, default: DEFAULT_HOUSE_RULES_FORMS,
+    note: 'Added to EVERY Ask CareStream agent after its own job and before the locked rules. It holds seven of the eight house rules: 1 question forms (one labelled box per question), 2 option previews (cards with a Preview button), 3 the staff list with pictures, 4 Save PDF and Print on every document, 5 the distribution choice (how, who, a summary, then Send), 7 next step buttons, and 8 context awareness (use what was already said). Rule 6, never reveal how CareStream works, is locked and is not here. The screen reads the three block formats (questions, options, next_steps), so keep the examples as they are.' },
   { usage: 'ask_agent_staff', label: 'Ask CareStream: Staff agent', default: jobOf('staff'),
     note: 'Used after the house rules when an administrator picks the Staff agent: roster, hours, checks due, pay questions. It chooses from the Staff agent tools.' },
   { usage: 'ask_agent_holiday', label: 'Ask CareStream: Holiday agent', default: jobOf('holiday'),

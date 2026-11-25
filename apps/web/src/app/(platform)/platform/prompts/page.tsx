@@ -35,9 +35,27 @@ const CATEGORY_DISPLAY: Record<string, string> = {
 
 type Prompt = { id: string; usage: string; label: string; content: string; updated_at: string }
 type ActiveTab = 'prompt' | 'outputs' | 'history'
-type AskInfo = { group: string; usages: string[]; notes: Record<string, string>; locked_rules: string; max_chars: number }
+type AskInfo = { group: string; usages: string[]; notes: Record<string, string>; locked_rules: string; rules?: Array<{ n: number; title: string; line: string; locked: boolean }>; max_chars: number }
 
 /** The read only panel showing the rules that can never be edited on this page (they are added after every Ask CareStream prompt). */
+/** The eight house rules in one line each. Seven are editable in the entries below; rule 6 is locked. The list comes from one constant in the API, so it matches the rule text. */
+function HouseRulesSummary({ rules }: { rules: Array<{ n: number; title: string; line: string; locked: boolean }> }) {
+  return (
+    <div className="mx-3 mb-3 rounded-lg border border-gray-200 bg-neutral-light/60 p-3" aria-label="The eight house rules">
+      <p className="text-[11px] font-bold uppercase tracking-wide text-neutral-dark">The eight house rules</p>
+      <p className="mt-0.5 text-[10px] leading-snug text-neutral-mid">Every agent follows these. Rules 1 to 5, 7 and 8 are editable in the entries below. Rule 6 is locked and read only.</p>
+      <ol className="mt-2 space-y-1.5">
+        {rules.map(r => (
+          <li key={r.n} className="flex items-start gap-2 text-[11px] leading-snug text-neutral-dark">
+            <span className="mt-px inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-white text-[10px] font-bold text-neutral-dark ring-1 ring-gray-300">{r.n}</span>
+            <span className="min-w-0"><strong className="font-semibold">{r.title}.</strong> {r.line}{r.locked && <span className="ml-1 inline-flex items-center gap-0.5 rounded-full bg-gray-200 px-1.5 py-px align-middle text-[9px] font-bold text-neutral-dark"><Lock size={9} aria-hidden="true" />Locked</span>}</span>
+          </li>
+        ))}
+      </ol>
+    </div>
+  )
+}
+
 function LockedRulesPanel({ text }: { text: string }) {
   return (
     <div className="mx-5 mb-5 rounded-lg border border-gray-200 bg-neutral-light/60 p-4">
@@ -377,13 +395,14 @@ export default function PromptsPage() {
                     </button>
                   )
                 }
-                const others = prompts.filter(p => !isAsk(p.usage)), askPrompts = prompts.filter(p => isAsk(p.usage))
+                const others = prompts.filter(p => !isAsk(p.usage)), askPrompts = prompts.filter(p => isAsk(p.usage)).sort((a, b) => (ask?.usages.indexOf(a.usage) ?? 0) - (ask?.usages.indexOf(b.usage) ?? 0))   // the order in the register: the house rules, then the rules for how agents work with you, then each agent
                 return (<>
                   {others.map(item)}
                   {askPrompts.length > 0 && (
                     <div className="pt-4">
                       <p className="flex items-center gap-1.5 px-3 pb-1 text-[11px] font-bold uppercase tracking-wide text-teal">{ask?.group ?? 'Ask CareStream'}</p>
                       <p className="px-3 pb-2 text-[10px] leading-snug text-neutral-mid">How the Ask CareStream agents are told to behave. Edits apply within about a minute.</p>
+                      {ask?.rules && ask.rules.length > 0 && <HouseRulesSummary rules={ask.rules} />}
                       {askPrompts.map(item)}
                     </div>
                   )}

@@ -6,7 +6,10 @@ import fs from 'fs'
 import path from 'path'
 import { AGENTS, systemPromptFor } from './agents'
 import { buildSystemPrompt, __setPromptTestHooks } from './prompt-register'
-import { DEFAULT_HOUSE_RULES_FORMS, NEXT_STEPS_REQUIRED, withNextStepsReminder } from './house-rules-forms'
+import { DEFAULT_HOUSE_RULES_FORMS, NEXT_STEPS_REQUIRED, withNextStepsReminder, HOUSE_RULES_SUMMARY, houseRulesForPage, HOUSE_RULES_FORMS_USAGE, HOUSE_RULES_FORMS_LABEL } from './house-rules-forms'
+import { ASK_PROMPTS } from './prompt-register'
+import { LOCKED_RULES } from './safety'
+import { CONTEXT_PROBES } from './context-probes'
 import { DRAFT_TOOL_TYPE } from './runner'
 import { planShare, summaryLine, NAMES_SHOWN, type PlanDoc, type PlanPerson } from '../ask-docs/share-plan'
 import { adminsFirst } from './actions/recipients'
@@ -193,4 +196,59 @@ test('RULE 5: nothing is sent without confirmation, the plan route sends nothing
   // the old direct send buttons are gone from the panel
   assert.doesNotMatch(webSrc('components/ask/document-panel.tsx'), /Share with staff|run\('now'|run\('email'|run\('note'/)
   assert.doesNotMatch(webSrc('components/ask/ask-overlay.tsx'), /ask\.shareSend/)   // chat code can never call the send
+})
+
+test('PROMPTS PAGE: one list of the eight rules; each key phrase is really in the composed prompt (rule 6 in the locked rules); the entry is renamed, explained and sits under the original house rules', async () => {
+  assert.deepEqual(HOUSE_RULES_SUMMARY.map(r => r.n), [1, 2, 3, 4, 5, 6, 7, 8])
+  assert.deepEqual(HOUSE_RULES_SUMMARY.filter(r => r.locked).map(r => r.n), [6])
+  __setPromptTestHooks({ reader: async () => null })
+  try {
+    const p = await buildSystemPrompt(AGENTS[0], '2026-11-26', 'Ferndale', '')
+    for (const r of HOUSE_RULES_SUMMARY) {
+      assert.ok(p.includes(r.phrase), `rule ${r.n}: the key phrase must be in the composed prompt`)
+      assert.equal(DEFAULT_HOUSE_RULES_FORMS.includes(r.phrase), !r.locked, `rule ${r.n}: ${r.locked ? 'the locked rule must not be in the editable text' : 'an editable rule must be in the editable text'}`)
+      if (r.locked) assert.ok(LOCKED_RULES.includes(r.phrase))
+      assert.doesNotMatch(`${r.title} ${r.line}`, /[–—]/)
+      assert.ok(r.line.length < 100, `rule ${r.n} is one short line`)
+    }
+  } finally { __setPromptTestHooks({ reader: null }) }
+  assert.deepEqual(houseRulesForPage().map(r => Object.keys(r).sort().join()), Array(8).fill('line,locked,n,title'))   // the page gets no rule text, only the one line each
+  const i = ASK_PROMPTS.findIndex(x => x.usage === 'ask_house_rules')
+  assert.equal(ASK_PROMPTS[i + 1].usage, HOUSE_RULES_FORMS_USAGE)                       // directly under the original tone rules, reading as one section
+  assert.equal(HOUSE_RULES_FORMS_LABEL, 'Ask CareStream: house rules for how agents work with you'); assert.equal(ASK_PROMPTS[i + 1].label, HOUSE_RULES_FORMS_LABEL)
+  for (const w of ['question forms', 'option previews', 'staff list with pictures', 'Save PDF and Print', 'distribution choice', 'next step buttons', 'context awareness', 'Rule 6']) assert.ok(ASK_PROMPTS[i + 1].note.includes(w), `the note lists: ${w}`)
+  assert.doesNotMatch(ASK_PROMPTS[i + 1].note, /[–—]/)
+  const page = webSrc('app/(platform)/platform/prompts/page.tsx')
+  assert.match(page, /The eight house rules/); assert.match(page, /<HouseRulesSummary/); assert.match(page, /Locked/); assert.match(page, /ask\?\.usages\.indexOf/)
+  assert.doesNotMatch(page, /overflow-y-(auto|scroll)[^"]*"[^>]*HouseRules/)
+  assert.ok(Buffer.from(fs.readFileSync(path.resolve(__dirname, '../../routes/admin.ts'))).toString('latin1').includes('rules: houseRulesForPage()'))
+})
+
+test('RULE 8: the form fills itself in from what the administrator has already said (counts, audience, names that match staff), and only when it is certain', async () => {
+  const pf = await web('lib/ask-prefill.ts'), b = await web('lib/ask-blocks.ts')
+  assert.deepEqual(['two employees of the month', '2 employees of the month', 'we have 2 winners', 'both carers', 'three new starters', 'one employee'].map(pf.countFrom), [2, 2, 2, 2, 3, 1])
+  assert.equal(pf.countFrom('write the newsletter for November'), null); assert.equal(pf.countFrom('we have two rotas'), null)
+  assert.deepEqual(pf.audienceFrom('it is for the night team only'), { kind: 'team', team: 'night' }); assert.deepEqual(pf.audienceFrom('send it to all staff'), { kind: 'all' }); assert.equal(pf.audienceFrom('make it short'), null)
+  const staff = [{ id: 'h', name: 'Helen Thomas' }, { id: 's', name: 'Sam Reed' }, { id: 'c1', name: 'Chloe Bennett' }, { id: 'c2', name: 'Chloe Adams' }, { id: 'l', name: 'Len Burgess' }]
+  assert.deepEqual(pf.peopleNamed('Helen and Sam', staff).map((p: any) => p.id), ['h', 's'])             // a first name that is the only one
+  assert.deepEqual(pf.peopleNamed('it is Chloe', staff), [])                                              // two Chloes: never a guess
+  assert.deepEqual(pf.peopleNamed('Chloe Adams did well', staff).map((p: any) => p.id), ['c2'])           // a full name settles it
+  assert.deepEqual(pf.peopleNamed('Samuel is on holiday', staff), [])                                     // not a partial word match
+  const form = b.parseQuestions('```questions\n{"questions":[{"id":"p","label":"Who is the employee of the month?","kind":"people","required":true},{"id":"t","label":"Tone?","kind":"text"}]}\n```')
+  const two = pf.prefillForm(form, ['we have two employees of the month'], staff)
+  assert.equal(two.form.questions[0].multiple, true); assert.equal(two.form.questions[0].expected, 2); assert.equal(two.values.p, undefined)   // plan for two; nobody ticked yet
+  const named = pf.prefillForm(form, ['two employees of the month, Helen and Sam'], staff)
+  assert.deepEqual(named.values.p.people.map((p: any) => p.name), ['Helen Thomas', 'Sam Reed']); assert.equal(named.form.questions[1].kind, 'text')
+  const one = pf.prefillForm(form, ['Len is the employee of the month'], staff)
+  assert.deepEqual(one.values.p.people.map((p: any) => p.id), ['l']); assert.equal(one.form.questions[0].multiple, false)
+  assert.deepEqual(pf.prefillForm(form, [], staff).values, {})                                            // nothing said, nothing filled
+  const msg = b.formatAnswers(named.form, named.values); assert.match(msg, /Answer: Helen Thomas, Sam Reed/); assert.doesNotMatch(b.parseAnswersMessage(msg) && JSON.stringify(b.parseAnswersMessage(msg)), /Staff ids/)
+  assert.match(webSrc('components/ask/question-form.tsx'), /prefillForm/); assert.match(webSrc('components/ask/ask-overlay.tsx'), /typed=\{messages/)
+})
+
+test('RULE 8: the eval phrasings cover the ways an administrator gives details up front (at least ten)', () => {
+  assert.ok(CONTEXT_PROBES.length >= 10)
+  const all = CONTEXT_PROBES.map(p => p.say).join(' | ').toLowerCase()
+  for (const k of ['two employees of the month', 'night team only', 'make it short', 'helen and sam', 'all staff', 'christmas', 'leaver', 'promotion', 'bank holiday', 'formal']) assert.ok(all.includes(k), `a probe should cover: ${k}`)
+  for (const p of CONTEXT_PROBES) { assert.ok(p.expect.length > 10); assert.doesNotMatch(`${p.say} ${p.expect}`, /[–—]/) }
 })

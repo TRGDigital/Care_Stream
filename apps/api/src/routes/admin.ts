@@ -40,6 +40,7 @@ import { blogImagePublicUrl, siteUrl } from '../lib/urls'
 import { USE_CASES, USE_CASE_POST_LIMIT, parseUseCaseSlugs, useCaseLabel } from '../lib/use-cases'
 import { ASK_PROMPTS, ASK_USAGES, ASK_GROUP, ASK_PROMPT_MAX, validateAskPrompt, clearAskPromptCache } from '../services/ask/prompt-register'
 import { LOCKED_RULES_DISPLAY } from '../services/ask/safety'
+import { houseRulesForPage } from '../services/ask/house-rules-forms'
 import { submitUrlsForIndexing, countIndexedPages, ralfyIndexBalance } from '../services/ralfyindex/indexer'
 import { authLimiter } from '../middleware/rateLimiter'
 import { sendRenewalReminders } from '../services/training/renewalReminders'
@@ -2936,7 +2937,7 @@ adminRouter.get('/prompts', async (_req: Request, res: Response) => {
   try {
     await ensurePromptsSeeded()
     const prompts = await (prisma as any).aiPrompt.findMany({ orderBy: { created_at: 'asc' } })
-    ok(res, { prompts, ask: { group: ASK_GROUP, usages: ASK_USAGES, notes: Object.fromEntries(ASK_PROMPTS.map(p => [p.usage, p.note])), locked_rules: LOCKED_RULES_DISPLAY, max_chars: ASK_PROMPT_MAX } })
+    ok(res, { prompts, ask: { group: ASK_GROUP, usages: ASK_USAGES, notes: Object.fromEntries(ASK_PROMPTS.map(p => [p.usage, p.note])), locked_rules: LOCKED_RULES_DISPLAY, rules: houseRulesForPage(), max_chars: ASK_PROMPT_MAX } })
   } catch (e) {
     err(res, 'READ_FAILED', `Could not load prompts: ${String(e)}`, 500)
   }

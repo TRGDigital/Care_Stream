@@ -16,6 +16,25 @@ export function withNextStepsReminder(toolName: string, data: any): any {
 
 export const HOUSE_RULES_FORMS_USAGE = 'ask_house_rules_forms'
 
+/**
+ * The eight house rules, ONE list. The Prompts page shows it as a numbered summary, and a test checks that each rule's key phrase really is in the composed prompt (rule 6 in the locked rules),
+ * so the summary cannot drift from the rule text. Rule 6 is locked: it is shown on the page with a padlock and cannot be edited.
+ */
+export interface HouseRuleSummary { n: number; title: string; line: string; phrase: string; locked: boolean }
+export const HOUSE_RULES_SUMMARY: HouseRuleSummary[] = [
+  { n: 1, title: 'Questions in a form', line: 'Agents ask in one form, a labelled box per question, never in a paragraph.', phrase: 'RULE 1, QUESTIONS GO IN A FORM', locked: false },
+  { n: 2, title: 'Options with a preview', line: 'Choices between designs or documents are cards with a Preview button.', phrase: 'RULE 2, CHOICES YOU CAN LOOK AT', locked: false },
+  { n: 3, title: 'Staff list with pictures', line: 'Staff are always picked from the list with their pictures, never typed.', phrase: 'RULE 3, STAFF COME FROM THE LIST', locked: false },
+  { n: 4, title: 'Save PDF and Print', line: 'Every document has separate Save PDF and Print buttons.', phrase: 'RULE 4, EVERY DOCUMENT CAN BE SAVED AND PRINTED', locked: false },
+  { n: 5, title: 'Distribution choice', line: 'One Share this panel: how, who, a summary, then Send.', phrase: 'RULE 5, SHARING IS ONE PANEL', locked: false },
+  { n: 6, title: 'Never reveal how CareStream works', line: 'No agent explains how the platform itself analyses, scores or decides.', phrase: 'PROTECT HOW CARESTREAM WORKS', locked: true },
+  { n: 7, title: 'Next step buttons', line: 'After anything is made, the agent ends with buttons for the next stage.', phrase: 'RULE 7, ALWAYS END WITH NEXT STEP BUTTONS', locked: false },
+  { n: 8, title: 'Context awareness', line: 'Agents use what was already said and never re-ask it.', phrase: 'RULE 8, READ WHAT THE ADMINISTRATOR HAS ALREADY SAID', locked: false },
+]
+/** What the Prompts page needs: the rules in one line each, which are editable and which is locked. */
+export const houseRulesForPage = () => HOUSE_RULES_SUMMARY.map(({ n, title, line, locked }) => ({ n, title, line, locked }))
+export const HOUSE_RULES_FORMS_LABEL = 'Ask CareStream: house rules for how agents work with you'
+
 export const DEFAULT_HOUSE_RULES_FORMS = `HOW TO ASK QUESTIONS AND OFFER CHOICES (applies to every answer you give)
 RULE 1, QUESTIONS GO IN A FORM. Whenever you need information from the administrator, put the questions in ONE fenced questions block at the end of your message. Never ask questions as sentences or lists in the text, never ask more than one thing in a single question, and never split one set of questions across messages. The screen shows each question in its own labelled box with a free text field, and one Send answers button, so there is no doubt which answer belongs to which question. Before the block write at most one short line of lead in. The block is JSON:
 \`\`\`questions

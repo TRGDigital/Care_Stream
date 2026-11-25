@@ -10,6 +10,7 @@ import { agentById } from '../services/ask/agents'
 import { ukToday } from '../lib/holiday-math'
 import { QUALITY_QUESTIONS } from './ask-eval-quality'
 import { CONFIDENTIALITY_PROBES, LEAK_MARKERS } from '../services/ask/confidentiality-probes'
+import { CONTEXT_PROBES } from '../services/ask/context-probes'
 
 const QUESTIONS: Record<string, string[]> = {
   staff: [
@@ -81,6 +82,16 @@ async function main() {
   const tenantId = process.env.TENANT_ID, userId = process.env.USER_ID
   if (!tenantId || !userId) { console.error('Set TENANT_ID and USER_ID.'); process.exit(1) }
   const only = process.argv[2]
+  // RULE 8 (read what was already said): `ask-eval.ts context` runs each phrasing and prints what a good answer does with it, for a person to judge.
+  if (only === 'context') {
+    for (const p of CONTEXT_PROBES) {
+      try {
+        const r = await runAgent({ agentId: p.agent, ctx: { tenantId, userId, today: ukToday() }, orgName: 'Evaluation', history: [], message: p.say })
+        console.log(`\n[${p.agent}] ${p.say}\nA GOOD ANSWER: ${p.expect}\n---\n${r.answer}\n[tools: ${r.tools_used.join(', ') || 'none'}]`)
+      } catch (e: any) { console.log(`\n${p.say}\nERROR: ${String(e?.message ?? e).slice(0, 200)}`) }
+    }
+    process.exit(0)
+  }
   // RULE 6 (protect how CareStream works): `ask-eval.ts confidential` asks every probe of three different agents and flags any answer that leaks.
   if (only === 'confidential') {
     for (const agent of ['staff', 'letters', 'newsletter']) {

@@ -8,13 +8,14 @@ import Link from 'next/link'
 import { useSession } from 'next-auth/react'
 import type { LucideIcon } from 'lucide-react'
 import { AlertTriangle, ArrowLeft, Award, BarChart3, Bell, BookOpen, CalendarDays, Check, ClipboardCheck, Copy, FileText, GraduationCap, Library, Loader2, Lock, Newspaper, PoundSterling, Send, Shield, Sparkles, Trash2, UserPlus, Users, Wallet, X, Pencil, ShieldCheck, BadgeCheck, FileBarChart, Maximize2, Minimize2, Heart } from 'lucide-react'
-import { ask, AskError, parseNotificationDraft, withoutDraftBlock, notificationsLink, type AskAgent, type AskConversation, type AskDocument, type AskMessage, type AskSource, type AskActionCard } from '@/lib/ask-client'
+import { ask, AskError, parseNotificationDraft, withoutDraftBlock, notificationsLink, type AskAgent, type AskConversation, type AskDocument, type AskMessage, type AskSource, type AskActionCard, type AskUpload } from '@/lib/ask-client'
 import { MarkdownLite } from '@/components/ask/markdown-lite'
 import { type AskPageContext, agentForPage, clampWidth, contextStarters, layoutFor, toWireContext, MAX_W, MIN_W, type PanelLayout } from '@/lib/ask-panel-state'
 import { useAskContext } from '@/lib/ask-context'
 import { closeAsk, initAskUi, openAsk, registerAskTrigger, setAskEnabled, setAskExpanded, setAskWidth, toggleAsk, useAskUi } from '@/lib/ask-ui-store'
 import { DocumentPanel } from '@/components/ask/document-panel'
 import { ActionCard } from '@/components/ask/action-card'
+import { AttachButton, UploadsBlock } from '@/components/ask/upload-panel'
 
 export const OPEN_ASK_EVENT = 'cs:open-ask'
 const ICONS: Record<string, LucideIcon> = {
@@ -157,6 +158,7 @@ export function AskPanel({ token, layout, expanded, width, onClose }: { token: s
   const [text, setText] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
+  const [uploads, setUploads] = useState<AskUpload[]>([])   // files attached to this chat (Pay and Finance agents)
   const [lib, setLib] = useState<{ tab: 'chats' | 'docs'; chats: AskConversation[] | null; docs: AskDocument[] | null }>({ tab: 'chats', chats: null, docs: null })
   const [docId, setDocId] = useState<string | null>(null)
   const [docFilter, setDocFilter] = useState<'all' | 'waiting'>('all')
@@ -195,7 +197,13 @@ export function AskPanel({ token, layout, expanded, width, onClose }: { token: s
     return () => { document.removeEventListener('keydown', key); document.body.style.overflow = prev }
   }, [onClose, docId, expanded, modal, layout])
 
-  const pick = (a: AskAgent) => { if (a.status === 'soon') return; setAgent(a); setConvId(null); setMessages([]); setCards({}); setError(''); setText(''); setView('chat') }
+  const pick = (a: AskAgent) => { if (a.status === 'soon') return; setAgent(a); setConvId(null); setUploads([]); setMessages([]); setCards({}); setError(''); setText(''); setView('chat') }
+  useEffect(() => {
+    if (!convId || !agent?.uploads) return
+    let live = true
+    ask.uploads.list(token, convId).then(r => { if (live) setUploads(r.uploads) }).catch(() => undefined)
+    return () => { live = false }
+  }, [convId, agent?.id, agent?.uploads, token])
   const pickAndAsk = (a: AskAgent, q: string) => { pick(a); void send(q, a) }
   async function send(q?: string, forAgent?: AskAgent) {
     const ag = forAgent ?? agent
@@ -313,6 +321,7 @@ export function AskPanel({ token, layout, expanded, width, onClose }: { token: s
                     <AnswerActions m={m} token={token} agentId={agent.id} />
                   </div>
                 ))}
+                {agent.uploads && <UploadsBlock token={token} uploads={uploads} onChange={u => setUploads(l => l.map(x => x.id === u.id ? u : x))} onRemoved={id => setUploads(l => l.filter(x => x.id !== id))} onError={setError} />}
                 {busy && <p className="flex items-center gap-2 text-sm text-neutral-mid" role="status"><Loader2 size={16} className="animate-spin" /> Working it out from your records</p>}
                 {error && <p role="alert" className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
                 <div ref={end} />
@@ -321,10 +330,12 @@ export function AskPanel({ token, layout, expanded, width, onClose }: { token: s
             {agent.status === 'ready' && (
               <form className={`flex-shrink-0 border-t border-gray-200 bg-neutral-light/50 px-4 py-3 ${expanded ? 'sm:px-6' : ''}`} onSubmit={e => { e.preventDefault(); send() }}>
                 <div className="mx-auto flex max-w-3xl items-end gap-2">
+                  <AttachButton token={token} agent={agent} convId={convId} disabled={busy} onError={setError} onAdded={u => { setUploads(l => [...l, u]); setConvId(u.conversation_id) }} />
                   <label htmlFor="ask-input" className="sr-only">Your question</label>
                   <textarea id="ask-input" rows={2} value={text} onChange={e => setText(e.target.value)} onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send() } }} placeholder={`Ask the ${agent.name} agent...`} maxLength={2000} className="min-h-[52px] flex-1 resize-none rounded-xl border border-gray-300 bg-white px-3 py-2 text-[15px] outline-none focus:border-teal focus:ring-2 focus:ring-teal/20" />
                   <button type="submit" disabled={busy || !text.trim()} className="inline-flex h-[52px] items-center gap-1.5 rounded-xl bg-teal px-4 text-sm font-semibold text-white hover:bg-teal-dark disabled:opacity-50"><Send size={16} aria-hidden="true" /> Ask</button>
                 </div>
+                {agent.uploads && <p className="mx-auto mt-1.5 max-w-3xl text-[11px] text-neutral-mid">{agent.uploads.hint} Bank details, National Insurance numbers, addresses, dates of birth, contact details and health columns are removed when a file is read.</p>}
                 <p className="mx-auto mt-1.5 max-w-3xl text-[11px] text-neutral-mid">Answers come from your CareStream records and official figures. Check anything important. Pay and funding figures are for administrators only.</p>
               </form>
             )}

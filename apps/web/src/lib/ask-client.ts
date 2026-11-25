@@ -11,7 +11,7 @@ async function call<T>(path: string, token: string, init: RequestInit = {}): Pro
 }
 
 export type AgentStatus = 'ready' | 'shell' | 'soon'
-export interface AskAgent { id: string; name: string; blurb: string; icon: string; status: AgentStatus; starters: string[]; shell_message: string | null }
+export interface AskAgent { id: string; name: string; blurb: string; icon: string; status: AgentStatus; starters: string[]; shell_message: string | null; uploads?: { kinds: string[]; hint: string } | null }
 export interface AskSource { label: string; as_of: string | null; warning?: string | null; url?: string | null }
 export interface AskMessage { id: string; role: 'user' | 'assistant'; content: string; sources?: AskSource[]; created_at?: string | null }
 export type ActionStatus = 'proposed' | 'confirmed' | 'cancelled' | 'expired' | 'failed' | 'done'
@@ -37,6 +37,14 @@ export interface AskDocFull {
   share_intent?: ShareIntent | null; share_intent_text?: string; ack_default?: boolean; hub_shares?: HubShare[]
   values?: Record<string, string | number>; fields?: AskDocField[]; actions: AskDocActions; data?: { review_note?: { note: string; at: string } } | null
 }
+export type UploadRetention = 'chat_end' | '30d' | 'keep'
+export interface MatchRowView { row: number; file_name: string; status: 'matched' | 'ambiguous' | 'unmatched'; staff_id: string | null; candidates: Array<{ id: string; name: string }>; chosen?: string | null }
+export interface AskUpload {
+  id: string; filename: string; agent_id: string; conversation_id: string; doc_kind: 'payroll' | 'invoice' | 'other'; kind: string; row_count: number; status: 'ready' | 'needs_match' | 'deleted'
+  columns: Array<{ name: string; meaning: string | null }>; dropped: Array<{ column: string; reason: string }>; sheet_name: string | null; sheets_found: number | null
+  text_totals?: Array<{ label: string; amount: number }>; created_at: string | null; expires_at: string | null; retention_note: string
+  match: null | { confirmed: boolean; matched: number; ambiguous: number; unmatched: number; total: number; rows: MatchRowView[]; staff: Array<{ id: string; name: string }> }
+}
 export interface AskApproval { id: string; type: string; title: string; staff_name: string | null; mine: boolean; updated_at: string | null }
 
 export const ask = {
@@ -55,6 +63,21 @@ export const ask = {
     edit: (t: string, id: string, b: { title?: string; body?: string; user_ids?: string[]; due_date?: string | null; email?: boolean }) => call<{ card: AskActionCard }>(`/ask/actions/${encodeURIComponent(id)}`, t, { method: 'PATCH', body: JSON.stringify(b) }),
     confirm: (t: string, id: string) => call<{ card: AskActionCard; result: any }>(`/ask/actions/${encodeURIComponent(id)}/confirm`, t, { method: 'POST', body: '{}' }),
     cancel: (t: string, id: string) => call<{ cancelled: boolean }>(`/ask/actions/${encodeURIComponent(id)}/cancel`, t, { method: 'POST', body: '{}' }),
+  },
+  uploads: {
+    config: (t: string) => call<{ retention: UploadRetention; retentions: Array<{ id: UploadRetention; label: string; note: string }>; max_mb: number; accept: string; per_chat: number }>('/ask/uploads/config', t),
+    saveConfig: (t: string, retention: UploadRetention) => call<{ retention: UploadRetention }>('/ask/uploads/config', t, { method: 'PUT', body: JSON.stringify({ retention }) }),
+    list: (t: string, conversationId: string) => call<{ uploads: AskUpload[] }>(`/ask/uploads?conversation_id=${encodeURIComponent(conversationId)}`, t),
+    /** One file, as multipart (the browser sets the content type). The reply carries the chat it belongs to (a new one when the file was the first thing in the chat). */
+    add: async (t: string, file: File, agentId: string, conversationId: string | null): Promise<{ upload: AskUpload }> => {
+      const fd = new FormData(); fd.append('agent_id', agentId); if (conversationId) fd.append('conversation_id', conversationId); fd.append('file', file)
+      const res = await fetch(`${API_URL}/ask/uploads`, { method: 'POST', headers: { Authorization: `Bearer ${t}` }, body: fd })
+      let body: any = null; try { body = await res.json() } catch { /* not json */ }
+      if (!res.ok || !body?.success) throw new AskError(body?.error?.code ?? 'ERROR', body?.error?.message ?? `That file could not be added (${res.status}).`, res.status)
+      return body.data
+    },
+    match: (t: string, id: string, choices: Record<string, string | null>, confirm: boolean) => call<{ upload: AskUpload }>(`/ask/uploads/${encodeURIComponent(id)}/match`, t, { method: 'POST', body: JSON.stringify({ choices, confirm }) }),
+    remove: (t: string, id: string) => call<{ deleted: boolean }>(`/ask/uploads/${encodeURIComponent(id)}`, t, { method: 'DELETE' }),
   },
   documents: (t: string) => call<{ documents: AskDocument[] }>('/ask/documents', t),
   document: (t: string, id: string) => call<{ document: AskDocFull }>(`/ask/documents/${encodeURIComponent(id)}`, t),

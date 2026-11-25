@@ -237,3 +237,21 @@ test('the SQL is safe to run twice, keeps RLS on, and adds only a table and a co
   assert.ok(!/drop |delete from|truncate/i.test(sql.replace(/--.*$/gm, '')))
   assert.ok(!/create policy/i.test(sql))
 })
+
+// ── The screen ────────────────────────────────────────────────────────────────────────
+const web = (rel: string) => fs.readFileSync(path.resolve(__dirname, '../../../../../web/src', rel), 'utf8')
+test('SCREEN: a paperclip for agents that take files, file chips with what was removed, a match table, a delete button and the retention choice in settings', () => {
+  const panel = web('components/ask/upload-panel.tsx'), overlay = web('components/ask/ask-overlay.tsx'), settings = web('components/ask/ask-settings.tsx'), client = web('lib/ask-client.ts')
+  assert.match(panel, /export function AttachButton/); assert.match(panel, /if \(!agent\.uploads\) return null/)
+  assert.match(panel, /Removed \{u\.dropped\.length\} sensitive/); assert.match(panel, /never stored/)
+  assert.match(panel, /Matched \{u\.match\.matched\} of \{u\.match\.total\}/); assert.match(panel, /Leave this name out/); assert.match(panel, /Confirm the match/)
+  assert.match(panel, /disabled=\{busy \|\| open > 0\}/)   // confirm waits until every name has a choice
+  assert.match(panel, /Delete<\/button>/); assert.match(panel, /nothing in CareStream is changed/)
+  assert.match(overlay, /<AttachButton/); assert.match(overlay, /<UploadsBlock/); assert.match(overlay, /agent\.uploads &&/)
+  assert.match(settings, /upload-retention/); assert.match(settings, /saveConfig/)
+  assert.match(client, /uploads: \{/); assert.match(client, /\/ask\/uploads/); assert.match(client, /uploads\?: \{ kinds: string\[\]; hint: string \} \| null/)
+})
+test('SCREEN: no scroll bars of its own and no dashes in the copy', () => {
+  const panel = web('components/ask/upload-panel.tsx'), settings = web('components/ask/ask-settings.tsx')
+  assert.ok(!/overflow-(y-)?(auto|scroll)|max-h-/.test(panel)); assert.ok(!/[–—]/.test(panel)); assert.ok(!/[–—]/.test(settings))
+})

@@ -7,6 +7,7 @@
 //     list and the administrator ticks who is included. Nobody is named without that.
 //   - Birthdays use the month and day only, never an age. Anniversaries use years of service, never an age.
 //   - Pay: only the national rates from the Data sources register (nlw) may appear, and only on a template marked national_rates. Never anyone's own pay.
+import { stripMarks } from './inline-marks'
 export type NewsletterData = 'new_starters' | 'birthdays' | 'anniversaries' | 'training' | 'training_due' | 'holiday' | 'nlw' | 'bank_holidays'
 export type NewsletterLayout = 'short' | 'standard' | 'detailed'
 export type NewsletterCategory = 'whole-team' | 'compliance-care' | 'rota-pay' | 'culture'
@@ -369,7 +370,7 @@ export function lintOptionsFor(templateId: string | null | undefined, rates: num
 /** Problems that stop a newsletter being saved: a dash, a health or pay word, an age, or a superlative. Returned as plain sentences for the agent to fix. */
 export function lintNewsletter(text: string, opts: LintOptions = {}): string[] {
   const out: string[] = []
-  let t = text
+  let t = stripMarks(text)   // the marks (bold, italic, underline) are not words
   if (/[–—]/.test(t)) out.push('It contains a dash. Use commas, full stops or the word "to" instead.')
   const health = opts.careTopic
     ? /\b(absence|absent|disciplin\w*|capability|grievance)\b/i

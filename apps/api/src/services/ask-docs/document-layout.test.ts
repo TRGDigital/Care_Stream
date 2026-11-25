@@ -6,7 +6,7 @@ import fs from 'fs'
 import path from 'path'
 import { NEWSLETTER_TEMPLATES, newsletterTemplate } from './newsletter-templates'
 import { buildDesign, landscapeRows, renderNewsletterHtml, renderNewsletterPdfFit, sampleBody, htmlToText, type DesignInput, type CustomIn } from './newsletter-design'
-import { renderNewsletterSheet, FIT_STEPS, MIN_SCALE, PAGE_MM, fitScript, orientationOf } from './newsletter-sheet'
+import { renderNewsletterSheet, FIT_STEPS, FIT_PLAN, MIN_SCALE, PAGE_MM, fitScript, orientationOf } from './newsletter-sheet'
 import { applyOp } from './newsletter-edit'
 import { pagesModeFor, TooLongError } from './newsletter-design-doc'
 import { countPdfPages, embeddedFontCss, pdfEngine } from './pdf-render'
@@ -220,4 +220,58 @@ test('BROWSER: an over-long newsletter is flagged as not fitting (and shown uncu
     assert.equal(ok.pages, 1); assert.equal(ok.fit!.fits, true)
     assert.equal(pdfEngine(), 'pdfkit')   // the live default: no browser is shipped (it would take the function over Vercel's 250 MB limit)
   } finally { await browser.close() }
+})
+
+// ── Len's real newsletter: long colleague quotes, a long how to nominate, two people, a gift, the DRAFT footer ──────────────────────────────
+const LEN_BODY = `## Our employees of the month
+We are delighted to announce not one but two employees of the month for November: **Callum Fraser** and **Chloe Bennett**.
+
+Both Callum and Chloe have shown exceptional dedication to our residents this month, going above and beyond in their care duties.
+
+## Why they were chosen
+Callum and Chloe have demonstrated brilliant work with residents throughout November, showing particular skill and compassion in managing complex care needs. Their attentive approach to pressure care has made a real difference to residents' comfort and wellbeing.
+
+Their commitment to providing high quality care, their attention to detail, and their genuine kindness have not gone unnoticed by colleagues and residents alike.
+
+## Thank you
+Thank you both for your hard work and dedication this month. Your professionalism and care for our residents set a wonderful example for the whole team. We are lucky to have you at Ferndale.
+
+## What colleagues said
+- Callum and Chloe always put residents first and nothing is too much trouble.
+- Their care and attention to detail is excellent.
+- They work brilliantly as a team and really look out for our residents.
+
+## How to nominate next month
+Do you know someone who deserves recognition? Nominations for December's employee of the month are now open.
+
+Tell us who you would like to nominate and why. What have they done that made a difference? How have they gone the extra mile?
+
+Speak to a member of the management team or drop a note with your nomination by the end of the month. Every nomination is read and appreciated.
+
+**Team Management**`
+test('LEN\'S NEWSLETTER: long quotes, a long nomination section, two people, a gift and the DRAFT footer fit ONE page in the drawn PDF, portrait and landscape (compact spacing first, then the type)', async t => {
+  let ok = true; try { await import('pdfkit') } catch { ok = false }
+  if (!ok) return t.skip('pdfkit is not installed here')
+  const { renderNewsletterPdfFit } = await import('./newsletter-design')
+  for (const orientation of ['portrait', 'landscape'] as const) {
+    const inp: any = { templateId: 'employee-of-the-month-standard', title: 'Our employees of the month', body: LEN_BODY, brand: { name: 'Ferndale Nursing Home - Admin', contact: ['01234 567890'] }, sentBy: 'Len Burgess', people: [{ dataUrl: '', name: 'Callum Fraser' }, { dataUrl: '', name: 'Chloe Bennett' }], gift: { text: 'A £25 M&S voucher each' }, orientation, stamp: 'DRAFT: not yet approved. Do not share.' }
+    const r = await renderNewsletterPdfFit(inp, null, null, null, { allowTwoPages: false })
+    assert.equal(r.pages, 1, `${orientation}: ${r.pages} pages at scale ${r.scale}`); assert.equal(r.fits, true)
+    assert.ok(r.scale >= MIN_SCALE, 'never below the readable minimum')
+    assert.equal(r.density, 1, 'the compact spacing was used before the type was shrunk too far')
+  }
+})
+test('THE FIT PLAN: tighter spacing comes before any shrinking of the type, and the sheet carries both densities for the fit step', () => {
+  assert.deepEqual(FIT_PLAN[0], [0, 1]); assert.deepEqual(FIT_PLAN[1], [1, 1]); assert.equal(FIT_PLAN.length, FIT_STEPS.length + 1)
+  assert.ok(FIT_PLAN.slice(1).every(([d]) => d === 1))
+  const html = renderNewsletterSheet({ templateId: 'monthly-update-standard', title: 'x', body: LEN_BODY, brand: { name: 'F' } } as any, { orientation: 'portrait' })
+  assert.match(html, /class="cs-dens" data-d="0"/); assert.match(html, /class="cs-dens" data-d="1" style="display:none"/)
+})
+test('A GENUINELY TOO LONG newsletter is still flagged (not silently shrunk or cut)', async t => {
+  let ok = true; try { await import('pdfkit') } catch { ok = false }
+  if (!ok) return t.skip('pdfkit is not installed here')
+  const { renderNewsletterPdfFit } = await import('./newsletter-design')
+  const long = LEN_BODY + '\n\n' + Array.from({ length: 8 }, (_, i) => `## More news ${i}\n${'A long paragraph of news for the team. '.repeat(14)}`).join('\n\n')
+  const r = await renderNewsletterPdfFit({ templateId: 'employee-of-the-month-standard', title: 'Long', body: long, brand: { name: 'F' }, orientation: 'portrait' } as any, null, null, null, { allowTwoPages: false })
+  assert.equal(r.fits, false); assert.ok(r.pages >= 2); assert.equal(r.scale, MIN_SCALE)
 })

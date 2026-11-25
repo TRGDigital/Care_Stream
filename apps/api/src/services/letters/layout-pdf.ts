@@ -3,6 +3,7 @@
 // works without them.
 
 import { footerFor, printable, type LayoutDoc } from './layout'
+import { drawMarked, markedHeight, stripMarks } from '../ask-docs/inline-marks'
 import { usableBrand } from '../../lib/brand-colour'
 
 const M = 56, W = 595.28, H = 841.89
@@ -40,7 +41,7 @@ export async function renderLayoutPdf(d: LayoutDoc, opts: { compress?: boolean; 
   const ensure = (h: number) => { if (doc.y + h > bottom) newPage() }
   /** Keeps a piece together: if it does not fit in what is left of this page but would fit on a fresh one, it moves to the next page (a piece longer than a page may split). */
   const keepTogether = (h: number) => { if (doc.y + h > bottom && h <= room) newPage() }
-  const hOf = (text: string, size: number, w: number, gap: number, font = 'Helvetica') => { doc.font(font).fontSize(size); return doc.heightOfString(printable(text), { width: w, lineGap: gap }) }
+  const hOf = (text: string, size: number, w: number, gap: number, font = 'Helvetica') => markedHeight(doc, text, { width: w, size, lineGap: gap, baseBold: /Bold/.test(font), baseItalic: /Oblique|Italic/.test(font), safe: printable })
   const lineH = (size: number, gap: number) => size * 1.2 + gap
 
   // ── The header: logo, then the organisation's name, address and contact lines ──
@@ -74,7 +75,7 @@ export async function renderLayoutPdf(d: LayoutDoc, opts: { compress?: boolean; 
       keepTogether(hOf(b.text, 10.5, width - 20, 2) + 8 + extra); start = pageNow()
       const y = doc.y
       doc.fillColor(INK).font('Helvetica').fontSize(10.5).text('•', M + 6, y, { width: 12, lineBreak: false })
-      doc.text(printable(b.text), M + 20, y, { width: width - 20, lineGap: 2 })
+      drawMarked(doc, b.text, M + 20, y, { width: width - 20, size: 10.5, color: INK, lineGap: 2, safe: printable })
       doc.moveDown(0.25)
     } else if (b.t === 'h') {
       // a heading never ends a page: it travels with the first lines of what follows (the whole next paragraph when it is short)
@@ -83,10 +84,10 @@ export async function renderLayoutPdf(d: LayoutDoc, opts: { compress?: boolean; 
       const nextH = next ? (next.t === 'p' ? hOf(next.text, 10.5, width, 2.5) + 9 : hOf(next.text, 10.5, width - 20, 2) + 8) + nextExtra : 0
       const follow = nextH > room - own ? Math.min(nextH, lineH(10.5, 2.5) * 3) : nextH
       keepTogether(own + follow); start = pageNow()
-      doc.moveDown(0.4); doc.fillColor(BRAND ?? (d.kind === 'letter' ? INK : TEAL)).font('Helvetica-Bold').fontSize(sizeOf('h')).text(printable(b.text), M, doc.y, { width }); doc.moveDown(0.3)
+      doc.moveDown(0.4); doc.fillColor(BRAND ?? (d.kind === 'letter' ? INK : TEAL)).font('Helvetica-Bold').fontSize(sizeOf('h')).text(printable(stripMarks(b.text)), M, doc.y, { width }); doc.moveDown(0.3)
     } else {
       keepTogether(hOf(b.text, 10.5, width, 2.5) + 9 + extra); start = pageNow()
-      doc.fillColor(INK).font('Helvetica').fontSize(10.5).text(printable(b.text), M, doc.y, { width, lineGap: 2.5, align: 'left' })
+      drawMarked(doc, b.text, M, doc.y, { width, size: 10.5, color: INK, lineGap: 2.5, safe: printable })
       doc.moveDown(0.7)
     }
     opts.trace?.push({ i: opts.trace.length, t: b.t, startPage: start, endPage: pageNow(), text: b.text })

@@ -12,25 +12,29 @@ export const PAGE_MM: Record<Orientation, { w: number; h: number }> = { portrait
 /** The sizes the fit step tries, largest first. 0.8 of the 15px body text is 12px, which is 9pt: the smallest body text allowed. */
 export const FIT_STEPS = [1, 0.97, 0.94, 0.91, 0.88, 0.85, 0.82, 0.8]
 export const MIN_SCALE = FIT_STEPS[FIT_STEPS.length - 1]
+/** What the fit step tries, in order: [density, scale]. Tighter spacing (density 1) comes BEFORE any shrinking of the type, so a long newsletter keeps its text size as long as it can. */
+export const FIT_PLAN: Array<[number, number]> = [[0, 1], [1, 1], ...FIT_STEPS.slice(1).map(sc => [1, sc] as [number, number])]
 /** Space kept clear at the bottom of the page for the draft or sample note and the margin. */
 export const BOTTOM_RESERVE_PX = 16
-export interface FitInfo { mode: PagesMode; fits: boolean; scale: number; contentHeight: number; pageHeight: number; pages: number }
+export interface FitInfo { mode: PagesMode; fits: boolean; scale: number; density?: number; contentHeight: number; pageHeight: number; pages: number }
 
 export const orientationOf = (v: unknown): Orientation => (v === 'landscape' ? 'landscape' : 'portrait')
 
 /** The fit step, as the small script that runs inside the page (so the screen, the print preview and the PDF engine all run the SAME code). */
 export function fitScript(): string {
   return `(function(){var d=document,sheet=d.getElementById('cs-sheet'),el=d.getElementById('cs-fit');if(!sheet||!el)return;
-var mode=sheet.getAttribute('data-mode')==='two'?'two':'one',STEPS=${JSON.stringify(FIT_STEPS)},R=${BOTTOM_RESERVE_PX};
+var mode=sheet.getAttribute('data-mode')==='two'?'two':'one',PLAN=${JSON.stringify(FIT_PLAN)},R=${BOTTOM_RESERVE_PX},copies=el.querySelectorAll('.cs-dens');
+function show(dn){for(var k=0;k<copies.length;k++){copies[k].style.display=(copies[k].getAttribute('data-d')==String(dn))?'':'none'}}
 function run(){sheet.style.height='';sheet.style.minHeight='';el.style.position='';
 var W=sheet.clientWidth,H=sheet.clientHeight,fits=false,used=1,ch=0;
 function apply(s){el.style.transform=s===1?'none':'scale('+s+')';el.style.width=(W/s)+'px';ch=el.offsetHeight*s;return ch}
-if(mode==='two'){apply(1);used=1;fits=ch<=H-R}
-else{for(var i=0;i<STEPS.length;i++){used=STEPS[i];apply(used);if(ch<=H-R){fits=true;break}}}
+var dens=0;
+if(mode==='two'){show(0);apply(1);used=1;fits=ch<=H-R}
+else{for(var i=0;i<PLAN.length;i++){dens=PLAN[i][0];used=PLAN[i][1];show(dens);apply(used);if(ch<=H-R){fits=true;break}}}
 if(mode==='one'&&!fits){sheet.style.height=Math.ceil(ch+R)+'px'}
 if(mode==='two'){sheet.style.height='auto';sheet.style.minHeight=H+'px';sheet.style.overflow='visible';el.style.position='relative'}
 var pages=Math.max(1,Math.ceil((ch+R)/H));
-var info={mode:mode,fits:mode==='two'?true:fits,scale:used,contentHeight:Math.round(ch),pageHeight:H,pages:mode==='two'?pages:(fits?1:pages)};
+var info={mode:mode,fits:mode==='two'?true:fits,scale:used,density:dens,contentHeight:Math.round(ch),pageHeight:H,pages:mode==='two'?pages:(fits?1:pages)};
 window.__nlFit=info;d.documentElement.setAttribute('data-fit',info.fits?(info.pages>1?'two':'one'):'over');
 try{parent.postMessage({type:'cs-sheet-fit',fit:info},'*')}catch(e){}return info}
 window.__nlRun=run;run();if(d.fonts&&d.fonts.ready){d.fonts.ready.then(function(){run()})}})();`
@@ -43,7 +47,7 @@ export function renderNewsletterSheet(input: DesignInput, o: { orientation?: Ori
   const orientation = orientationOf(o.orientation ?? input.orientation)
   const pages = o.pages === 'two' ? 'two' : 'one'
   const { w, h } = PAGE_MM[orientation]
-  const card = renderNewsletterHtml({ ...input, orientation }, 'web', { sheet: true })
+  const card = `<div class="cs-dens" data-d="0">${renderNewsletterHtml({ ...input, orientation }, 'web', { sheet: true, density: 0 })}</div><div class="cs-dens" data-d="1" style="display:none">${renderNewsletterHtml({ ...input, orientation }, 'web', { sheet: true, density: 1 })}</div>`
   const stamp = o.stamp ?? input.stamp ?? ''
   const css = `@page{size:A4 ${orientation};margin:0}
 *{box-sizing:border-box}

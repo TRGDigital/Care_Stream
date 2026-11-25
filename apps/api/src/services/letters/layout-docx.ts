@@ -2,6 +2,7 @@
 // inline, and a footer with the legal details and page numbers. Built from the same LayoutDoc as the PDF, so the two match. The 'docx' package (pure JavaScript) is loaded when this runs.
 
 import { footerFor, printable, type LayoutDoc } from './layout'
+import { parseMarks } from '../ask-docs/inline-marks'
 import { usableBrand } from '../../lib/brand-colour'
 
 const FONT = 'Arial'
@@ -68,7 +69,7 @@ export async function renderLayoutDocx(d: LayoutDoc): Promise<Buffer> {
   const para = (text: string, o: { bold?: boolean; color?: string; size?: number; after?: number; before?: number; bullet?: boolean; keepNext?: boolean } = {}) => new Paragraph({
     keepLines: true, keepNext: o.keepNext ?? false, widowControl: true,
     spacing: { after: o.after ?? 140, before: o.before ?? 0, line: 300 }, bullet: o.bullet ? { level: 0 } : undefined,
-    children: [new TextRun({ text: printable(text), font: FONT, size: PT(o.size ?? 10.5), bold: o.bold, color: o.color ?? '1A1530' })],
+    children: parseMarks(text).map(r => new TextRun({ text: printable(r.text), font: FONT, size: PT(o.size ?? 10.5), bold: o.bold || r.b, italics: r.i, underline: r.u ? {} : undefined, color: o.color ?? '1A1530' })),
   })
   const lastBody = (() => { for (let k = d.blocks.length - 1; k >= 0; k--) if (d.blocks[k].t !== 'h') return k; return -1 })()
   const bodyParas = d.blocks.map((b, k) => b.t === 'li' ? para(b.text, { bullet: true, after: 60, keepNext: d.kind === 'letter' && k === lastBody }) : b.t === 'h' ? para(b.text, { keepNext: true, bold: true, size: d.kind === 'letter' ? 11 : 13, color: BRAND ? BRAND.slice(1) : d.kind === 'letter' ? '1A1530' : '0F766E', before: 120, after: 80 }) : para(b.text, { keepNext: d.kind === 'letter' && k === lastBody }))

@@ -2,6 +2,7 @@
 // Pure data and string building: no database, no files. Nothing here prints a dash; a person's own text is printed as typed.
 
 import type { Letterhead } from './letterhead'
+import { marksToHtml, stripMarks } from '../ask-docs/inline-marks'
 import { usableBrand } from '../../lib/brand-colour'
 
 export type BlockKind = 'p' | 'li' | 'h'
@@ -70,9 +71,9 @@ export function layoutToHtml(d: LayoutDoc, logoDataUrl?: string | null): string 
   const body: string[] = []
   let inList = false
   for (const b of d.blocks) {
-    if (b.t === 'li') { if (!inList) { body.push('<ul>'); inList = true } body.push(`<li>${esc(b.text)}</li>`); continue }
+    if (b.t === 'li') { if (!inList) { body.push('<ul>'); inList = true } body.push(`<li>${marksToHtml(b.text)}</li>`); continue }
     if (inList) { body.push('</ul>'); inList = false }
-    body.push(b.t === 'h' ? `<h3${hStyle}>${esc(b.text)}</h3>` : `<p>${esc(b.text).replace(/\n/g, '<br>')}</p>`)
+    body.push(b.t === 'h' ? `<h3${hStyle}>${esc(stripMarks(b.text))}</h3>` : `<p>${marksToHtml(b.text).replace(/\n/g, '<br>')}</p>`)
   }
   if (inList) body.push('</ul>')
   const sig = d.signer?.signature ? `<img class="lh-sig" src="data:image/png;base64,${d.signer.signature.png.toString('base64')}" alt="Signature">` : '<div class="lh-gap"></div>'

@@ -4,6 +4,7 @@
 // A shared tablet's own token never reaches the staff routes (tabletRefusal); a PERSONAL tablet session is the person and does.
 // The tables are created by prisma/sql/2026-11-25_staff_notifications.sql; until then every route answers 'not switched on yet'.
 
+import { stripMarks } from '../services/ask-docs/inline-marks'
 import { Router, Request, Response } from 'express'
 import { prisma } from '../db/client'
 import { ok, err } from '../lib/response'
@@ -79,6 +80,7 @@ async function sendTo(opts: { notification: any; people: Array<{ id: string; nam
 export async function createAndSendNotification(o: { tenantId: string; userId: string; title: string; body: string; audience: unknown; userIds?: unknown; files: any[]; email?: boolean; skipDailyLimit?: boolean; via?: string; emailHtml?: string; hubHtml?: string }):
   Promise<{ ok: true; id: string; recipients: number; emailed: number; email_failed: number; dropped: number } | { ok: false; code: string; message: string; status: number }> {
   const { tenantId } = o
+  o = { ...o, title: stripMarks(o.title), body: stripMarks(o.body) }   // house rule 11: a notification never shows stray stars or underscores
   const sentToday = o.skipDailyLimit ? 0 : await p().staffNotification.count({ where: { tenant_id: tenantId, created_at: { gte: new Date(Date.now() - 24 * 3600_000) } } })
   if (sentToday >= MAX_SENDS_PER_DAY) return { ok: false, code: 'LIMIT', message: `You can send up to ${MAX_SENDS_PER_DAY} notifications a day. Please try again tomorrow.`, status: 429 }
   const eligible = (await p().user.findMany({ where: ELIGIBLE_WHERE(tenantId), select: { id: true, name: true, email: true, job_role: true, role: true } })).filter((u: any) => u.email)

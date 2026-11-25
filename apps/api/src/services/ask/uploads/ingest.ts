@@ -25,7 +25,7 @@ export async function ingest(buf: Buffer, filename: string, thisYear?: number): 
   const sh: Sheet = pick.d.sheet
   return { ok: true, ext: p.ext, stored: { v: 1, filename, kind: 'spreadsheet', doc_kind: pick.d.kind, sheet_name: sh.name, headers: sh.headers, rows: sh.rows, roles: pick.d.roles, dropped: pick.dropped, sheets_found: p.sheets.length, title_rows_skipped: sh.title_rows_skipped } }
 }
-export const emptyRoles = (): Roles => ({ name: null, rate: null, rate_weekend: null, hours: null, contracted_hours: null, gross: null, job: null, supplier: null, amount: null, date: null, description: null })
+export const emptyRoles = (): Roles => ({ name: null, rate: null, rate_weekend: null, hours: null, contracted_hours: null, gross: null, job: null, supplier: null, amount: null, date: null, description: null, allowance: null, taken: null, remaining: null, course: null, completed: null, expiry: null })
 
 /** Which columns mean what, for the screen and for the assistant. */
 export function columnSummary(s: Stored) {

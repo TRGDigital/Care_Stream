@@ -12,7 +12,7 @@ export interface AgentDef {
   starters: string[]         // four clickable starter prompts
   prompt: string             // what this agent is for and how it answers
   shell_message?: string     // for shells: what it will do and when
-  uploads?: { kinds: Array<'payroll' | 'invoice' | 'other'>; hint: string }   // set by agents-uploads.ts: this agent accepts attached files
+  uploads?: { kinds: Array<'payroll' | 'invoice' | 'rota' | 'holiday' | 'training' | 'other'>; hint: string }   // set by agents-uploads.ts: this agent accepts attached files
 }
 
 /** The EDITABLE house rules (tone, how to answer). The locked privacy and safety rules are in safety.ts and are always added after this. */

@@ -47,7 +47,7 @@ export function AskSettingsBody({ token }: { token: string }) {
       {up && (
         <fieldset className="space-y-2 border-t border-gray-100 pt-4">
           <legend className="text-sm font-semibold text-neutral-dark">Files attached to a chat</legend>
-          <p className="text-sm text-neutral-mid">Administrators can attach a spreadsheet, Word file or PDF to the Pay and Finance agents. CareStream removes bank details, National Insurance numbers, addresses, dates of birth, contact details and health columns as the file is read, and never keeps the original. Only the cleaned copy is kept, in private storage, and only the person who attached it can use it. When should it be deleted?</p>
+          <p className="text-sm text-neutral-mid">Administrators can attach a spreadsheet, Word file or PDF to the Pay, Finance, Staff, Holiday, Training, Letters and Staff newsletter agents (each shows what suits it). It is never offered for anything about sickness, residents or complaints. CareStream removes bank details, National Insurance numbers, addresses, dates of birth, contact details and health columns as the file is read, and never keeps the original. For letters and newsletters it also replaces staff names with [name]. Only the cleaned copy is kept, in private storage, and only the person who attached it can use it. When should it be deleted?</p>
           {up.retentions.map(o => (
             <label key={o.id} className="flex items-start gap-2.5 text-sm text-neutral-dark">
               <input type="radio" name="upload-retention" className="mt-0.5 h-4 w-4" checked={up.retention === o.id} onChange={() => setRetention(o.id)} />

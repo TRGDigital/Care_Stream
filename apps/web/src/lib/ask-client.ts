@@ -40,7 +40,7 @@ export interface AskDocFull {
 export type UploadRetention = 'chat_end' | '30d' | 'keep'
 export interface MatchRowView { row: number; file_name: string; status: 'matched' | 'ambiguous' | 'unmatched'; staff_id: string | null; candidates: Array<{ id: string; name: string }>; chosen?: string | null }
 export interface AskUpload {
-  id: string; filename: string; agent_id: string; conversation_id: string; doc_kind: 'payroll' | 'invoice' | 'other'; kind: string; row_count: number; status: 'ready' | 'needs_match' | 'deleted'
+  id: string; filename: string; agent_id: string; conversation_id: string; doc_kind: 'payroll' | 'invoice' | 'rota' | 'holiday' | 'training' | 'other'; kind: string; row_count: number; status: 'ready' | 'needs_match' | 'deleted'
   columns: Array<{ name: string; meaning: string | null }>; dropped: Array<{ column: string; reason: string }>; sheet_name: string | null; sheets_found: number | null
   text_totals?: Array<{ label: string; amount: number }>; created_at: string | null; expires_at: string | null; retention_note: string
   match: null | { confirmed: boolean; matched: number; ambiguous: number; unmatched: number; total: number; rows: MatchRowView[]; staff: Array<{ id: string; name: string }> }

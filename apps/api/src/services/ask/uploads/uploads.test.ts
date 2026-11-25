@@ -208,14 +208,15 @@ test('TOOLS: the four tools exist, are read only, and belong to the Pay and Fina
   assert.ok(!TOOLS.some(t => /^(propose|set|update|change|approve|reject|delete|remove|archive|send|save)_/.test(t.name) && NAMES.includes(t.name)))
   for (const id of ['pay', 'finance']) { const a = agentById(id)!; assert.ok(a.uploads, id); for (const n of NAMES.filter(x => id === 'pay' ? x !== 'invoice_cost_per_resident_day' : true)) assert.ok(a.tools.includes(n), `${id} ${n}`) }
   assert.ok(!agentById('pay')!.tools.includes('invoice_cost_per_resident_day'))
-  for (const a of AGENTS) if (!['pay', 'finance'].includes(a.id)) { assert.ok(!a.uploads, a.id); for (const n of NAMES) assert.ok(!a.tools.includes(n), `${a.id} ${n}`) }
-  assert.ok(publicAgent(agentById('pay')!).uploads); assert.equal(publicAgent(agentById('staff')!).uploads, null)
+  const MORE = ['staff', 'holiday', 'training', 'letters', 'newsletter']   // the other agents that take files (uploads-more.test.ts); they get upload_summary but never the payroll or invoice tools
+  for (const a of AGENTS) if (!['pay', 'finance'].includes(a.id)) { if (!MORE.includes(a.id)) assert.ok(!a.uploads, a.id); for (const n of NAMES.filter(x => !(MORE.includes(a.id) && x === 'upload_summary'))) assert.ok(!a.tools.includes(n), `${a.id} ${n}`) }
+  assert.ok(publicAgent(agentById('pay')!).uploads); assert.equal(publicAgent(agentById('knowledge')!).uploads, null)
   for (const t of AGENTS.flatMap(a => a.tools)) assert.ok(toolByName(t), `agent names a missing tool: ${t}`)
 })
-test('PROMPTS: the upload wording is registered for editing on /platform/prompts, added for the two agents only, before the locked rules', async () => {
+test('PROMPTS: the upload wording is registered for editing on /platform/prompts, added only for the agents that take files, before the locked rules', async () => {
   for (const u of ['ask_uploads_rules', 'ask_uploads_pay', 'ask_uploads_finance']) assert.ok(ASK_PROMPTS.some(p => p.usage === u && p.default.length > 100), u)
   __setPromptTestHooks({ reader: async () => null, clock: () => 1 })
-  const pay = await buildSystemPrompt(agentById('pay')!, '2026-11-25', 'Org', ''), staff = await buildSystemPrompt(agentById('staff')!, '2026-11-25', 'Org', '')
+  const pay = await buildSystemPrompt(agentById('pay')!, '2026-11-25', 'Org', ''), staff = await buildSystemPrompt(agentById('knowledge')!, '2026-11-25', 'Org', '')
   assert.match(pay, /UPLOADED FILES/); assert.match(pay, /PAYROLL:/); assert.ok(!/UPLOADED FILES/.test(staff))
   assert.ok(pay.indexOf('UPLOADED FILES') < pay.indexOf('LOCKED RULES')); assert.ok(pay.trimEnd().endsWith(pay.slice(pay.indexOf('LOCKED RULES')).trimEnd()))
   const fin = await buildSystemPrompt(agentById('finance')!, '2026-11-25', 'Org', ''); assert.match(fin, /INVOICES AND FOOD COST/)

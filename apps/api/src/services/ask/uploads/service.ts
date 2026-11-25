@@ -6,6 +6,9 @@ import { ingest, columnSummary, type Stored } from './ingest'
 import { matchPeople, resolveChoices, type MatchRow } from './match'
 import { loadRetention, retentionNote, type Retention } from './settings'
 import { toNumber } from './sheet'
+import { PEOPLE_KINDS } from './columns'
+import { uploadConfigFor } from '../agents-uploads'
+import { scrubStaffNames } from './calc-more'
 import type { PayRow, StaffLite, Mapping } from './calc'
 import { ukToday } from '../../../lib/holiday-math'
 
@@ -15,7 +18,7 @@ export const MAX_UPLOADS_PER_DAY = 20
 export interface Names { rows: Array<{ row: number; name: string }>; hasPeople: boolean }
 export function namesOf(s: Stored): Names {
   const i = s.roles.name
-  if (s.doc_kind !== 'payroll' || i == null) return { rows: [], hasPeople: false }
+  if (!PEOPLE_KINDS.includes(s.doc_kind) || i == null) return { rows: [], hasPeople: false }
   return { hasPeople: true, rows: s.rows.map((r, row) => ({ row, name: r[i] ?? '' })).filter(x => x.name.trim() !== '') }
 }
 export function payRowsOf(s: Stored): PayRow[] {
@@ -47,6 +50,13 @@ export async function viewOf(u: store.UploadRow, stored: Stored, retention: Rete
   return { ...base, match: { confirmed: !!u.match?.confirmed_at, matched: rows.filter(r => r.status === 'matched').length, ambiguous: rows.filter(r => r.status === 'ambiguous').length, unmatched: rows.filter(r => r.status === 'unmatched').length, total: rows.length, rows: view, staff: staff.map(s => ({ id: s.id, name: s.name })).sort((a, b) => a.name.localeCompare(b.name)) } }
 }
 
+/** Replaces every staff name found in the text and the cells by [name]. The cleaned copy then holds no staff names. */
+export async function scrubStoredNames(s: Stored, tenantId: string): Promise<Stored> {
+  const names = (await loadStaff(tenantId, ukToday())).map(x => x.name)
+  const f = (t: string) => scrubStaffNames(t, names)
+  return { ...s, text: s.text != null ? f(s.text) : s.text, rows: s.rows.map(r => r.map(c => f(c))), headers: s.headers.map(f) }
+}
+
 export async function addUpload(o: { tenantId: string; userId: string; agentId: string; conversationId?: string | null; buf: Buffer; filename: string }): Promise<{ ok: true; view: View } | { ok: false; code: string; reason: string; status: number }> {
   let convId = o.conversationId ?? ''
   if (convId) {
@@ -57,6 +67,8 @@ export async function addUpload(o: { tenantId: string; userId: string; agentId: 
   if ((await store.countToday(o.tenantId, o.userId)) >= MAX_UPLOADS_PER_DAY) return { ok: false, code: 'LIMIT', reason: 'That is the limit of files for one day. Please try again tomorrow.', status: 429 }
   const r = await ingest(o.buf, o.filename)
   if (!r.ok) return { ok: false, code: 'INVALID_FILE', reason: r.reason, status: 400 }
+  // Letters and newsletters: staff names in the text are replaced by [name] before anything is kept, so no personal data is stored.
+  if (uploadConfigFor(o.agentId)?.scrubNames) r.stored = await scrubStoredNames(r.stored, o.tenantId)
   if (!convId) convId = await createConversation(o.tenantId, o.userId, o.agentId, `File: ${o.filename}`.slice(0, 80))
   const retention = await loadRetention(o.tenantId)
   const needsMatch = namesOf(r.stored).hasPeople

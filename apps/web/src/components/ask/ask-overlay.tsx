@@ -159,7 +159,7 @@ export function AskPanel({ token, layout, expanded, width, onClose }: { token: s
   const [text, setText] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
-  const [uploads, setUploads] = useState<AskUpload[]>([])   // files attached to this chat (Pay and Finance agents)
+  const [uploads, setUploads] = useState<AskUpload[]>([])   // files attached to this chat (agents that take files)
   const [lib, setLib] = useState<{ tab: 'chats' | 'docs'; chats: AskConversation[] | null; docs: AskDocument[] | null }>({ tab: 'chats', chats: null, docs: null })
   const [docId, setDocId] = useState<string | null>(null)
   const [docFilter, setDocFilter] = useState<'all' | 'waiting'>('all')

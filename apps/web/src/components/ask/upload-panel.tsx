@@ -1,12 +1,12 @@
 'use client'
 
-// Files attached to an Ask CareStream chat (Pay and Finance agents): the paperclip, the file chips with what was removed and when it is deleted, and the match table
+// Files attached to an Ask CareStream chat (the agents that take files: Pay, Finance, Staff, Holiday, Training, Letters and Staff newsletter): the paperclip, the file chips with what was removed and when it is deleted, and the match table
 // for a payroll. Administrators only. Nothing here changes anything in CareStream: the files are used to compare and calculate.
 import { useRef, useState } from 'react'
 import { Paperclip, Trash2, FileSpreadsheet, ShieldCheck, Loader2, Check, AlertTriangle } from 'lucide-react'
 import { ask, AskError, type AskAgent, type AskUpload, type MatchRowView } from '@/lib/ask-client'
 
-const KIND: Record<string, string> = { payroll: 'Payroll', invoice: 'Invoices', other: 'File' }
+const KIND: Record<string, string> = { payroll: 'Payroll', invoice: 'Invoices', rota: 'Rota or timesheet', holiday: 'Holiday sheet', training: 'Training list', other: 'File' }
 
 export function AttachButton({ token, agent, convId, disabled, onAdded, onError }: { token: string; agent: AskAgent; convId: string | null; disabled?: boolean; onAdded: (u: AskUpload) => void; onError: (m: string) => void }) {
   const input = useRef<HTMLInputElement>(null)

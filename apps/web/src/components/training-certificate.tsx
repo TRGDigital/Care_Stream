@@ -137,11 +137,12 @@ export function TrainingCertificate({
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/logo-color.png" alt="CareStream" className="h-10 w-auto object-contain" />
         </div>
+        {/* Two certificates. A course generated from the home's own policies says only where it came from. Every other course, including each CPD Certified course (the one with the CPD logo), keeps the statement
+            the CPD Certification Service asked for (completion and assessment only; not a qualification; not competence) in shorter words, with no mention of policies. */}
         <p className="mx-auto mt-3 max-w-lg text-[9.5px] leading-relaxed text-neutral-mid">
-          {tailored ? <>Tailored to {orgName ?? 'the home'}&apos;s own policies and assessed by CareStream. </> : null}
-          This certificate is evidence that the named person completed this course and passed CareStream&apos;s assessment. It is not a
-          government recognised qualification and does not certify competence to perform a particular role, treatment or activity.
-          The employer remains responsible for ensuring training meets regulatory requirements.
+          {tailored && !cpdAccredited
+            ? <>Tailored to {orgName ?? 'the home'}&apos;s own policies, delivered and assessed by CareStreamai.com.</>
+            : <>Delivered and assessed by CareStreamai.com. This certificate is evidence that the named person completed this course and passed CareStream&apos;s assessment. It is not a qualification and does not certify competence. The employer remains responsible for ensuring training meets regulatory requirements.</>}
         </p>
       </div>
     </div>

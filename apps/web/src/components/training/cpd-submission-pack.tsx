@@ -411,9 +411,8 @@ function CertificateDoc({ m }: { m: any }) {
             <img src="/logo-color.png" alt="CareStream" className="h-8 w-auto object-contain" />
           </div>
           <p className="mx-auto mt-2.5 max-w-md text-[8.5px] leading-relaxed text-neutral-mid">
-            This certificate is evidence that the named person completed this course and passed CareStream&apos;s assessment. It is not a
-            government recognised qualification and does not certify competence to perform a particular role, treatment or activity.
-            The employer remains responsible for ensuring training meets regulatory requirements.
+            Delivered and assessed by CareStreamai.com. This certificate is evidence that the named person completed this course and passed CareStream&apos;s assessment.
+            It is not a qualification and does not certify competence. The employer remains responsible for ensuring training meets regulatory requirements.
           </p>
         </div>
       </div>

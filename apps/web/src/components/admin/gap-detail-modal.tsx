@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useSession } from 'next-auth/react'
 import { persistentCache } from '@/lib/page-cache'
+import { BuyMissingPolicy } from '@/components/admin/missing-policies-banner'
 import { createApiClient } from '@/lib/api-client'
 import EditablePolicyBody from './editable-policy-body'
 import SlowLoadHint from './slow-load-hint'
@@ -1309,6 +1310,7 @@ export function GapDetailModal({ token, referenceKey, viewKey = null, viewName =
                     <FilePlus2 size={28} className="text-teal" />
                     <p className="text-sm font-semibold text-neutral-dark">No existing policy to check against</p>
                     <p className="max-w-xs text-sm text-neutral-mid">You don&rsquo;t have a matching policy yet — you&rsquo;ll need a new {detail.suggested_new_policy_title ?? 'policy'}. The wording on the left is your starting point.</p>
+                    <BuyMissingPolicy token={token} referenceKey={referenceKey} />
                   </div>
                 )}
               </div>

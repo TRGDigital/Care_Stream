@@ -96,6 +96,48 @@ export function MissingPoliciesAlert({ token }: { token: string }) {
   )
 }
 
+/** Inside the window of a regulation that has NO policy at all: the policy that is missing for it, with a button to buy it. It uses the same list, prices and checkout as the banner on this page,
+ *  so the price is the shop's price and the payment comes back to /gaps and is confirmed there. Nothing shows when the verdict cannot be believed, the policy is already ordered, or it was ignored. */
+export function BuyMissingPolicy({ token, referenceKey }: { token: string; referenceKey: string }) {
+  const mkey = useMissingKey()
+  const c0 = persistentCache.get<MissingBundle>(mkey)
+  const [bundle, setBundle] = useState<MissingBundle | null>(c0 ?? null)
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState('')
+  useEffect(() => {
+    let live = true
+    const api = createApiClient(token)
+    Promise.all([api.gaps.missingPolicies(), api.policyPurchases.list()])
+      .then(([r, p]) => { const b = { r, p } as MissingBundle; persistentCache.set(mkey, b); if (live) setBundle(b) })
+      .catch(() => { /* the button simply does not appear: the page already says what to do */ })
+    return () => { live = false }
+  }, [token, mkey])
+  if (!bundle || !bundle.r.analysed || !bundle.r.usable) return null
+  const entry = bundle.r.missing.find(m => m.regulations.some(r => r.reference_key === referenceKey))
+  if (!entry) return null
+  if ((bundle.p.ignored ?? []).some(i => i.policy_title === entry.title)) return null
+  const order = bundle.p.purchases.find(x => x.policy_title === entry.title)
+  if (order) return <p className="max-w-xs text-xs text-neutral-mid">You have ordered the <strong className="text-neutral-dark">{entry.title}</strong>. Its progress is under &ldquo;We have read your policies against the law&rdquo; on this page.</p>
+  const price = priceOf({ byTitle: bundle.p.prices ?? {}, fallback: bundle.p.price_pence }, entry.title)
+  async function buy() {
+    setBusy(true); setError('')
+    try {
+      const { url } = await createApiClient(token).policyPurchases.checkout([entry!.title])
+      window.location.href = url
+    } catch (e: any) { setError(e?.message ?? 'Could not start checkout'); setBusy(false) }
+  }
+  return (
+    <div className="flex flex-col items-center gap-1.5">
+      <button type="button" onClick={buy} disabled={busy}
+        className="inline-flex items-center gap-2 rounded-btn bg-teal px-4 py-2 text-sm font-semibold text-white hover:bg-teal-dark disabled:opacity-50">
+        {busy ? <Loader2 size={14} className="animate-spin" /> : <ShoppingCart size={14} />} Buy the {entry.title} ({money(price)})
+      </button>
+      <p className="max-w-xs text-xs text-neutral-mid">We write it for your home, using your name and your named leads, and check it before it reaches you.</p>
+      {error && <p className="max-w-xs text-xs text-red-700">{error}</p>}
+    </div>
+  )
+}
+
 export function MissingPoliciesBanner({ token }: { token: string }) {
   const mkey = useMissingKey()
   const c0 = persistentCache.get<MissingBundle>(mkey)

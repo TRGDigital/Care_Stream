@@ -1,9 +1,9 @@
 // "Weave a name in": when an admin adopts suggested wording they can include a named person from Organisation details, and the wording is rewritten ONCE so the name sits in it naturally,
-// instead of being pasted at the cursor. Switched on per account while it is tested: NAME_WEAVE_ACCOUNTS is a comma list of account numbers (default CS-1001), or * for everyone.
+// instead of being pasted at the cursor. On for EVERY account (after it was tested on CS-1001). NAME_WEAVE_ACCOUNTS is a switch back: set it to a comma list of account numbers and only those accounts get it.
 import { prisma } from '../db/client'
 import { wholeNameRegex } from './other-names'
 
-export const NAME_WEAVE_DEFAULT = ['CS-1001']
+export const NAME_WEAVE_DEFAULT = ['*']   // everyone (it was CS-1001 only while it was tested)
 export function nameWeaveAccounts(env: string | undefined = process.env.NAME_WEAVE_ACCOUNTS): string[] {
   const list = String(env ?? '').split(',').map(s => s.trim().toUpperCase()).filter(Boolean)
   return list.length ? list : NAME_WEAVE_DEFAULT

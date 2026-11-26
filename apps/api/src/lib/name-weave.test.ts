@@ -5,10 +5,10 @@ import fs from 'fs'
 import path from 'path'
 import { nameWeaveAccounts, isNameWeaveAccount, weavePrompt, weaveResult, WEAVE_SYSTEM } from './name-weave'
 
-test('WHO GETS IT: CS-1001 by default, a list of accounts when set, * for everyone, and nobody else', () => {
-  assert.deepEqual(nameWeaveAccounts(undefined), ['CS-1001']); assert.deepEqual(nameWeaveAccounts(''), ['CS-1001'])
-  assert.equal(isNameWeaveAccount('CS-1001', undefined), true); assert.equal(isNameWeaveAccount('cs-1009', undefined), false); assert.equal(isNameWeaveAccount(null, undefined), false)
-  assert.equal(isNameWeaveAccount('CS-1009', ' cs-1001 , CS-1009 '), true); assert.equal(isNameWeaveAccount('CS-1234', '*'), true)
+test('WHO GETS IT: everyone by default; NAME_WEAVE_ACCOUNTS narrows it to a list of accounts (the switch back)', () => {
+  assert.deepEqual(nameWeaveAccounts(undefined), ['*']); assert.deepEqual(nameWeaveAccounts(''), ['*'])
+  assert.equal(isNameWeaveAccount('CS-1001', undefined), true); assert.equal(isNameWeaveAccount('cs-1009', undefined), true)
+  assert.equal(isNameWeaveAccount('CS-1009', ' cs-1001 , CS-1009 '), true); assert.equal(isNameWeaveAccount('CS-1234', 'CS-1001'), false); assert.equal(isNameWeaveAccount(null, 'CS-1001'), false)
 })
 
 test('PROMPT: keeps every fact, adds nothing, never puts the name only at the front, British English and no dashes', () => {

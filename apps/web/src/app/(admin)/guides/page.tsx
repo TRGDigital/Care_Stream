@@ -3163,7 +3163,7 @@ const GUIDE_SECTIONS: GuideSection[] = [
           <p className="text-sm text-neutral-mid">
             Suggested wording in <strong>Policy Gap Detection</strong> is often copied from a policy that is out of date, so it can already name
             someone who has left. When you press <strong>Adopt into [policy]</strong> on a suggestion, CareStream helps you get the names right
-            before anything is added. If your account does not show these yet, they are being switched on account by account.
+            before anything is added.
           </p>
           <ul className="mt-2 list-disc space-y-1.5 pl-5 text-sm text-neutral-mid">
             <li><strong>Named people who matter here</strong>: only the people whose role fits the wording or the policy, each with their picture. <strong>Show everyone</strong> reveals the rest.</li>

@@ -143,12 +143,14 @@ function groundAnchor(anchor: string, policyText: string): string {
 // for every policy it looked at, including a Water Supply Management policy. Step 1 now rates
 // each quality against the policy with an explicit n/a option; step 2 drafts wording ONLY for
 // the qualities genuinely absent, so zero suggestions is a normal, reachable answer.
-async function generateAlignments(statements: any[], fullText: string, open = true): Promise<SafAlignment[]> {
+/** The same check as generateAlignments, but also says whether any AI step FAILED, so a run can tell "this policy already reads well" from "the check did not complete". */
+async function alignmentsWithStatus(statements: any[], fullText: string, open = true): Promise<{ alignments: SafAlignment[]; failed: boolean }> {
+  let failed = false
   // NO CAP: every quality is checked and every genuinely missing one gets its wording. Qualities are rated QUALITIES_PER_CALL at a time and drafted DRAFTS_PER_CALL at a time (the sizes the
   // prompts were tuned on), and a policy longer than the read limit is read in overlapping parts. A short policy with few qualities is the same two calls as before.
   let cues = [...new Set(statements.flatMap((s: any) => (s.expectation_cues as string[]) ?? []))]
   if (!open) cues = cues.slice(0, 20)   // the old limits, for accounts not switched on for no cap
-  if (!cues.length || !fullText.trim()) return []
+  if (!cues.length || !fullText.trim()) return { alignments: [], failed: false }
   let keepTerms = ((await (prisma as any).platformGlossary.findMany({ where: { keep: true }, select: { term: true } }).catch(() => [])) as any[]).map(t => t.term)
   if (!open) keepTerms = keepTerms.slice(0, 30)
 
@@ -188,7 +190,7 @@ Respond with ONLY minified JSON: {"cues":[{"n":1,"status":"yes|partly|no|n/a","q
     const chunk = cues.slice(off, off + QUALITIES_PER_CALL)
     for (const w of windows) {
       const r = await rateChunk(chunk, w)
-      if (r === null) return []   // as before: a failed read gives no suggestions, never a partial verdict
+      if (r === null) return { alignments: [], failed: true }   // a failed read gives no suggestions, never a partial verdict, and is reported as failed
       for (const c of r) {
         if (!(c.n >= 1 && c.n <= chunk.length)) continue
         const g = off + c.n, cur = best.get(g)
@@ -200,7 +202,7 @@ Respond with ONLY minified JSON: {"cues":[{"n":1,"status":"yes|partly|no|n/a","q
 
   let needed = rated.filter(c => (c.status === 'no' || c.status === 'partly') && cues[c.n - 1])
   if (!open) needed = needed.slice(0, 5)
-  if (!needed.length) return []   // already reads well — a real and common answer, not a failure
+  if (!needed.length) return { alignments: [], failed: false }   // already reads well — a real and common answer, not a failure
 
   // Step 2 — draft wording only for what is genuinely missing, DRAFTS_PER_CALL at a time, against the part of the policy that holds the closest existing wording.
   const draftChunk = async (group: typeof needed, policyText: string): Promise<SafAlignment[]> => {
@@ -224,7 +226,7 @@ Respond with ONLY minified JSON:
 
     let parsed: any
     try { parsed = parseJson(await callClaude(system, step2, { maxTokens: 2600, temperature: 0.3, feature: 'saf' })) }
-    catch { return [] }
+    catch { failed = true; return [] }
 
     return (Array.isArray(parsed.alignments) ? parsed.alignments : [])
       .filter((a: any) => a && String(a.wording ?? '').trim() && String(a.focus ?? '').trim())
@@ -253,7 +255,11 @@ Respond with ONLY minified JSON:
     const w = (quoted && windows.find(x => x.includes(quoted))) || windows[0]
     out.push(...await draftChunk(group, w))
   }
-  return out
+  return { alignments: out, failed }
+}
+
+async function generateAlignments(statements: any[], fullText: string, open = true): Promise<SafAlignment[]> {
+  return (await alignmentsWithStatus(statements, fullText, open)).alignments   // unchanged for the single policy check
 }
 
 export async function safAlignment(tenantId: string, referenceKey: string, policyId: string, force = false): Promise<SafAlignmentResult> {
@@ -310,7 +316,9 @@ export type PolicyWordingRow = {
   message: string
   has_suggestions: boolean
 }
-export type WordingProgress = { done: number; analysed: number; total: number; remaining: number }
+export type WordingProgress = { done: number; analysed: number; total: number; remaining: number; failed?: number }
+/** Stored on a policy whose wording check did not complete. It is never shown as "already reads well", and a Resume tries it again. */
+export const WORDING_FAILED_MESSAGE = 'The wording check could not be completed for this policy. Use Resume to try it again.'
 
 // Which quality statements is a policy checked against? Two routes, unioned:
 //   1. The regulations this policy evidences in the coverage analysis.
@@ -356,7 +364,7 @@ async function statementsForPolicy(tenantId: string, policyId: string, policyNam
 export async function wordingRunState(tenantId: string): Promise<{ total: number; analysed: number; remaining: number }> {
   const [total, analysed] = await Promise.all([
     (prisma as any).policy.count({ where: { tenant_id: tenantId, status: 'active' } }),
-    (prisma as any).policyWordingAlignment.count({ where: { tenant_id: tenantId } }),
+    (prisma as any).policyWordingAlignment.count({ where: { tenant_id: tenantId, OR: [{ message: null }, { NOT: { message: WORDING_FAILED_MESSAGE } }] } }),   // a policy whose check failed is not counted as done, so Resume offers it again
   ])
   return { total, analysed: Math.min(analysed, total), remaining: Math.max(0, total - analysed) }
 }
@@ -374,22 +382,26 @@ export async function startPolicyWordingAlignment(tenantId: string): Promise<{ t
 // Analyse the next batch of not-yet-done active policies. One AI call per policy that has
 // linked quality statements; policies with none get an empty result (no AI, no credit).
 // Idempotent/resumable: processes whichever active policies don't yet have a result row.
-export async function wordingAlignmentBatch(tenantId: string, batchSize = 3): Promise<WordingProgress> {
+export async function wordingAlignmentBatch(tenantId: string, batchSize = 3, retryFailedBefore?: Date): Promise<WordingProgress> {
   const policies = await (prisma as any).policy.findMany({
     where: { tenant_id: tenantId, status: 'active' }, select: { id: true, name: true }, orderBy: { name: 'asc' },
   })
   const total = (policies as any[]).length
   if (!total) return { done: 0, analysed: 0, total: 0, remaining: 0 }
-  const existing = await (prisma as any).policyWordingAlignment.findMany({ where: { tenant_id: tenantId }, select: { policy_id: true } })
-  const doneIds = new Set((existing as any[]).map(e => e.policy_id))
+  const existing = await (prisma as any).policyWordingAlignment.findMany({ where: { tenant_id: tenantId }, select: { policy_id: true, message: true, analysed_at: true } })
+  // A policy whose check failed counts as done within a run (so a policy that keeps failing cannot hold the run in a loop),
+  // except on a Resume, which tries each failed policy once more: those last tried before the Resume began.
+  const doneIds = new Set((existing as any[]).filter(e => !(retryFailedBefore && e.message === WORDING_FAILED_MESSAGE && new Date(e.analysed_at) < retryFailedBefore)).map(e => e.policy_id))
+  const failedBefore = (existing as any[]).filter(e => e.message === WORDING_FAILED_MESSAGE).length
   const todo = (policies as any[]).filter(p => !doneIds.has(p.id)).slice(0, batchSize)
-  if (!todo.length) return { done: 0, analysed: doneIds.size, total, remaining: 0 }
+  if (!todo.length) return { done: 0, analysed: doneIds.size - failedBefore, total, remaining: 0, failed: failedBefore }
 
   await mapLimit(todo, 3, async (p: any) => {
     const statements = await statementsForPolicy(tenantId, p.id, p.name)
     const stmtOut = (statements as any[]).map(s => ({ reference_key: s.reference_key, name: s.name, we_statement: s.we_statement }))
     let alignments: SafAlignment[] = []
     let message: string
+    let didFail = false
     if (!statements.length) {
       message = 'This policy is not linked to any CQC quality statement, so there is nothing to check its wording against.'
     } else {
@@ -399,10 +411,11 @@ export async function wordingAlignmentBatch(tenantId: string, batchSize = 3): Pr
         message = 'The policy text is not available to check.'
       } else {
         await checkAiCreditLimit(tenantId)   // throws PlanLimitError → stops the run (402)
-        try { alignments = await generateAlignments(statements as any[], policyText, await noCapFor(tenantId)) }
-        catch (e: any) { console.error('[saf] policy wording failed', p.id, e?.message); alignments = [] }
+        try { const r = await alignmentsWithStatus(statements as any[], policyText, await noCapFor(tenantId)); alignments = r.alignments; didFail = r.failed }
+        catch (e: any) { console.error('[saf] policy wording failed', p.id, e?.message); alignments = []; didFail = true }
+        if (didFail) alignments = []   // never a partial verdict, and a failed check is not charged
         if (alignments.length > 0) await logAiCredit(tenantId, 'saf_alignment', p.id)
-        message = alignments.length
+        message = didFail ? WORDING_FAILED_MESSAGE : alignments.length
           ? `${alignments.length} area${alignments.length === 1 ? '' : 's'} could read in a more person-centred way for CQC.`
           : 'This policy already reads in a person-centred way for the quality statements it supports.'
       }
@@ -414,8 +427,9 @@ export async function wordingAlignmentBatch(tenantId: string, batchSize = 3): Pr
     })
   })
 
+  const nowFailed = await (prisma as any).policyWordingAlignment.count({ where: { tenant_id: tenantId, message: WORDING_FAILED_MESSAGE } })
   const analysed = doneIds.size + todo.length
-  return { done: todo.length, analysed, total, remaining: Math.max(0, total - analysed) }
+  return { done: todo.length, analysed: Math.max(0, analysed - nowFailed), total, remaining: Math.max(0, total - analysed), failed: nowFailed }
 }
 
 export async function getPolicyWordingAlignment(tenantId: string): Promise<{ policies: PolicyWordingRow[]; analysed: number; total_suggestions: number; analysed_at: string | null }> {
@@ -424,7 +438,7 @@ export async function getPolicyWordingAlignment(tenantId: string): Promise<{ pol
   })
   // Policies the admin has marked updated are hidden until the next wording run re-flags them.
   const resolved = await resolvedPolicyIds(tenantId, 'wording')
-  const policies: PolicyWordingRow[] = (rows as any[]).filter(r => !resolved.has(r.policy_id)).map(r => ({
+  const policies: PolicyWordingRow[] = (rows as any[]).filter(r => !resolved.has(r.policy_id) && r.message !== WORDING_FAILED_MESSAGE).map(r => ({
     policy_id: r.policy_id, policy_name: r.policy_name ?? 'Policy',
     statements: Array.isArray(r.statements) ? r.statements : [],
     alignments: Array.isArray(r.alignments) ? r.alignments : [],

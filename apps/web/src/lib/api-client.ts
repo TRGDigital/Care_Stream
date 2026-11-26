@@ -332,11 +332,36 @@ export interface QueryResponse {
   suggestedQuestions?: string[]
 }
 
+// The login token lasts an hour. A long run on a page (the /gaps analyses work for much longer) keeps the token it started with, so
+// when a request comes back 401 we first ask for a fresh one (the long lived refresh behind the session) and try the SAME request once more.
+// Only if there is no fresh token do we send the person to sign in. One refresh is shared by every request that fails at the same moment (the
+// refresh token rotates, so two at once would reject each other), and a refreshed token is remembered so later calls made with the old one use it straight away.
+const refreshedTokens = new Map<string, string>()
+let refreshInFlight: Promise<string | null> | null = null
+async function freshTokenFor(stale: string): Promise<string | null> {
+  if (typeof window === 'undefined') return null
+  if (!refreshInFlight) {
+    refreshInFlight = (async () => {
+      try {
+        const { getSession } = await import('next-auth/react')   // loaded only here, so marketing and platform bundles stay free of it
+        const sess: any = await getSession()
+        return sess && !sess.error && typeof sess.accessToken === 'string' ? sess.accessToken : null
+      } catch { return null }
+    })().finally(() => { setTimeout(() => { refreshInFlight = null }, 2000) })
+  }
+  const fresh = await refreshInFlight
+  if (fresh && fresh !== stale) { refreshedTokens.set(stale, fresh); return fresh }
+  return null
+}
+const currentToken = (t: string) => { let n = t, i = 0; while (refreshedTokens.has(n) && i++ < 5) n = refreshedTokens.get(n)!; return n }
+
 async function apiFetch<T>(
   path:    string,
   token:   string,
   options: RequestInit = {},
+  retried = false,
 ): Promise<T> {
+  token = currentToken(token)
   const isFormData = options.body instanceof FormData
   const res = await fetch(`${API_URL}${path}`, {
     ...options,
@@ -352,6 +377,7 @@ async function apiFetch<T>(
     // where they were working, instead of dumping them on the dashboard.
     // During a "view hub as" the way back is a one time token held in this tab: use it, so the admin is not stranded on a password page.
     if (typeof window !== 'undefined' && (() => { try { return !!sessionStorage.getItem('cs-view-as-return') } catch { return false } })()) { import('@/lib/view-as-client').then(m => m.endViewAs(undefined)); throw new Error('This view has ended.') }
+    if (!retried) { const fresh = await freshTokenFor(token); if (fresh) return apiFetch<T>(path, fresh, options, true) }
     if (typeof window !== 'undefined') window.location.href = `/login?callbackUrl=${encodeURIComponent(window.location.pathname + window.location.search)}`
     throw new Error('Session expired. Please sign in again.')
   }
@@ -1656,7 +1682,7 @@ export function createApiClient(token: string) {
       consistencyResolve: (key: string) => apiFetch<{ resolution: string }>('/analytics/consistency/resolve', token, { method: 'POST', body: JSON.stringify({ key }) }),
       readiness: () => apiFetch<{ visible: boolean; overall: number | null; rag: string; band: string; updated_at: string; has_audit: boolean; has_policy: boolean; domains: Array<{ key: string; label: string; score: number | null; rag: string; band: string; audit: number | null; policy: number | null }>; trend: Array<{ period: string; overall: number }> }>('/analytics/readiness', token),
       consistencyStart: () => apiFetch<{ sets: number; duplicate_sets: number; topic_sets: number; to_extract: number }>('/analytics/consistency/scan/start', token, { method: 'POST' }),
-      consistencyBatch: () => apiFetch<{ extracted: number; remaining: number }>('/analytics/consistency/scan/batch', token, { method: 'POST' }),
+      consistencyBatch: (retrySince?: string) => apiFetch<{ extracted: number; remaining: number }>('/analytics/consistency/scan/batch', token, { method: 'POST', ...(retrySince ? { body: JSON.stringify({ retry_since: retrySince }) } : {}) }),
       consistencyDetect: () => apiFetch<{ conflicts: number; sets: number }>('/analytics/consistency/detect', token, { method: 'POST' }),
       consistencyDismiss: (key: string) => apiFetch<{ dismissed: boolean }>('/analytics/consistency/dismiss', token, { method: 'POST', body: JSON.stringify({ key }) }),
       // Policy review matrix (deduped across the four gap sections).
@@ -1713,7 +1739,7 @@ export function createApiClient(token: string) {
       safAlignment: (referenceKey: string, policyId: string, force = false) => apiFetch<{ statements: Array<{ reference_key: string; name: string; we_statement: string }>; target_policy: { id: string; name: string } | null; alignments: Array<{ focus: string; placement: 'amend' | 'add_under_heading' | 'new_section'; anchor: string; section_title: string; wording: string }>; message: string }>(`/analytics/gaps/${encodeURIComponent(referenceKey)}/saf-alignment`, token, { method: 'POST', body: JSON.stringify({ policy_id: policyId, force }) }),
       // CQC wording alignment as its own analysis (per policy, re-run over the whole library).
       wordingAlignmentStart: () => apiFetch<{ total: number }>('/analytics/wording-alignment/start', token, { method: 'POST' }),
-      wordingAlignmentBatch: () => apiFetch<{ done: number; analysed: number; total: number; remaining: number }>('/analytics/wording-alignment/batch', token, { method: 'POST' }),
+      wordingAlignmentBatch: (retrySince?: string) => apiFetch<{ done: number; analysed: number; total: number; remaining: number; failed?: number }>('/analytics/wording-alignment/batch', token, { method: 'POST', ...(retrySince ? { body: JSON.stringify({ retry_since: retrySince }) } : {}) }),
       wordingAlignment: () => apiFetch<{ policies: Array<{ policy_id: string; policy_name: string; statements: Array<{ reference_key: string; name: string; we_statement: string }>; alignments: Array<{ focus: string; placement: 'amend' | 'add_under_heading' | 'new_section'; anchor: string; section_title: string; wording: string }>; message: string; has_suggestions: boolean }>; analysed: number; total_suggestions: number; analysed_at: string | null }>('/analytics/wording-alignment', token),
       adoptionContext: () => apiFetch<{ enabled: boolean; variables: Array<{ key: string; label: string; value: string }>; role_holders: Array<{ key: string; role: string; candidates: string[] }>; role_names: Record<string, string[]>; show_role_names: boolean; logo_url: string | null; home_name: string; address: string; registered_manager: string; default_approver: string; review_cycle_months: string; version_scheme: string; require_manager_approval: boolean; require_external_approval: boolean }>('/analytics/gaps/adoption-context', token),
       // Coverage suggestion decisions: 'ignored' or 'new_section', so a later

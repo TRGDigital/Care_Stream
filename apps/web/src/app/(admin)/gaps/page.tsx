@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useSession } from 'next-auth/react'
 import { MissingPoliciesAlert, MissingPoliciesBanner } from '@/components/admin/missing-policies-banner'
@@ -10,6 +10,7 @@ import { persistentCache } from '@/lib/page-cache'
 import { usePlanFeatures } from '@/lib/use-plan-features'
 import { UpgradePanel } from '@/components/admin/upgrade-gate'
 import { GapDetailModal } from '@/components/admin/gap-detail-modal'
+import { RunOverlay } from '@/components/admin/run-overlay'
 import { PolicyLintModal } from '@/components/admin/policy-lint-modal'
 import { ConflictModal } from '@/components/admin/conflict-modal'
 import { WordingReviewModal } from '@/components/admin/wording-review-modal'
@@ -185,6 +186,7 @@ export default function GapsPage() {
   const isFree = useIsFree()
   const [analysing, setAnalysing] = useState(false)
   const [analyseProgress, setAnalyseProgress] = useState<{ done: number; total: number } | null>(null)
+  const stopCoverage = useRef(false)   // set by the overlay's Stop: the loop ends after the batch in hand, and what is finished is kept
   // Deep-dive modal + client-side verdict corrections (reg keys the drill-in found covered).
   const [detailReg, setDetailReg] = useState<{ reference_key: string; official_name: string; view_key: string | null; view_name: string | null } | null>(null)
   const [correctedToCovered, setCorrectedToCovered] = useState<Set<string>>(new Set())
@@ -318,10 +320,11 @@ export default function GapsPage() {
   // Resume, which never calls start — so already-analysed regulations are kept and cost
   // no further credits.
   async function driveCoverageBatches(api: ReturnType<typeof createApiClient>) {
+    stopCoverage.current = false
     for (let i = 0; i < 200; i++) {   // guard; each batch does ~12 regulations
       const p = await api.analytics.analyseGapsBatch()
       setAnalyseProgress({ done: p.analysed, total: p.total })
-      if (p.remaining <= 0) break
+      if (p.remaining <= 0 || stopCoverage.current) break
     }
   }
 
@@ -419,14 +422,7 @@ export default function GapsPage() {
     runAnalysis()
   }
 
-  // While an analysis is running, warn before the tab is closed or refreshed: leaving pauses the
-  // run part-way (progress is kept server-side and can be resumed, but staying is fastest).
-  useEffect(() => {
-    if (!analysing) return
-    const handler = (e: BeforeUnloadEvent) => { e.preventDefault(); e.returnValue = '' }
-    window.addEventListener('beforeunload', handler)
-    return () => window.removeEventListener('beforeunload', handler)
-  }, [analysing])
+  // The leave warning while a run is going lives in RunOverlay (shared by all three analyses).
 
   // Policy gap detection is a Professional+ feature. While the plan is still
   // loading, show a skeleton (never the raw API error); once known, show the
@@ -627,32 +623,8 @@ export default function GapsPage() {
         </div>
       )}
 
-      {/* Blocking overlay while a coverage analysis runs — the batch loop is client-driven, so
-          leaving the page pauses it. Finished work is kept server-side and can be resumed. */}
-      {analysing && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-4">
-          <div className="w-full max-w-md rounded-2xl bg-white p-6 text-center shadow-xl">
-            <Loader2 size={30} className="mx-auto animate-spin text-teal" />
-            <h2 className="mt-3 text-lg font-bold text-neutral-dark">Analysing your policies…</h2>
-            <p className="mt-1 text-sm text-neutral-mid">
-              {analyseProgress && analyseProgress.total > 0
-                ? <>Checked <strong className="text-neutral-dark">{analyseProgress.done}</strong> of <strong className="text-neutral-dark">{analyseProgress.total}</strong> regulations.</>
-                : 'Getting started…'}
-            </p>
-            {analyseProgress && analyseProgress.total > 0 && (
-              <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-gray-100">
-                <div className="h-2 rounded-full bg-teal transition-all" style={{ width: `${Math.min(100, Math.round((analyseProgress.done / analyseProgress.total) * 100))}%` }} />
-              </div>
-            )}
-            <div className="mt-4 flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 text-left">
-              <AlertCircle size={15} className="mt-0.5 shrink-0 text-amber-500" />
-              <p className="text-xs leading-relaxed text-amber-800">
-                Please keep this page open so the analysis can finish in one go. If you leave or refresh, it pauses, but your progress is saved and you can resume from where it stopped with no extra credits for finished items.
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Blocking overlay while a coverage analysis runs: the batch loop is client driven, so leaving the page pauses it. Finished work is kept and can be resumed. */}
+      {analysing && <RunOverlay title="Analysing your policies…" unit="regulations" progress={analyseProgress} onStop={() => { stopCoverage.current = true }} />}
 
       {isFree && (
         <div className="mb-4 rounded-card border border-teal/20 bg-teal-light/20 px-4 py-3 text-sm text-neutral-dark">
@@ -1478,6 +1450,9 @@ function PolicyConsistencySection({ token, userId, stepInfo, confirmRun, onRunCo
   const [loadErr, setLoadErr] = useState(false)
   const [running, setRunning] = useState(false)
   const [progress, setProgress] = useState<string | null>(null)
+  const [prog, setProg] = useState<{ done: number; total: number } | null>(null)
+  const [phase, setPhase] = useState<string | null>(null)
+  const stopRun = useRef(false)   // set by the overlay's Stop
   const [runErr, setRunErr] = useState('')
   const [open, setOpen] = useState(false)
   const [selected, setSelected] = useState<Conflict | null>(null)
@@ -1500,16 +1475,19 @@ function PolicyConsistencySection({ token, userId, stepInfo, confirmRun, onRunCo
   // The batch phase of a consistency run: claim extraction batches, then detection.
   // Shared by a fresh run (after start rebuilds the comparison sets) and by Resume,
   // which skips start so already-extracted claims are kept (no extra credits).
-  async function driveBatches(api: ReturnType<typeof createApiClient>, toExtract: number) {
+  async function driveBatches(api: ReturnType<typeof createApiClient>, toExtract: number, retrySince?: string) {
     let last = toExtract
+    stopRun.current = false; setPhase(null); setProg({ done: 0, total: toExtract })
     for (let i = 0; i < 300; i++) {
-      const p = await api.analytics.consistencyBatch()
+      const p = await api.analytics.consistencyBatch(retrySince)
       setProgress(`Reading policies… ${Math.max(0, toExtract - p.remaining)}/${toExtract}`)
+      setProg({ done: Math.max(0, toExtract - p.remaining), total: toExtract })
+      if (stopRun.current) return   // stopped on purpose: what is read is kept, and Resume carries on (comparison waits for every policy)
       if (p.remaining <= 0) break
       if (p.remaining >= last) { /* no progress — stop rather than spin */ break }
       last = p.remaining
     }
-    setProgress('Comparing for contradictions…')
+    setProgress('Comparing for contradictions…'); setPhase('Comparing your policies. This part has no count, and can take a few minutes.')
     await api.analytics.consistencyDetect()
   }
 
@@ -1522,7 +1500,7 @@ function PolicyConsistencySection({ token, userId, stepInfo, confirmRun, onRunCo
       load()
     } catch (e: any) {
       setRunErr(/credit|token/i.test(e?.message ?? '') ? 'Your AI token allowance for this month is spent — the check stopped. It will resume where it left off once the allowance resets on the 1st, or sooner if you move up a plan.' : (e?.message ?? 'The check could not finish.'))
-    } finally { setRunning(false); setProgress(null); onRunComplete() }
+    } finally { setRunning(false); setProgress(null); setProg(null); setPhase(null); onRunComplete() }
   }
 
   // Resume an interrupted run: batch loop + detection only — never the start endpoint,
@@ -1531,11 +1509,11 @@ function PolicyConsistencySection({ token, userId, stepInfo, confirmRun, onRunCo
     setRunning(true); setProgress('Resuming…'); setRunErr('')
     const api = createApiClient(token)
     try {
-      await driveBatches(api, runState?.remaining ?? 0)
+      await driveBatches(api, runState?.remaining ?? 0, new Date().toISOString())
       load()
     } catch (e: any) {
       setRunErr(/credit|token/i.test(e?.message ?? '') ? 'Your AI token allowance for this month is spent — the check stopped. It will resume where it left off once the allowance resets on the 1st, or sooner if you move up a plan.' : (e?.message ?? 'The check could not finish.'))
-    } finally { setRunning(false); setProgress(null); onRunComplete() }
+    } finally { setRunning(false); setProgress(null); setProg(null); setPhase(null); onRunComplete() }
   }
 
   // "Mark as updated" — dismiss this conflict (until the next check re-detects it).
@@ -1574,6 +1552,7 @@ function PolicyConsistencySection({ token, userId, stepInfo, confirmRun, onRunCo
           </button>
         </div>
         {runErr && <p className="px-6 pt-2 text-xs text-red-600">{runErr}</p>}
+        {running && <RunOverlay title="Checking your policies for contradictions…" unit="policies" progress={prog} phase={phase} onStop={() => { stopRun.current = true }} />}
 
         {loadErr && !data ? (
           <div className="px-6 py-4"><LoadError onRetry={load} /></div>
@@ -1646,6 +1625,8 @@ function PolicyWordingAlignmentSection({ token, userId, stepInfo, confirmRun, on
   const [loadErr, setLoadErr] = useState(false)
   const [running, setRunning] = useState(false)
   const [progress, setProgress] = useState<string | null>(null)
+  const [prog, setProg] = useState<{ done: number; total: number } | null>(null)
+  const stopRun = useRef(false)   // set by the overlay's Stop
   const [runErr, setRunErr]   = useState('')
   const [open, setOpen]       = useState(false)
   const [selected, setSelected] = useState<WordingData['policies'][number] | null>(null)
@@ -1667,11 +1648,18 @@ function PolicyWordingAlignmentSection({ token, userId, stepInfo, confirmRun, on
   // The batch phase of a wording run: loop the (idempotent, resumable) batch endpoint
   // until nothing remains. Shared by a fresh run (after the destructive start) and by
   // Resume, which skips start so already-checked policies are kept (no extra credits).
-  async function driveBatches(api: ReturnType<typeof createApiClient>, fallbackTotal: number) {
+  async function driveBatches(api: ReturnType<typeof createApiClient>, fallbackTotal: number, retrySince?: string) {
+    stopRun.current = false; setProg({ done: 0, total: fallbackTotal })
     for (let i = 0; i < 800; i++) {
-      const p = await api.analytics.wordingAlignmentBatch()
+      const p = await api.analytics.wordingAlignmentBatch(retrySince)
       setProgress(`Checking policies… ${p.analysed}/${p.total || fallbackTotal}`)
-      if (p.remaining <= 0) break
+      setProg({ done: p.analysed, total: p.total || fallbackTotal })
+      if (p.remaining <= 0) {
+        // A policy whose check did not complete is never shown as fine: say so, and Resume tries it again.
+        if ((p.failed ?? 0) > 0) setRunErr(`${p.failed} ${p.failed === 1 ? 'policy' : 'policies'} could not be checked this time. Use Resume to try again.`)
+        break
+      }
+      if (stopRun.current) break
     }
   }
 
@@ -1685,7 +1673,7 @@ function PolicyWordingAlignmentSection({ token, userId, stepInfo, confirmRun, on
     } catch (e: any) {
       setRunErr(/credit|token/i.test(e?.message ?? '') ? 'Your AI token allowance for this month is spent — the check stopped. It resumes where it left off once the allowance resets on the 1st, or sooner if you move up a plan.' : (e?.message ?? 'The check could not finish.'))
       load()
-    } finally { setRunning(false); setProgress(null); onRunComplete() }
+    } finally { setRunning(false); setProgress(null); setProg(null); onRunComplete() }
   }
 
   // Resume an interrupted run: the batch loop only — never the start endpoint (which
@@ -1695,12 +1683,12 @@ function PolicyWordingAlignmentSection({ token, userId, stepInfo, confirmRun, on
     setRunning(true); setProgress('Resuming…'); setRunErr('')
     const api = createApiClient(token)
     try {
-      await driveBatches(api, runState?.total ?? 0)
+      await driveBatches(api, runState?.total ?? 0, new Date().toISOString())
       load()
     } catch (e: any) {
       setRunErr(/credit|token/i.test(e?.message ?? '') ? 'Your AI token allowance for this month is spent — the check stopped. It resumes where it left off once the allowance resets on the 1st, or sooner if you move up a plan.' : (e?.message ?? 'The check could not finish.'))
       load()
-    } finally { setRunning(false); setProgress(null); onRunComplete() }
+    } finally { setRunning(false); setProgress(null); setProg(null); onRunComplete() }
   }
 
   // "Mark as updated" — hide this policy from the wording list (until the next run re-flags it).
@@ -1741,6 +1729,7 @@ function PolicyWordingAlignmentSection({ token, userId, stepInfo, confirmRun, on
           </button>
         </div>
         {runErr && <p className="px-6 pt-2 text-xs text-red-600">{runErr}</p>}
+        {running && <RunOverlay title="Checking your CQC wording…" unit="policies" progress={prog} onStop={() => { stopRun.current = true }} />}
 
         {loadErr && !data ? (
           <div className="px-6 py-4"><LoadError onRetry={load} /></div>

@@ -185,6 +185,9 @@ function groundQuote(quote: string, text: string): string {
 // no usable text or the AI call fails — so the policy leaves the pending queue and the scan
 // terminates (otherwise a policy that can't be read would be retried forever). Credit limiting is
 // enforced at the batch route, so a hit limit stops the run cleanly instead of looping.
+/** Stored in place of a content hash when reading a policy failed. Never matches a real hash, so the policy is read again, and it is not counted as done. */
+export const CLAIMS_FAILED_HASH = 'failed'
+
 export async function extractPolicyClaims(tenantId: string, policy: { id: string; name: string }): Promise<PolicyClaim[]> {
   const writeRow = (content_hash: string, claims: PolicyClaim[]) =>
     (prisma as any).policyClaim.upsert({
@@ -218,7 +221,7 @@ export async function extractPolicyClaims(tenantId: string, policy: { id: string
     }
   } catch (e: any) {
     console.error('[consistency] claim extraction failed', policy.id, e?.message)
-    await writeRow(hash, [])   // mark attempted so the run terminates; a later re-scan can retry
+    await writeRow(CLAIMS_FAILED_HASH, [])   // marked as failed, so the run terminates but the policy is NOT counted as read: a Resume tries it again
     return []
   }
 
@@ -257,13 +260,15 @@ export async function claimSourcePolicies(tenantId: string): Promise<Array<{ id:
 
 // Which policies still need claim extraction? Batched so the route can run it with progress
 // rather than holding one long request open.
-export async function pendingClaimPolicies(tenantId: string): Promise<Array<{ id: string; name: string }>> {
+export async function pendingClaimPolicies(tenantId: string, retryFailedBefore?: Date): Promise<Array<{ id: string; name: string }>> {
   const sources = await claimSourcePolicies(tenantId)
   if (!sources.length) return []
   const cached = await (prisma as any).policyClaim.findMany({
-    where: { tenant_id: tenantId, policy_id: { in: sources.map(s => s.id) } }, select: { policy_id: true },
+    where: { tenant_id: tenantId, policy_id: { in: sources.map(s => s.id) } }, select: { policy_id: true, content_hash: true, extracted_at: true },
   })
-  const have = new Set((cached as any[]).map(c => c.policy_id))
+  // A policy whose read failed counts as done within a run (so one that keeps failing cannot hold the run in a loop),
+  // except on a Resume, which tries each failed policy once more: those last tried before the Resume began.
+  const have = new Set((cached as any[]).filter(c => !(retryFailedBefore && c.content_hash === CLAIMS_FAILED_HASH && new Date(c.extracted_at) < retryFailedBefore)).map(c => c.policy_id))
   // We can't cheaply know here whether a cached copy is stale (hash) without the text, so we treat
   // "has a row" as done for batching; extractPolicyClaims re-checks the hash and skips if unchanged.
   return sources.filter(s => !have.has(s.id))
@@ -299,7 +304,7 @@ export async function consistencyRunState(tenantId: string): Promise<{ total: nu
   const total = sources.length
   if (!total) return { total: 0, analysed: 0, remaining: 0 }
   const cached = await (prisma as any).policyClaim.findMany({
-    where: { tenant_id: tenantId, policy_id: { in: sources.map(s => s.id) } }, select: { policy_id: true },
+    where: { tenant_id: tenantId, policy_id: { in: sources.map(s => s.id) }, OR: [{ content_hash: null }, { NOT: { content_hash: CLAIMS_FAILED_HASH } }] }, select: { policy_id: true },   // a policy whose read failed is not counted as done, so Resume offers it again
   })
   const have = new Set((cached as any[]).map((c: any) => c.policy_id))
   const analysed = sources.filter(s => have.has(s.id)).length

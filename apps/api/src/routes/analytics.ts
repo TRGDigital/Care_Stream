@@ -816,6 +816,8 @@ analyticsRouter.post('/consistency/scan/start', requireAdmin, async (_req: Reque
   }
 })
 
+/** A Resume sends the moment it began, so a policy whose check failed is tried once more in that Resume and not again within it. */
+const sinceOf = (v: unknown): Date | undefined => { const d = typeof v === 'string' ? new Date(v) : null; return d && !isNaN(d.getTime()) ? d : undefined }
 analyticsRouter.post('/consistency/scan/batch', requireAdmin, async (_req: Request, res: Response) => {
   const tenantId = getTenantId()
   try {
@@ -826,11 +828,12 @@ analyticsRouter.post('/consistency/scan/batch', requireAdmin, async (_req: Reque
   }
   try {
     await checkAiCreditLimit(tenantId)   // stop the run cleanly (402) if the AI credit is spent
-    const pending = await pendingClaimPolicies(tenantId)
+    const retryBefore = sinceOf(_req.body?.retry_since)   // set by Resume only: policies whose read failed are tried once more
+    const pending = await pendingClaimPolicies(tenantId, retryBefore)
     const batch = pending.slice(0, CLAIM_BATCH)
     await extractClaimsBatch(tenantId, batch)
     // Every processed policy now writes a cache row, so re-reading gives the true remaining.
-    const stillPending = await pendingClaimPolicies(tenantId)
+    const stillPending = await pendingClaimPolicies(tenantId, retryBefore)
     ok(res, { extracted: batch.length, remaining: stillPending.length })
   } catch (e: any) {
     if (e instanceof PlanLimitError) { err(res, e.code, e.message, 402); return }
@@ -1022,7 +1025,7 @@ analyticsRouter.post('/wording-alignment/start', requireAdmin, async (_req: Requ
 analyticsRouter.post('/wording-alignment/batch', requireAdmin, async (_req: Request, res: Response) => {
   const tenantId = getTenantId()
   try {
-    ok(res, await wordingAlignmentBatch(tenantId))
+    ok(res, await wordingAlignmentBatch(tenantId, 3, sinceOf(_req.body?.retry_since)))
   } catch (e: any) {
     if (e instanceof PlanLimitError) { err(res, e.code, e.message, 402); return }
     err(res, 'WORDING_FAILED', e.message ?? 'Could not check the wording alignment.', 500)

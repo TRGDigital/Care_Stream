@@ -9,7 +9,7 @@ import { effectiveStaffRoles, effectiveSpecialistRoles } from '../data/onboardin
 import { effectiveLanguages, resolveLanguageName, DEFAULT_LANGUAGES, languageCatalog } from '../data/languages'
 import { runKnowledgeGapJobForTenant } from '../services/knowledge-gaps/digest'
 import { scanRoleMentions, saveRoleMentionScan, getRoleMentionScan } from '../services/analytics/role-mentions'
-import { roleNameImpact, applyRoleNameChange } from '../services/analytics/policy-adoption'
+import { roleNameImpact, applyRoleNameChange, getAdoptionContext } from '../services/analytics/policy-adoption'
 import { facilityTypeToSetting } from '../lib/care-setting'
 import { SERVICE_TRIGGERS, resolveServiceProfile, sanitiseServiceProfile } from '../lib/service-triggers'
 import { runCredentialExpiryForTenant } from '../services/workforce/credentialExpiry'
@@ -280,7 +280,7 @@ settingsRouter.patch('/', async (req: Request, res: Response) => {
     if (typeof organisation_details !== 'object' || organisation_details === null || Array.isArray(organisation_details)) {
       return err(res, 'INVALID_INPUT', 'organisation_details must be an object', 400)
     }
-    const ALLOWED = new Set(['nominated_individual', 'address', 'cqc_location_id', 'cqc_provider_id', 'review_cycle_months', 'version_scheme', 'default_approver', 'show_role_names', 'require_manager_approval', 'require_external_approval', 'require_audit_manager_approval', 'show_readiness_score', 'audit_escalate_after_days', 'audit_summary', 'audit_report_email'])
+    const ALLOWED = new Set(['nominated_individual', 'address', 'cqc_location_id', 'cqc_provider_id', 'review_cycle_months', 'version_scheme', 'default_approver', 'show_role_names', 'require_name_change_approval', 'require_manager_approval', 'require_external_approval', 'require_audit_manager_approval', 'show_readiness_score', 'audit_escalate_after_days', 'audit_summary', 'audit_report_email'])
     // Role-holders can hold MORE THAN ONE person (comma-separated); the tenant picks which
     // one at adoption. These add to the names derived from staff positions/specialisms.
     const ROLE_KEYS = new Set(['registered_manager', 'safeguarding_lead', 'caldicott_guardian', 'ipc_lead', 'fire_safety_officer', 'dignity_champion', 'maintenance_lead', 'health_safety_lead', 'medicines_lead', 'data_protection_officer', 'deputy_manager', 'moving_handling_lead', 'mental_capacity_lead', 'end_of_life_lead', 'water_safety_lead', 'training_lead', 'freedom_to_speak_up_guardian', 'complaints_lead', 'first_aid_lead', 'food_safety_lead', 'nutrition_hydration_lead', 'falls_lead', 'tissue_viability_lead', 'business_continuity_lead'])
@@ -612,12 +612,16 @@ settingsRouter.post('/role-name/apply', async (req: Request, res: Response) => {
   // Only the policies the tenant was shown and confirmed, never a set derived here.
   if (!ids.length) return err(res, 'INVALID_INPUT', 'No policies were selected', 400)
 
-  const updated: Array<{ policy_id: string; version: string; occurrences: number; propagated: boolean }> = []
+  // The account decides whether a name change must be approved like any other change. Read here, never taken from the browser.
+  const tenantRow = await (prisma as any).tenant.findUnique({ where: { id: user.tenant_id }, select: { organisation_details: true } }).catch(() => null)
+  const needsApproval = ((tenantRow?.organisation_details ?? {}) as Record<string, string>).require_name_change_approval === 'on'
+
+  const updated: Array<{ policy_id: string; version: string; occurrences: number; propagated: boolean; pending?: boolean }> = []
   const failed:  Array<{ policy_id: string; reason: string }> = []
   for (const policyId of ids.slice(0, 200)) {
     try {
       const r = await applyRoleNameChange(user.tenant_id, policyId, {
-        role_label: roleLabel, old_name: oldName, new_name: newName, applied_by: user.sub,
+        role_label: roleLabel, old_name: oldName, new_name: newName, applied_by: user.sub, require_approval: needsApproval,
       })
       if ('error' in r) failed.push({ policy_id: policyId, reason: r.error })
       else updated.push({ policy_id: policyId, ...r })
@@ -625,14 +629,20 @@ settingsRouter.post('/role-name/apply', async (req: Request, res: Response) => {
       failed.push({ policy_id: policyId, reason: e?.message ?? 'failed' })
     }
   }
-  ok(res, { updated, failed })
+  ok(res, { updated, failed, needs_approval: needsApproval })
 })
 
 settingsRouter.post('/role-mentions/scan', async (req: Request, res: Response) => {
   const user = (req as any).user
   if (user.role !== 'admin') return err(res, 'FORBIDDEN', 'Only admins can run this', 403)
   try {
-    const scan = await scanRoleMentions(user.tenant_id)
+    // The people named in Organisation details right now, so the scan can say where each name is written into policies.
+    const ctx = await getAdoptionContext(user.tenant_id).catch(() => null)
+    const byName = new Map<string, { name: string; roles: string[] }>()
+    const addName = (name: string, role: string) => { const k = name.trim().toLowerCase(); if (!k) return; const e = byName.get(k) ?? { name: name.trim(), roles: [] }; if (!e.roles.includes(role)) e.roles.push(role); byName.set(k, e) }
+    for (const rh of ctx?.role_holders ?? []) for (const c of rh.candidates) addName(c, rh.role)
+    for (const v of ctx?.variables ?? []) if (v.key === 'nominated_individual') addName(v.value, 'Nominated individual'); else if (v.key === 'default_approver') addName(v.value, 'Approver')
+    const scan = await scanRoleMentions(user.tenant_id, { names: [...byName.values()] })
     await saveRoleMentionScan(user.tenant_id, scan)
     ok(res, { scan })
   } catch (e: any) {

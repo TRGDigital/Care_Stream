@@ -284,7 +284,9 @@ export default function SettingsPage() {
     replaceWith: string
     busy: boolean
     error: string
-    done: { updated: Array<{ policy_id: string; version: string }>; failed: Array<{ policy_id: string; reason: string }> } | null
+    done: { updated: Array<{ policy_id: string; version: string }>; failed: Array<{ policy_id: string; reason: string }>; needs_approval?: boolean } | null
+    /** The new person was already chosen (a change from the one named person field), so only the policies are left to decide. */
+    scalar?: boolean
   } | null>(null)
   const [roleInput,      setRoleInput]      = useState<Record<string, string>>({})
   const [savingOrg,      setSavingOrg]      = useState(false)
@@ -415,6 +417,16 @@ export default function SettingsPage() {
   const namePic = (name: string) => { const u = personForName(name); return u ? <StaffAvatar name={u.name} photoUrl={u.photo_url ?? null} size={22} onRefresh={reloadStaffDir} /> : null }
   const [replaceHolder, setReplaceHolder] = useState<{ key: string; label: string; from: string; to: string } | null>(null)   // asked before the one named person (nominated individual, default approver) is changed
   const [moreThanOne, setMoreThanOne] = useState<{ key: string; role: string; name: string; existing: string[] } | null>(null)   // asked before a second holder is added to a role
+  const [showAllNames, setShowAllNames] = useState(false)
+  // Where a named person sits in Organisation details, so "Replace in policies" opens the same change flow the chips use.
+  const locateName = (name: string): { key: string; label: string; scalar: boolean } | null => {
+    for (const rh of orgContext.role_holders) if ([...rh.derived, ...roleManual(rh.key)].some(n => sameName(n, name))) return { key: rh.key, label: rh.role, scalar: false }
+    if (sameName(orgDetails.nominated_individual ?? '', name)) return { key: 'nominated_individual', label: 'Nominated individual', scalar: true }
+    if (sameName(orgDetails.default_approver ?? '', name)) return { key: 'default_approver', label: 'Default approver', scalar: true }
+    return null
+  }
+  const currentNamedPeople = [...new Set([...orgContext.role_holders.flatMap(rh => [...rh.derived, ...roleManual(rh.key)]), orgDetails.nominated_individual ?? '', orgDetails.default_approver ?? ''].map(n => n.trim()).filter(Boolean))]
+  const namesStale = !!roleScan?.name_usage && currentNamedPeople.some(n => !roleScan!.name_usage!.some(u => sameName(u.name, n)))   // someone was named since the last check
   const [typedOpen, setTypedOpen] = useState<Record<string, boolean>>({})   // "someone not on the staff list": the typed box, kept for people who are not staff
   // A name is shown as archived only when an archived person has it and no active person does (two people can share a name).
   const nameKey = (n: string) => n.replace(/,/g, '').toLowerCase().trim()
@@ -574,6 +586,11 @@ export default function SettingsPage() {
     if (existing.length === 0 || existing.some(n => n.toLowerCase() === name.toLowerCase())) { addRoleName(key, picked); return }
     setMoreThanOne({ key, role, name, existing })
   }
+  // The person is changed without touching any policy text: the new name takes the old one's place on the role (or on the one named person field).
+  function swapName(key: string, from: string, to: string) {
+    const next = { ...orgDetails, [key]: [...roleManual(key).filter(n => n !== from), to].join(', ') }
+    setOrgDetails(next); saveOrgDetails(next)
+  }
   function dropRoleName(key: string, name: string) {
     const next = { ...orgDetails, [key]: roleManual(key).filter(n => n !== name).join(', ') }
     setOrgDetails(next); saveOrgDetails(next)
@@ -583,17 +600,17 @@ export default function SettingsPage() {
   // render time, so they show the new holder immediately. The exception is a policy with the
   // person's name WRITTEN INTO its text, which would keep the old name for ever. Those are
   // checked first and never changed without the tenant seeing exactly where.
-  async function removeRoleName(key: string, name: string) {
-    const label = orgContext.role_holders.find(h => h.key === key)?.role ?? 'Role holder'
+  async function removeRoleName(key: string, name: string, opts: { label?: string; replacement?: string; scalar?: boolean } = {}) {
+    const label = opts.label ?? orgContext.role_holders.find(h => h.key === key)?.role ?? 'Role holder'
     // Opened straight away: the sweep reads every policy, most from object storage, so leaving
     // a spinner on a chip would look like nothing was happening.
     setNameChange({
       key, label, name, scanning: true, policies: [], others: [], roleMentions: null,
-      scanned: 0, unreadable: 0, replaceWith: '', busy: false, error: '', done: null,
+      scanned: 0, unreadable: 0, replaceWith: opts.replacement ?? '', busy: false, error: '', done: null, scalar: opts.scalar,
     })
     try {
       const r = await createApiClient(session!.accessToken as string).settings.roleNameImpact(key, name)
-      if (!r.policies.length && !r.others.length) { setNameChange(null); dropRoleName(key, name); return }
+      if (!r.policies.length && !r.others.length) { setNameChange(null); if (opts.replacement) swapName(key, name, opts.replacement); else dropRoleName(key, name); return }
       setNameChange(nc => nc && nc.name === name ? {
         ...nc, scanning: false, policies: r.policies, others: r.others,
         roleMentions: r.role_mentions, scanned: r.policies_scanned, unreadable: r.policies_unreadable,
@@ -601,14 +618,14 @@ export default function SettingsPage() {
     } catch {
       // If the check itself fails, removing the name is still what was asked for.
       setNameChange(null)
-      dropRoleName(key, name)
+      if (opts.replacement) swapName(key, name, opts.replacement); else dropRoleName(key, name)
     }
   }
 
   async function confirmNameChange(rewrite: boolean) {
     const nc = nameChange
     if (!nc) return
-    if (!rewrite) { dropRoleName(nc.key, nc.name); setNameChange(null); return }
+    if (!rewrite) { if (nc.replaceWith.trim()) swapName(nc.key, nc.name, nc.replaceWith.trim()); else dropRoleName(nc.key, nc.name); setNameChange(null); return }
     const replacement = nc.replaceWith.trim()
     if (!replacement) { setNameChange({ ...nc, error: 'Enter the name that replaces them.' }); return }
     setNameChange({ ...nc, busy: true, error: '' })
@@ -624,6 +641,7 @@ export default function SettingsPage() {
       }
       setOrgDetails(next); saveOrgDetails(next)
       setNameChange({ ...nc, busy: false, done: r })
+      void runRoleScan()   // the list of where names are used is refreshed as soon as policies have changed
     } catch (e: any) {
       setNameChange({ ...nc, busy: false, error: e?.message ?? 'Could not update the policies.' })
     }
@@ -655,6 +673,11 @@ export default function SettingsPage() {
   const requireManagerApproval = orgDetails.require_manager_approval !== 'off'
   function toggleManagerApproval() {
     const next = { ...orgDetails, require_manager_approval: requireManagerApproval ? 'off' : 'on' }
+    setOrgDetails(next); saveOrgDetails(next)
+  }
+  const requireNameApproval = orgDetails.require_name_change_approval === 'on'
+  function toggleNameApproval() {
+    const next = { ...orgDetails, require_name_change_approval: requireNameApproval ? 'off' : 'on' }
     setOrgDetails(next); saveOrgDetails(next)
   }
   const requireExternalApproval = orgDetails.require_external_approval === 'on'
@@ -1207,6 +1230,18 @@ export default function SettingsPage() {
                 <span className={`absolute left-0.5 top-1/2 h-5 w-5 -translate-y-1/2 rounded-full bg-white shadow transition-transform ${requireExternalApproval ? 'translate-x-5' : 'translate-x-0'}`} />
               </button>
             </div>
+
+            <div className="mt-3 flex items-start justify-between gap-4 border-t border-gray-200 pt-3">
+              <div className="min-w-0">
+                <p className="text-sm font-medium text-neutral-dark">Require approval for name changes</p>
+                <p className="mt-0.5 text-xs text-neutral-mid">When on, changing who holds a role, and updating the policies that have their name written into the text, goes through the same approvals as any other change before it goes live. When off, those updates go live straight away as a small new version, and the History keeps a record of each one.</p>
+              </div>
+              <button type="button" role="switch" aria-checked={requireNameApproval} aria-label="Require approval for name changes"
+                onClick={toggleNameApproval}
+                className={`relative mt-0.5 h-6 w-11 shrink-0 rounded-full transition-colors ${requireNameApproval ? 'bg-teal' : 'bg-gray-300'}`}>
+                <span className={`absolute left-0.5 top-1/2 h-5 w-5 -translate-y-1/2 rounded-full bg-white shadow transition-transform ${requireNameApproval ? 'translate-x-5' : 'translate-x-0'}`} />
+              </button>
+            </div>
           </div>
 
           <div className="space-y-4">
@@ -1306,6 +1341,86 @@ export default function SettingsPage() {
                   <p className="mt-2 text-xs text-neutral-mid">
                     {roleScan.policies_unreadable} policies could not be read, so a role mentioned only in those will not show here.
                   </p>
+                )}
+                {roleScan && (namesStale || (roleScan.name_usage ?? []).length > 0 || roleScan.mentions.some(m => m.policies > 0)) && (
+                  <div className="mt-4 space-y-3 border-t border-gray-200 pt-3">
+                    {namesStale && (
+                      <p className="rounded-md bg-amber-50 px-3 py-2 text-xs text-amber-900">Names have changed since this was checked. Press Check again to include them.</p>
+                    )}
+
+                    {(roleScan.name_usage ?? []).length > 0 && (
+                      <div>
+                        <p className="text-sm font-medium text-neutral-dark">Where names are used in your policies</p>
+                        <p className="mt-0.5 text-xs text-neutral-mid">A name written into a policy&rsquo;s text stays as it is when you change the name here, so it needs updating in the policy as well.</p>
+                        <ul className="mt-2 space-y-1.5">
+                          {[...(roleScan.name_usage ?? [])]
+                            .sort((a, b) => Number(isArchivedName(b.name)) - Number(isArchivedName(a.name)) || b.policies.length - a.policies.length || a.name.localeCompare(b.name))
+                            .slice(0, showAllNames ? 500 : 8)
+                            .map(u => {
+                              const where = locateName(u.name)
+                              const archived = isArchivedName(u.name)
+                              const writable = u.policies.filter(p => p.writable).length
+                              return (
+                                <li key={u.name} className={`rounded-md bg-white px-3 py-2 ${archived ? 'border border-amber-200' : ''}`}>
+                                  <div className="flex flex-wrap items-center gap-2.5">
+                                    {namePic(u.name)}
+                                    <div className="min-w-0 flex-1">
+                                      <p className="truncate text-sm font-medium text-neutral-dark">{u.name}{archived && <> <ArchivedTag /></>}</p>
+                                      <p className="truncate text-xs text-neutral-mid">{u.roles.join(', ')}</p>
+                                    </div>
+                                    <p className="text-xs text-neutral-mid">
+                                      {u.policies.length === 0
+                                        ? 'Not written into any policy text'
+                                        : <>Written into <strong className="text-neutral-dark">{u.policies.length}</strong> {u.policies.length === 1 ? 'policy' : 'policies'} ({u.total_occurrences} {u.total_occurrences === 1 ? 'time' : 'times'})</>}
+                                    </p>
+                                    {where && (u.policies.length > 0 || archived) && (
+                                      <button type="button" onClick={() => void removeRoleName(where.key, u.name, { label: where.label, scalar: where.scalar })}
+                                        className={`shrink-0 rounded-btn border px-2.5 py-1 text-xs font-medium ${archived ? 'border-amber-300 bg-amber-50 text-amber-900 hover:bg-amber-100' : 'border-gray-200 bg-white text-neutral-dark hover:border-teal/40 hover:text-teal'}`}>
+                                        {archived ? 'Choose who replaces them' : 'Replace in policies'}
+                                      </button>
+                                    )}
+                                  </div>
+                                  {archived && <p className="mt-1.5 text-xs text-amber-900">This person is archived. {u.policies.length > 0 ? 'Their name is still written into the policies below.' : 'Choose someone else for the role.'}</p>}
+                                  {u.policies.length > 0 && (
+                                    <details className="mt-1.5">
+                                      <summary className="cursor-pointer text-xs font-medium text-teal">Show policies</summary>
+                                      <ul className="mt-1 space-y-0.5 pl-1 text-xs text-neutral-mid">
+                                        {u.policies.map(p => (
+                                          <li key={p.policy_id}>{p.policy_name} &middot; {p.occurrences} {p.occurrences === 1 ? 'time' : 'times'}{!p.writable && ' · adopt this policy first so it can be updated here'}</li>
+                                        ))}
+                                      </ul>
+                                      {writable < u.policies.length && <p className="mt-1 text-xs text-neutral-mid">{writable} of these can be updated from here.</p>}
+                                    </details>
+                                  )}
+                                </li>
+                              )
+                            })}
+                        </ul>
+                        {(roleScan.name_usage ?? []).length > 8 && (
+                          <button type="button" onClick={() => setShowAllNames(v => !v)} className="mt-1.5 text-xs text-neutral-mid underline-offset-2 hover:text-neutral-dark hover:underline">{showAllNames ? 'Show fewer' : `Show everyone (${(roleScan.name_usage ?? []).length - 8} more)`}</button>
+                        )}
+                      </div>
+                    )}
+
+                    {roleScan.mentions.some(m => m.policies > 0) && (
+                      <details>
+                        <summary className="cursor-pointer text-sm font-medium text-neutral-dark">Roles named in your policies <span className="text-xs font-normal text-neutral-mid">(these show the current name by themselves)</span></summary>
+                        <ul className="mt-2 space-y-1">
+                          {roleScan.mentions.filter(m => m.policies > 0).map(m => (
+                            <li key={m.key} className="rounded-md bg-white px-3 py-1.5">
+                              <details>
+                                <summary className="cursor-pointer text-xs text-neutral-dark"><strong>{m.label}</strong> <span className="text-neutral-mid">in {m.policies} {m.policies === 1 ? 'policy' : 'policies'}</span></summary>
+                                <ul className="mt-1 space-y-0.5 pl-1 text-xs text-neutral-mid">
+                                  {(m.policy_list ?? []).map(p => <li key={p.policy_id}>{p.policy_name}</li>)}
+                                  {!m.policy_list && <li>Press Check again to list the policies.</li>}
+                                </ul>
+                              </details>
+                            </li>
+                          ))}
+                        </ul>
+                      </details>
+                    )}
+                  </div>
                 )}
               </div>
 
@@ -1430,7 +1545,7 @@ export default function SettingsPage() {
                 </p>
                 <div className="mt-5 flex flex-wrap justify-end gap-2">
                   <Button variant="secondary" size="md" onClick={() => setReplaceHolder(null)}>No, keep {replaceHolder.from}</Button>
-                  <Button size="md" onClick={() => { const r = replaceHolder; setReplaceHolder(null); setScalar(r.key, r.to) }}>Yes, change to {replaceHolder.to}</Button>
+                  <Button size="md" onClick={() => { const r = replaceHolder; setReplaceHolder(null); void removeRoleName(r.key, r.from, { label: r.label, replacement: r.to, scalar: true }) }}>Yes, change to {replaceHolder.to}</Button>
                 </div>
               </div>
             </div>
@@ -1478,13 +1593,14 @@ export default function SettingsPage() {
                   ) : nameChange.done ? (
                     <div className="space-y-3 text-sm">
                       <p className="text-neutral-dark">
-                        {nameChange.done.updated.length} {nameChange.done.updated.length === 1 ? 'policy was' : 'policies were'} updated
-                        and given a new version. You can see each change in <strong>Policies &rsaquo; History</strong>.
+                        {nameChange.done.needs_approval
+                          ? <>{nameChange.done.updated.length} {nameChange.done.updated.length === 1 ? 'policy has' : 'policies have'} the change waiting for approval. Review and approve {nameChange.done.updated.length === 1 ? 'it' : 'them'} under <strong>Adopted changes to review</strong> on the Policies page.</>
+                          : <>{nameChange.done.updated.length} {nameChange.done.updated.length === 1 ? 'policy was' : 'policies were'} updated and given a new version. You can see each change in <strong>Policies &rsaquo; History</strong>.</>}
                       </p>
                       <ul className="space-y-1 text-xs text-neutral-mid">
                         {nameChange.done.updated.map(u => {
                           const p = nameChange.policies.find(x => x.policy_id === u.policy_id)
-                          return <li key={u.policy_id}>{p?.policy_name ?? u.policy_id} &middot; now version {u.version}</li>
+                          return <li key={u.policy_id}>{p?.policy_name ?? u.policy_id}{nameChange.done?.needs_approval ? ' · waiting for approval' : ` · now version ${u.version}`}</li>
                         })}
                       </ul>
                       {nameChange.done.failed.length > 0 && (
@@ -1499,7 +1615,9 @@ export default function SettingsPage() {
                         <p className="text-sm text-neutral-dark">
                           <strong>{nameChange.policies.length}</strong> {nameChange.policies.length === 1 ? 'policy has' : 'policies have'} this
                           name written into the text. Replacing it updates {nameChange.policies.length === 1 ? 'it' : 'them'} and
-                          creates a new version of each. No approval is needed: changing who holds a role does not change what the policy says.
+                          {requireNameApproval
+                            ? 'adds the change to each one for approval, and it goes live once it has been approved in the usual way.'
+                            : 'creates a new version of each, straight away. No approval is needed, because changing who holds a role does not change what the policy says.'}
                         </p>
                       ) : (
                         <p className="text-sm text-neutral-dark">
@@ -1564,8 +1682,13 @@ export default function SettingsPage() {
 
                       <div>
                         <label className="text-sm font-medium text-neutral-dark">Replace with</label>
+                        {staffPeople.length > 0 && !nameChange.scalar && (
+                          <div className="mt-1.5">
+                            <StaffNameChooser people={staffPeople} taken={[nameChange.name]} label="Choose the person who replaces them" onPick={n => setNameChange({ ...nameChange, replaceWith: n })} />
+                          </div>
+                        )}
                         <input
-                          autoFocus
+                          autoFocus={staffPeople.length === 0 || !!nameChange.scalar}
                           value={nameChange.replaceWith}
                           onChange={e => setNameChange({ ...nameChange, replaceWith: e.target.value })}
                           placeholder="Name of the person taking this on"
@@ -1590,7 +1713,7 @@ export default function SettingsPage() {
                     <>
                       <button onClick={() => setNameChange(null)} disabled={nameChange.busy} className="rounded-md px-3 py-2 text-sm font-medium text-neutral-mid hover:text-neutral-dark disabled:opacity-40">Cancel</button>
                       <button onClick={() => confirmNameChange(false)} disabled={nameChange.busy} className="rounded-md border border-gray-200 px-3 py-2 text-sm font-medium text-neutral-dark hover:border-gray-300 disabled:opacity-40">
-                        {nameChange.policies.length ? 'Remove only, leave policies' : 'Remove the name'}
+                        {nameChange.replaceWith.trim() ? 'Change the name only, leave the policies' : nameChange.policies.length ? 'Remove only, leave policies' : 'Remove the name'}
                       </button>
                       {/* Offered only where there is something this can actually change. */}
                       {nameChange.policies.length > 0 && (

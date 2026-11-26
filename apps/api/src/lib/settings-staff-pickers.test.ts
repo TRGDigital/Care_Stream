@@ -16,7 +16,7 @@ test('NAMES ARE KEPT: a chosen name is stored in the same plain text, comma sepa
 
 test('PICKER: role holders, Nominated individual and Default approver use the shared staff picker, with typing kept for people who are not staff', () => {
   assert.match(page, /import \{ StaffPicker \} from '@\/components\/ask\/staff-picker'/)
-  assert.equal((page.match(/<StaffNameChooser people=\{staffPeople\}/g) ?? []).length, 2)   // role holder rows and the two single name fields
+  assert.equal((page.match(/<StaffNameChooser people=\{staffPeople\}/g) ?? []).length, 3)   // role holder rows, the two single name fields, and the person who replaces someone
   assert.match(page, /Not on your staff list\? Type a name/)
   assert.match(page, /\(staffPeople\.length === 0 \|\| typedOpen\[rh\.key\]\)/)             // no staff loaded: the typed box is still there
   assert.doesNotMatch(page, /\bloadStaff\b|ask\.actions\.staff/)                                // not the Ask only staff endpoint: it is not available to every account

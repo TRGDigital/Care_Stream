@@ -887,6 +887,7 @@ async function rebuildDraft(documentId: string): Promise<void> {
   let content = doc.original_content as string
   for (const c of changes as any[]) {
     if (superseded.has(c.id)) continue
+    if (c.reference_key === ROLE_NAME_KEY && c.old_text) { content = content.replace(roleNameRegex(c.old_text), () => c.new_text); continue }   // a person's name: whole name only, never inside another word
     content = applyChange(content, c.placement, c.old_text, c.new_text, c.section_title || undefined).content
   }
   if (supersededIds.length) {
@@ -1081,7 +1082,9 @@ export async function applyMinorEdit(tenantId: string, policyId: string, input: 
  *  Matching is case sensitive on purpose: case-insensitively, a name that is also an ordinary
  *  word (Bill, Grace, Rose, Mark) would rewrite real sentences. The name is escaped because
  *  real ones contain regex characters. Covered by rolename.test.mjs. */
-function roleNameRegex(name: string): RegExp {
+/** reference_key on a pending change that renames a person: it is replayed with the careful name matching below, never a plain find and replace. */
+export const ROLE_NAME_KEY = 'role_name'
+export function roleNameRegex(name: string): RegExp {
   const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
   return new RegExp(`(?<![\\p{L}\\p{N}'’-])${escaped}(?![\\p{L}\\p{N}-])`, 'gu')
 }
@@ -1174,7 +1177,10 @@ export async function applyRoleNameChange(tenantId: string, policyId: string, in
   old_name: string
   new_name: string
   applied_by: string
-}): Promise<{ version: string; occurrences: number; propagated: boolean } | { error: string }> {
+  /** The account has chosen that a name change must be approved like any other change: it is added to the policy's draft as a pending change (reviewed and published in the usual way)
+   *  instead of going live at once. */
+  require_approval?: boolean
+}): Promise<{ version: string; occurrences: number; propagated: boolean; pending?: boolean } | { error: string }> {
   const oldName = String(input.old_name ?? '').trim()
   const newName = String(input.new_name ?? '').trim()
   if (!oldName || !newName) return { error: 'no_old_text' }
@@ -1192,6 +1198,20 @@ export async function applyRoleNameChange(tenantId: string, policyId: string, in
   // Every occurrence is the same person, so all of them move. This is the case applyMinorEdit
   // deliberately refuses, because there the tenant had selected one specific paragraph.
   const content = liveBase.replace(roleNameRegex(oldName), newName)
+
+  // Approval wanted: the change waits in the draft like any adopted change, and goes live through the usual approval steps. Nothing is published here.
+  if (input.require_approval) {
+    await (prisma as any).policyDocumentChange.create({
+      data: {
+        document_id: doc.id, tenant_id: tenantId, reference_key: ROLE_NAME_KEY,
+        requirement: `${input.role_label} name updated`, placement: 'amend',
+        old_text: oldName, new_text: newName, section_title: '',
+        applied_by: input.applied_by, published: false, minor: false,
+      },
+    })
+    await rebuildDraft(doc.id)
+    return { version: String(doc.version || ''), occurrences, propagated: false, pending: true }
+  }
 
   // Point release: 2.0 -> 2.1. A reviewed change set bumps the major, so a name correction
   // reading as a minor revision of the same version is what a history is meant to convey.

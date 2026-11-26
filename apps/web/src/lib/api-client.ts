@@ -148,7 +148,9 @@ export type RoleMentionScan = {
   scanned_at: string
   policies_scanned: number
   policies_unreadable: number
-  mentions: Array<{ key: string; label: string; policies: number; example: string | null }>
+  mentions: Array<{ key: string; label: string; policies: number; example: string | null; policy_list?: Array<{ policy_id: string; policy_name: string }> }>
+  /** The people named in Organisation details when this was checked, and where their NAME is written into policies. */
+  name_usage?: Array<{ name: string; roles: string[]; total_occurrences: number; policies: Array<{ policy_id: string; policy_name: string; occurrences: number; writable: boolean }> }>
 }
 // Typed fetch client for the CareStreamAI API.
 // All requests attach the NextAuth access token as Bearer.
@@ -771,8 +773,10 @@ export function createApiClient(token: string) {
 
       roleNameApply: (input: { role_label: string; old_name: string; new_name: string; policy_ids: string[] }) =>
         apiFetch<{
-          updated: Array<{ policy_id: string; version: string; occurrences: number; propagated: boolean }>
+          updated: Array<{ policy_id: string; version: string; occurrences: number; propagated: boolean; pending?: boolean }>
           failed:  Array<{ policy_id: string; reason: string }>
+          /** The account requires a name change to be approved like any other change: it is waiting in each policy's draft. */
+          needs_approval?: boolean
         }>('/settings/role-name/apply', token, { method: 'POST', body: JSON.stringify(input) }),
       translationSuggestions: (status?: string) =>
         apiFetch<{ suggestions: TranslationSuggestion[]; pending_count: number }>(`/translation-suggestions${status ? `?status=${status}` : ''}`, token),

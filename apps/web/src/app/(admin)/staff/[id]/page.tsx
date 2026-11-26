@@ -28,7 +28,7 @@ const TIP = {
   completion: "Each ring is the share of assigned items completed — training modules and induction flows — plus the average quiz score across completed modules. A low average score can signal a knowledge gap worth following up.",
   benchmark:  "Compares this person to your home's average. The teal bar is their figure; the dark tick is the team average. Bars sitting below the tick are below average and may be worth a conversation.",
   training:   "Every training module assigned to them. 'Score' is the percentage of quiz questions answered correctly. 'Expires' applies to annual modules due for renewal; 'Overdue' means past the due date and not yet complete. Use 'Reset' to let someone retake a module.",
-  annual:     "AI-generated annual training built from your policies. 'Score' is the assessment result; 'Renews' is when it's next due. For topics that also need a practical/observed assessment, use 'Record practical' to log that it's been done (with your name + date). View or print each certificate as evidence.",
+  annual:     "CPD training. These courses are independently approved by The CPD Certification Service. 'Score' is the assessment result; 'Renews' is when it's next due. For topics that also need a practical/observed assessment, use 'Record practical' to log that it's been done (with your name + date). View or print each certificate as evidence.",
   induction:  "Their induction (onboarding) flows. The bar shows steps completed — reading policies and answering questions. 'X/Y correct' counts how many question steps they got right.",
   reading:    "How thoroughly this person reads induction policies: total time spent, the furthest they scrolled, and whether they reached the end. 'Thorough' = scrolled (almost) to the end AND spent a realistic amount of time reading (at least a minute); 'Skimmed' = reached the end but too quickly to have genuinely read it, or marked read without scrolling far. Multiple opens of the same policy are combined.",
   cqc:        "This person's CQC inspector-prep practice: each question assigned, their AI score out of 100, and — where they reviewed the model answer and tried again — how much they improved. Useful evidence of inspection readiness.",
@@ -611,7 +611,7 @@ export default function StaffRecordPage() {
         {rec.annual_training && rec.annual_training.items.length > 0 && (
           <div className="pdf-card rounded-card border border-gray-100 bg-white shadow-card">
             <div className="flex items-center justify-between border-b border-gray-100 px-5 py-3.5">
-              <p className="flex items-center gap-1.5 text-sm font-semibold text-neutral-dark"><GraduationCap size={15} className="text-teal" /> Annual training <InfoTip text={TIP.annual} /></p>
+              <p className="flex items-center gap-1.5 text-sm font-semibold text-neutral-dark"><GraduationCap size={15} className="text-teal" /> CPD training <InfoTip text={TIP.annual} /></p>
               <p className="text-xs text-neutral-mid">{rec.annual_training.summary.completed}/{rec.annual_training.summary.assigned} complete{rec.annual_training.summary.practical_due > 0 ? ` · ${rec.annual_training.summary.practical_due} practical to record` : ''}</p>
             </div>
             <table className="w-full text-sm">

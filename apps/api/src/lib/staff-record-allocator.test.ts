@@ -28,3 +28,11 @@ test('STAFF PAGE: the CPD Certified logo shows beside a course name only when th
   assert.equal((p.match(/\{m\.cpd_accredited && <img src=\{CPD_CERTIFIED_LOGO\} alt="CPD Certified" className="ml-2 inline-block h-6 w-auto align-middle" \/>\}/g) ?? []).length, 2)
   assert.doesNotMatch(p, /tier === 'cpd' && <img/)   // never on the kind of course alone, only once certified
 })
+
+test('STAFF PAGE: the block under the Training record is called CPD training (it is the CPD training block), not Annual training', () => {
+  const p = fs.readFileSync(path.resolve(__dirname, '../../../web/src/app/(admin)/staff/[id]/page.tsx'), 'utf8')
+  assert.match(p, /<GraduationCap size=\{15\} className="text-teal" \/> CPD training <InfoTip/)
+  assert.doesNotMatch(p, /<\/> Annual training <InfoTip/); assert.doesNotMatch(p, /annual:     "AI-generated annual training/)
+  assert.match(p, /annual:     "CPD training\. These courses are independently approved by The CPD Certification Service\./)
+  assert.doesNotMatch(p, /annual:     "[^"]*(your policies|from your policies)/)   // CPD training has nothing to do with the home's policies
+})

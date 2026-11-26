@@ -216,6 +216,12 @@ function ArchivedTag() {
 function StaffNameChooser({ people, taken, onPick, label }: { people: ActionPerson[]; taken: string[]; onPick: (name: string) => void; label: string }) {
   const [open, setOpen] = useState(false)
   const choices = people.filter(p => !taken.some(t => t.toLowerCase() === p.name.toLowerCase()))
+  // A visible button at the top AND the bottom of the open list, so a long list never has to be scrolled to find it.
+  const closeButton = (
+    <button type="button" onClick={() => setOpen(false)} className="inline-flex items-center gap-1 rounded-md border border-gray-200 bg-white px-3 py-1.5 text-xs font-semibold text-neutral-dark hover:bg-neutral-light">
+      <X size={12} aria-hidden="true" /> Close
+    </button>
+  )
   return (
     <div>
       <button type="button" aria-expanded={open} onClick={() => setOpen(o => !o)}
@@ -225,9 +231,10 @@ function StaffNameChooser({ people, taken, onPick, label }: { people: ActionPers
       </button>
       {open && choices.length > 0 && (
         <div className="mt-1">
+          <div className="mb-1 flex justify-end">{closeButton}</div>
           <StaffPicker people={choices} selected={[]} mode="single" label={label}
             onChange={ids => { const who = choices.find(p => p.id === ids[0]); if (who) { onPick(who.name); setOpen(false) } }} />
-          <button type="button" onClick={() => setOpen(false)} className="mt-1 text-xs text-neutral-mid underline-offset-2 hover:text-neutral-dark hover:underline">Close</button>
+          <div className="mt-1.5 flex justify-end">{closeButton}</div>
         </div>
       )}
     </div>

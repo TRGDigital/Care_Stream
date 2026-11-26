@@ -32,7 +32,8 @@ test('ARCHIVED AND PICTURES: a name that belongs to an archived person gets an A
 })
 
 test('CLOSE AND CONFIRM: the open picker has a Close button, and a second person for a role is only added after the admin confirms (picked or typed)', () => {
-  assert.match(page, /onClick=\{\(\) => setOpen\(false\)\} className="mt-1 text-xs[^"]*">Close<\/button>/)
+  assert.match(page, /const closeButton = \(\s*<button type="button" onClick=\{\(\) => setOpen\(false\)\} className="inline-flex[^"]*border[^"]*">\s*<X size=\{12\} aria-hidden="true" \/> Close/)
+  assert.equal((page.match(/\{closeButton\}/g) ?? []).length, 2)          // a visible button at the top and the bottom of the open list
   assert.match(page, /function askAddRoleName\(key: string, role: string, existing: string\[\], picked\?: string\)/)
   assert.match(page, /if \(existing\.length === 0 \|\| existing\.some\(n => n\.toLowerCase\(\) === name\.toLowerCase\(\)\)\) \{ addRoleName\(key, picked\); return \}/)   // first holder, or the same name again: no question
   assert.match(page, /onPick=\{n => askAddRoleName\(rh\.key, rh\.role, \[\.\.\.rh\.derived, \.\.\.manual\], n\)\}/)

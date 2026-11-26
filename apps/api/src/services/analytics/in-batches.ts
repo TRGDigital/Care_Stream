@@ -32,3 +32,22 @@ export function splitForComparison<T>(group: T[], max: number): T[][] {
   for (let a = 0; a < pieces.length; a++) for (let b = a + 1; b < pieces.length; b++) out.push([...pieces[a], ...pieces[b]])
   return out
 }
+
+/** The complete items of a JSON array that was cut off part-way (an answer that ran past its length limit). Each whole `{...}` after `"<key>":[` is kept, the unfinished last one is dropped.
+ *  Returns [] when nothing whole can be found. Used only after a normal parse has already failed. */
+export function wholeItemsOf(raw: string, key: string): any[] {
+  const start = raw.indexOf(`"${key}"`)
+  const open = start < 0 ? -1 : raw.indexOf('[', start)
+  if (open < 0) return []
+  const items: any[] = []
+  let depth = 0, from = -1, inStr = false, esc = false
+  for (let i = open + 1; i < raw.length; i++) {
+    const ch = raw[i]
+    if (inStr) { if (esc) esc = false; else if (ch === '\\') esc = true; else if (ch === '"') inStr = false; continue }
+    if (ch === '"') { inStr = true; continue }
+    if (ch === '{') { if (depth === 0) from = i; depth++ }
+    else if (ch === '}') { depth--; if (depth === 0 && from >= 0) { try { items.push(JSON.parse(raw.slice(from, i + 1))) } catch { /* skip an unreadable item */ } from = -1 } }
+    else if (ch === ']' && depth === 0) break
+  }
+  return items
+}

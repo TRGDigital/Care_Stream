@@ -143,12 +143,15 @@ type SectionRunState = RunStateData['sections'][number]
 // Amber banner inside a section when a run was interrupted part-way. Resume continues
 // from where it stopped — already-analysed items are never re-run, so they cost nothing.
 function ResumeBanner({ state, resuming, onResume }: { state?: SectionRunState; resuming: boolean; onResume: () => void }) {
-  if (!state || state.total <= 0 || state.remaining <= 0 || state.analysed <= 0) return null
+  const comparing = !!state && (state.comparing_total ?? 0) > 0
+  if (!state || (!comparing && (state.total <= 0 || state.remaining <= 0 || state.analysed <= 0))) return null
   return (
     <div className="mx-6 my-4 flex flex-wrap items-center gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3">
       <AlertCircle size={15} className="shrink-0 text-amber-500" />
       <p className="min-w-0 flex-1 text-xs leading-relaxed text-amber-800">
-        An analysis was interrupted: {state.analysed} of {state.total} done. Resume to finish without re-running what is already complete (no extra credits for finished items).
+        {comparing && state.remaining <= 0
+          ? <>The comparison was interrupted: {state.comparing_done} of {state.comparing_total} parts done. Resume to finish without repeating what is already complete.</>
+          : <>An analysis was interrupted: {state.analysed} of {state.total} done. Resume to finish without re-running what is already complete (no extra credits for finished items).</>}
       </p>
       <button onClick={onResume} disabled={resuming}
         className="shrink-0 rounded-btn bg-amber-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-amber-700 disabled:opacity-50">
@@ -1487,8 +1490,16 @@ function PolicyConsistencySection({ token, userId, stepInfo, confirmRun, onRunCo
       if (p.remaining >= last) { /* no progress — stop rather than spin */ break }
       last = p.remaining
     }
-    setProgress('Comparing for contradictions…'); setPhase('Comparing your policies. This part has no count, and can take a few minutes.')
-    await api.analytics.consistencyDetect()
+    setProgress('Comparing for contradictions…')
+    // The comparison runs in small saved steps, so it can never be cut off and Resume carries on from the last finished step. A fresh start whenever policies were read in this call, so it uses what was just read.
+    let r = await api.analytics.consistencyDetectStep(!retrySince || toExtract > 0)
+    if (r.mode === 'single') { setPhase('Comparing your policies. This part has no count, and can take a few minutes.'); await api.analytics.consistencyDetect(); return }
+    while (!r.done) {
+      setPhase(`Comparing your policies: part ${r.step + 1} of ${r.total}.`); setProg({ done: r.step, total: r.total })
+      if (stopRun.current) return   // stopped on purpose: the finished parts are kept, and Resume carries on
+      r = await api.analytics.consistencyDetectStep(false)
+      if (r.mode === 'single') return
+    }
   }
 
   async function run() {

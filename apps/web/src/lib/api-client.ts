@@ -1633,7 +1633,7 @@ export function createApiClient(token: string) {
       completeGap: (referenceKey: string) => apiFetch<{ completed: boolean }>(`/analytics/gaps/${encodeURIComponent(referenceKey)}/complete`, token, { method: 'POST' }),
       reopenGap: (referenceKey: string) => apiFetch<{ reopened: boolean }>(`/analytics/gaps/${encodeURIComponent(referenceKey)}/reopen`, token, { method: 'POST' }),
       gapsPipeline: () => apiFetch<{ sections: Array<{ section: 'coverage' | 'out_of_date' | 'wording' | 'consistency'; ran_at: string | null; stale_policy_count: number; stale: boolean }>; pending_changes: number; pending_policies: number; last_publish_at: string | null }>('/analytics/gaps/pipeline', token),
-      gapsRunState: () => apiFetch<{ sections: Array<{ section: 'coverage' | 'consistency' | 'wording'; total: number; analysed: number; remaining: number }> }>('/analytics/gaps/run-state', token),
+      gapsRunState: () => apiFetch<{ sections: Array<{ section: 'coverage' | 'consistency' | 'wording'; total: number; analysed: number; remaining: number; comparing_done?: number; comparing_total?: number }> }>('/analytics/gaps/run-state', token),
       analyseGaps: () => apiFetch<{ analysed_at: string; regulations_total: number; regulations_covered: number; regulations_partial: number; regulations_gap: number }>('/analytics/gaps/analyse', token, { method: 'POST' }),
       analyseGapsStart: () => apiFetch<{ total: number }>('/analytics/gaps/analyse/start', token, { method: 'POST' }),
       analyseGapsBatch: () => apiFetch<{ done: number; analysed: number; total: number; remaining: number }>('/analytics/gaps/analyse/batch', token, { method: 'POST' }),
@@ -1683,6 +1683,8 @@ export function createApiClient(token: string) {
       readiness: () => apiFetch<{ visible: boolean; overall: number | null; rag: string; band: string; updated_at: string; has_audit: boolean; has_policy: boolean; domains: Array<{ key: string; label: string; score: number | null; rag: string; band: string; audit: number | null; policy: number | null }>; trend: Array<{ period: string; overall: number }> }>('/analytics/readiness', token),
       consistencyStart: () => apiFetch<{ sets: number; duplicate_sets: number; topic_sets: number; to_extract: number }>('/analytics/consistency/scan/start', token, { method: 'POST' }),
       consistencyBatch: (retrySince?: string) => apiFetch<{ extracted: number; remaining: number }>('/analytics/consistency/scan/batch', token, { method: 'POST', ...(retrySince ? { body: JSON.stringify({ retry_since: retrySince }) } : {}) }),
+      // The comparison in small saved steps (`fresh` only on the first call of a new run). `mode: 'single'` means the steps table does not exist yet: use consistencyDetect.
+      consistencyDetectStep: (fresh: boolean) => apiFetch<{ mode: 'steps'; step: number; total: number; done: boolean; conflicts?: number; sets?: number } | { mode: 'single' }>('/analytics/consistency/detect-step', token, { method: 'POST', body: JSON.stringify({ fresh }) }),
       consistencyDetect: () => apiFetch<{ conflicts: number; sets: number }>('/analytics/consistency/detect', token, { method: 'POST' }),
       consistencyDismiss: (key: string) => apiFetch<{ dismissed: boolean }>('/analytics/consistency/dismiss', token, { method: 'POST', body: JSON.stringify({ key }) }),
       // Policy review matrix (deduped across the four gap sections).

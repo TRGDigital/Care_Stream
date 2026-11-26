@@ -11,7 +11,7 @@
 //      re-run only when the policy text changes. Only policies that appear in a comparison set
 //      are extracted, so the AI cost is bounded to what can actually conflict.
 
-import { splitForComparison } from './in-batches'
+import { splitForComparison, wholeItemsOf } from './in-batches'
 import { noCapFor, partsOf } from './uncapped'
 import { createHash } from 'crypto'
 import { prisma } from '../../db/client'
@@ -211,9 +211,17 @@ export async function extractPolicyClaims(tenantId: string, policy: { id: string
     // A policy that fits in one read is the same single call as before.
     const seen = new Set<string>()
     for (const part of partsOf(text, CLAIM_READ_CHARS, open)) {
-      const out = await callClaude(EXTRACT_SYSTEM, extractPrompt(policy.name, part), { model: HAIKU, maxTokens: 2000, temperature: 0, feature: 'policy_consistency' })
-      const parsed = JSON.parse(out.slice(out.indexOf('{'), out.lastIndexOf('}') + 1))
-      const got: PolicyClaim[] = (Array.isArray(parsed.claims) ? parsed.claims : [])
+      // Room for a full list (up to 25 claims) on a long part: 2000 cut the answer off part-way on long policies, which then failed to read. A policy whose answer already fitted gets the same answer as before.
+      const out = await callClaude(EXTRACT_SYSTEM, extractPrompt(policy.name, part), { model: HAIKU, maxTokens: 6000, temperature: 0, feature: 'policy_consistency' })
+      let rawClaims: any[]
+      try { const parsed = JSON.parse(out.slice(out.indexOf('{'), out.lastIndexOf('}') + 1)); rawClaims = Array.isArray(parsed.claims) ? parsed.claims : [] }
+      catch (e) {
+        // An answer that still ran past its limit keeps every whole claim in it, rather than the policy failing to read at all.
+        rawClaims = wholeItemsOf(out, 'claims')
+        if (!rawClaims.length) throw e
+        console.error('[consistency] claim list was cut off, kept the whole claims in it', policy.id, rawClaims.length)
+      }
+      const got: PolicyClaim[] = rawClaims
       .map((c: any) => ({ topic: String(c.topic ?? '').trim(), statement: String(c.statement ?? '').trim(), quote: groundQuote(String(c.quote ?? '').trim(), text), kind: (KINDS.has(c.kind) ? c.kind : 'other') as ClaimKind }))
         .filter((c: PolicyClaim) => c.topic && c.statement && !isReviewMetaClaim(c))
         .slice(0, 25)   // the prompt asks for at most 25 per part of the policy
@@ -556,6 +564,85 @@ export async function runDetection(tenantId: string): Promise<{ conflicts: numbe
     create: { tenant_id: tenantId, conflicts, analysed_at: new Date() },
   }).catch(() => {})
   return { conflicts: conflicts.length, sets: groups.length }
+}
+
+// ── The same comparison, in small saved steps ────────────────────────────────────
+// One call that compares everything can run past the server's time limit on a big library, and then NOTHING is saved. Here the groups to compare are fixed once (step 0),
+// then a few groups are compared per call and each slice is saved (steps 1..n); the last call joins them and saves the result exactly as runDetection does.
+// A step that is cut off is simply done again; Resume carries on from the last saved step. Needs public.policy_consistency_steps; without it `mode: 'single'` is returned and the caller uses runDetection.
+const DETECT_SLICE = 3   // groups compared per call
+
+export type DetectStepResult = { mode: 'steps'; step: number; total: number; done: boolean; conflicts?: number; sets?: number } | { mode: 'single' }
+
+const noStepsTable = (e: any) => /policy_consistency_steps|42P01|does not exist/i.test(String(e?.message ?? e?.code ?? ''))
+
+export async function detectStep(tenantId: string, fresh: boolean): Promise<DetectStepResult> {
+  const db = prisma as any
+  try {
+    if (fresh) await db.$executeRaw`delete from public.policy_consistency_steps where tenant_id = ${tenantId}`
+    let plan: { groups: IndexedClaim[][]; total: number } | null = null
+    const planRow: any[] = await db.$queryRaw`select data from public.policy_consistency_steps where tenant_id = ${tenantId} and step = 0`
+    if (planRow.length) plan = planRow[0].data
+    if (!plan) {
+      await checkAiCreditLimit(tenantId)
+      const sources = await claimSourcePolicies(tenantId)
+      const nameById = new Map(sources.map(s => [s.id, s.name]))
+      const rows = await db.policyClaim.findMany({ where: { tenant_id: tenantId, policy_id: { in: sources.map(s => s.id) } }, select: { policy_id: true, claims: true } })
+      const claims: IndexedClaim[] = []
+      for (const r of rows as any[]) for (const c of ((r.claims as PolicyClaim[]) ?? [])) {
+        if (isReviewMetaClaim(c) || !c.topic || !c.statement) continue
+        claims.push({ ...c, policy_id: r.policy_id, policy_name: nameById.get(r.policy_id) ?? 'a policy' })
+      }
+      const groups = await buildClaimTopicGroups(claims, await noCapFor(tenantId))
+      if (!groups.length) {
+        await db.policyConsistency.upsert({ where: { tenant_id: tenantId }, update: { conflicts: [], analysed_at: new Date() }, create: { tenant_id: tenantId, conflicts: [], analysed_at: new Date() } }).catch(() => {})
+        return { mode: 'steps', step: 0, total: 0, done: true, conflicts: 0, sets: 0 }
+      }
+      plan = { groups, total: Math.ceil(groups.length / DETECT_SLICE) }
+      await db.$executeRaw`insert into public.policy_consistency_steps (tenant_id, step, data) values (${tenantId}, 0, ${JSON.stringify(plan)}::jsonb) on conflict (tenant_id, step) do update set data = excluded.data`
+    }
+    const last: any[] = await db.$queryRaw`select coalesce(max(step), 0)::int as n from public.policy_consistency_steps where tenant_id = ${tenantId}`
+    const next = (last[0]?.n ?? 0) + 1
+    if (next <= plan.total) {
+      await checkAiCreditLimit(tenantId)
+      const slice = plan.groups.slice((next - 1) * DETECT_SLICE, next * DETECT_SLICE)
+      const textById = new Map<string, string>()
+      await mapLimit([...new Set(slice.flat().map(c => c.policy_id))], 6, async (pid: string) => { const t = await downloadExtractedText(tenantId, pid).catch(() => null); if (t) textById.set(pid, t) })
+      const candidates = (await mapLimit(slice, 3, (g: IndexedClaim[], i: number) => detectGroupConflicts(g, (next - 1) * DETECT_SLICE + i, textById).catch(() => []))).flat()
+      const seen = new Set<string>()
+      const unique = candidates.filter(c => { const k = c.positions.map(p => `${p.policy_id}::${p.statement}`).sort().join('||'); if (seen.has(k)) return false; seen.add(k); return true })
+      const verified = (await mapLimit(unique, 3, (c: PolicyConflict) => verifyConflict(c, textById).catch(() => null))).filter(Boolean) as PolicyConflict[]
+      await db.$executeRaw`insert into public.policy_consistency_steps (tenant_id, step, data) values (${tenantId}, ${next}, ${JSON.stringify({ candidates: candidates.length, verified })}::jsonb) on conflict (tenant_id, step) do update set data = excluded.data`
+      if (next < plan.total) return { mode: 'steps', step: next, total: plan.total, done: false }
+    }
+    // Every slice is saved: join them and save the result, as runDetection does.
+    const all: any[] = await db.$queryRaw`select step, data from public.policy_consistency_steps where tenant_id = ${tenantId} and step >= 1 order by step`
+    const seenKey = new Set<string>()
+    const rank = { high: 0, medium: 1, low: 2 } as const
+    const conflicts = (all.flatMap(r => (r.data?.verified ?? []) as PolicyConflict[]))
+      .filter(c => { const k = c.positions.map(p => `${p.policy_id}::${p.statement}`).sort().join('||'); if (seenKey.has(k)) return false; seenKey.add(k); return true })
+      .filter(c => !REVIEW_META.test(`${c.topic} ${c.summary}`))
+      .sort((a, b) => rank[a.severity] - rank[b.severity])
+    if (all.some(r => (r.data?.candidates ?? 0) > 0)) await logAiCredit(tenantId, 'policy_consistency', `${plan.groups.length}-groups`)
+    await db.policyConsistency.upsert({ where: { tenant_id: tenantId }, update: { conflicts, analysed_at: new Date() }, create: { tenant_id: tenantId, conflicts, analysed_at: new Date() } }).catch(() => {})
+    await db.$executeRaw`delete from public.policy_consistency_steps where tenant_id = ${tenantId}`
+    return { mode: 'steps', step: plan.total, total: plan.total, done: true, conflicts: conflicts.length, sets: plan.groups.length }
+  } catch (e: any) {
+    if (noStepsTable(e)) return { mode: 'single' }   // the table has not been created yet: the caller compares in one call, as before
+    throw e
+  }
+}
+
+/** For the Resume banner: a comparison that stopped part-way (its plan is saved, not every step is). Null when there is none, or the table does not exist yet. */
+export async function comparingState(tenantId: string): Promise<{ done: number; total: number } | null> {
+  try {
+    const rows: any[] = await (prisma as any).$queryRaw`select step, data from public.policy_consistency_steps where tenant_id = ${tenantId} and step = 0`
+    if (!rows.length) return null
+    const total = Number(rows[0].data?.total ?? 0)
+    const n: any[] = await (prisma as any).$queryRaw`select coalesce(max(step), 0)::int as n from public.policy_consistency_steps where tenant_id = ${tenantId}`
+    const done = n[0]?.n ?? 0
+    return total > 0 && done < total ? { done, total } : null
+  } catch { return null }
 }
 
 // A stable key for a conflict (topic + the policies involved) so a dismissal survives re-runs,

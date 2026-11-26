@@ -18,7 +18,7 @@ import { getGapDetail, viewOfDetail } from '../services/analytics/gap-detail'
 import { scanTenantPolicies, getTenantLint } from '../services/analytics/policy-lint'
 import { addIgnore, removeIgnore, listIgnores, ALL_POLICIES } from '../services/analytics/lint-ignores'
 import { resolveSection, reopenSection, clearResolutions, listResolutions } from '../services/analytics/review-resolutions'
-import { buildAndCacheSets, dropStaleClaims, getCachedSets, pendingClaimPolicies, extractClaimsBatch, runDetection, getConsistency, dismissConflict, resolveConflict, consistencyRunState } from '../services/analytics/policy-consistency'
+import { buildAndCacheSets, dropStaleClaims, detectStep, comparingState, getCachedSets, pendingClaimPolicies, extractClaimsBatch, runDetection, getConsistency, dismissConflict, resolveConflict, consistencyRunState } from '../services/analytics/policy-consistency'
 import { getReadinessScore } from '../services/analytics/readiness'
 import { adoptSuggestion, getPolicyDocument, getAdoptionContext, revertChange, editChange, publishDocument, repropagatePolicy, summariseDocuments, approvalsOverview, submitForApproval, managerApprove, rejectPolicy, getApprovalState, setExternalRecipient, revokeExternalLink, reissueExternalLink, remindApproval, getPolicyVersions, getPolicyVersionContent, getPolicyMatrix, policiesDueForReview, detectPolicySection } from '../services/analytics/policy-adoption'
 import { qualityStatementCoverage, safAlignment, startPolicyWordingAlignment, wordingAlignmentBatch, getPolicyWordingAlignment, wordingRunState } from '../services/analytics/saf'
@@ -569,10 +569,11 @@ analyticsRouter.get('/gaps/run-state', requireAdmin, async (_req: Request, res: 
       consistencyRunState(tenantId),
       wordingRunState(tenantId),
     ])
+    const comparing = await comparingState(tenantId)
     ok(res, {
       sections: [
         { section: 'coverage',    ...coverage },
-        { section: 'consistency', ...consistency },
+        { section: 'consistency', ...consistency, ...(comparing ? { comparing_done: comparing.done, comparing_total: comparing.total } : {}) },
         { section: 'wording',     ...wording },
       ],
     })
@@ -864,6 +865,23 @@ analyticsRouter.post('/consistency/detect', requireAdmin, async (_req: Request, 
   }
   try {
     ok(res, await runDetection(tenantId))
+  } catch (e: any) {
+    if (e instanceof PlanLimitError) { err(res, e.code, e.message, 402); return }
+    err(res, 'CONSISTENCY_DETECT_FAILED', e.message ?? 'Could not run consistency detection.', 500)
+  }
+})
+
+// The same comparison in small saved steps: each call compares a few groups and saves them. `fresh` is true on the first call of a new run only.
+analyticsRouter.post('/consistency/detect-step', requireAdmin, async (req: Request, res: Response) => {
+  const tenantId = getTenantId()
+  try {
+    await checkFeature(tenantId, 'has_gap_detection')
+  } catch (e) {
+    if (e instanceof PlanLimitError) { err(res, e.code, e.message, 403); return }
+    throw e
+  }
+  try {
+    ok(res, await detectStep(tenantId, req.body?.fresh === true))
   } catch (e: any) {
     if (e instanceof PlanLimitError) { err(res, e.code, e.message, 402); return }
     err(res, 'CONSISTENCY_DETECT_FAILED', e.message ?? 'Could not run consistency detection.', 500)

@@ -3,6 +3,9 @@
 import { createContext, useContext, useEffect, useRef, useState } from 'react'
 import { signIn, signOut, useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
+import { StaffPicker } from '@/components/ask/staff-picker'
+import { StaffAvatar } from '@/components/admin/staff-avatar'
+import type { ActionPerson } from '@/lib/ask-client'
 import { createApiClient, type RoleMentionScan } from '@/lib/api-client'
 import { usePlanFeatures } from '@/lib/use-plan-features'
 import { UpgradeOverlay } from '@/components/upgrade-overlay'
@@ -204,6 +207,32 @@ function DangerZone({ token }: { token: string }) {
 
 // ─── Page ──────────────────────────────────────────────────────────────────────
 
+/** Beside a named person who has since been archived, so an admin knows to choose someone else. */
+function ArchivedTag() {
+  return <span title="This person is archived. Choose someone else for this role." className="rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase leading-none text-amber-900">Archived</span>
+}
+
+/** Pick a person from the account's staff instead of typing their name: the shared staff picker (picture, name, job title, searchable). The chosen name is stored exactly as the typed ones always were (plain text), so nothing downstream changes. */
+function StaffNameChooser({ people, taken, onPick, label }: { people: ActionPerson[]; taken: string[]; onPick: (name: string) => void; label: string }) {
+  const [open, setOpen] = useState(false)
+  const choices = people.filter(p => !taken.some(t => t.toLowerCase() === p.name.toLowerCase()))
+  return (
+    <div>
+      <button type="button" aria-expanded={open} onClick={() => setOpen(o => !o)}
+        className="flex w-full items-center justify-between rounded-md border border-gray-200 bg-white px-3 py-2 text-left text-sm text-neutral-mid hover:border-teal focus:border-teal focus:outline-none focus:ring-1 focus:ring-teal">
+        <span>{choices.length ? 'Choose a staff member…' : 'Everyone on your staff is already chosen'}</span>
+        <ChevronDown size={14} className={`shrink-0 transition-transform ${open ? 'rotate-180' : ''}`} aria-hidden="true" />
+      </button>
+      {open && choices.length > 0 && (
+        <div className="mt-1">
+          <StaffPicker people={choices} selected={[]} mode="single" label={label}
+            onChange={ids => { const who = choices.find(p => p.id === ids[0]); if (who) { onPick(who.name); setOpen(false) } }} />
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function SettingsPage() {
   const { data: session }           = useSession()
   const holidayMeta                 = useHolidayMeta().meta
@@ -313,7 +342,7 @@ export default function SettingsPage() {
   const [signoff,        setSignoff]        = useState('')
   const [savingSignoff,  setSavingSignoff]  = useState(false)
   const [signoffSaved,   setSignoffSaved]   = useState(false)
-  const [staffDir,       setStaffDir]       = useState<Array<{ email: string; name: string; job_role: string | null; phone_number?: string | null }>>([])
+  const [staffDir,       setStaffDir]       = useState<Array<{ id?: string; email: string; name: string; job_role: string | null; phone_number?: string | null; photo_url?: string | null; is_active?: boolean; role?: string }>>([])
 
   // Hydrate instantly from the last-loaded snapshot (survives full reloads).
   useEffect(() => {
@@ -360,13 +389,28 @@ export default function SettingsPage() {
     const cachedScan = persistentCache.get<RoleMentionScan>(`admin-settings-rolescan-${userId}`)
     if (cachedScan) setRoleScan(cachedScan)
   }, [userId])
-  useEffect(() => {
+  const reloadStaffDir = () => {
     if (!session?.accessToken) return
     createApiClient(session.accessToken).users.list()
       .then((d: any) => { const list = Array.isArray(d) ? d : (d?.users ?? []); setStaffDir(list); persistentCache.set(`admin-settings-staffdir-${userId}`, list) })
       .catch(() => {})
-  }, [session?.accessToken])
+  }
+  useEffect(() => { reloadStaffDir() }, [session?.accessToken])   // eslint-disable-line react-hooks/exhaustive-deps
 
+  // The shared picker's list: active staff with the picture they were given in CareStream (a signed address, never public). Administrators first, as everywhere.
+  // A comma would split a stored name (several holders are kept comma separated), so it is dropped.
+  const staffPeople: ActionPerson[] = staffDir.filter(u => u.id && (u as any).is_active !== false && u.name).map(u => ({ id: u.id as string, name: u.name.replace(/,/g, '').trim(), job_role: u.job_role ?? null, photo_url: u.photo_url ?? null, has_email: !!u.email, is_admin: u.role === 'admin' }))
+    .sort((a, b) => Number(!!b.is_admin) - Number(!!a.is_admin) || a.name.localeCompare(b.name))
+  // The person behind a stored name, for the picture on its chip (an active person first, then an archived one).
+  const sameName = (a: string, b: string) => a.replace(/,/g, '').toLowerCase().trim() === b.replace(/,/g, '').toLowerCase().trim()
+  const personForName = (n: string) => staffDir.find(u => u.name && sameName(u.name, n) && (u as any).is_active !== false) ?? staffDir.find(u => u.name && sameName(u.name, n)) ?? null
+  const namePic = (name: string) => { const u = personForName(name); return u ? <StaffAvatar name={u.name} photoUrl={u.photo_url ?? null} size={22} onRefresh={reloadStaffDir} /> : null }
+  const [typedOpen, setTypedOpen] = useState<Record<string, boolean>>({})   // "someone not on the staff list": the typed box, kept for people who are not staff
+  // A name is shown as archived only when an archived person has it and no active person does (two people can share a name).
+  const nameKey = (n: string) => n.replace(/,/g, '').toLowerCase().trim()
+  const activeKeys = new Set(staffDir.filter(u => (u as any).is_active !== false && u.name).map(u => nameKey(u.name)))
+  const archivedKeys = new Set(staffDir.filter(u => (u as any).is_active === false && u.name).map(u => nameKey(u.name)))
+  const isArchivedName = (n: string) => archivedKeys.has(nameKey(n)) && !activeKeys.has(nameKey(n))
   const userByEmail = new Map(staffDir.filter(u => u.email).map(u => [u.email.toLowerCase(), u]))
   const staffSuffix = (u?: { name: string; job_role: string | null }) =>
     u ? ` — ${u.name}${u.job_role ? ` (${u.job_role})` : ''}` : ''
@@ -505,8 +549,8 @@ export default function SettingsPage() {
   function roleManual(key: string): string[] {
     return String(orgDetails[key] ?? '').split(',').map(s => s.trim()).filter(Boolean)
   }
-  function addRoleName(key: string) {
-    const name = (roleInput[key] ?? '').trim()
+  function addRoleName(key: string, picked?: string) {
+    const name = (picked ?? roleInput[key] ?? '').trim()
     if (!name) return
     const cur = roleManual(key)
     if (cur.some(n => n.toLowerCase() === name.toLowerCase())) { setRoleInput(r => ({ ...r, [key]: '' })); return }
@@ -568,8 +612,8 @@ export default function SettingsPage() {
     }
   }
   // Single-value fields use the same add-and-show-below chip pattern for a consistent UI.
-  function setScalar(key: string) {
-    const v = (roleInput[key] ?? '').trim()
+  function setScalar(key: string, picked?: string) {
+    const v = (picked ?? roleInput[key] ?? '').trim()
     if (!v) return
     const next = { ...orgDetails, [key]: v }
     setOrgDetails(next); setRoleInput(r => ({ ...r, [key]: '' })); saveOrgDetails(next)
@@ -1154,6 +1198,15 @@ export default function SettingsPage() {
               return (
                 <div key={f.key}>
                   <label className="mb-1 block text-sm font-medium text-neutral-dark">{f.label}</label>
+                  {(f.key === 'nominated_individual' || f.key === 'default_approver') && staffPeople.length > 0 && (
+                    <div className="mb-2">
+                      <StaffNameChooser people={staffPeople} taken={val ? [val] : []} label={`Choose the ${f.label.toLowerCase()}`} onPick={n => setScalar(f.key, n)} />
+                      {!typedOpen[f.key] && (
+                        <button type="button" onClick={() => setTypedOpen(t => ({ ...t, [f.key]: true }))} className="mt-1 text-xs text-neutral-mid underline-offset-2 hover:text-neutral-dark hover:underline">Not on your staff list? Type a name</button>
+                      )}
+                    </div>
+                  )}
+                  {(!((f.key === 'nominated_individual' || f.key === 'default_approver') && staffPeople.length > 0) || typedOpen[f.key]) && (
                   <div className="mb-2 flex gap-2">
                     <input
                       type="text"
@@ -1168,10 +1221,11 @@ export default function SettingsPage() {
                       <Plus size={14} className="mr-1.5" />{val ? 'Update' : 'Add'}
                     </Button>
                   </div>
+                  )}
                   {val ? (
                     <div className="flex flex-wrap gap-2">
                       <span className="flex items-center gap-1.5 rounded-full border border-gray-200 bg-neutral-light py-1 pl-3 pr-2 text-sm text-neutral-dark">
-                        {val}
+                        {(f.key === 'nominated_individual' || f.key === 'default_approver') && namePic(val)}{val}{(f.key === 'nominated_individual' || f.key === 'default_approver') && isArchivedName(val) && <ArchivedTag />}
                         <button onClick={() => clearScalar(f.key)} disabled={savingOrg} className="flex h-4 w-4 items-center justify-center rounded-full text-neutral-mid hover:bg-gray-300 hover:text-neutral-dark disabled:opacity-40" title="Remove">
                           <X size={10} />
                         </button>
@@ -1252,32 +1306,42 @@ export default function SettingsPage() {
                           </span>
                         )}
                       </label>
-                      <div className="mb-2 flex gap-2">
-                        <input
-                          type="text"
-                          value={roleInput[rh.key] ?? ''}
-                          onChange={e => setRoleInput(r => ({ ...r, [rh.key]: e.target.value }))}
-                          onKeyDown={e => e.key === 'Enter' && addRoleName(rh.key)}
-                          placeholder="Add a name…"
-                          maxLength={80}
-                          className={INPUT}
-                        />
-                        <Button onClick={() => addRoleName(rh.key)} disabled={savingOrg || !(roleInput[rh.key] ?? '').trim()} size="md">
-                          <Plus size={14} className="mr-1.5" />Add
-                        </Button>
-                      </div>
+                      {staffPeople.length > 0 && (
+                        <div className="mb-2">
+                          <StaffNameChooser people={staffPeople} taken={[...rh.derived, ...manual]} label={`Choose who is the ${rh.role}`} onPick={n => addRoleName(rh.key, n)} />
+                          {!typedOpen[rh.key] && (
+                            <button type="button" onClick={() => setTypedOpen(t => ({ ...t, [rh.key]: true }))} className="mt-1 text-xs text-neutral-mid underline-offset-2 hover:text-neutral-dark hover:underline">Not on your staff list? Type a name</button>
+                          )}
+                        </div>
+                      )}
+                      {(staffPeople.length === 0 || typedOpen[rh.key]) && (
+                        <div className="mb-2 flex gap-2">
+                          <input
+                            type="text"
+                            value={roleInput[rh.key] ?? ''}
+                            onChange={e => setRoleInput(r => ({ ...r, [rh.key]: e.target.value }))}
+                            onKeyDown={e => e.key === 'Enter' && addRoleName(rh.key)}
+                            placeholder="Add a name…"
+                            maxLength={80}
+                            className={INPUT}
+                          />
+                          <Button onClick={() => addRoleName(rh.key)} disabled={savingOrg || !(roleInput[rh.key] ?? '').trim()} size="md">
+                            <Plus size={14} className="mr-1.5" />Add
+                          </Button>
+                        </div>
+                      )}
                       {rh.derived.length === 0 && manual.length === 0 ? (
                         <p className="rounded-md bg-neutral-light px-4 py-2.5 text-sm text-neutral-mid">No one yet — assign the matching role to a staff member, or add a name above.</p>
                       ) : (
                         <div className="flex flex-wrap gap-2">
                           {rh.derived.map(name => (
                             <span key={`d-${name}`} className="flex items-center gap-1.5 rounded-full border border-teal/30 bg-teal-light/30 py-1 pl-3 pr-3 text-sm text-neutral-dark" title="From staff records">
-                              {name} <span className="text-[10px] font-semibold uppercase text-teal">staff</span>
+                              {namePic(name)}{name} <span className="text-[10px] font-semibold uppercase text-teal">staff</span>{isArchivedName(name) && <ArchivedTag />}
                             </span>
                           ))}
                           {manual.filter(n => !rh.derived.some(d => d.toLowerCase() === n.toLowerCase())).map(name => (
                             <span key={`m-${name}`} className="flex items-center gap-1.5 rounded-full border border-gray-200 bg-neutral-light py-1 pl-3 pr-2 text-sm text-neutral-dark">
-                              {name}
+                              {namePic(name)}{name}{isArchivedName(name) && <ArchivedTag />}
                               <button onClick={() => removeRoleName(rh.key, name)} disabled={savingOrg || checkingName === `${rh.key}:${name}`} className="flex h-4 w-4 items-center justify-center rounded-full text-neutral-mid hover:bg-gray-300 hover:text-neutral-dark disabled:opacity-40" title="Remove">
                                 {checkingName === `${rh.key}:${name}` ? <Loader2 size={10} className="animate-spin" /> : <X size={10} />}
                               </button>

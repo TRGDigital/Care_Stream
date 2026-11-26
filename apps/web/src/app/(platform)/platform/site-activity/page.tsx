@@ -66,7 +66,7 @@ export default function SiteActivityPage() {
         </div>
 
         <p className="rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-900">
-          Page views, time and clicks are recorded <strong>only for visitors who accept analytics cookies</strong>, so they show a sample of everyone who visits.
+          The <strong>Every visitor</strong> box below counts every page view anonymously, with or without cookies. Time on a page, clicks and the visitor numbers are recorded <strong>only for visitors who accept analytics cookies</strong>, so they show a sample.
           The three counts marked &ldquo;everyone&rdquo; come from the database and include every visitor. {d?.recording_since ? <>Recording since {when(d.recording_since)}.</> : <>Nothing has been recorded yet: it starts as visitors accept cookies.</>}
           {' '}<button type="button" onClick={toggleMine} className="font-semibold underline">{mine ? 'Start recording my own visits again' : 'Do not record my own visits in this browser'}</button>
         </p>
@@ -89,6 +89,28 @@ export default function SiteActivityPage() {
               <Tile Icon={CalendarCheck} label="Demo requests" value={d.real.demo_requests} sub="everyone" />
               <Tile Icon={Mail} label="Contact enquiries" value={d.real.contact_enquiries} sub="everyone" />
             </div>
+
+            {/* Every visitor, with or without cookie consent: an anonymous head count (no cookie, nothing stored, no IP address). */}
+            <Card title="Every visitor" note="An anonymous count of every page view, whether or not cookies were accepted. No cookie, nothing stored on the device, no IP address, so it counts pages and not people.">
+              {!d.everyone ? (
+                <p className="text-xs text-amber-800">Not counting yet: the table behind this count has not been created. Run apps/api/prisma/sql/2026-11-26_site_page_counts.sql in Supabase, and it starts straight away.</p>
+              ) : (
+                <div className="space-y-3">
+                  <div className="flex flex-wrap items-end gap-x-6 gap-y-1">
+                    <div><p className="text-2xl font-bold text-neutral-dark">{d.everyone.total_views}</p><p className="text-xs text-neutral-mid">page views, everyone{d.everyone.counting_since ? ` (counting since ${d.everyone.counting_since})` : ''}</p></div>
+                    <div><p className="text-2xl font-bold text-neutral-dark">{d.totals.page_views}</p><p className="text-xs text-neutral-mid">of them from visitors who accepted cookies{d.everyone.total_views > 0 ? ` (${Math.round((d.totals.page_views / d.everyone.total_views) * 100)}%)` : ''}</p></div>
+                  </div>
+                  <div className="grid gap-4 md:grid-cols-3">
+                    <div><p className="mb-1 text-xs font-semibold text-neutral-mid">Busiest pages</p><ul className="space-y-0.5 text-xs">{d.everyone.pages.slice(0, 10).map(r => <li key={r.path} className="flex justify-between gap-2"><span className="truncate text-neutral-dark">{r.path}</span><span className="font-semibold">{r.views}</span></li>)}</ul></div>
+                    <div><p className="mb-1 text-xs font-semibold text-neutral-mid">Where they came from</p><ul className="space-y-0.5 text-xs">{d.everyone.sources.slice(0, 10).map(r => <li key={r.source} className="flex justify-between gap-2"><span className="truncate text-neutral-dark">{r.source}</span><span className="font-semibold">{r.views}</span></li>)}</ul></div>
+                    <div><p className="mb-1 text-xs font-semibold text-neutral-mid">Devices</p><ul className="space-y-0.5 text-xs">{d.everyone.devices.map(r => <li key={r.device} className="flex justify-between gap-2"><span className="capitalize text-neutral-dark">{r.device}</span><span className="font-semibold">{r.views}</span></li>)}</ul></div>
+                  </div>
+                  <div><p className="mb-1 text-xs font-semibold text-neutral-mid">Page views by day</p>
+                    <div className="flex h-16 items-end gap-0.5">{(() => { const mx = Math.max(1, ...d.everyone.by_day.map(r => r.views)); return d.everyone.by_day.map(r => <div key={r.day} title={`${r.day}: ${r.views}`} className="flex-1 rounded-sm bg-teal/70" style={{ height: `${Math.max(4, (r.views / mx) * 100)}%` }} />) })()}</div>
+                  </div>
+                </div>
+              )}
+            </Card>
 
             <div className="grid gap-4 lg:grid-cols-2">
               <Card title="What visitors did" note="Distinct visitors who got as far as each step.">

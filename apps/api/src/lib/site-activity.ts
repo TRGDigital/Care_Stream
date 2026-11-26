@@ -105,5 +105,25 @@ export async function loadSiteActivity(days: number, now: Date = new Date()) {
     demo_requests: (leads as any[]).find(l => l.type === 'demo')?._count._all ?? 0,
     contact_enquiries: (leads as any[]).find(l => l.type === 'contact')?._count._all ?? 0,
   }
-  return { range_days: d, since: since.toISOString(), recording_since: firstSeen?.started_at ? new Date(firstSeen.started_at).toISOString() : null, real, ...summariseSiteActivity(rows as VisitRow[], now, Math.min(d, 31)) }
+  // EVERY page view, with or without cookie consent: the anonymous head count (site_page_counts). Null until that table exists.
+  const everyone = await loadEveryone(since, now)
+  return { range_days: d, since: since.toISOString(), everyone, recording_since: firstSeen?.started_at ? new Date(firstSeen.started_at).toISOString() : null, real, ...summariseSiteActivity(rows as VisitRow[], now, Math.min(d, 31)) }
+}
+
+
+/** Anonymous counts for every visitor (no cookie, no id): total views, by day, the busiest pages, where visits came from and the device split. */
+export async function loadEveryone(since: Date, now: Date = new Date()) {
+  const p = prisma as any
+  const from = londonDay(since), to = londonDay(now)
+  try {
+    const [byDay, byPage, bySource, byDevice] = await Promise.all([
+      p.$queryRaw`select day::text as day, sum(views)::int as views from public.site_page_counts where day >= ${from}::date and day <= ${to}::date group by day order by day`,
+      p.$queryRaw`select path, sum(views)::int as views from public.site_page_counts where day >= ${from}::date and day <= ${to}::date group by path order by views desc limit 25`,
+      p.$queryRaw`select source, sum(views)::int as views from public.site_page_counts where day >= ${from}::date and day <= ${to}::date group by source order by views desc limit 15`,
+      p.$queryRaw`select device, sum(views)::int as views from public.site_page_counts where day >= ${from}::date and day <= ${to}::date group by device order by views desc`,
+    ])
+    const total = (byDay as any[]).reduce((n, r) => n + Number(r.views), 0)
+    const first = await p.$queryRaw`select min(day)::text as day from public.site_page_counts`
+    return { total_views: total, by_day: byDay as Array<{ day: string; views: number }>, pages: byPage as Array<{ path: string; views: number }>, sources: bySource as Array<{ source: string; views: number }>, devices: byDevice as Array<{ device: string; views: number }>, counting_since: (first as any[])[0]?.day ?? null }
+  } catch { return null }   // the table has not been created yet
 }

@@ -3,7 +3,7 @@
 // (no IP, no query strings in paths or links, only the host of the referrer). Bots and non-public paths are dropped.
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 export const CONVERSIONS = ['email_entered', 'signup_click', 'signup_submitted', 'demo_click', 'demo_submitted', 'contact_click', 'form_submit', 'cta_click', 'chat_opened'] as const
-const BOT = /bot|crawl|spider|slurp|preview|headless|lighthouse|pagespeed|gtmetrix|facebookexternalhit|embedly|monitor|uptime|curl\/|wget|python-requests|node-fetch|axios|go-http/i
+export const BOT = /bot|crawl|spider|slurp|preview|headless|lighthouse|pagespeed|gtmetrix|facebookexternalhit|embedly|monitor|uptime|curl\/|wget|python-requests|node-fetch|axios|go-http/i
 // Application and operator areas are never recorded, even if the tracker were mounted there by mistake.
 const PRIVATE_FIRST = new Set(['platform', 'admin', 'api', 'chat', 'dashboard', 'login', 'staff', 'billing', 'settings', 'family', 'auth', 'onboarding'])
 

@@ -4,6 +4,7 @@ import './globals.css'
 import { CookieConsent } from '@/components/marketing/cookie-consent'
 import { VisitTracker } from '@/components/marketing/visit-tracker'
 import { TrackersGate } from '@/components/marketing/trackers-gate'
+import { PageCounter } from '@/components/marketing/page-counter'
 import { Analytics } from '@/components/marketing/analytics'
 import { DemoDialog } from '@/components/marketing/demo-dialog'
 import { AltMapProvider } from '@/components/alt-map-provider'
@@ -86,6 +87,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         </AltMapProvider>
         <TrackersGate>
           <CookieConsent />
+          {/* The anonymous head count: every visitor, no cookies, nothing stored (components/marketing/page-counter.tsx). */}
+          <PageCounter />
           <VisitTracker />
           <Analytics />
         </TrackersGate>

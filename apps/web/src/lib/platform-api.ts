@@ -716,6 +716,8 @@ export type RegulationChange = {
 /** What visitors do on the public site (api lib/site-activity.ts). Only visitors who accepted analytics cookies are in the page views. */
 export type SiteActivityData = {
   range_days: number; since: string; recording_since: string | null
+  /** Every page view, with or without cookie consent (anonymous head count). Null until the table exists. */
+  everyone: null | { total_views: number; counting_since: string | null; by_day: Array<{ day: string; views: number }>; pages: Array<{ path: string; views: number }>; sources: Array<{ source: string; views: number }>; devices: Array<{ device: string; views: number }> }
   real: { accounts_created: number; demo_requests: number; contact_enquiries: number }
   totals: { visitors: number; sessions: number; page_views: number; avg_active_seconds: number; bounce_pct: number; returning_pct: number; pages_per_session: number }
   live_visitors: number

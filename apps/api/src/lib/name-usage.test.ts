@@ -57,3 +57,14 @@ test('FORMER STAFF: the scan also looks for archived staff names (current holder
   assert.match(p, /\{nameChange\.key && <button onClick=\{\(\) => confirmNameChange\(false\)\}/)                      // "remove only" makes no sense without a role
   assert.doesNotMatch('Former staff named in your policies These people are archived, but their name is still written into policy text. Names run into the next word in a policy’s text can be missed here. Choose who replaces them', /[–—]| - /)
 })
+
+test('ACCORDION: "Roles your policies ask for" is closed until an admin opens it, the check button stays in the header, and what needs attention stays visible while it is closed', () => {
+  const p = web('app/(admin)/settings/page.tsx')
+  assert.match(p, /const \[rolesOpen, setRolesOpen\] = useState\(false\)/)
+  assert.match(p, /<button type="button" onClick=\{\(\) => setRolesOpen\(o => !o\)\} aria-expanded=\{rolesOpen\}/)
+  assert.match(p, /\{!rolesOpen && roleScan && \(needsName\.length > 0/)
+  assert.match(p, /role needs' : 'roles need'\} a name/); assert.match(p, /former staff named in policies<\/span>/)
+  const box = p.slice(p.indexOf('Roles your policies ask for</span>'), p.indexOf('Where names are used in your policies'))
+  assert.match(box, /\{rolesOpen && \(\s*<>\s*\{roleScan && needsName\.length > 0/)            // the warning, the note and the panel are inside the accordion
+  assert.ok(box.indexOf('Check again') > -1 && box.indexOf('Check again') < box.indexOf('{rolesOpen && ('))      // the button is in the header, outside it
+})

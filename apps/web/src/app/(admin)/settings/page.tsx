@@ -418,6 +418,7 @@ export default function SettingsPage() {
   const [replaceHolder, setReplaceHolder] = useState<{ key: string; label: string; from: string; to: string } | null>(null)   // asked before the one named person (nominated individual, default approver) is changed
   const [moreThanOne, setMoreThanOne] = useState<{ key: string; role: string; name: string; existing: string[] } | null>(null)   // asked before a second holder is added to a role
   const [showAllNames, setShowAllNames] = useState(false)
+  const [rolesOpen, setRolesOpen] = useState(false)   // "Roles your policies ask for" is an accordion: closed until an admin opens it
   // Where a named person sits in Organisation details, so "Replace in policies" opens the same change flow the chips use.
   const locateName = (name: string): { key: string; label: string; scalar: boolean } | null => {
     for (const rh of orgContext.role_holders) if ([...rh.derived, ...roleManual(rh.key)].some(n => sameName(n, name))) return { key: rh.key, label: rh.role, scalar: false }
@@ -1321,18 +1322,30 @@ export default function SettingsPage() {
                   boxes. Costs no AI tokens: it is a text search over policies we already hold. */}
               <div className="mt-4 rounded-lg border border-gray-200 bg-neutral-light/40 p-4">
                 <div className="flex flex-wrap items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium text-neutral-dark">Roles your policies ask for</p>
-                    <p className="mt-0.5 text-sm text-neutral-mid">
-                      {roleScan
-                        ? `Read ${roleScan.policies_scanned} of your policies. ${roleScan.mentions.filter(m => m.policies > 0).length} roles are named in them.`
-                        : 'We can read your policies and tell you which roles they name, so you know which of these are worth filling in.'}
-                    </p>
-                  </div>
+                  <button type="button" onClick={() => setRolesOpen(o => !o)} aria-expanded={rolesOpen} className="flex min-w-0 flex-1 items-start gap-2 text-left">
+                    <ChevronDown size={16} className={`mt-0.5 shrink-0 text-neutral-mid transition-transform ${rolesOpen ? '' : '-rotate-90'}`} aria-hidden="true" />
+                    <span className="min-w-0">
+                      <span className="block text-sm font-medium text-neutral-dark">Roles your policies ask for</span>
+                      <span className="mt-0.5 block text-sm text-neutral-mid">
+                        {roleScan
+                          ? `Read ${roleScan.policies_scanned} of your policies. ${roleScan.mentions.filter(m => m.policies > 0).length} roles are named in them.`
+                          : 'We can read your policies and tell you which roles they name, so you know which of these are worth filling in.'}
+                      </span>
+                      {/* What needs attention stays visible while it is closed. */}
+                      {!rolesOpen && roleScan && (needsName.length > 0 || (roleScan.name_usage ?? []).some(u => u.former && u.policies.length > 0)) && (
+                        <span className="mt-1.5 flex flex-wrap gap-1.5">
+                          {needsName.length > 0 && <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-900">{needsName.length} {needsName.length === 1 ? 'role needs' : 'roles need'} a name</span>}
+                          {(roleScan.name_usage ?? []).filter(u => u.former && u.policies.length > 0).length > 0 && <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-900">{(roleScan.name_usage ?? []).filter(u => u.former && u.policies.length > 0).length} former staff named in policies</span>}
+                        </span>
+                      )}
+                    </span>
+                  </button>
                   <Button onClick={runRoleScan} disabled={scanningRoles} size="md" variant="secondary">
                     {scanningRoles ? 'Reading your policies…' : roleScan ? 'Check again' : 'Check my policies'}
                   </Button>
                 </div>
+                {rolesOpen && (
+                <>
                 {roleScan && needsName.length > 0 && (
                   <p className="mt-3 rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-900">
                     {needsName.length === 1
@@ -1453,6 +1466,8 @@ export default function SettingsPage() {
                       </details>
                     )}
                   </div>
+                )}
+                </>
                 )}
               </div>
 

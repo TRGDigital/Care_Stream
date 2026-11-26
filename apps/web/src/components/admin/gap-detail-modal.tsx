@@ -9,6 +9,8 @@ import EditablePolicyBody from './editable-policy-body'
 import SlowLoadHint from './slow-load-hint'
 import { applyRoleNames } from '@/lib/policy-names'
 import { AdoptNamedPeople, type AdoptPerson } from '@/components/admin/adopt-named-people'
+import { HighlightedTextarea } from '@/components/admin/highlighted-textarea'
+import { hasAdditions } from '@/lib/text-diff'
 import { X, Loader2, CheckCircle2, Check, Plus, FileText, Sparkles, Mail, Scale, FilePlus2, FilePenLine, GraduationCap, Search, BookOpen, ChevronDown, HelpCircle, EyeOff, Info, RotateCcw } from 'lucide-react'
 
 type Detail = Awaited<ReturnType<ReturnType<typeof createApiClient>['analytics']['gapDetail']>>
@@ -500,6 +502,7 @@ export function GapDetailModal({ token, referenceKey, viewKey = null, viewName =
   const [adoption,     setAdoption]     = useState<{ enabled: boolean; variables: Array<{ key: string; label: string; value: string }>; role_holders: Array<{ key: string; role: string; candidates: string[] }>; role_names?: Record<string, string[]>; names_v2?: boolean; show_role_names?: boolean } | null>(() => persistentCache.get<any>(adoptionKey) ?? null)
   const [adoptingReq,  setAdoptingReq]  = useState<string | null>(null)
   const [adoptText,    setAdoptText]    = useState('')
+  const [adoptBaseline, setAdoptBaseline] = useState('')   // the wording as first suggested: what differs from it is highlighted (names woven in or replaced)
   const [adoptTitle,   setAdoptTitle]   = useState('')
   const [adoptBusy,    setAdoptBusy]    = useState(false)
   const [adoptErr,     setAdoptErr]     = useState('')
@@ -572,7 +575,7 @@ export function GapDetailModal({ token, referenceKey, viewKey = null, viewName =
   function openAdopt(r: { requirement: string; suggested_addition?: string | null; section_title?: string | null }) {
     setAdoptAsNewSection(false)
     setAdoptingReq(r.requirement)
-    setAdoptText(r.suggested_addition ?? '')
+    setAdoptText(r.suggested_addition ?? ''); setAdoptBaseline(r.suggested_addition ?? '')
     setAdoptTitle(r.section_title ?? '')
     setAdoptErr('')
     setWeaveUndo(null); setWeaveErr('')
@@ -621,7 +624,7 @@ export function GapDetailModal({ token, referenceKey, viewKey = null, viewName =
   function openAsNewSection(r: { requirement: string; suggested_addition?: string | null; section_title?: string | null }) {
     setAdoptingReq(r.requirement)
     setAdoptAsNewSection(true)
-    setAdoptText(r.suggested_addition ?? '')
+    setAdoptText(r.suggested_addition ?? ''); setAdoptBaseline(r.suggested_addition ?? '')
     setAdoptTitle(r.section_title || headingFromRequirement(r.requirement))
     setAdoptErr('')
   }
@@ -1102,8 +1105,13 @@ export function GapDetailModal({ token, referenceKey, viewKey = null, viewName =
                                   </div>
                                 )}
                                 <label className="text-[10px] font-bold uppercase tracking-wide text-neutral-mid">Wording to add (edit before adopting)</label>
-                                <textarea ref={adoptRef} value={adoptText} onChange={e => setAdoptText(e.target.value)} rows={5}
-                                  className="mt-0.5 w-full rounded-md border border-gray-200 px-2 py-1.5 text-sm leading-relaxed focus:border-teal focus:outline-none" />
+                                {adoption.names_v2
+                                  ? <>
+                                      <HighlightedTextarea textareaRef={adoptRef} value={adoptText} onChange={setAdoptText} baseline={adoptBaseline} rows={5} />
+                                      {hasAdditions(adoptBaseline, adoptText) && <p className="mt-1 text-[11px] text-neutral-mid"><mark className="rounded-sm bg-emerald-200 px-1 text-neutral-dark">Highlighted</mark> wording is what was added or changed from the suggestion.</p>}
+                                    </>
+                                  : <textarea ref={adoptRef} value={adoptText} onChange={e => setAdoptText(e.target.value)} rows={5}
+                                      className="mt-0.5 w-full rounded-md border border-gray-200 px-2 py-1.5 text-sm leading-relaxed focus:border-teal focus:outline-none" />}
                                 {adoption.names_v2 ? (
                                   <>
                                     {adoption.variables.filter(v => v.key === 'home_name').length > 0 && (

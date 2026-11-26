@@ -41,3 +41,12 @@ test('CLOSE AND CONFIRM: the open picker has a Close button, and a second person
   assert.match(page, /Add more than one \{moreThanOne\.role\}\?/); assert.match(page, /No, leave it as it is/); assert.match(page, /Yes, add them as well/)
   assert.doesNotMatch(page, /onPick=\{n => addRoleName\(/)                                                       // nothing adds a picked name without the check
 })
+
+test('CHANGE CONFIRM: the one named person (nominated individual, default approver) is only changed after the admin confirms, whether picked or typed; the first name and the same name need no question', () => {
+  assert.match(page, /function askSetScalar\(key: string, label: string, picked\?: string\)/)
+  assert.match(page, /if \(!from \|\| from\.toLowerCase\(\) === to\.toLowerCase\(\)\) \{ setScalar\(key, picked\); return \}/)
+  assert.match(page, /onPick=\{n => askSetScalar\(f\.key, f\.label, n\)\}/)
+  assert.match(page, /askSetScalar\(f\.key, f\.label\) : setScalar\(f\.key\)\)\} disabled=\{savingOrg/)   // the typed Update button asks too
+  assert.match(page, /Change the \{replaceHolder\.label\}\?/); assert.match(page, /No, keep \{replaceHolder\.from\}/); assert.match(page, /Yes, change to \{replaceHolder\.to\}/)
+  assert.doesNotMatch(page, /onPick=\{n => setScalar\(/)
+})

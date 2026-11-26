@@ -413,6 +413,7 @@ export default function SettingsPage() {
   const sameName = (a: string, b: string) => a.replace(/,/g, '').toLowerCase().trim() === b.replace(/,/g, '').toLowerCase().trim()
   const personForName = (n: string) => staffDir.find(u => u.name && sameName(u.name, n) && (u as any).is_active !== false) ?? staffDir.find(u => u.name && sameName(u.name, n)) ?? null
   const namePic = (name: string) => { const u = personForName(name); return u ? <StaffAvatar name={u.name} photoUrl={u.photo_url ?? null} size={22} onRefresh={reloadStaffDir} /> : null }
+  const [replaceHolder, setReplaceHolder] = useState<{ key: string; label: string; from: string; to: string } | null>(null)   // asked before the one named person (nominated individual, default approver) is changed
   const [moreThanOne, setMoreThanOne] = useState<{ key: string; role: string; name: string; existing: string[] } | null>(null)   // asked before a second holder is added to a role
   const [typedOpen, setTypedOpen] = useState<Record<string, boolean>>({})   // "someone not on the staff list": the typed box, kept for people who are not staff
   // A name is shown as archived only when an archived person has it and no active person does (two people can share a name).
@@ -633,6 +634,14 @@ export default function SettingsPage() {
     if (!v) return
     const next = { ...orgDetails, [key]: v }
     setOrgDetails(next); setRoleInput(r => ({ ...r, [key]: '' })); saveOrgDetails(next)
+  }
+  // The one named person on a policy (the nominated individual, the default approver) is only changed once the admin has confirmed the change.
+  function askSetScalar(key: string, label: string, picked?: string) {
+    const to = (picked ?? roleInput[key] ?? '').trim()
+    if (!to) return
+    const from = (orgDetails[key] ?? '').trim()
+    if (!from || from.toLowerCase() === to.toLowerCase()) { setScalar(key, picked); return }
+    setReplaceHolder({ key, label, from, to })
   }
   function clearScalar(key: string) {
     const next = { ...orgDetails, [key]: '' }
@@ -1216,7 +1225,7 @@ export default function SettingsPage() {
                   <label className="mb-1 block text-sm font-medium text-neutral-dark">{f.label}</label>
                   {(f.key === 'nominated_individual' || f.key === 'default_approver') && staffPeople.length > 0 && (
                     <div className="mb-2">
-                      <StaffNameChooser people={staffPeople} taken={val ? [val] : []} label={`Choose the ${f.label.toLowerCase()}`} onPick={n => setScalar(f.key, n)} />
+                      <StaffNameChooser people={staffPeople} taken={val ? [val] : []} label={`Choose the ${f.label.toLowerCase()}`} onPick={n => askSetScalar(f.key, f.label, n)} />
                       {!typedOpen[f.key] && (
                         <button type="button" onClick={() => setTypedOpen(t => ({ ...t, [f.key]: true }))} className="mt-1 text-xs text-neutral-mid underline-offset-2 hover:text-neutral-dark hover:underline">Not on your staff list? Type a name</button>
                       )}
@@ -1228,12 +1237,12 @@ export default function SettingsPage() {
                       type="text"
                       value={roleInput[f.key] ?? ''}
                       onChange={e => setRoleInput(r => ({ ...r, [f.key]: e.target.value }))}
-                      onKeyDown={e => e.key === 'Enter' && setScalar(f.key)}
+                      onKeyDown={e => e.key === 'Enter' && (f.key === 'nominated_individual' || f.key === 'default_approver' ? askSetScalar(f.key, f.label) : setScalar(f.key))}
                       placeholder={f.ph}
                       maxLength={f.max}
                       className={INPUT}
                     />
-                    <Button onClick={() => setScalar(f.key)} disabled={savingOrg || !(roleInput[f.key] ?? '').trim()} size="md">
+                    <Button onClick={() => (f.key === 'nominated_individual' || f.key === 'default_approver' ? askSetScalar(f.key, f.label) : setScalar(f.key))} disabled={savingOrg || !(roleInput[f.key] ?? '').trim()} size="md">
                       <Plus size={14} className="mr-1.5" />{val ? 'Update' : 'Add'}
                     </Button>
                   </div>
@@ -1412,6 +1421,21 @@ export default function SettingsPage() {
 
           {/* Removing somebody whose name is written into policy text. Never applied without
               showing which policies and the wording around the name in each. */}
+          {replaceHolder && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4 py-8" role="dialog" aria-modal="true" aria-label={`Change the ${replaceHolder.label}`}>
+              <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-2xl">
+                <h2 className="text-base font-semibold text-neutral-dark">Change the {replaceHolder.label}?</h2>
+                <p className="mt-2 text-sm text-neutral-mid">
+                  The <strong className="text-neutral-dark">{replaceHolder.label}</strong> is <strong className="text-neutral-dark">{replaceHolder.from}</strong>. Do you want to change it to <strong className="text-neutral-dark">{replaceHolder.to}</strong>?
+                </p>
+                <div className="mt-5 flex flex-wrap justify-end gap-2">
+                  <Button variant="secondary" size="md" onClick={() => setReplaceHolder(null)}>No, keep {replaceHolder.from}</Button>
+                  <Button size="md" onClick={() => { const r = replaceHolder; setReplaceHolder(null); setScalar(r.key, r.to) }}>Yes, change to {replaceHolder.to}</Button>
+                </div>
+              </div>
+            </div>
+          )}
+
           {moreThanOne && (
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4 py-8" role="dialog" aria-modal="true" aria-label={`Add more than one ${moreThanOne.role}`}>
               <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-2xl">

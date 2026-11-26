@@ -68,3 +68,16 @@ test('ACCORDION: "Roles your policies ask for" is closed until an admin opens it
   assert.match(box, /\{rolesOpen && \(\s*<>\s*\{roleScan && needsName\.length > 0/)            // the warning, the note and the panel are inside the accordion
   assert.ok(box.indexOf('Check again') > -1 && box.indexOf('Check again') < box.indexOf('{rolesOpen && ('))      // the button is in the header, outside it
 })
+
+test('GUIDE: Named role holders explains choosing people, both switches (matching the Settings wording), finding names in policies, and names in wording being adopted; no dashes, and nothing about how it works inside', () => {
+  const g = web('app/(admin)/guides/page.tsx')
+  const guide = g.slice(g.indexOf("id:      'role-holders',"), g.indexOf("id:      'settings',"))
+  for (const t of ['Choosing a person', 'The two switches', 'Show role-holder names in policies', 'Require approval for name changes', 'Seeing where names are used', 'Roles your policies ask for', 'Former staff named in your policies', 'Names in wording you are about to adopt', 'Check for other names', 'Weave in [name]', 'Update the rest of this policy', 'Show everyone', 'Archived']) assert.ok(guide.includes(t), t)
+  assert.match(guide, /With approval <strong>off<\/strong>/); assert.match(guide, /With approval <strong>on<\/strong>/)
+  assert.doesNotMatch(guide, /A name change does not go through manager or external approval/)      // no longer true: the account decides
+  assert.doesNotMatch(guide, /[–—]|&mdash;|&ndash;| - /)
+  assert.doesNotMatch(guide, /regex|regular expression|embedding|prompt|Claude|Haiku|Sonnet|threshold|cosine|vector/i)   // never how it works inside (locked rule 6)
+  assert.match(g, /See <strong>Named role holders &amp; changing a name<\/strong> for how names are offered, woven in naturally and checked\./)   // the Gap Detection guide points to it
+  const st = web('app/(admin)/settings/page.tsx')
+  assert.match(st, /Show role-holder names in policies/); assert.match(st, /Require approval for name changes/)     // the guide names the switches exactly as Settings does
+})

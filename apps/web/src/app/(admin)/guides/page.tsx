@@ -784,7 +784,7 @@ const GUIDE_SECTIONS: GuideSection[] = [
             You are never forced to take a suggestion as written. Each one in the left-hand column offers three choices, and CareStream <strong>remembers what you decided</strong> — so re-running the analysis does not keep proposing something you have already dealt with.
           </p>
           <div className="space-y-2">
-            <Step n={1}><strong>Adopt into [policy]</strong>: use the suggestion as intended. You can edit the wording first, and insert your own names and job titles from the chips underneath. On a replacement, it swaps the highlighted paragraph in full.</Step>
+            <Step n={1}><strong>Adopt into [policy]</strong>: use the suggestion as intended. You can edit the wording first, and insert your own names and job titles from the chips underneath. On a replacement, it swaps the highlighted paragraph in full. See <strong>Named role holders &amp; changing a name</strong> for how names are offered, woven in naturally and checked.</Step>
             <Step n={2}><strong>Add as new section</strong>: for when the wording is good but the replacement does not work for you. Instead of changing your existing paragraph, the wording is added as a <strong>new section at the bottom of the policy</strong>, under a heading CareStream suggests and you can edit. Your original wording is left exactly as it is.</Step>
             <Step n={3}><strong>Ignore</strong>: you do not want it. The suggestion turns grey and will not be raised again on future runs.</Step>
           </div>
@@ -3052,7 +3052,7 @@ const GUIDE_SECTIONS: GuideSection[] = [
     id:      'role-holders',
     icon:    UserRound,
     title:   'Named role holders & changing a name',
-    summary: 'How your policies know who your Medicines Lead is, and what happens when that person changes',
+    summary: 'How names work in your policies, what the two switches do, and how to find names that should not be there',
     content: (
       <div className="space-y-5">
         <SectionBlock title="Where the names come from">
@@ -3064,8 +3064,18 @@ const GUIDE_SECTIONS: GuideSection[] = [
           <p className="mt-2 text-sm text-neutral-mid">
             Names reach a role two ways. A chip marked <strong>STAFF</strong> comes from a staff member&rsquo;s job role or
             specialism on their record, so it has no remove button here: change it on their record in <strong>Staff</strong>.
-            A plain chip is one you typed, and can be removed with the <strong>&times;</strong> beside it.
+            A chip without that mark is one you added, and can be removed with the <strong>&times;</strong> beside it.
           </p>
+        </SectionBlock>
+
+        <SectionBlock title="Choosing a person">
+          <ul className="mt-2 list-disc space-y-1.5 pl-5 text-sm text-neutral-mid">
+            <li><strong>Choose a staff member</strong>: opens your staff list with each person&rsquo;s picture, name and job title, and a search box. Pick someone and they are added at once. Press <strong>Close</strong> to leave without adding anyone.</li>
+            <li><strong>Not on your staff list? Type a name</strong>: for a person who is not on your staff list, such as a director or an outside consultant.</li>
+            <li><strong>A second person for a role</strong>: if the role already has someone, you are asked to confirm before another is added. Some roles do have more than one holder, so it is your decision.</li>
+            <li><strong>Nominated individual and Default approver</strong> hold one person each, because that name is printed on the policy (for example &ldquo;Approved by&rdquo;). Choosing someone else asks you to confirm the change first, and then offers to update any policy that has the old name written in.</li>
+            <li><strong>Archived</strong>: if a named person has since been archived on the Staff page, an amber <strong>Archived</strong> tag appears beside their name. It is your reminder to choose someone else.</li>
+          </ul>
         </SectionBlock>
 
         <SectionBlock title="Most policies update themselves">
@@ -3080,6 +3090,25 @@ const GUIDE_SECTIONS: GuideSection[] = [
           </Tip>
         </SectionBlock>
 
+        <SectionBlock title="The two switches">
+          <p className="text-sm text-neutral-mid">Both are in Settings &rsaquo; Organisation details. Each takes effect as soon as you press it.</p>
+          <div className="mt-3 rounded-lg border border-gray-200 divide-y divide-gray-100 text-sm">
+            {[
+              ['Show role-holder names in policies', 'On: the first mention of a role shows the current holder in brackets, such as "Care Manager (Jane Smith)", wherever a policy is displayed. Off: the role is shown on its own. The text of your policy is never changed by this switch, either way.'],
+              ['Require approval for name changes', 'Off: when you update a name that is written into policies, each policy goes live straight away as a small new version (2.0 becomes 2.1), with a record in Policies > History. On: the change is added to each policy as a pending change instead. You review and approve it under Adopted changes to review on the Policies page, like any other change, and it goes live once it has been approved (including your care manager and external approval steps, if you use them).'],
+            ].map(([name, desc]) => (
+              <div key={name} className="grid grid-cols-[11rem_1fr] gap-3 px-4 py-3">
+                <span className="font-medium text-neutral-dark">{name}</span>
+                <span className="text-neutral-mid">{desc}</span>
+              </div>
+            ))}
+          </div>
+          <Tip>
+            Choose <strong>On</strong> for approval if your provider wants every change to a policy signed off, including a change of name.
+            Leave it <strong>Off</strong> if you treat a new name as a correction rather than a change to what the policy requires.
+          </Tip>
+        </SectionBlock>
+
         <SectionBlock title="Some policies have the name written in">
           <p className="text-sm text-neutral-mid">
             A policy we write for you names the person once, at the point their role first takes a responsibility.
@@ -3087,13 +3116,13 @@ const GUIDE_SECTIONS: GuideSection[] = [
             name is part of the text and will not update on its own.
           </p>
           <p className="mt-2 text-sm text-neutral-mid">
-            So when you remove a named person, CareStream checks your policies first. If any of them have that name
+            So when you remove or replace a named person, CareStream checks your policies first. If any of them have that name
             written in, you are shown <strong>which policies, how many mentions, and the wording around each one</strong>
             before anything changes. You then choose:
           </p>
           <div className="mt-3 rounded-lg border border-gray-200 divide-y divide-gray-100 text-sm">
             {[
-              ['Update the policies', 'Replaces the name throughout each policy and saves a new version of each. Every mention moves, not just the first.'],
+              ['Update the policies', 'Replaces the name throughout each policy. Every mention moves, not just the first. Whether it goes live at once or waits for approval depends on the switch above.'],
               ['Remove only', 'Takes the person off the role but leaves your policies exactly as they are. Use this when nobody has taken the role on yet.'],
             ].map(([action, desc]) => (
               <div key={action} className="grid grid-cols-[9rem_1fr] gap-3 px-4 py-3">
@@ -3102,17 +3131,63 @@ const GUIDE_SECTIONS: GuideSection[] = [
               </div>
             ))}
           </div>
+          <p className="mt-2 text-sm text-neutral-mid">
+            Choose the replacement from your staff list, or type a name if they are not on it.
+          </p>
+        </SectionBlock>
+
+        <SectionBlock title="Seeing where names are used">
+          <p className="text-sm text-neutral-mid">
+            In Settings &rsaquo; Organisation details, open <strong>Roles your policies ask for</strong>. It starts closed, and shows
+            a short summary with an amber note if a role needs a name. Press <strong>Check my policies</strong> (or <strong>Check again</strong>)
+            and CareStream reads your policies. It uses no AI allowance and only runs when you ask. Once open, you can see:
+          </p>
+          <ul className="mt-2 list-disc space-y-1.5 pl-5 text-sm text-neutral-mid">
+            <li><strong>Roles your policies name but nobody holds</strong>: these are worth filling in first.</li>
+            <li><strong>Where names are used in your policies</strong>: each named person, how many policies have their name written in, how many times, and the policies themselves under <strong>Show policies</strong>. <strong>Replace in policies</strong> starts the same update described above.</li>
+            <li><strong>Former staff named in your policies</strong>: people who have been archived but are still written into policy text. <strong>Choose who replaces them</strong> to update those policies.</li>
+            <li><strong>Roles named in your policies</strong>: which policies mention each role. These show the current name by themselves, so they need no update.</li>
+          </ul>
+          <Tip>
+            If you add or change a name after checking, a note asks you to press <strong>Check again</strong> so the list includes it. The list is also refreshed as soon as you update policies.
+          </Tip>
+          <p className="mt-2 text-sm text-neutral-mid"><strong>Good to know:</strong></p>
+          <ul className="mt-1 list-disc space-y-1.5 pl-5 text-sm text-neutral-mid">
+            <li>Only the <strong>full name</strong> is found. &ldquo;Jane Smith&rdquo; is found, but &ldquo;Jane&rdquo; or &ldquo;J. Smith&rdquo; on its own is not.</li>
+            <li>A name that runs into the next word in a policy&rsquo;s text can be missed.</li>
+            <li>A policy that has no working copy yet is listed with &ldquo;adopt this policy first so it can be updated here&rdquo;. It keeps the old name until then.</li>
+          </ul>
+        </SectionBlock>
+
+        <SectionBlock title="Names in wording you are about to adopt">
+          <p className="text-sm text-neutral-mid">
+            Suggested wording in <strong>Policy Gap Detection</strong> is often copied from a policy that is out of date, so it can already name
+            someone who has left. When you press <strong>Adopt into [policy]</strong> on a suggestion, CareStream helps you get the names right
+            before anything is added. If your account does not show these yet, they are being switched on account by account.
+          </p>
+          <ul className="mt-2 list-disc space-y-1.5 pl-5 text-sm text-neutral-mid">
+            <li><strong>Named people who matter here</strong>: only the people whose role fits the wording or the policy, each with their picture. <strong>Show everyone</strong> reveals the rest.</li>
+            <li><strong>Weave in [name]</strong>: rewrites the wording once so the name sits in it naturally, rather than being dropped in at the start. It uses one AI credit. Your facts and duties are kept, and nothing is added.</li>
+            <li><strong>Highlighting</strong>: anything added or changed from the suggestion is highlighted in the box, so you can see exactly what was rewritten. It stays accurate as you type.</li>
+            <li><strong>Undo the last change</strong> puts the wording back as it was.</li>
+            <li><strong>Another name is in this wording</strong>: if the wording names someone who is not a current role holder, you are told. Archived staff are found automatically. <strong>Check for other names</strong> asks the AI to look for anyone else, including people who were never in CareStream, and uses one AI credit.</li>
+            <li>For each name found, choose <strong>Keep as it is</strong>, or <strong>Replace with [person]</strong> from the relevant current people. By default the section is rewritten so the new name fits naturally. Untick <strong>Rewrite the wording so the new name fits naturally</strong> to swap the name only, with no rewrite and no AI credit. That is best when the new person holds the same role as the old one.</li>
+            <li><strong>After you adopt</strong>, if you replaced a name, you are offered <strong>Update the rest of this policy</strong>, so the old name is not left elsewhere in the same policy. It follows your approval switch above.</li>
+          </ul>
+          <Tip>
+            You are always the one who decides. Nothing is rewritten or replaced until you press a button, and you can edit the wording in the box before you adopt it.
+          </Tip>
         </SectionBlock>
 
         <SectionBlock title="What gets recorded">
           <p className="text-sm text-neutral-mid">
-            Each updated policy gets a new point version (2.0 becomes 2.1) and an entry in
+            With approval <strong>off</strong>, each updated policy gets a new point version (2.0 becomes 2.1) and an entry in
             <strong> Policies &rsaquo; History</strong> showing the role, the old name, the new name and the date. Staff
             see the corrected wording straight away, and so does the AI when answering questions.
           </p>
           <p className="mt-2 text-sm text-neutral-mid">
-            A name change does not go through manager or external approval. Correcting who holds a role is not a change
-            to what the policy requires, in the same way that fixing a typo is not.
+            With approval <strong>on</strong>, the change waits in each policy&rsquo;s pending changes. Staff keep seeing the current published
+            wording until it has been approved and published.
           </p>
           <p className="mt-2 text-sm text-neutral-mid">
             The check reads <strong>every one of your policies</strong>, not just the ones we hold as editable text. Where a

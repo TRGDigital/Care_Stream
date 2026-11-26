@@ -677,6 +677,8 @@ export type MonitoredSource = {
   url: string
   domain: string
   signal: 'last-modified' | 'content-hash' | 'error' | 'skipped' | 'never-checked' | 'unknown'
+  /** Plain words for why the source is not watched; null when it is. */
+  reason?: string | null
   has_text: boolean
   last_checked_at: string | null
   last_changed_at: string | null
@@ -1188,7 +1190,7 @@ export function createPlatformClient(token: string) {
         adminFetch<{ changes: RegulationChange[]; counts: { new: number; notified: number; dismissed: number; unreviewed: number } }>(
           `/regulations/changes${status ? `?status=${encodeURIComponent(status)}` : ''}`, token),
       reviewChanges: () =>
-        adminFetch<{ reviewed: number; failed: number }>('/regulations/changes/review', token, { method: 'POST' }),
+        adminFetch<{ reviewed: number; failed: number; auto_cosmetic?: number; flags_cleared?: number }>('/regulations/changes/review', token, { method: 'POST' }),
       setChangeStatus: (id: string, status: 'new' | 'dismissed' | 'notified') =>
         adminFetch<{ change: RegulationChange }>(`/regulations/changes/${id}`, token, { method: 'PATCH', body: JSON.stringify({ status }) }),
     },

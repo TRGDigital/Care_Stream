@@ -2462,7 +2462,7 @@ adminRouter.get('/regulations/sources', async (_req: Request, res: Response) => 
         const signal =
           !c                        ? 'never-checked'
           : fp.startsWith('lm:')    ? 'last-modified'
-          : fp.startsWith('h:')     ? 'content-hash'
+          : fp.startsWith('h:') || fp.startsWith('h2:') ? 'content-hash'
           : fp.startsWith('err:')   ? 'error'
           : fp.startsWith('skip:')  ? 'skipped'
           : 'unknown'
@@ -2473,6 +2473,11 @@ adminRouter.get('/regulations/sources', async (_req: Request, res: Response) => 
           url,
           domain:          (url.match(/^https?:\/\/([^/]+)/) ?? [])[1] ?? '',
           signal,
+          // Plain words for why a source is not being watched (null when it is).
+          reason:          signal === 'never-checked' ? 'Not reached yet. The weekly check runs out of time before the end of the list, so these are picked up first next run.'
+            : signal === 'error'   ? (/^err:(\d{3})$/.test(fp) ? `The site refused or could not serve the page to our check (HTTP ${fp.slice(4)}). Open it in a browser to see whether the address has moved.` : 'The page did not respond to our check.')
+            : signal === 'skipped' ? (fp === 'skip:non-html' ? 'A PDF or file rather than a web page, so there is no text to compare.' : 'The page has no readable text for us to compare.')
+            : null,
           // A page with no stored text can be detected as changed but never explained.
           has_text:        !!(c?.content && String(c.content).length > 0),
           last_checked_at: c?.last_checked_at ?? null,

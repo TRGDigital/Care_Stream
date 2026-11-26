@@ -44,7 +44,24 @@ export type SourceDiff = { added: string; removed: string; changed: boolean }
  *  Taking both from one definition makes that disagreement unrepresentable: if the
  *  fingerprint moves there is a sentence to show for it. */
 export function meaningfulLines(s: string): string[] {
-  return s.split(/(?<=[.!?])\s+|\n+/).map(l => l.trim()).filter(l => l.length > 25)
+  return s.split(/(?<=[.!?])\s+|\n+/).map(l => l.trim()).filter(l => l.length > 25 && !isNoiseLine(l))
+}
+
+// Lines that move every week without the regulation changing: the legislation.gov.uk currency statement, "Last updated" stamps, page numbers and
+// cookie wording. They are dropped before the fingerprint and the diff, so they can never flag a regulation. A stamp that carries real words
+// (for example "Updated the section on notifications to include new timescales") is kept, because the words are the change.
+const MONTHS = '(?:jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|june?|july?|aug(?:ust)?|sep(?:t(?:ember)?)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)'
+const DATE_SRC = `\\b\\d{1,2}(?:st|nd|rd|th)?\\s+${MONTHS}\\.?,?\\s+\\d{4}\\b|\\b${MONTHS}\\s+\\d{4}\\b|\\b\\d{1,2}/\\d{1,2}/\\d{2,4}\\b|\\b\\d{4}-\\d{2}-\\d{2}\\b`
+const HAS_DATE = new RegExp(DATE_SRC, 'i')
+const ALL_DATES = new RegExp(DATE_SRC, 'gi')
+const STAMP_WORDS = /\b(last|updated|update|published|revised|reviewed|review|modified|on|date|as|at|from|current|currency|until|version|this|page|was|is|latest|available|statement|the|of|to|and|a)\b/gi
+const CURRENCY = /changes to legislation|up to date with all changes known|latest available \(revised\)|point in time|there are changes that may be brought into force/i
+const FURNITURE = /cookie|accept all|reject all|skip to main content|back to top|is this page useful|page \d+ of \d+|results per page|follow us on/i
+export function isNoiseLine(l: string): boolean {
+  if (CURRENCY.test(l) || FURNITURE.test(l)) return true
+  if (!HAS_DATE.test(l)) return false
+  const rest = l.replace(ALL_DATES, ' ').replace(STAMP_WORDS, ' ').replace(/[^a-z]+/gi, ' ').trim()
+  return rest.split(/\s+/).filter(w => w.length > 1).length < 3
 }
 
 export function diffText(oldText: string, newText: string): SourceDiff {
@@ -200,20 +217,53 @@ export async function reviewChange(input: {
   }
 }
 
+/** Drop the noise lines from a stored diff (older changes were recorded before the filter existed). */
+const cleanDiff = (t: string) => String(t ?? '').split('\n').filter(l => l.trim() && !isNoiseLine(l)).join('\n')
+
+/** A regulation the monitor flagged on its own stays flagged only while a real change is open behind it: a change still to be explained, or one
+ *  judged material or to affect policies. Flags with nothing behind them (a header that ticked, a date that moved) are cleared. A flag a person
+ *  set by hand has a different note and is never touched. */
+export async function clearAutoFlags(): Promise<number> {
+  const flagged = await (prisma as any).externalRegulation.findMany({
+    where: { needs_update: true, review_note: { startsWith: 'Source page changed (auto-detected' } }, select: { reference_key: true },
+  }).catch(() => [])
+  if (!flagged.length) return 0
+  const keys = (flagged as any[]).map(f => f.reference_key)
+  const open = await (prisma as any).regulationChange.findMany({
+    where: { subject_kind: 'regulation', reference_key: { in: keys }, status: 'new', OR: [{ reviewed_at: null }, { severity: { in: ['material', 'minor'] } }, { affects_policies: true }] },
+    select: { reference_key: true },
+  }).catch(() => [])
+  const openKeys = new Set((open as any[]).map(o => o.reference_key))
+  const toClear = keys.filter((k: string) => !openKeys.has(k))
+  if (toClear.length) await (prisma as any).externalRegulation.updateMany({ where: { reference_key: { in: toClear } }, data: { needs_update: false, review_note: '' } }).catch(() => {})
+  return toClear.length
+}
+
 /** Review any change that has not been reviewed yet. Runs after the monitor, and separately,
- *  so a model outage delays explanations rather than losing detections. */
-export async function reviewPendingChanges(limit = 25): Promise<{ reviewed: number; failed: number }> {
+ *  so a model outage delays explanations rather than losing detections.
+ *
+ *  A change whose only differences are dates, page numbers or site wording is settled here without the model (free and instant): it is marked
+ *  cosmetic. Only changes with real wording left go to the model, at most `limit` per run. Afterwards flags with nothing open behind them are cleared. */
+export async function reviewPendingChanges(limit = 25): Promise<{ reviewed: number; failed: number; auto_cosmetic: number; flags_cleared: number }> {
   const pending = await (prisma as any).regulationChange.findMany({
     where:   { reviewed_at: null },
     orderBy: { detected_at: 'asc' },
-    take:    limit,
+    take:    400,
   }).catch(() => [])
 
-  let reviewed = 0, failed = 0
+  let reviewed = 0, failed = 0, auto = 0, usedModel = 0
   for (const c of pending as any[]) {
-    const r = await reviewChange({
-      officialName: c.official_name, url: c.url, added: c.added_text, removed: c.removed_text,
-    })
+    const added = cleanDiff(c.added_text), removed = cleanDiff(c.removed_text)
+    if (!added && !removed) {
+      await (prisma as any).regulationChange.update({
+        where: { id: c.id },
+        data: { severity: 'cosmetic', affects_policies: false, summary: 'Only dates, page numbers or site wording changed.', impact_note: 'The requirement itself is unchanged.', reviewed_at: new Date() },
+      }).then(() => { auto++ }).catch(() => { failed++ })
+      continue
+    }
+    if (usedModel >= limit) continue
+    usedModel++
+    const r = await reviewChange({ officialName: c.official_name, url: c.url, added, removed })
     if (!r) { failed++; continue }
     await (prisma as any).regulationChange.update({
       where: { id: c.id },
@@ -224,5 +274,6 @@ export async function reviewPendingChanges(limit = 25): Promise<{ reviewed: numb
     }).catch(() => { failed++ })
     reviewed++
   }
-  return { reviewed, failed }
+  const flags_cleared = await clearAutoFlags().catch(() => 0)
+  return { reviewed, failed, auto_cosmetic: auto, flags_cleared }
 }

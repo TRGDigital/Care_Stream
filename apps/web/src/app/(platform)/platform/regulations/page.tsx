@@ -411,7 +411,7 @@ export default function RegulationsPage() {
           <div className="flex flex-col gap-2 rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-sm text-rose-800"><strong>{needsUpdateCount}</strong> regulation{needsUpdateCount === 1 ? '' : 's'} flagged as needing an update (legislation changed or module out of date).</p>
             <button
-              onClick={() => setNeedsUpdateOnly(v => !v)}
+              onClick={() => { setNeedsUpdateOnly(v => !v); setTimeout(() => document.getElementById('regulation-list')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 60) }}
               className={`shrink-0 rounded-btn px-3 py-1.5 text-xs font-semibold ${needsUpdateOnly ? 'bg-rose-600 text-white' : 'border border-rose-300 bg-white text-rose-700 hover:bg-rose-50'}`}
             >
               {needsUpdateOnly ? 'Show all regulations' : 'Show only these'}
@@ -432,7 +432,11 @@ export default function RegulationsPage() {
             <Loader2 size={28} className="animate-spin text-neutral-mid" />
           </div>
         ) : (
-          <div className="space-y-2">
+          <div id="regulation-list" className="scroll-mt-4 space-y-2">
+            <p className="text-xs font-semibold text-neutral-mid">
+              {needsUpdateOnly ? `Showing the ${filtered.length} flagged regulations` : `Showing all ${filtered.length} regulations`}
+              {needsUpdateOnly && <> · each row says why it was flagged. <a href="/platform/regulation-changes" className="text-purple-600 underline">See the detected changes</a></>}
+            </p>
             {filtered.map(reg => (
               <RegulationRow
                 key={reg.id}
@@ -802,6 +806,9 @@ function RegulationRow({ reg, token, isEditing, onEdit, onCancelEdit, onSaved, o
               <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-slate-500">Universal</span>
             )}
           </div>
+          {reg.needs_update && reg.review_note && (
+            <p className="mt-1 text-xs text-rose-700">{reg.review_note}</p>
+          )}
           <p className="mt-1 text-xs text-neutral-mid line-clamp-2">{reg.summary}</p>
         </div>
         <div className="flex flex-shrink-0 items-center gap-1">

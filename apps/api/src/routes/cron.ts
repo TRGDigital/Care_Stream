@@ -279,7 +279,8 @@ cronRouter.get('/onboarding-emails', (req, res) =>
 // changed for platform-team review (never auto-edits content).
 cronRouter.get('/regulation-source-monitor', (req, res) =>
   job('regulation-source-monitor', req, res, async () => {
-    const scan = await checkRegulationSources()
+    // ?catchup=1 (a daily job behind the Monday run): only sources not checked in the last 5 days, so a Monday run cut short is finished the next day.
+    const scan = await checkRegulationSources(req.query.catchup === '1' ? { catchupDays: 5 } : {})
     // Explain what was found in the same run, so Monday morning brings changes that already
     // read as English. Reviewed separately from detection, so a model failure here costs the
     // summaries and not the detections.

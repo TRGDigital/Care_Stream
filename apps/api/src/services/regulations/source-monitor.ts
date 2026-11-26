@@ -80,7 +80,8 @@ async function fingerprintUrl(url: string): Promise<{ fp: string; kind: 'last-mo
     // sources came to be marked changed with an empty review queue behind them.
     const signature = meaningfulLines(text).join('\n')
     if (!signature) return { fp: 'skip:no-prose', kind: 'skip', text }
-    return { fp: `h:${crypto.createHash('sha256').update(signature).digest('hex')}`, kind: 'hash', text }
+    // h2: the noise filter (dates, page numbers, cookie wording) changed what is hashed, so the method name changed too and every page re-baselines silently once.
+    return { fp: `h2:${crypto.createHash('sha256').update(signature).digest('hex')}`, kind: 'hash', text }
   } catch {
     return { fp: 'err:fetch', kind: 'error', text: '' }
   } finally {
@@ -103,6 +104,8 @@ export type SourceMonitorSummary = {
   /** Fingerprint moved but no sentence did — a header that ticked on its own. Counted so the
    *  gap between "changed" and "recorded" is visible rather than mysterious. */
   unchanged_text: number
+  /** Sources left for the next run because this run's time budget ran out (oldest checked are always done first). */
+  deferred: number
   flagged_regs: Array<{ reference_key: string; official_name: string; url: string }>
 }
 
@@ -170,23 +173,38 @@ export async function gatherSubjects(referenceKey?: string): Promise<Subject[]> 
 }
 
 // Check the source URLs for one regulation (referenceKey) or every watched subject.
-export async function checkRegulationSources(opts: { referenceKey?: string } = {}): Promise<SourceMonitorSummary> {
+/** `catchupDays`: only fetch sources not checked in that many days (a daily catch-up behind the Monday run, so a run cut short costs a day, not a week). */
+export async function checkRegulationSources(opts: { referenceKey?: string; catchupDays?: number } = {}): Promise<SourceMonitorSummary> {
   const regs = await gatherSubjects(opts.referenceKey)
 
-  const summary: SourceMonitorSummary = { regulations: 0, urls_checked: 0, changed: 0, flagged: 0, errors: 0, recorded: 0, unchanged_text: 0, flagged_regs: [] }
+  const summary: SourceMonitorSummary = { regulations: 0, urls_checked: 0, changed: 0, flagged: 0, errors: 0, recorded: 0, unchanged_text: 0, deferred: 0, flagged_regs: [] }
   const now = new Date()
 
   // One fetch per URL per run, however many subjects cite it. CQC publishes all 34 quality
   // statements on a single framework page, and regulations already share URLs (95 source
   // entries, ~80 distinct), so without this the same page is downloaded repeatedly.
   const fetched = new Map<string, { fp: string; kind: string; text: string }>()
-  const fetchOnce = async (url: string) => {
-    const hit = fetched.get(url)
-    if (hit) return hit
-    const res = await fingerprintUrl(url)
-    fetched.set(url, res)
-    return res
+  // The whole list (about 550 sources) cannot be fetched one subject at a time inside a 300 second function: the run was cut off before the audit
+  // pages, and the explanation step after it never started. So every distinct URL is fetched up front, 12 at a time, the ones checked longest ago
+  // (or never) first, until the fetch budget is spent. Whatever is left is simply first in line next run.
+  const t0 = Date.now()
+  const FETCH_BUDGET_MS = Number(process.env.REG_MONITOR_FETCH_BUDGET_MS) || 150_000
+  const allUrls = [...new Set((regs as any[]).flatMap(r => (r.source_urls ?? []).filter(Boolean)))] as string[]
+  const lastRows = await (prisma as any).regulationSourceCheck.findMany({ select: { url: true, last_checked_at: true } }).catch(() => [])
+  const lastByUrl = new Map<string, number>()
+  for (const r of lastRows as any[]) {
+    const t = r.last_checked_at ? new Date(r.last_checked_at).getTime() : 0
+    lastByUrl.set(r.url, Math.max(lastByUrl.get(r.url) ?? 0, t))
   }
+  allUrls.sort((a, b) => (lastByUrl.get(a) ?? 0) - (lastByUrl.get(b) ?? 0))
+  const staleBefore = opts.catchupDays ? Date.now() - opts.catchupDays * 86_400_000 : Infinity
+  const toFetch = allUrls.filter(u => (lastByUrl.get(u) ?? 0) < staleBefore)
+  await mapLimit(toFetch, 12, async (url: string) => {
+    if (Date.now() - t0 > FETCH_BUDGET_MS) return
+    fetched.set(url, await fingerprintUrl(url))
+  })
+  // Per URL, whether a real sentence changed (computed once, shared by every subject that cites the page).
+  const realChange = new Map<string, boolean>()
   // And one recorded change per URL per run, for the same reason: 34 statements citing one
   // changed page is one change, not 34 entries for a person to read.
   const recordedUrls = new Set<string>()
@@ -198,8 +216,10 @@ export async function checkRegulationSources(opts: { referenceKey?: string } = {
     let regChangedUrl: string | null = null
 
     await mapLimit(urls, 3, async (url: string) => {
+      const got = fetched.get(url)
+      if (!got) { if (!opts.catchupDays) summary.deferred++; return }      // not reached in this run's time budget: left exactly as it was
       summary.urls_checked++
-      const { fp, kind, text } = await fetchOnce(url)
+      const { fp, kind, text } = got
       if (kind === 'error') summary.errors++
 
       const prior = await (prisma as any).regulationSourceCheck.findUnique({
@@ -212,15 +232,21 @@ export async function checkRegulationSources(opts: { referenceKey?: string } = {
         && isReal(priorFp) && isReal(fp)
         && method(priorFp) === method(fp)
         && priorFp !== fp
-      if (changed) { summary.changed++; regChangedUrl = url }
+      if (changed) summary.changed++
+      // A regulation is flagged only for a REAL change: a sentence added or removed once dates, page numbers and cookie wording are ignored. A page
+      // with no stored text (a PDF) cannot be compared, so a moved Last-Modified there still counts.
+      if (changed && !text) regChangedUrl = url
 
       // Record WHAT changed, while both versions are in hand. Only when there is prior text
       // to compare against: the first run after this ships has none, and reporting a whole
       // page as "added" would be noise on every source at once.
+      if (changed && text && prior?.content && realChange.get(url) && regChangedUrl !== url) regChangedUrl = url   // a later subject citing the same changed page
       if (changed && text && prior?.content && !recordedUrls.has(url)) {
         recordedUrls.add(url)
         const diff = diffText(String(prior.content), text)
+        realChange.set(url, diff.changed)
         if (diff.changed) {
+          regChangedUrl = url
           // Only a regulation has tenant coverage behind it. A quality statement or a stale
           // wording signal changes what we ASK of every tenant, so there is no per-tenant
           // list to resolve and an empty one is the honest answer.

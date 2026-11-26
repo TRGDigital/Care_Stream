@@ -32,6 +32,7 @@ export default function RegulationChangesPage() {
   const [filter, setFilter]   = useState<'new' | 'notified' | 'dismissed' | ''>('new')
   const [error, setError]     = useState('')
   const [busy, setBusy]       = useState('')
+  const [reviewMsg, setReviewMsg] = useState('')
   const [open, setOpen]       = useState<Set<string>>(new Set())
   const [view, setView]       = useState<'changes' | 'sources'>('changes')
   const [sources, setSources] = useState<{
@@ -64,7 +65,11 @@ export default function RegulationChangesPage() {
   async function runReview() {
     if (!token) return
     setBusy('review')
-    try { await createPlatformClient(token).regulations.reviewChanges(); await load(filter) }
+    try {
+      const r = await createPlatformClient(token).regulations.reviewChanges()
+      setReviewMsg(`${r.auto_cosmetic ?? 0} settled automatically (only dates, page numbers or site wording changed), ${r.reviewed} explained, ${r.failed} could not be explained, ${r.flags_cleared ?? 0} regulation flags cleared.`)
+      await load(filter)
+    }
     catch (e: any) { setError(e?.message ?? 'Review failed') }
     finally { setBusy('') }
   }
@@ -96,6 +101,7 @@ export default function RegulationChangesPage() {
             recorded and reviewed, and matched to the tenants whose coverage analysis names a policy behind
             that regulation.
           </p>
+          {reviewMsg && <p className="mt-2 max-w-2xl rounded-md bg-emerald-50 px-3 py-2 text-xs text-emerald-800">{reviewMsg}</p>}
         </div>
         <button
           onClick={runReview}
@@ -327,7 +333,7 @@ export default function RegulationChangesPage() {
                         </td>
                         <td className="px-4 py-2.5 align-top">
                           {bad ? (
-                            <span className="inline-flex items-center gap-1 font-semibold text-red-700"><EyeOff size={11} /> Not watched</span>
+                            <span><span className="inline-flex items-center gap-1 font-semibold text-red-700"><EyeOff size={11} /> Not watched</span>{src.reason && <span className="mt-0.5 block max-w-xs text-[11px] font-normal leading-snug text-neutral-mid">{src.reason}</span>}</span>
                           ) : (
                             <span className="text-neutral-mid">
                               {src.signal === 'last-modified' ? 'Publication date' : 'Page text'}

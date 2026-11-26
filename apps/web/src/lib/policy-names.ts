@@ -5,7 +5,7 @@
 
 export type RoleNames = Record<string, string[]>
 
-const ROLE_PHRASES: Array<{ re: RegExp; key: string }> = [
+export const ROLE_PHRASES: Array<{ re: RegExp; key: string }> = [
   { re: /\b(?:registered manager|care manager)\b/i,                     key: 'registered_manager' },
   { re: /\bsafeguarding lead\b/i,                                       key: 'safeguarding_lead' },
   { re: /\b(?:infection prevention (?:and|&) control lead|ipc lead)\b/i, key: 'ipc_lead' },

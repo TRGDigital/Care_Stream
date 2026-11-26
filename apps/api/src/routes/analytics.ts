@@ -9,6 +9,8 @@ import { getTenantId } from '../db/tenant-context'
 import { requireAdmin } from '../middleware/auth'
 import { ok, err } from '../lib/response'
 import { checkFeature, PlanLimitError, checkAiCreditLimit, logAiCredit } from '../lib/plan-limits'
+import { nameWeaveEnabled, WEAVE_SYSTEM, weavePrompt, weaveResult } from '../lib/name-weave'
+import { callClaude } from '../services/ai/claude'
 import { checkFreeAiBudget } from '../lib/free-tier'
 import { assertFreeRerun, assertFreeDetailAllowed } from '../services/analytics/free-gates'
 import { generateAnnualModuleDraft } from '../services/training/moduleGenerator'
@@ -955,9 +957,30 @@ analyticsRouter.get('/gaps/adoption-context', requireAdmin, async (_req: Request
   const tenantId = getTenantId()
   try {
     const ctx = await getAdoptionContext(tenantId)
-    ok(res, ctx)
+    ok(res, { ...ctx, names_v2: await nameWeaveEnabled(tenantId) })   // the targeted names, pictures and Weave in button: on for the accounts it is being tested on
   } catch (e: any) {
     err(res, 'CONTEXT_FAILED', e.message ?? 'Could not load adoption context.', 500)
+  }
+})
+
+// POST /analytics/gaps/weave-name — rewrite wording about to be adopted so a named person sits in it naturally (one short AI call, only when the admin asks).
+analyticsRouter.post('/gaps/weave-name', requireAdmin, async (req: Request, res: Response) => {
+  const tenantId = getTenantId()
+  try {
+    if (!(await nameWeaveEnabled(tenantId))) { err(res, 'NOT_AVAILABLE', 'This is not available for your account yet.', 404); return }
+    const b = req.body ?? {}
+    const text = typeof b.text === 'string' ? b.text.trim() : '', name = typeof b.name === 'string' ? b.name.trim() : '', role = typeof b.role === 'string' ? b.role.trim() : ''
+    const policyName = typeof b.policy_name === 'string' ? b.policy_name.trim().slice(0, 200) : null
+    if (!text || text.length > 6000 || !name || name.length > 80 || !role || role.length > 80) { err(res, 'INVALID_INPUT', 'Wording, name and role are needed.', 400); return }
+    await checkAiCreditLimit(tenantId)
+    const out = await callClaude(WEAVE_SYSTEM, weavePrompt({ text, name, role, policy_name: policyName }), { maxTokens: 1800, temperature: 0.2, feature: 'name_weave' })
+    const r = weaveResult(text, out, name)
+    if (!r.ok) { err(res, 'WEAVE_FAILED', 'Could not place the name naturally this time. Your wording is unchanged.', 422); return }
+    await logAiCredit(tenantId, 'name_weave', null)
+    ok(res, { text: r.text })
+  } catch (e: any) {
+    if (e instanceof PlanLimitError) { err(res, e.code, e.message, 402); return }
+    err(res, 'WEAVE_FAILED', 'Could not place the name this time. Your wording is unchanged.', 500)
   }
 })
 

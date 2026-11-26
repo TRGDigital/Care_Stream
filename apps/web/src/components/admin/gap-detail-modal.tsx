@@ -8,6 +8,7 @@ import { createApiClient } from '@/lib/api-client'
 import EditablePolicyBody from './editable-policy-body'
 import SlowLoadHint from './slow-load-hint'
 import { applyRoleNames } from '@/lib/policy-names'
+import { AdoptNamedPeople, type AdoptPerson } from '@/components/admin/adopt-named-people'
 import { X, Loader2, CheckCircle2, Check, Plus, FileText, Sparkles, Mail, Scale, FilePlus2, FilePenLine, GraduationCap, Search, BookOpen, ChevronDown, HelpCircle, EyeOff, Info, RotateCcw } from 'lucide-react'
 
 type Detail = Awaited<ReturnType<ReturnType<typeof createApiClient>['analytics']['gapDetail']>>
@@ -496,7 +497,7 @@ export function GapDetailModal({ token, referenceKey, viewKey = null, viewName =
   const previewRef = useRef<HTMLDivElement>(null)
 
   // Policy Change Adoption (beta) — adopt a suggestion into the policy's draft.
-  const [adoption,     setAdoption]     = useState<{ enabled: boolean; variables: Array<{ key: string; label: string; value: string }>; role_holders: Array<{ key: string; role: string; candidates: string[] }>; role_names?: Record<string, string[]>; show_role_names?: boolean } | null>(() => persistentCache.get<any>(adoptionKey) ?? null)
+  const [adoption,     setAdoption]     = useState<{ enabled: boolean; variables: Array<{ key: string; label: string; value: string }>; role_holders: Array<{ key: string; role: string; candidates: string[] }>; role_names?: Record<string, string[]>; names_v2?: boolean; show_role_names?: boolean } | null>(() => persistentCache.get<any>(adoptionKey) ?? null)
   const [adoptingReq,  setAdoptingReq]  = useState<string | null>(null)
   const [adoptText,    setAdoptText]    = useState('')
   const [adoptTitle,   setAdoptTitle]   = useState('')
@@ -513,6 +514,22 @@ export function GapDetailModal({ token, referenceKey, viewKey = null, viewName =
   const [adoptedContent, setAdoptedContent] = useState<Record<string, { new_text: string; section_title?: string }>>({})
   const [pendingCount, setPendingCount] = useState<number | null>(null)
   const adoptRef = useRef<HTMLTextAreaElement>(null)
+  // Weave in a named person (switched on per account while it is tested; adoption.names_v2).
+  const [people,       setPeople]       = useState<AdoptPerson[]>([])
+  const [weaving,      setWeaving]      = useState<string | null>(null)
+  const [weaveUndo,    setWeaveUndo]    = useState<string | null>(null)
+  const [weaveErr,     setWeaveErr]     = useState('')
+  const loadPeople = () => { createApiClient(token).users.list().then((d: any) => { const l = Array.isArray(d) ? d : (d?.users ?? []); setPeople(l.map((u: any) => ({ name: String(u.name ?? ''), photo_url: u.photo_url ?? null, is_active: u.is_active }))) }).catch(() => {}) }
+  useEffect(() => { if (adoption?.names_v2) loadPeople() }, [adoption?.names_v2, token])   // eslint-disable-line react-hooks/exhaustive-deps
+  async function weaveIn(name: string, role: string) {
+    setWeaving(name); setWeaveErr('')
+    try {
+      const r = await createApiClient(token).analytics.weaveName({ text: adoptText, name, role, policy_name: detail?.target_policy?.name ?? null })
+      setWeaveUndo(adoptText); setAdoptText(r.text)
+    } catch (e: any) { setWeaveErr(e?.message ?? 'Could not place the name this time. Your wording is unchanged.') }
+    finally { setWeaving(null) }
+  }
+  function undoWeave() { if (weaveUndo !== null) { setAdoptText(weaveUndo); setWeaveUndo(null) } }
 
   useEffect(() => {
     if (!accepted) return
@@ -558,6 +575,7 @@ export function GapDetailModal({ token, referenceKey, viewKey = null, viewName =
     setAdoptText(r.suggested_addition ?? '')
     setAdoptTitle(r.section_title ?? '')
     setAdoptErr('')
+    setWeaveUndo(null); setWeaveErr('')
   }
 
   // Insert a variable/name at the cursor in the adopt textarea.
@@ -1086,6 +1104,28 @@ export function GapDetailModal({ token, referenceKey, viewKey = null, viewName =
                                 <label className="text-[10px] font-bold uppercase tracking-wide text-neutral-mid">Wording to add (edit before adopting)</label>
                                 <textarea ref={adoptRef} value={adoptText} onChange={e => setAdoptText(e.target.value)} rows={5}
                                   className="mt-0.5 w-full rounded-md border border-gray-200 px-2 py-1.5 text-sm leading-relaxed focus:border-teal focus:outline-none" />
+                                {adoption.names_v2 ? (
+                                  <>
+                                    {adoption.variables.filter(v => v.key === 'home_name').length > 0 && (
+                                      <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                                        <p className="text-[10px] text-neutral-mid">Insert at the cursor:</p>
+                                        {adoption.variables.filter(v => v.key === 'home_name').map(v => (
+                                          <button key={v.key} type="button" onClick={() => insertChip(v.value)} title={v.label}
+                                            className="rounded-full border border-gray-200 bg-white px-2 py-0.5 text-xs text-neutral-dark hover:border-teal hover:text-teal">{v.value}</button>
+                                        ))}
+                                      </div>
+                                    )}
+                                    <AdoptNamedPeople
+                                      roleHolders={adoption.role_holders}
+                                      nominated={adoption.variables.find(v => v.key === 'nominated_individual')?.value ?? ''}
+                                      approver={adoption.variables.find(v => v.key === 'default_approver')?.value ?? ''}
+                                      people={people} wording={adoptText} requirement={adoptingReq ?? ''} policyName={detail.target_policy.name}
+                                      policyText={previewRef.current?.textContent ?? ''}
+                                      weaving={weaving} canUndo={weaveUndo !== null} error={weaveErr}
+                                      onWeave={weaveIn} onUndo={undoWeave} onRefreshPeople={loadPeople} />
+                                  </>
+                                ) : (
+                                  <>
                                 {(adoption.variables.length > 0 || adoption.role_holders.some(rh => rh.candidates.length > 0)) && (
                                   <div className="mt-2">
                                     <p className="text-[10px] text-neutral-mid">Insert a name (click to add at the cursor):</p>
@@ -1100,6 +1140,8 @@ export function GapDetailModal({ token, referenceKey, viewKey = null, viewName =
                                       )))}
                                     </div>
                                   </div>
+                                )}
+                                  </>
                                 )}
                                 {adoptErr && <p className="mt-2 text-xs text-amber-700">{adoptErr}</p>}
                                 <div className="mt-2 flex items-center gap-2">

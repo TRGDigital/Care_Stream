@@ -52,7 +52,7 @@ export function PolicyIntakePanel({ token }: { token: string }) {
   const intakeKey = `admin-policy-intake-${sess?.user?.email ?? 'guest'}`
   const [intake, setIntake] = useState<TenantIntake | null>(() => persistentCache.get<TenantIntake>(intakeKey) ?? null)
   const [draft, setDraft] = useState<Record<string, string>>(() => persistentCache.get<TenantIntake>(intakeKey)?.answers ?? {})
-  const [open, setOpen] = useState(() => (persistentCache.get<TenantIntake>(intakeKey)?.missing ?? 0) > 0)
+  const [open, setOpen] = useState(false)   // closed by default: the heading, the count of questions left and the progress bar already say what is outstanding
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState('')
   const [error, setError] = useState('')
@@ -60,9 +60,9 @@ export function PolicyIntakePanel({ token }: { token: string }) {
   useEffect(() => {
     let live = true
     const cached = persistentCache.get<TenantIntake>(intakeKey)
-    if (cached) { setIntake(cached); setDraft(cached.answers); setOpen(cached.missing > 0) }
+    if (cached) { setIntake(cached); setDraft(cached.answers) }
     createApiClient(token).policies.intake()
-      .then(r => { if (!live) return; persistentCache.set(intakeKey, r.intake); setIntake(r.intake); setDraft(r.intake.answers); setOpen(r.intake.missing > 0) })
+      .then(r => { if (!live) return; persistentCache.set(intakeKey, r.intake); setIntake(r.intake); setDraft(r.intake.answers) })
       .catch(e => { if (live && !cached) setError(e?.message ?? 'Could not load what we still need.') })
     return () => { live = false }
   }, [token, intakeKey])

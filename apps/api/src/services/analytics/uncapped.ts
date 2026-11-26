@@ -1,12 +1,12 @@
-// WHO GETS "NO CAP". Reading every point of a regulation and every page of a policy (instead of the first 8 or 12 points and the first 24,000 or 60,000 characters) is switched on per account while it
-// is checked: NO_CAP_ACCOUNTS is a comma list of account numbers (default CS-1001), or * for everyone. Every other account keeps the old limits exactly.
+// NO CAP is now STANDARD (26 Nov 2026, after it was checked on CS-1001): every account reads every point of a regulation and every page of a policy.
+// NO_CAP_ACCOUNTS stays as a switch back: set it to a comma list of account numbers (for example CS-1001) and ONLY those accounts read without the old limits (8 or 12 points, 24,000 or 60,000 characters), or to * for everyone.
 import { prisma } from '../../db/client'
 import { textWindows } from './in-batches'
 
 const cache = new Map<string, { at: number; open: boolean }>()
-export const noCapList = (): string[] => String(process.env.NO_CAP_ACCOUNTS ?? 'CS-1001').split(',').map(s => s.trim().toUpperCase()).filter(Boolean)
+export const noCapList = (): string[] => String(process.env.NO_CAP_ACCOUNTS ?? '*').split(',').map(s => s.trim().toUpperCase()).filter(Boolean)
 
-/** True when this tenant's account is switched on for the no cap reading. Looked up once a minute; any failure means the old limits (never the new behaviour by accident). */
+/** True when this tenant's account reads with no cap: everyone by default, or only the accounts in NO_CAP_ACCOUNTS when that is set. A lookup that fails (only when the list names accounts) means the old limits. */
 export async function noCapFor(tenantId: string): Promise<boolean> {
   const list = noCapList()
   if (list.includes('*') || list.includes('ALL')) return true

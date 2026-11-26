@@ -46,10 +46,10 @@ test('WIRING: no cap left on cross-policy claims, CQC wording or out of date ter
 })
 
 import { noCapList, partsOf } from './uncapped'
-test('WHO GETS NO CAP: CS-1001 by default, * for everyone, and the old limits (one cut part) for everyone else', () => {
+test('WHO GETS NO CAP: everyone by default; NO_CAP_ACCOUNTS can narrow it to a list of accounts (the switch back), and the old limits (one cut part) apply to the rest', () => {
   const was = process.env.NO_CAP_ACCOUNTS
   try {
-    delete process.env.NO_CAP_ACCOUNTS; assert.deepEqual(noCapList(), ['CS-1001'])
+    delete process.env.NO_CAP_ACCOUNTS; assert.deepEqual(noCapList(), ['*'])
     process.env.NO_CAP_ACCOUNTS = ' cs-1001 , CS-1009 '; assert.deepEqual(noCapList(), ['CS-1001', 'CS-1009'])
     process.env.NO_CAP_ACCOUNTS = '*'; assert.deepEqual(noCapList(), ['*'])
   } finally { if (was === undefined) delete process.env.NO_CAP_ACCOUNTS; else process.env.NO_CAP_ACCOUNTS = was }

@@ -12,6 +12,7 @@ import { InfoTip } from '@/components/info-tip'
 import { StaffAvatar } from '@/components/admin/staff-avatar'
 import { StaffPictureBlock } from '@/components/admin/staff-picture-controls'
 import { TrainingCertificate } from '@/components/training-certificate'
+import { CPD_CERTIFIED_LOGO } from '@/lib/cpd'
 import { SignInLinkButton } from '@/components/admin/staff/sign-in-link'
 import { ViewAsButton } from '@/components/admin/staff/view-as-button'
 import { StaffIncentivesSection } from '@/components/admin/staff/incentives-section'
@@ -575,6 +576,7 @@ export default function StaffRecordPage() {
                   <tr key={m.enrollment_id} className="border-b border-gray-50 last:border-0">
                     <td className="px-5 py-2.5">
                       <span className="text-neutral-dark">{m.module_name}</span>
+                      {m.cpd_accredited && <img src={CPD_CERTIFIED_LOGO} alt="CPD Certified" className="ml-2 inline-block h-6 w-auto align-middle" />}
                       <span className="ml-2 text-[10px] uppercase text-neutral-mid">{m.category === 'statutory' ? 'Statutory' : 'Specialist'}</span>
                       {m.overdue && <span className="ml-2 inline-flex items-center rounded-full bg-red-50 px-1.5 py-1 text-[10px] font-medium leading-none text-red-600">Overdue</span>}
                     </td>
@@ -626,6 +628,7 @@ export default function StaffRecordPage() {
                   <tr key={m.enrollment_id} className="border-b border-gray-50 last:border-0 align-top">
                     <td className="px-5 py-2.5">
                       <span className="text-neutral-dark">{m.module_name}</span>
+                      {m.cpd_accredited && <img src={CPD_CERTIFIED_LOGO} alt="CPD Certified" className="ml-2 inline-block h-6 w-auto align-middle" />}
                       {m.overdue && <span className="ml-2 inline-flex items-center rounded-full bg-red-50 px-1.5 py-1 text-[10px] font-medium leading-none text-red-600">Overdue</span>}
                     </td>
                     <td className="px-3 py-2.5"><StatusPill status={m.status} /></td>

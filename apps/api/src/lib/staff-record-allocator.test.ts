@@ -21,3 +21,10 @@ test('STAFF PAGE: a completed module in the Training record has a Certificate bu
   assert.match(rec, /m\.status === 'complete' && \(\s*<button onClick=\{\(\) => setCertItem\(m\)\}/)
   assert.equal((p.match(/<TrainingCertificate/g) ?? []).length, 1)   // one certificate view shared by both tables
 })
+
+test('STAFF PAGE: the CPD Certified logo shows beside a course name only when that module is certified (cpd_accredited), unaltered, in both training tables', () => {
+  const p = fs.readFileSync(path.resolve(__dirname, '../../../web/src/app/(admin)/staff/[id]/page.tsx'), 'utf8')
+  assert.match(p, /import \{ CPD_CERTIFIED_LOGO \} from '@\/lib\/cpd'/)
+  assert.equal((p.match(/\{m\.cpd_accredited && <img src=\{CPD_CERTIFIED_LOGO\} alt="CPD Certified" className="ml-2 inline-block h-6 w-auto align-middle" \/>\}/g) ?? []).length, 2)
+  assert.doesNotMatch(p, /tier === 'cpd' && <img/)   // never on the kind of course alone, only once certified
+})

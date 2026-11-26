@@ -5,7 +5,7 @@ import { usePlatformAuth } from '@/hooks/use-platform-auth'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
 import { PagePerformanceModal, UpdateQueue, PerfButton, PerfLegend, VERDICT_UI } from '@/components/platform/page-performance'
-import { createPlatformClient, uploadBlogImage, fetchTrainingSeoIndex, type BlogAuthor, type BlogPost, type SitePage, type Collection, type ProductCluster, type FeaturePage, type UseCaseAllocation } from '@/lib/platform-api'
+import { createPlatformClient, uploadBlogImage, generateBlogImage, fetchTrainingSeoIndex, type BlogAuthor, type BlogPost, type SitePage, type Collection, type ProductCluster, type FeaturePage, type UseCaseAllocation } from '@/lib/platform-api'
 import { EMPTY_FEATURE_CONTENT, type FeaturePageContent } from '@/lib/feature-content'
 import { slotsForPath, type SlotDef } from '@/lib/page-slots'
 import { PlatformShell } from '@/components/platform-shell'
@@ -219,7 +219,7 @@ function AuthorForm({
 // A visual editor: you see formatted text, not HTML. Stores HTML via the
 // browser's contentEditable so the public site (which renders HTML) is unchanged.
 
-function RichEditor({ value, onChange, rows = 6, placeholder = '', token }: {
+function RichEditor({ value, onChange, rows = 6, placeholder = '', token, topic }: {
   value:       string
   onChange:    (v: string) => void
   rows?:       number
@@ -227,12 +227,15 @@ function RichEditor({ value, onChange, rows = 6, placeholder = '', token }: {
   // When a token is supplied, an "Image" button is shown that uploads and inserts
   // an image inline. Left off elsewhere (FAQ answers, etc.) so it stays uncluttered.
   token?:      string | null
+  // When a topic (the post title) is supplied as well, a 'Make picture' button asks for a scene and generates a house style picture to insert.
+  topic?:      string
 }) {
   const ref       = useRef<HTMLDivElement>(null)
   const lastHtml  = useRef<string>('')
   const savedRange = useRef<Range | null>(null)
   const imgInputRef = useRef<HTMLInputElement>(null)
   const [imgBusy, setImgBusy] = useState(false)
+  const [genBusy, setGenBusy] = useState(false)
 
   // Push external value changes into the div WITHOUT resetting on our own edits
   // (which would jump the caret to the start mid-typing).
@@ -296,6 +299,24 @@ function RichEditor({ value, onChange, rows = 6, placeholder = '', token }: {
     }
   }
 
+  // Describe one ordinary care moment, generate the picture in the house style and insert it at the caret (the description is also the alt text).
+  async function handleGenerate() {
+    if (!token || !topic) return
+    const scene = (window.prompt('Describe the picture: one ordinary care moment. No lettering, no screens, no bedrooms, no personal care.', '') ?? '').trim()
+    if (scene.length < 15) { if (scene) window.alert('Please describe the scene in a sentence or two.'); return }
+    saveSelection()
+    setGenBusy(true)
+    try {
+      const url = await generateBlogImage(token, topic, scene)
+      const alt = scene.replace(/"/g, '&quot;')
+      exec('insertHTML', `<img src="${url}" alt="${alt}" style="max-width:100%;height:auto;border-radius:8px;" />`)
+    } catch (err: any) {
+      window.alert(err?.message ?? 'Could not make the picture. Please try again.')
+    } finally {
+      setGenBusy(false)
+    }
+  }
+
   // mousedown-preventDefault keeps the editor's selection while clicking a button
   const btn = 'rounded px-2.5 py-0.5 text-xs text-neutral-mid hover:bg-gray-200 hover:text-neutral-dark'
   const minHeight = `${Math.max(rows, 3) * 1.6}rem`
@@ -327,6 +348,12 @@ function RichEditor({ value, onChange, rows = 6, placeholder = '', token }: {
             </button>
             <input ref={imgInputRef} type="file" accept="image/*" className="hidden"
               onChange={e => { const f = e.target.files?.[0]; if (f) void handleImagePick(f); e.currentTarget.value = '' }} />
+            {topic ? (
+              <button type="button" onMouseDown={e => e.preventDefault()} disabled={genBusy}
+                onClick={() => void handleGenerate()} title="Describe a scene and make a house style picture" className={btn}>
+                {genBusy ? 'Making picture… (up to a minute)' : '✨ Make picture'}
+              </button>
+            ) : null}
           </>
         ) : null}
         <div className="mx-1 h-3.5 w-px bg-gray-300" />
@@ -503,6 +530,28 @@ function PostForm({
   const [imgUploading, setImgUploading] = useState(false)
   const [imgError,     setImgError]     = useState('')
   const imgInputRef = useRef<HTMLInputElement>(null)
+  const [heroScene, setHeroScene] = useState('')
+  const [heroBusy,  setHeroBusy]  = useState(false)
+
+  // One click hero: uses the scene typed in the box, or a calm default built from the title. Fills the alt text when it is empty.
+  async function handleGenerateHero() {
+    if (!token) return
+    const title = form.title.trim()
+    if (title.length < 3) { setImgError('Add the post title first, so the picture can match it.'); return }
+    const scene = heroScene.trim().length >= 15
+      ? heroScene.trim()
+      : `Two care staff in a bright, tidy care home corridor talking calmly about: ${title}. Warm daylight, ordinary everyday moment.`
+    setHeroBusy(true); setImgError('')
+    try {
+      const url = await generateBlogImage(token, title, scene, `hero-${form.slug || title}`)
+      set('feature_image_url', url)
+      if (!form.feature_image_alt) set('feature_image_alt', heroScene.trim().length >= 15 ? heroScene.trim() : `Illustration for ${title}`)
+    } catch (e: any) {
+      setImgError(e.message ?? 'Could not make the picture')
+    } finally {
+      setHeroBusy(false)
+    }
+  }
 
   async function handleImageFile(file: File) {
     if (!token) return
@@ -730,6 +779,17 @@ function PostForm({
               <span className="text-xs text-neutral-mid">JPG, PNG, WebP or GIF up to 10 MB</span>
             </button>
           )}
+          <div className="mt-3 rounded-lg border border-gray-200 bg-white p-3">
+            <p className="mb-1 text-xs font-semibold text-neutral-mid">Or make a hero picture with AI (house style, takes up to a minute)</p>
+            <textarea value={heroScene} onChange={e => setHeroScene(e.target.value)} rows={2}
+              placeholder="Optional: describe one ordinary care moment. Leave empty and it builds a calm scene from the title. No lettering, no screens, no bedrooms, no personal care."
+              className="w-full rounded-md border border-gray-200 px-3 py-2 text-xs focus:border-teal focus:outline-none focus:ring-1 focus:ring-teal" />
+            <button type="button" onClick={() => void handleGenerateHero()} disabled={heroBusy || imgUploading}
+              className="mt-2 inline-flex items-center gap-1.5 rounded-md bg-teal px-3 py-1.5 text-xs font-semibold text-white hover:opacity-90 disabled:opacity-50">
+              {heroBusy ? <Loader2 size={12} className="animate-spin" /> : null}
+              {heroBusy ? 'Making the picture…' : form.feature_image_url ? 'Make a new hero image' : 'Generate hero image'}
+            </button>
+          </div>
           {imgError && <p className="mt-1 text-xs text-red-500">{imgError}</p>}
         </div>
         <div>
@@ -950,6 +1010,7 @@ function PostForm({
           onChange={v => { set('content', v); set('read_time_minutes', calcReadTime(v)) }}
           rows={22}
           token={token}
+          topic={form.title}
           placeholder="Write your post content here. HTML is supported — headings, paragraphs, lists, bold, links etc."
         />
         <p className="text-xs text-neutral-mid">Read time auto-calculates as you type.</p>

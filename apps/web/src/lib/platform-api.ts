@@ -647,6 +647,19 @@ export async function uploadBlogImage(token: string, file: File): Promise<string
   return body.data.url as string
 }
 
+/** Makes one house style picture for a post from a plain description of an ordinary care moment (admin only, no token or script needed).
+ *  Returns the public URL. Takes up to about a minute. */
+export async function generateBlogImage(token: string, topic: string, scene: string, key?: string): Promise<string> {
+  const res = await fetch(`${API_URL}/admin/policy-images/content-image`, {
+    method:  'POST',
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body:    JSON.stringify({ topic, scene, key }),
+  })
+  const body = await res.json().catch(() => ({}))
+  if (!res.ok || !body.success) throw new Error(body.error?.message ?? `Could not make the picture (${res.status})`)
+  return body.data.url as string
+}
+
 export interface UseCaseAllocation {
   slug:      string
   label:     string

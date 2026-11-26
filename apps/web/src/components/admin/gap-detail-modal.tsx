@@ -8,8 +8,11 @@ import { createApiClient } from '@/lib/api-client'
 import EditablePolicyBody from './editable-policy-body'
 import SlowLoadHint from './slow-load-hint'
 import { applyRoleNames } from '@/lib/policy-names'
-import { AdoptNamedPeople, type AdoptPerson } from '@/components/admin/adopt-named-people'
+import { AdoptNamedPeople, namedEntries, type AdoptPerson } from '@/components/admin/adopt-named-people'
 import { HighlightedTextarea } from '@/components/admin/highlighted-textarea'
+import { AdoptOtherNames, type FoundName } from '@/components/admin/adopt-other-names'
+import { relevantRoleKeys } from '@/lib/name-relevance'
+import { countName, replaceWholeName } from '@/lib/name-replace'
 import { hasAdditions } from '@/lib/text-diff'
 import { X, Loader2, CheckCircle2, Check, Plus, FileText, Sparkles, Mail, Scale, FilePlus2, FilePenLine, GraduationCap, Search, BookOpen, ChevronDown, HelpCircle, EyeOff, Info, RotateCcw } from 'lucide-react'
 
@@ -499,7 +502,7 @@ export function GapDetailModal({ token, referenceKey, viewKey = null, viewName =
   const previewRef = useRef<HTMLDivElement>(null)
 
   // Policy Change Adoption (beta) — adopt a suggestion into the policy's draft.
-  const [adoption,     setAdoption]     = useState<{ enabled: boolean; variables: Array<{ key: string; label: string; value: string }>; role_holders: Array<{ key: string; role: string; candidates: string[] }>; role_names?: Record<string, string[]>; names_v2?: boolean; show_role_names?: boolean } | null>(() => persistentCache.get<any>(adoptionKey) ?? null)
+  const [adoption,     setAdoption]     = useState<{ enabled: boolean; variables: Array<{ key: string; label: string; value: string }>; role_holders: Array<{ key: string; role: string; candidates: string[] }>; role_names?: Record<string, string[]>; names_v2?: boolean; name_change_needs_approval?: boolean; show_role_names?: boolean } | null>(() => persistentCache.get<any>(adoptionKey) ?? null)
   const [adoptingReq,  setAdoptingReq]  = useState<string | null>(null)
   const [adoptText,    setAdoptText]    = useState('')
   const [adoptBaseline, setAdoptBaseline] = useState('')   // the wording as first suggested: what differs from it is highlighted (names woven in or replaced)
@@ -520,7 +523,17 @@ export function GapDetailModal({ token, referenceKey, viewKey = null, viewName =
   // Weave in a named person (switched on per account while it is tested; adoption.names_v2).
   const [people,       setPeople]       = useState<AdoptPerson[]>([])
   const [weaving,      setWeaving]      = useState<string | null>(null)
-  const [weaveUndo,    setWeaveUndo]    = useState<string | null>(null)
+  const [weaveUndo,    setWeaveUndo]    = useState<{ text: string; replaced?: { from: string; to: string } } | null>(null)
+  // Other people named in the wording (usually copied from an out of date policy): the exact check runs by itself, the AI check when asked. The AI's findings stay while the name is still in the wording.
+  const [foundNames,   setFoundNames]   = useState<FoundName[]>([])
+  const [aiNames,      setAiNames]      = useState<FoundName[]>([])
+  const [keptNames,    setKeptNames]    = useState<Set<string>>(new Set())
+  const [replacedNames, setReplacedNames] = useState<Array<{ from: string; to: string }>>([])
+  const [namesBusy,    setNamesBusy]    = useState(false)
+  const [namesAiRan,   setNamesAiRan]   = useState(false)
+  const [namesErr,     setNamesErr]     = useState('')
+  const [nameFollowUp, setNameFollowUp] = useState<{ pairs: Array<{ from: string; to: string }>; policyId: string; policyName: string; busy: boolean; message: string } | null>(null)
+  function resetNameState() { setWeaveUndo(null); setWeaveErr(''); setFoundNames([]); setAiNames([]); setKeptNames(new Set()); setReplacedNames([]); setNamesAiRan(false); setNamesErr('') }
   const [weaveErr,     setWeaveErr]     = useState('')
   const loadPeople = () => { createApiClient(token).users.list().then((d: any) => { const l = Array.isArray(d) ? d : (d?.users ?? []); setPeople(l.map((u: any) => ({ name: String(u.name ?? ''), photo_url: u.photo_url ?? null, is_active: u.is_active }))) }).catch(() => {}) }
   useEffect(() => { if (adoption?.names_v2) loadPeople() }, [adoption?.names_v2, token])   // eslint-disable-line react-hooks/exhaustive-deps
@@ -528,11 +541,47 @@ export function GapDetailModal({ token, referenceKey, viewKey = null, viewName =
     setWeaving(name); setWeaveErr('')
     try {
       const r = await createApiClient(token).analytics.weaveName({ text: adoptText, name, role, policy_name: detail?.target_policy?.name ?? null })
-      setWeaveUndo(adoptText); setAdoptText(r.text)
+      setWeaveUndo({ text: adoptText }); setAdoptText(r.text)
     } catch (e: any) { setWeaveErr(e?.message ?? 'Could not place the name this time. Your wording is unchanged.') }
     finally { setWeaving(null) }
   }
-  function undoWeave() { if (weaveUndo !== null) { setAdoptText(weaveUndo); setWeaveUndo(null) } }
+  function undoWeave() {
+    if (!weaveUndo) return
+    setAdoptText(weaveUndo.text)
+    if (weaveUndo.replaced) setReplacedNames(r => { const i = r.map(x => `${x.from}|${x.to}`).lastIndexOf(`${weaveUndo.replaced!.from}|${weaveUndo.replaced!.to}`); return i < 0 ? r : [...r.slice(0, i), ...r.slice(i + 1)] })
+    setWeaveUndo(null)
+  }
+  // The exact check (archived staff) runs by itself as the wording changes; the AI check only when asked.
+  useEffect(() => {
+    if (!adoption?.names_v2 || adoptingReq === null || !adoptText.trim()) return
+    const t = setTimeout(() => { createApiClient(token).analytics.otherNames({ text: adoptText }).then(r => setFoundNames(r.found)).catch(() => {}) }, 600)
+    return () => clearTimeout(t)
+  }, [adoption?.names_v2, adoptingReq, adoptText, token])
+  async function checkOtherNames() {
+    setNamesBusy(true); setNamesErr('')
+    try {
+      const r = await createApiClient(token).analytics.otherNames({ text: adoptText, ai: true })
+      setFoundNames(r.found.filter(f => f.kind === 'archived')); setAiNames(r.found.filter(f => f.kind === 'unknown')); setNamesAiRan(true)
+    } catch (e: any) { setNamesErr(e?.message ?? 'Could not check for other names this time.') }
+    finally { setNamesBusy(false) }
+  }
+  function replaceOtherName(from: string, to: string) {
+    setWeaveUndo({ text: adoptText, replaced: { from, to } }); setAdoptText(replaceWholeName(adoptText, from, to)); setReplacedNames(r => [...r, { from, to }])
+  }
+  async function updateNameInPolicy() {
+    const f = nameFollowUp; if (!f) return
+    setNameFollowUp({ ...f, busy: true, message: '' })
+    let msg = ''
+    try {
+      for (const p of f.pairs) {
+        const r = await createApiClient(token).settings.roleNameApply({ role_label: 'Name', old_name: p.from, new_name: p.to, policy_ids: [f.policyId] })
+        const hit = r.updated.length > 0
+        msg += (msg ? ' ' : '') + (hit ? (r.needs_approval ? `${p.from} was changed to ${p.to} in the rest of the policy and is waiting for approval under Adopted changes to review.` : `${p.from} was changed to ${p.to} in the rest of the policy, as a small new version.`) : `${p.from} is not written anywhere else in this policy.`)
+      }
+    } catch (e: any) { msg = e?.message ?? 'Could not update the policy this time.' }
+    setNameFollowUp({ ...f, busy: false, pairs: [], message: msg })
+  }
+
 
   useEffect(() => {
     if (!accepted) return
@@ -578,7 +627,7 @@ export function GapDetailModal({ token, referenceKey, viewKey = null, viewName =
     setAdoptText(r.suggested_addition ?? ''); setAdoptBaseline(r.suggested_addition ?? '')
     setAdoptTitle(r.section_title ?? '')
     setAdoptErr('')
-    setWeaveUndo(null); setWeaveErr('')
+    resetNameState(); setNameFollowUp(null)
   }
 
   // Insert a variable/name at the cursor in the adopt textarea.
@@ -627,6 +676,7 @@ export function GapDetailModal({ token, referenceKey, viewKey = null, viewName =
     setAdoptText(r.suggested_addition ?? ''); setAdoptBaseline(r.suggested_addition ?? '')
     setAdoptTitle(r.section_title || headingFromRequirement(r.requirement))
     setAdoptErr('')
+    resetNameState(); setNameFollowUp(null)
   }
 
   async function doAdopt(r: { requirement: string; placement?: string | null; location_quote?: string | null }) {
@@ -655,6 +705,7 @@ export function GapDetailModal({ token, referenceKey, viewKey = null, viewName =
         }).catch(() => {})
       }
       setPendingCount(res.pending)
+      if (adoption?.names_v2 && replacedNames.length > 0) setNameFollowUp({ pairs: [...new Map(replacedNames.map(p => [`${p.from}|${p.to}`, p])).values()], policyId: detail.target_policy.id, policyName: detail.target_policy.name, busy: false, message: '' })
       setAdoptingReq(null)
       // Honest outcomes: placed_at_end = it IS adopted and pending, just added as its own
       // section rather than in situ. applied:false now only happens when there was genuinely
@@ -1009,6 +1060,25 @@ export function GapDetailModal({ token, referenceKey, viewKey = null, viewName =
                   </div>
 
                   {/* Missing requirements + suggested wording + where to add */}
+                  {nameFollowUp && (nameFollowUp.pairs.length > 0 || nameFollowUp.message) && (
+                    <div className="rounded-lg border border-teal/30 bg-teal-light/30 p-3 text-sm text-neutral-dark">
+                      {nameFollowUp.pairs.length > 0 ? (
+                        <>
+                          <p>You replaced {nameFollowUp.pairs.map(p => `${p.from} with ${p.to}`).join(' and ')} in the wording you adopted. The old {nameFollowUp.pairs.length === 1 ? 'name' : 'names'} may be written elsewhere in the <strong>{nameFollowUp.policyName}</strong> too.</p>
+                          <div className="mt-2 flex flex-wrap items-center gap-2">
+                            <button type="button" onClick={updateNameInPolicy} disabled={nameFollowUp.busy} className="inline-flex items-center gap-1.5 rounded-btn bg-teal px-3 py-1.5 text-xs font-medium text-white hover:bg-teal-dark disabled:opacity-50">
+                              {nameFollowUp.busy ? <><Loader2 size={12} className="animate-spin" /> Updating…</> : 'Update the rest of this policy'}
+                            </button>
+                            <button type="button" onClick={() => setNameFollowUp(null)} className="rounded-btn border border-gray-200 bg-white px-3 py-1.5 text-xs text-neutral-mid hover:bg-gray-50">No thanks</button>
+                          </div>
+                          <p className="mt-1.5 text-xs text-neutral-mid">{adoption?.name_change_needs_approval ? 'The change will wait for approval, as your settings require.' : 'It goes live straight away as a small new version, as your settings allow.'}</p>
+                        </>
+                      ) : (
+                        <div className="flex items-start justify-between gap-3"><p>{nameFollowUp.message}</p><button type="button" onClick={() => setNameFollowUp(null)} className="shrink-0 text-xs text-neutral-mid hover:text-neutral-dark">Close</button></div>
+                      )}
+                    </div>
+                  )}
+
                   {missing.length > 0 && (
                     <div className="space-y-3">
                       <p className="flex items-center gap-2 text-sm font-semibold text-neutral-dark"><Plus size={15} className="text-amber-600" /> What to add ({missing.length})</p>
@@ -1131,6 +1201,14 @@ export function GapDetailModal({ token, referenceKey, viewKey = null, viewName =
                                       policyText={previewRef.current?.textContent ?? ''}
                                       weaving={weaving} canUndo={weaveUndo !== null} error={weaveErr}
                                       onWeave={weaveIn} onUndo={undoWeave} onRefreshPeople={loadPeople} />
+                                    {(() => {
+                                      const all = namedEntries(adoption.role_holders, adoption.variables.find(v => v.key === 'nominated_individual')?.value ?? '', adoption.variables.find(v => v.key === 'default_approver')?.value ?? '')
+                                      const rel = relevantRoleKeys({ wording: `${adoptText}\n${adoptingReq ?? ''}`, policyName: detail.target_policy.name, policyText: previewRef.current?.textContent ?? '' })
+                                      const shown = [...foundNames, ...aiNames.filter(a => !foundNames.some(f => f.name === a.name))].map(f => ({ ...f, occurrences: countName(adoptText, f.name) })).filter(f => f.occurrences > 0)
+                                      return <AdoptOtherNames found={shown} kept={keptNames} choices={all.filter(e => rel.has(e.key))} allChoices={all} people={people}
+                                        checking={namesBusy} aiRan={namesAiRan} error={namesErr} onCheckAi={checkOtherNames} onReplace={(from, to) => replaceOtherName(from, to)}
+                                        onKeep={n => setKeptNames(k => new Set(k).add(n))} />
+                                    })()}
                                   </>
                                 ) : (
                                   <>

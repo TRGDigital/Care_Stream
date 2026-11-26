@@ -10,6 +10,7 @@ import { requireAdmin } from '../middleware/auth'
 import { ok, err } from '../lib/response'
 import { checkFeature, PlanLimitError, checkAiCreditLimit, logAiCredit } from '../lib/plan-limits'
 import { nameWeaveEnabled, WEAVE_SYSTEM, weavePrompt, weaveResult } from '../lib/name-weave'
+import { archivedNamesIn, unknownNamesFrom, NAMES_SYSTEM, namesPrompt } from '../lib/other-names'
 import { callClaude } from '../services/ai/claude'
 import { checkFreeAiBudget } from '../lib/free-tier'
 import { assertFreeRerun, assertFreeDetailAllowed } from '../services/analytics/free-gates'
@@ -957,7 +958,9 @@ analyticsRouter.get('/gaps/adoption-context', requireAdmin, async (_req: Request
   const tenantId = getTenantId()
   try {
     const ctx = await getAdoptionContext(tenantId)
-    ok(res, { ...ctx, names_v2: await nameWeaveEnabled(tenantId) })   // the targeted names, pictures and Weave in button: on for the accounts it is being tested on
+    const tenantRow = await (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { organisation_details: true } }).catch(() => null)
+    const nameApproval = ((tenantRow?.organisation_details ?? {}) as Record<string, string>).require_name_change_approval === 'on'
+    ok(res, { ...ctx, names_v2: await nameWeaveEnabled(tenantId), name_change_needs_approval: nameApproval })   // the targeted names, pictures and Weave in button: on for the accounts it is being tested on
   } catch (e: any) {
     err(res, 'CONTEXT_FAILED', e.message ?? 'Could not load adoption context.', 500)
   }
@@ -981,6 +984,37 @@ analyticsRouter.post('/gaps/weave-name', requireAdmin, async (req: Request, res:
   } catch (e: any) {
     if (e instanceof PlanLimitError) { err(res, e.code, e.message, 402); return }
     err(res, 'WEAVE_FAILED', 'Could not place the name this time. Your wording is unchanged.', 500)
+  }
+})
+
+// POST /analytics/gaps/other-names — other people named in wording about to be adopted. The exact check against archived staff is free and always runs; the AI check (ai: true) is optional and also finds people who were never in CareStream.
+analyticsRouter.post('/gaps/other-names', requireAdmin, async (req: Request, res: Response) => {
+  const tenantId = getTenantId()
+  try {
+    if (!(await nameWeaveEnabled(tenantId))) { err(res, 'NOT_AVAILABLE', 'This is not available for your account yet.', 404); return }
+    const text = typeof req.body?.text === 'string' ? req.body.text.trim() : ''
+    if (!text || text.length > 8000) { err(res, 'INVALID_INPUT', 'Wording is needed.', 400); return }
+    const [users, ctx] = await Promise.all([
+      (prisma as any).user.findMany({ where: { tenant_id: tenantId, is_shared: false }, select: { name: true, job_role: true, is_active: true } }),
+      getAdoptionContext(tenantId),
+    ])
+    const found = archivedNamesIn(text, users as any[])
+    let aiRan = false
+    if (req.body?.ai === true) {
+      await checkAiCreditLimit(tenantId)
+      const current = [
+        ...(users as any[]).filter(u => u.is_active !== false).map(u => String(u.name ?? '')),
+        ...ctx.role_holders.flatMap(r => r.candidates), ...ctx.variables.filter(v => v.key === 'nominated_individual' || v.key === 'default_approver').map(v => v.value),
+      ]
+      const raw = await callClaude(NAMES_SYSTEM, namesPrompt(text), { model: 'claude-haiku-4-5-20251001', maxTokens: 400, temperature: 0, feature: 'other_names' })
+      found.push(...unknownNamesFrom(raw, text, current, found.map(f => f.name)))
+      aiRan = true
+      await logAiCredit(tenantId, 'other_names', null)
+    }
+    ok(res, { found, ai_ran: aiRan })
+  } catch (e: any) {
+    if (e instanceof PlanLimitError) { err(res, e.code, e.message, 402); return }
+    err(res, 'OTHER_NAMES_FAILED', 'Could not check for other names this time.', 500)
   }
 })
 

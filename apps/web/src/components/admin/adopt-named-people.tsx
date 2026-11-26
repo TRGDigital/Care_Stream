@@ -10,6 +10,16 @@ import { relevantRoleKeys } from '@/lib/name-relevance'
 export type AdoptPerson = { name: string; photo_url?: string | null; is_active?: boolean }
 type Entry = { key: string; role: string; name: string }
 
+/** Every named person in Organisation details with the role they hold (a person who holds two roles appears twice). */
+export function namedEntries(roleHolders: Array<{ key: string; role: string; candidates: string[] }>, nominated: string, approver: string): Array<{ key: string; role: string; name: string }> {
+  const list: Array<{ key: string; role: string; name: string }> = []
+  for (const rh of roleHolders) for (const c of rh.candidates) list.push({ key: rh.key, role: rh.role, name: c })
+  if (nominated) list.push({ key: 'nominated_individual', role: 'Nominated individual', name: nominated })
+  if (approver) list.push({ key: 'default_approver', role: 'Approver', name: approver })
+  const seen = new Set<string>()
+  return list.filter(e => { const k = `${e.key}|${e.name.toLowerCase()}`; if (seen.has(k)) return false; seen.add(k); return true })
+}
+
 const sameName = (a: string, b: string) => a.replace(/,/g, '').toLowerCase().trim() === b.replace(/,/g, '').toLowerCase().trim()
 
 export function AdoptNamedPeople({ roleHolders, nominated, approver, people, wording, requirement, policyName, policyText, weaving, canUndo, error, onWeave, onUndo, onRefreshPeople }: {
@@ -29,14 +39,7 @@ export function AdoptNamedPeople({ roleHolders, nominated, approver, people, wor
   onRefreshPeople?: () => void
 }) {
   const [showAll, setShowAll] = useState(false)
-  const entries = useMemo<Entry[]>(() => {
-    const list: Entry[] = []
-    for (const rh of roleHolders) for (const c of rh.candidates) list.push({ key: rh.key, role: rh.role, name: c })
-    if (nominated) list.push({ key: 'nominated_individual', role: 'Nominated individual', name: nominated })
-    if (approver) list.push({ key: 'default_approver', role: 'Approver', name: approver })
-    const seen = new Set<string>()
-    return list.filter(e => { const k = `${e.key}|${e.name.toLowerCase()}`; if (seen.has(k)) return false; seen.add(k); return true })
-  }, [roleHolders, nominated, approver])
+  const entries = useMemo<Entry[]>(() => namedEntries(roleHolders, nominated, approver), [roleHolders, nominated, approver])
   const relevant = useMemo(() => relevantRoleKeys({ wording: `${wording}\n${requirement}`, policyName, policyText }), [wording, requirement, policyName, policyText])
   const shown = showAll ? entries : entries.filter(e => relevant.has(e.key))
   const hidden = entries.length - entries.filter(e => relevant.has(e.key)).length

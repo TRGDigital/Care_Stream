@@ -10,12 +10,18 @@ export function askPilotAccounts(env: string | undefined = process.env.ASK_PILOT
 export const isAskPilotAccount = (accountNumber: string | null | undefined, env?: string): boolean =>
   !!accountNumber && askPilotAccounts(env).includes(String(accountNumber).trim().toUpperCase())
 
+/** Demo switch: an account whose feature_flags carry hide_pilots: true shows none of the pilot features (Ask CareStream, holiday tracking), for a demo call. Takes effect within a minute, no deploy. */
+export const pilotsHidden = (flags: unknown): boolean => !!(flags && typeof flags === 'object' && (flags as Record<string, unknown>).hide_pilots === true)
+
 const memo = new Map<string, { at: number; v: boolean }>()
 export async function askPilotEnabled(tenantId: string): Promise<boolean> {
   const hit = memo.get(tenantId)
   if (hit && Date.now() - hit.at < 60_000) return hit.v
   let v = false
-  try { v = isAskPilotAccount((await (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { account_number: true } }))?.account_number) } catch { v = false }
+  try {
+    const t = await (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { account_number: true, feature_flags: true } })
+    v = isAskPilotAccount(t?.account_number) && !pilotsHidden(t?.feature_flags)
+  } catch { v = false }
   memo.set(tenantId, { at: Date.now(), v })
   return v
 }

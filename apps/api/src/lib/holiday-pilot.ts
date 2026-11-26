@@ -2,6 +2,7 @@
 // Everything is behind this: the API routes answer 404 for any other account, and the web hides every holiday control.
 // HOLIDAY_PILOT_ACCOUNTS (a comma list, for example "CS-1001,CS-1009") adds accounts without a deploy of code changes.
 import { prisma } from '../db/client'
+import { pilotsHidden } from './ask-pilot'
 
 export const HOLIDAY_PILOT_DEFAULT = ['CS-1001']
 
@@ -22,8 +23,8 @@ export async function holidayPilotEnabled(tenantId: string): Promise<boolean> {
   if (hit && Date.now() - hit.at < MEMO_MS) return hit.v
   let v = false
   try {
-    const t = await (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { account_number: true } })
-    v = isPilotAccount(t?.account_number)
+    const t = await (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { account_number: true, feature_flags: true } })
+    v = isPilotAccount(t?.account_number) && !pilotsHidden(t?.feature_flags)   // demo switch: feature_flags.hide_pilots
   } catch { v = false }
   memo.set(tenantId, { at: Date.now(), v })
   return v

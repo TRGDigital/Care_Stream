@@ -75,7 +75,7 @@ export function ScenariosPanel({ token }: { token: string }) {
     setBusy(false)
   }
 
-  // Import DRAFT pages from a JSON file (one page or a list). Never publishes; an existing slug is never changed.
+  // Import DRAFT pages from a JSON file (one page or a list). Never publishes; an existing page changes only if it is a draft and the file says replace_draft.
   async function importDrafts(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     e.target.value = ''
@@ -88,8 +88,9 @@ export function ScenariosPanel({ token }: { token: string }) {
       const j = await r.json()
       if (!r.ok) throw new Error(j?.error?.message ?? 'The import failed.')
       const created = (j.data?.created ?? []) as Array<{ slug: string; notes: string[] }>
+      const updated = (j.data?.updated ?? []) as Array<{ slug: string; notes: string[] }>
       const skipped = (j.data?.skipped ?? []) as Array<{ slug: string; reason: string[] }>
-      setMsg(`Imported ${created.length} draft${created.length === 1 ? '' : 's'}.${created.map(c => ` ${c.slug}${c.notes.length ? ` (to check: ${c.notes.join('; ')})` : ''}`).join('')}${skipped.length ? ` Skipped: ${skipped.map(s => `${s.slug} (${s.reason.join('; ')})`).join(' | ')}` : ''}`)
+      setMsg(`Imported ${created.length} draft${created.length === 1 ? '' : 's'}.${updated.length ? ` Replaced ${updated.length}: ${updated.map(u => u.slug).join(', ')}.` : ''}${created.map(c => ` ${c.slug}${c.notes.length ? ` (to check: ${c.notes.join('; ')})` : ''}`).join('')}${skipped.length ? ` Skipped: ${skipped.map(s => `${s.slug} (${s.reason.join('; ')})`).join(' | ')}` : ''}`)
       await loadDb()
     } catch (err: any) { setMsg(`Import failed: ${err?.message ?? 'unknown error'}`) }
     setBusy(false)

@@ -642,7 +642,15 @@ settingsRouter.post('/role-mentions/scan', async (req: Request, res: Response) =
     const addName = (name: string, role: string) => { const k = name.trim().toLowerCase(); if (!k) return; const e = byName.get(k) ?? { name: name.trim(), roles: [] }; if (!e.roles.includes(role)) e.roles.push(role); byName.set(k, e) }
     for (const rh of ctx?.role_holders ?? []) for (const c of rh.candidates) addName(c, rh.role)
     for (const v of ctx?.variables ?? []) if (v.key === 'nominated_individual') addName(v.value, 'Nominated individual'); else if (v.key === 'default_approver') addName(v.value, 'Approver')
-    const scan = await scanRoleMentions(user.tenant_id, { names: [...byName.values()] })
+    // Archived staff are looked for too: a former manager is often still written into policies, and is not a current role holder so nothing else would show them.
+    const archived = await (prisma as any).user.findMany({ where: { tenant_id: user.tenant_id, is_active: false, is_shared: false }, select: { name: true, job_role: true } }).catch(() => [])
+    const former: Array<{ name: string; roles: string[]; former: true }> = []
+    for (const a of archived as any[]) {
+      const name = String(a.name ?? '').replace(/,/g, '').trim()
+      if (name.length < 5 || byName.has(name.toLowerCase()) || former.some(f => f.name.toLowerCase() === name.toLowerCase())) continue
+      former.push({ name, roles: [a.job_role ? `Former staff, ${a.job_role}` : 'Former staff'], former: true })
+    }
+    const scan = await scanRoleMentions(user.tenant_id, { names: [...byName.values(), ...former] })
     await saveRoleMentionScan(user.tenant_id, scan)
     ok(res, { scan })
   } catch (e: any) {

@@ -150,7 +150,7 @@ export type RoleMentionScan = {
   policies_unreadable: number
   mentions: Array<{ key: string; label: string; policies: number; example: string | null; policy_list?: Array<{ policy_id: string; policy_name: string }> }>
   /** The people named in Organisation details when this was checked, and where their NAME is written into policies. */
-  name_usage?: Array<{ name: string; roles: string[]; total_occurrences: number; policies: Array<{ policy_id: string; policy_name: string; occurrences: number; writable: boolean }> }>
+  name_usage?: Array<{ name: string; roles: string[]; former?: boolean; total_occurrences: number; policies: Array<{ policy_id: string; policy_name: string; occurrences: number; writable: boolean }> }>
 }
 // Typed fetch client for the CareStreamAI API.
 // All requests attach the NextAuth access token as Bearer.

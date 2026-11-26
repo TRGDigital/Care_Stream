@@ -40,7 +40,7 @@ test('SCREEN: the new people row shows only on accounts where it is on, keeps th
   const web = (f: string) => fs.readFileSync(path.resolve(__dirname, '../../../web/src', f), 'utf8')
   const modal = web('components/admin/gap-detail-modal.tsx'), row = web('components/admin/adopt-named-people.tsx')
   assert.match(modal, /adoption\.names_v2 \? \(/); assert.match(modal, /Insert a name \(click to add at the cursor\):/)     // the old row is still the else branch
-  assert.match(modal, /weaveName\(\{ text: adoptText, name, role, policy_name:/); assert.match(modal, /setWeaveUndo\(adoptText\); setAdoptText\(r\.text\)/)
+  assert.match(modal, /weaveName\(\{ text: adoptText, name, role, policy_name:/); assert.match(modal, /setWeaveUndo\(\{ text: adoptText \}\); setAdoptText\(r\.text\)/)
   assert.match(modal, /function undoWeave\(\)/); assert.match(modal, /Your wording is unchanged/)
   assert.doesNotMatch(row, /insertChip|setSelectionRange/)                                    // the weave button never pastes at the cursor
   assert.match(row, /relevantRoleKeys\(/); assert.match(row, /Show everyone \(\$\{hidden\} more\)/); assert.match(row, /Undo the last change/)

@@ -35,6 +35,8 @@ export type RoleMention = {
 export type NameUsage = {
   name: string
   roles: string[]
+  /** An archived staff member rather than a current role holder: shown as "former staff named in your policies". */
+  former?: boolean
   policies: Array<{ policy_id: string; policy_name: string; occurrences: number; /** has a working copy, so the name can be replaced here; false = adopt the policy first */ writable: boolean }>
   total_occurrences: number
 }
@@ -53,7 +55,7 @@ const READ_CONCURRENCY = 8
 // pulling whole appendices into memory for a sweep that only needs to know "is it mentioned".
 const TEXT_CAP = 120_000
 
-export async function scanRoleMentions(tenantId: string, opts: { names?: Array<{ name: string; roles: string[] }> } = {}): Promise<RoleMentionScan> {
+export async function scanRoleMentions(tenantId: string, opts: { names?: Array<{ name: string; roles: string[]; former?: boolean }> } = {}): Promise<RoleMentionScan> {
   const policies: { id: string; name: string }[] = await (prisma as any).policy.findMany({
     where: { tenant_id: tenantId, status: 'active' },
     select: { id: true, name: true },
@@ -67,7 +69,7 @@ export async function scanRoleMentions(tenantId: string, opts: { names?: Array<{
   const docs = await (prisma as any).policyDocument.findMany({ where: { tenant_id: tenantId }, select: { policy_id: true, published_content: true, original_content: true } }).catch(() => [])
   const docText = new Map<string, string>((docs as any[]).map(d => [d.policy_id, String(d.published_content || d.original_content || '')]))
   const names = (opts.names ?? []).filter(n => n.name && n.name.trim().length >= 2)
-  const usage: NameUsage[] = names.map(n => ({ name: n.name.trim(), roles: n.roles, policies: [], total_occurrences: 0 }))
+  const usage: NameUsage[] = names.map(n => ({ name: n.name.trim(), roles: n.roles, ...(n.former ? { former: true } : {}), policies: [], total_occurrences: 0 }))
 
   await mapLimit(policies, READ_CONCURRENCY, async (p) => {
     const stored = await downloadExtractedText(tenantId, p.id).catch(() => null)
@@ -83,6 +85,7 @@ export async function scanRoleMentions(tenantId: string, opts: { names?: Array<{
     }
     const nameText = own || body
     for (const u of usage) {
+      if (!nameText.includes(u.name)) continue   // quick check before the careful whole name match
       const n = (nameText.match(roleNameRegex(u.name)) ?? []).length
       if (!n) continue
       u.policies.push({ policy_id: p.id, policy_name: p.name, occurrences: n, writable: !!own })

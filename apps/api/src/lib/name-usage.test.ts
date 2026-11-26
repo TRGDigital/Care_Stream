@@ -15,7 +15,7 @@ test('SCAN: one sweep reports, per role, every policy that names it, and per per
   assert.match(s, /writable: !!own/)                                     // a working copy: the name can be replaced here
   assert.match(s, /const nameText = own \|\| body/)                       // the same text the name change itself rewrites
   const rt = api('routes/settings.ts')
-  assert.match(rt, /scanRoleMentions\(user\.tenant_id, \{ names: \[\.\.\.byName\.values\(\)\] \}\)/)
+  assert.match(rt, /scanRoleMentions\(user\.tenant_id, \{ names: \[\.\.\.byName\.values\(\), \.\.\.former\] \}\)/)   // current people, then archived staff
   assert.match(rt, /addName\(v\.value, 'Nominated individual'\)/); assert.match(rt, /addName\(v\.value, 'Approver'\)/)
 })
 
@@ -43,4 +43,17 @@ test('SETTINGS SCREEN: the approval switch, the list of where names are used, ar
   assert.match(p, /adds the change to each one for approval/); assert.match(p, /waiting for approval/)
   const copy = ['Names have changed since this was checked. Press Check again to include them.', 'A name written into a policy', 'Written into', 'Not written into any policy text', 'Choose who replaces them', 'This person is archived.', 'Roles named in your policies', 'adopt this policy first so it can be updated here', 'Require approval for name changes', 'When on, changing who holds a role', 'adds the change to each one for approval'].join(' ')
   assert.doesNotMatch(copy, /[–—]| - /)
+})
+
+test('FORMER STAFF: the scan also looks for archived staff names (current holders are not repeated), and the panel lists them apart with a way to replace them everywhere, without touching Organisation details', () => {
+  const rt = api('routes/settings.ts'), sc = api('services/analytics/role-mentions.ts'), p = web('app/(admin)/settings/page.tsx')
+  assert.match(rt, /where: \{ tenant_id: user\.tenant_id, is_active: false, is_shared: false \}/)
+  assert.match(rt, /byName\.has\(name\.toLowerCase\(\)\)/)                                  // a person who is also a current holder is not listed twice
+  assert.match(rt, /roles: \[a\.job_role \? `Former staff, \$\{a\.job_role\}` : 'Former staff'\], former: true/)
+  assert.match(sc, /\.\.\.\(n\.former \? \{ former: true \} : \{\}\)/); assert.match(sc, /if \(!nameText\.includes\(u\.name\)\) continue/)
+  assert.match(p, /Former staff named in your policies/); assert.match(p, /\.filter\(u => !u\.former\)/)
+  assert.match(p, /removeRoleName\('', u\.name, \{ label: 'Former staff member' \}\)/)
+  assert.match(p, /if \(!key\) return; if \(opts\.replacement\)/); assert.match(p, /if \(nc\.key\) \{\s*const next = \{/)   // no role, nothing to change in Organisation details
+  assert.match(p, /\{nameChange\.key && <button onClick=\{\(\) => confirmNameChange\(false\)\}/)                      // "remove only" makes no sense without a role
+  assert.doesNotMatch('Former staff named in your policies These people are archived, but their name is still written into policy text. Names run into the next word in a policy’s text can be missed here. Choose who replaces them', /[–—]| - /)
 })

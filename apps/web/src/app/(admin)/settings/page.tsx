@@ -610,7 +610,7 @@ export default function SettingsPage() {
     })
     try {
       const r = await createApiClient(session!.accessToken as string).settings.roleNameImpact(key, name)
-      if (!r.policies.length && !r.others.length) { setNameChange(null); if (opts.replacement) swapName(key, name, opts.replacement); else dropRoleName(key, name); return }
+      if (!r.policies.length && !r.others.length) { setNameChange(null); if (!key) return; if (opts.replacement) swapName(key, name, opts.replacement); else dropRoleName(key, name); return }
       setNameChange(nc => nc && nc.name === name ? {
         ...nc, scanning: false, policies: r.policies, others: r.others,
         roleMentions: r.role_mentions, scanned: r.policies_scanned, unreadable: r.policies_unreadable,
@@ -618,6 +618,7 @@ export default function SettingsPage() {
     } catch {
       // If the check itself fails, removing the name is still what was asked for.
       setNameChange(null)
+      if (!key) return
       if (opts.replacement) swapName(key, name, opts.replacement); else dropRoleName(key, name)
     }
   }
@@ -625,7 +626,7 @@ export default function SettingsPage() {
   async function confirmNameChange(rewrite: boolean) {
     const nc = nameChange
     if (!nc) return
-    if (!rewrite) { if (nc.replaceWith.trim()) swapName(nc.key, nc.name, nc.replaceWith.trim()); else dropRoleName(nc.key, nc.name); setNameChange(null); return }
+    if (!rewrite) { if (nc.key) { if (nc.replaceWith.trim()) swapName(nc.key, nc.name, nc.replaceWith.trim()); else dropRoleName(nc.key, nc.name) } setNameChange(null); return }
     const replacement = nc.replaceWith.trim()
     if (!replacement) { setNameChange({ ...nc, error: 'Enter the name that replaces them.' }); return }
     setNameChange({ ...nc, busy: true, error: '' })
@@ -634,12 +635,14 @@ export default function SettingsPage() {
         role_label: nc.label, old_name: nc.name, new_name: replacement,
         policy_ids: nc.policies.map(p => p.policy_id),
       })
-      // The replacement takes the old name's place on the role, so the chip list stays true.
-      const next = {
-        ...orgDetails,
-        [nc.key]: [...roleManual(nc.key).filter(n => n !== nc.name), replacement].join(', '),
+      // The replacement takes the old name's place on the role, so the chip list stays true (a former staff member holds no role, so there is nothing to change there).
+      if (nc.key) {
+        const next = {
+          ...orgDetails,
+          [nc.key]: [...roleManual(nc.key).filter(n => n !== nc.name), replacement].join(', '),
+        }
+        setOrgDetails(next); saveOrgDetails(next)
       }
-      setOrgDetails(next); saveOrgDetails(next)
       setNameChange({ ...nc, busy: false, done: r })
       void runRoleScan()   // the list of where names are used is refreshed as soon as policies have changed
     } catch (e: any) {
@@ -1348,12 +1351,12 @@ export default function SettingsPage() {
                       <p className="rounded-md bg-amber-50 px-3 py-2 text-xs text-amber-900">Names have changed since this was checked. Press Check again to include them.</p>
                     )}
 
-                    {(roleScan.name_usage ?? []).length > 0 && (
+                    {(roleScan.name_usage ?? []).filter(u => !u.former).length > 0 && (
                       <div>
                         <p className="text-sm font-medium text-neutral-dark">Where names are used in your policies</p>
                         <p className="mt-0.5 text-xs text-neutral-mid">A name written into a policy&rsquo;s text stays as it is when you change the name here, so it needs updating in the policy as well.</p>
                         <ul className="mt-2 space-y-1.5">
-                          {[...(roleScan.name_usage ?? [])]
+                          {[...(roleScan.name_usage ?? [])].filter(u => !u.former)
                             .sort((a, b) => Number(isArchivedName(b.name)) - Number(isArchivedName(a.name)) || b.policies.length - a.policies.length || a.name.localeCompare(b.name))
                             .slice(0, showAllNames ? 500 : 8)
                             .map(u => {
@@ -1396,9 +1399,38 @@ export default function SettingsPage() {
                               )
                             })}
                         </ul>
-                        {(roleScan.name_usage ?? []).length > 8 && (
-                          <button type="button" onClick={() => setShowAllNames(v => !v)} className="mt-1.5 text-xs text-neutral-mid underline-offset-2 hover:text-neutral-dark hover:underline">{showAllNames ? 'Show fewer' : `Show everyone (${(roleScan.name_usage ?? []).length - 8} more)`}</button>
+                        {(roleScan.name_usage ?? []).filter(u => !u.former).length > 8 && (
+                          <button type="button" onClick={() => setShowAllNames(v => !v)} className="mt-1.5 text-xs text-neutral-mid underline-offset-2 hover:text-neutral-dark hover:underline">{showAllNames ? 'Show fewer' : `Show everyone (${(roleScan.name_usage ?? []).filter(u => !u.former).length - 8} more)`}</button>
                         )}
+                      </div>
+                    )}
+
+                    {(roleScan.name_usage ?? []).some(u => u.former && u.policies.length > 0) && (
+                      <div>
+                        <p className="text-sm font-medium text-neutral-dark">Former staff named in your policies</p>
+                        <p className="mt-0.5 text-xs text-neutral-mid">These people are archived, but their name is still written into policy text. Names run into the next word in a policy&rsquo;s text can be missed here.</p>
+                        <ul className="mt-2 space-y-1.5">
+                          {(roleScan.name_usage ?? []).filter(u => u.former && u.policies.length > 0).sort((a, b) => b.policies.length - a.policies.length || a.name.localeCompare(b.name)).map(u => (
+                            <li key={u.name} className="rounded-md border border-amber-200 bg-white px-3 py-2">
+                              <div className="flex flex-wrap items-center gap-2.5">
+                                {namePic(u.name)}
+                                <div className="min-w-0 flex-1">
+                                  <p className="truncate text-sm font-medium text-neutral-dark">{u.name} <ArchivedTag /></p>
+                                  <p className="truncate text-xs text-neutral-mid">{u.roles.join(', ')}</p>
+                                </div>
+                                <p className="text-xs text-neutral-mid">Written into <strong className="text-neutral-dark">{u.policies.length}</strong> {u.policies.length === 1 ? 'policy' : 'policies'} ({u.total_occurrences} {u.total_occurrences === 1 ? 'time' : 'times'})</p>
+                                <button type="button" onClick={() => void removeRoleName('', u.name, { label: 'Former staff member' })}
+                                  className="shrink-0 rounded-btn border border-amber-300 bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-900 hover:bg-amber-100">Choose who replaces them</button>
+                              </div>
+                              <details className="mt-1.5">
+                                <summary className="cursor-pointer text-xs font-medium text-teal">Show policies</summary>
+                                <ul className="mt-1 space-y-0.5 pl-1 text-xs text-neutral-mid">
+                                  {u.policies.map(p => <li key={p.policy_id}>{p.policy_name} &middot; {p.occurrences} {p.occurrences === 1 ? 'time' : 'times'}{!p.writable && ' · adopt this policy first so it can be updated here'}</li>)}
+                                </ul>
+                              </details>
+                            </li>
+                          ))}
+                        </ul>
                       </div>
                     )}
 
@@ -1712,9 +1744,9 @@ export default function SettingsPage() {
                   ) : (
                     <>
                       <button onClick={() => setNameChange(null)} disabled={nameChange.busy} className="rounded-md px-3 py-2 text-sm font-medium text-neutral-mid hover:text-neutral-dark disabled:opacity-40">Cancel</button>
-                      <button onClick={() => confirmNameChange(false)} disabled={nameChange.busy} className="rounded-md border border-gray-200 px-3 py-2 text-sm font-medium text-neutral-dark hover:border-gray-300 disabled:opacity-40">
+                      {nameChange.key && <button onClick={() => confirmNameChange(false)} disabled={nameChange.busy} className="rounded-md border border-gray-200 px-3 py-2 text-sm font-medium text-neutral-dark hover:border-gray-300 disabled:opacity-40">
                         {nameChange.replaceWith.trim() ? 'Change the name only, leave the policies' : nameChange.policies.length ? 'Remove only, leave policies' : 'Remove the name'}
-                      </button>
+                      </button>}
                       {/* Offered only where there is something this can actually change. */}
                       {nameChange.policies.length > 0 && (
                         <Button onClick={() => confirmNameChange(true)} disabled={nameChange.busy}>

@@ -565,6 +565,8 @@ export default function StaffRecordPage() {
                 <th className="px-5 py-2 font-medium">Module</th>
                 <th className="px-3 py-2 font-medium">Status</th>
                 <th className="px-3 py-2 font-medium">Score</th>
+                <th className="px-3 py-2 font-medium">Allocated</th>
+                <th className="px-3 py-2 font-medium">Allocated by</th>
                 <th className="px-3 py-2 font-medium">Due / Expires</th>
                 <th className="px-3 py-2 font-medium print:hidden" />
               </tr></thead>
@@ -578,6 +580,8 @@ export default function StaffRecordPage() {
                     </td>
                     <td className="px-3 py-2.5"><StatusPill status={m.status} /></td>
                     <td className={`px-3 py-2.5 font-medium ${scoreColour(m.score?.pct)}`}>{m.score ? `${m.score.pct}%` : '—'}</td>
+                    <td className="px-3 py-2.5 text-xs text-neutral-mid">{m.assigned_at ? fmtDate(m.assigned_at) : '—'}</td>
+                    <td className="px-3 py-2.5 text-xs text-neutral-mid">{m.assigned_by_name ?? 'Not recorded'}</td>
                     <td className="px-3 py-2.5 text-xs text-neutral-mid">
                       {m.expires_at ? `Expires ${fmtDate(m.expires_at)}` : m.due_date ? `Due ${fmtDate(m.due_date)}` : '—'}
                     </td>

@@ -74,6 +74,14 @@ export async function buildStaffRecord(tenantId: string, userId: string, opts: S
     }),
   ])
 
+  // Who allocated each module: the stored id, shown as a name. Only people of THIS account are looked up, so an id from anywhere else shows nothing.
+  const allocatorIds = [...new Set((tEnr as any[]).map(e => e.assigned_by).filter((x: any): x is string => typeof x === 'string' && x.length > 0))]
+  const allocatorNames = new Map<string, string>()
+  if (allocatorIds.length) {
+    const people = await (prisma as any).user.findMany({ where: { id: { in: allocatorIds }, tenant_id: tenantId }, select: { id: true, name: true } }).catch(() => [])
+    for (const p of people as any[]) if (p.name) allocatorNames.set(p.id, p.name)
+  }
+
   // ── Training items ──────────────────────────────────────────────────────────
   const allTrainingItems = (tEnr as any[]).map(e => {
     const answers = e.answers ?? []
@@ -89,7 +97,8 @@ export async function buildStaffRecord(tenantId: string, userId: string, opts: S
       source: e.module?.source ?? 'manual', requires_practical: !!e.module?.requires_practical, frequency: e.module?.frequency ?? null,
       status, score: total > 0 ? { correct, total, pct: Math.round((correct / total) * 100) } : null,
       question_count: qCount, renewal_count: e.renewal_count ?? 0,
-      assigned_at: e.created_at, completed_at: e.completed_at, due_date: e.due_date, expires_at: e.expires_at,
+      assigned_at: e.created_at, assigned_by_name: e.assigned_by ? (e.assigned_by === userId ? 'Themselves' : (allocatorNames.get(e.assigned_by) ?? null)) : null,
+      completed_at: e.completed_at, due_date: e.due_date, expires_at: e.expires_at,
       certificate_url: e.certificate_url ?? null, overdue, due_soon: dueSoon,
       practical_signed: !!e.practical_signed, practical_signed_by: e.practical_signed_by ?? null, practical_signed_at: e.practical_signed_at ?? null, practical_note: e.practical_note ?? null,
       cpd_accredited: !!e.module?.cpd_accredited,

@@ -974,10 +974,11 @@ analyticsRouter.post('/gaps/weave-name', requireAdmin, async (req: Request, res:
     const b = req.body ?? {}
     const text = typeof b.text === 'string' ? b.text.trim() : '', name = typeof b.name === 'string' ? b.name.trim() : '', role = typeof b.role === 'string' ? b.role.trim() : ''
     const policyName = typeof b.policy_name === 'string' ? b.policy_name.trim().slice(0, 200) : null
+    const replaceName = typeof b.replace_name === 'string' && b.replace_name.trim().length >= 2 && b.replace_name.trim().length <= 80 ? b.replace_name.trim() : null   // set when the new person takes the place of someone named in the wording
     if (!text || text.length > 6000 || !name || name.length > 80 || !role || role.length > 80) { err(res, 'INVALID_INPUT', 'Wording, name and role are needed.', 400); return }
     await checkAiCreditLimit(tenantId)
-    const out = await callClaude(WEAVE_SYSTEM, weavePrompt({ text, name, role, policy_name: policyName }), { maxTokens: 1800, temperature: 0.2, feature: 'name_weave' })
-    const r = weaveResult(text, out, name)
+    const out = await callClaude(WEAVE_SYSTEM, weavePrompt({ text, name, role, policy_name: policyName, replace_name: replaceName }), { maxTokens: 1800, temperature: 0.2, feature: 'name_weave' })
+    const r = weaveResult(text, out, name, replaceName)
     if (!r.ok) { err(res, 'WEAVE_FAILED', 'Could not place the name naturally this time. Your wording is unchanged.', 422); return }
     await logAiCredit(tenantId, 'name_weave', null)
     ok(res, { text: r.text })

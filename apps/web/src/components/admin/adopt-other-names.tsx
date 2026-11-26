@@ -12,7 +12,7 @@ export type Choice = { key: string; role: string; name: string }
 
 const sameName = (a: string, b: string) => a.replace(/,/g, '').toLowerCase().trim() === b.replace(/,/g, '').toLowerCase().trim()
 
-export function AdoptOtherNames({ found, kept, choices, allChoices, people, checking, aiRan, error, onCheckAi, onReplace, onKeep }: {
+export function AdoptOtherNames({ found, kept, choices, allChoices, people, checking, aiRan, error, replacing, onCheckAi, onReplace, onKeep }: {
   found: FoundName[]
   kept: Set<string>
   choices: Choice[]
@@ -21,11 +21,14 @@ export function AdoptOtherNames({ found, kept, choices, allChoices, people, chec
   checking: boolean
   aiRan: boolean
   error: string
+  /** The person being worked in right now (a rewrite is in progress). */
+  replacing: string | null
   onCheckAi: () => void
-  onReplace: (from: string, to: string, role: string) => void
+  onReplace: (from: string, to: string, role: string, rewrite: boolean) => void
   onKeep: (name: string) => void
 }) {
   const [showAll, setShowAll] = useState<Record<string, boolean>>({})
+  const [swapOnly, setSwapOnly] = useState<Record<string, boolean>>({})   // per name: tick off to swap the name exactly, with no rewrite
   const open = found.filter(f => !kept.has(f.name))
   const keptNow = found.filter(f => kept.has(f.name))
   const personFor = (n: string) => people.find(p => sameName(p.name, n) && p.is_active !== false) ?? people.find(p => sameName(p.name, n)) ?? null
@@ -45,16 +48,23 @@ export function AdoptOtherNames({ found, kept, choices, allChoices, people, chec
               {' '}&middot; {f.occurrences} {f.occurrences === 1 ? 'time' : 'times'}.
             </p>
             <p className="mt-0.5 text-xs text-amber-900">It may be out of date. Keep it as it is, or replace every one with a current person.</p>
+            <label className="mt-1.5 flex cursor-pointer items-center gap-2 text-xs text-amber-900">
+              <input type="checkbox" className="h-3.5 w-3.5" checked={!swapOnly[f.name]} onChange={e => setSwapOnly(m => ({ ...m, [f.name]: !e.target.checked }))} />
+              Rewrite the wording so the new name fits naturally <span className="text-amber-800/80">(untick to swap the name only)</span>
+            </label>
             {list.length > 0 && (
               <ul className="mt-2 flex flex-wrap gap-1.5">
                 {list.map(c => {
                   const person = personFor(c.name)
                   return (
                     <li key={`${c.key}-${c.name}`}>
-                      <button type="button" onClick={() => onReplace(f.name, c.name, c.role)}
-                        className="inline-flex items-center gap-1.5 rounded-btn border border-teal/40 bg-white py-1 pl-1.5 pr-2.5 text-xs font-medium text-teal hover:bg-teal-light/30">
-                        {person && <StaffAvatar name={person.name} photoUrl={person.photo_url ?? null} size={20} />}
-                        Replace with {c.name} <span className="font-normal text-neutral-mid">&middot; {c.role}</span>
+                      <button type="button" disabled={!!replacing} onClick={() => onReplace(f.name, c.name, c.role, !swapOnly[f.name])}
+                        className="inline-flex items-center gap-1.5 rounded-btn border border-teal/40 bg-white py-1 pl-1.5 pr-2.5 text-left text-xs font-medium text-teal hover:bg-teal-light/30 disabled:cursor-not-allowed disabled:opacity-50">
+                        {replacing === c.name ? <Loader2 size={14} className="animate-spin" /> : person && <StaffAvatar name={person.name} photoUrl={person.photo_url ?? null} size={20} />}
+                        <span>
+                          {replacing === c.name ? 'Working it in…' : <>Replace with {c.name}{!swapOnly[f.name] && ' and weave in'}</>}
+                          <span className="block font-normal text-neutral-mid">{c.role}</span>
+                        </span>
                       </button>
                     </li>
                   )

@@ -1751,7 +1751,7 @@ export function createApiClient(token: string) {
       // Other people named in wording about to be adopted (archived staff always; people never in CareStream too when ai is true, which is one small AI call).
       otherNames: (body: { text: string; ai?: boolean }) => apiFetch<{ found: Array<{ name: string; kind: 'archived' | 'unknown'; job_role: string | null; occurrences: number }>; ai_ran: boolean }>('/analytics/gaps/other-names', token, { method: 'POST', body: JSON.stringify(body) }),
       // Rewrite wording about to be adopted so a named person sits in it naturally. One short AI call; the wording is untouched on any failure.
-      weaveName: (body: { text: string; name: string; role: string; policy_name?: string | null }) => apiFetch<{ text: string }>('/analytics/gaps/weave-name', token, { method: 'POST', body: JSON.stringify(body) }),
+      weaveName: (body: { text: string; name: string; role: string; policy_name?: string | null; replace_name?: string | null }) => apiFetch<{ text: string }>('/analytics/gaps/weave-name', token, { method: 'POST', body: JSON.stringify(body) }),
       // Coverage suggestion decisions: 'ignored' or 'new_section', so a later
       // analysis stops proposing something already dealt with.
       setCoverageDecision: (referenceKey: string, body: { requirement: string; decision: 'ignored' | 'new_section'; policy_id?: string | null; section_title?: string | null }) =>

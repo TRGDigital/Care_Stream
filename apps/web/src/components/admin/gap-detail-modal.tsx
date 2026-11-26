@@ -532,6 +532,7 @@ export function GapDetailModal({ token, referenceKey, viewKey = null, viewName =
   const [namesBusy,    setNamesBusy]    = useState(false)
   const [namesAiRan,   setNamesAiRan]   = useState(false)
   const [namesErr,     setNamesErr]     = useState('')
+  const [replacing,    setReplacing]    = useState<string | null>(null)   // the person being worked into the wording right now
   const [nameFollowUp, setNameFollowUp] = useState<{ pairs: Array<{ from: string; to: string }>; policyId: string; policyName: string; busy: boolean; message: string } | null>(null)
   function resetNameState() { setWeaveUndo(null); setWeaveErr(''); setFoundNames([]); setAiNames([]); setKeptNames(new Set()); setReplacedNames([]); setNamesAiRan(false); setNamesErr('') }
   const [weaveErr,     setWeaveErr]     = useState('')
@@ -565,8 +566,17 @@ export function GapDetailModal({ token, referenceKey, viewKey = null, viewName =
     } catch (e: any) { setNamesErr(e?.message ?? 'Could not check for other names this time.') }
     finally { setNamesBusy(false) }
   }
-  function replaceOtherName(from: string, to: string) {
-    setWeaveUndo({ text: adoptText, replaced: { from, to } }); setAdoptText(replaceWholeName(adoptText, from, to)); setReplacedNames(r => [...r, { from, to }])
+  // Replace someone named in the wording with a current person. By default the section is rewritten so the new name fits naturally (one short AI call, like Weave in); if that cannot be done, or the admin chose to swap only, the name is swapped exactly.
+  async function replaceOtherName(from: string, to: string, role: string, rewrite: boolean) {
+    const before = adoptText
+    const swap = (note = '') => { setWeaveUndo({ text: before, replaced: { from, to } }); setAdoptText(replaceWholeName(before, from, to)); setReplacedNames(r => [...r, { from, to }]); setNamesErr(note) }
+    if (!rewrite) { swap(); return }
+    setReplacing(to); setNamesErr('')
+    try {
+      const r = await createApiClient(token).analytics.weaveName({ text: before, name: to, role, policy_name: detail?.target_policy?.name ?? null, replace_name: from })
+      setWeaveUndo({ text: before, replaced: { from, to } }); setAdoptText(r.text); setReplacedNames(p => [...p, { from, to }])
+    } catch { swap(`The wording could not be rewritten this time, so ${from} was swapped for ${to} as it is.`) }
+    finally { setReplacing(null) }
   }
   async function updateNameInPolicy() {
     const f = nameFollowUp; if (!f) return
@@ -1206,7 +1216,7 @@ export function GapDetailModal({ token, referenceKey, viewKey = null, viewName =
                                       const rel = relevantRoleKeys({ wording: `${adoptText}\n${adoptingReq ?? ''}`, policyName: detail.target_policy.name, policyText: previewRef.current?.textContent ?? '' })
                                       const shown = [...foundNames, ...aiNames.filter(a => !foundNames.some(f => f.name === a.name))].map(f => ({ ...f, occurrences: countName(adoptText, f.name) })).filter(f => f.occurrences > 0)
                                       return <AdoptOtherNames found={shown} kept={keptNames} choices={all.filter(e => rel.has(e.key))} allChoices={all} people={people}
-                                        checking={namesBusy} aiRan={namesAiRan} error={namesErr} onCheckAi={checkOtherNames} onReplace={(from, to) => replaceOtherName(from, to)}
+                                        checking={namesBusy} aiRan={namesAiRan} error={namesErr} replacing={replacing} onCheckAi={checkOtherNames} onReplace={(from, to, role, rewrite) => void replaceOtherName(from, to, role, rewrite)}
                                         onKeep={n => setKeptNames(k => new Set(k).add(n))} />
                                     })()}
                                   </>

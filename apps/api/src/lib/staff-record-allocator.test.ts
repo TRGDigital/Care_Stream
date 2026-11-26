@@ -14,3 +14,10 @@ test('STAFF PAGE: the Training record table has Allocated and Allocated by colum
   const p = fs.readFileSync(path.resolve(__dirname, '../../../web/src/app/(admin)/staff/[id]/page.tsx'), 'utf8')
   assert.match(p, />Allocated<\/th>/); assert.match(p, />Allocated by<\/th>/); assert.match(p, /m\.assigned_by_name \?\? 'Not recorded'/)
 })
+
+test('STAFF PAGE: a completed module in the Training record has a Certificate button that opens the same certificate as the Annual training table', () => {
+  const p = fs.readFileSync(path.resolve(__dirname, '../../../web/src/app/(admin)/staff/[id]/page.tsx'), 'utf8')
+  const rec = p.slice(p.indexOf('rec.training.items.map'), p.indexOf('Annual training (AI modules)'))
+  assert.match(rec, /m\.status === 'complete' && \(\s*<button onClick=\{\(\) => setCertItem\(m\)\}/)
+  assert.equal((p.match(/<TrainingCertificate/g) ?? []).length, 1)   // one certificate view shared by both tables
+})

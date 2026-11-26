@@ -586,12 +586,17 @@ export default function StaffRecordPage() {
                       {m.expires_at ? `Expires ${fmtDate(m.expires_at)}` : m.due_date ? `Due ${fmtDate(m.due_date)}` : '—'}
                     </td>
                     <td className="px-3 py-2.5 print:hidden">
-                      {m.status !== 'not_started' && (
-                        <button onClick={() => resetModule(m.enrollment_id)} disabled={busy === m.enrollment_id} title="Reset module"
-                          className="flex items-center gap-1 rounded px-2 py-1 text-xs text-neutral-mid hover:bg-neutral-light hover:text-neutral-dark disabled:opacity-50">
-                          {busy === m.enrollment_id ? <Loader2 size={12} className="animate-spin" /> : <RotateCcw size={12} />} Reset
-                        </button>
-                      )}
+                      <div className="flex items-center gap-1.5">
+                        {m.status === 'complete' && (
+                          <button onClick={() => setCertItem(m)} title="Open the certificate" className="flex items-center gap-1 rounded px-2 py-1 text-xs text-teal hover:bg-teal-light/40"><Award size={12} /> Certificate</button>
+                        )}
+                        {m.status !== 'not_started' && (
+                          <button onClick={() => resetModule(m.enrollment_id)} disabled={busy === m.enrollment_id} title="Reset module"
+                            className="flex items-center gap-1 rounded px-2 py-1 text-xs text-neutral-mid hover:bg-neutral-light hover:text-neutral-dark disabled:opacity-50">
+                            {busy === m.enrollment_id ? <Loader2 size={12} className="animate-spin" /> : <RotateCcw size={12} />} Reset
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}

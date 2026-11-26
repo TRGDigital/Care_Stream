@@ -227,6 +227,7 @@ function StaffNameChooser({ people, taken, onPick, label }: { people: ActionPers
         <div className="mt-1">
           <StaffPicker people={choices} selected={[]} mode="single" label={label}
             onChange={ids => { const who = choices.find(p => p.id === ids[0]); if (who) { onPick(who.name); setOpen(false) } }} />
+          <button type="button" onClick={() => setOpen(false)} className="mt-1 text-xs text-neutral-mid underline-offset-2 hover:text-neutral-dark hover:underline">Close</button>
         </div>
       )}
     </div>
@@ -405,6 +406,7 @@ export default function SettingsPage() {
   const sameName = (a: string, b: string) => a.replace(/,/g, '').toLowerCase().trim() === b.replace(/,/g, '').toLowerCase().trim()
   const personForName = (n: string) => staffDir.find(u => u.name && sameName(u.name, n) && (u as any).is_active !== false) ?? staffDir.find(u => u.name && sameName(u.name, n)) ?? null
   const namePic = (name: string) => { const u = personForName(name); return u ? <StaffAvatar name={u.name} photoUrl={u.photo_url ?? null} size={22} onRefresh={reloadStaffDir} /> : null }
+  const [moreThanOne, setMoreThanOne] = useState<{ key: string; role: string; name: string; existing: string[] } | null>(null)   // asked before a second holder is added to a role
   const [typedOpen, setTypedOpen] = useState<Record<string, boolean>>({})   // "someone not on the staff list": the typed box, kept for people who are not staff
   // A name is shown as archived only when an archived person has it and no active person does (two people can share a name).
   const nameKey = (n: string) => n.replace(/,/g, '').toLowerCase().trim()
@@ -556,6 +558,13 @@ export default function SettingsPage() {
     if (cur.some(n => n.toLowerCase() === name.toLowerCase())) { setRoleInput(r => ({ ...r, [key]: '' })); return }
     const next = { ...orgDetails, [key]: [...cur, name].join(', ') }
     setOrgDetails(next); setRoleInput(r => ({ ...r, [key]: '' })); saveOrgDetails(next)
+  }
+  // A role that already has someone named is only given a second person once the admin has said that is what they meant.
+  function askAddRoleName(key: string, role: string, existing: string[], picked?: string) {
+    const name = (picked ?? roleInput[key] ?? '').trim()
+    if (!name) return
+    if (existing.length === 0 || existing.some(n => n.toLowerCase() === name.toLowerCase())) { addRoleName(key, picked); return }
+    setMoreThanOne({ key, role, name, existing })
   }
   function dropRoleName(key: string, name: string) {
     const next = { ...orgDetails, [key]: roleManual(key).filter(n => n !== name).join(', ') }
@@ -1308,7 +1317,7 @@ export default function SettingsPage() {
                       </label>
                       {staffPeople.length > 0 && (
                         <div className="mb-2">
-                          <StaffNameChooser people={staffPeople} taken={[...rh.derived, ...manual]} label={`Choose who is the ${rh.role}`} onPick={n => addRoleName(rh.key, n)} />
+                          <StaffNameChooser people={staffPeople} taken={[...rh.derived, ...manual]} label={`Choose who is the ${rh.role}`} onPick={n => askAddRoleName(rh.key, rh.role, [...rh.derived, ...manual], n)} />
                           {!typedOpen[rh.key] && (
                             <button type="button" onClick={() => setTypedOpen(t => ({ ...t, [rh.key]: true }))} className="mt-1 text-xs text-neutral-mid underline-offset-2 hover:text-neutral-dark hover:underline">Not on your staff list? Type a name</button>
                           )}
@@ -1320,12 +1329,12 @@ export default function SettingsPage() {
                             type="text"
                             value={roleInput[rh.key] ?? ''}
                             onChange={e => setRoleInput(r => ({ ...r, [rh.key]: e.target.value }))}
-                            onKeyDown={e => e.key === 'Enter' && addRoleName(rh.key)}
+                            onKeyDown={e => e.key === 'Enter' && askAddRoleName(rh.key, rh.role, [...rh.derived, ...manual])}
                             placeholder="Add a name…"
                             maxLength={80}
                             className={INPUT}
                           />
-                          <Button onClick={() => addRoleName(rh.key)} disabled={savingOrg || !(roleInput[rh.key] ?? '').trim()} size="md">
+                          <Button onClick={() => askAddRoleName(rh.key, rh.role, [...rh.derived, ...manual])} disabled={savingOrg || !(roleInput[rh.key] ?? '').trim()} size="md">
                             <Plus size={14} className="mr-1.5" />Add
                           </Button>
                         </div>
@@ -1396,6 +1405,21 @@ export default function SettingsPage() {
 
           {/* Removing somebody whose name is written into policy text. Never applied without
               showing which policies and the wording around the name in each. */}
+          {moreThanOne && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4 py-8" role="dialog" aria-modal="true" aria-label={`Add more than one ${moreThanOne.role}`}>
+              <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-2xl">
+                <h2 className="text-base font-semibold text-neutral-dark">Add more than one {moreThanOne.role}?</h2>
+                <p className="mt-2 text-sm text-neutral-mid">
+                  <strong className="text-neutral-dark">{moreThanOne.role}</strong> already has <strong className="text-neutral-dark">{moreThanOne.existing.join(', ')}</strong>. Do you want to add <strong className="text-neutral-dark">{moreThanOne.name}</strong> as well?
+                </p>
+                <div className="mt-5 flex flex-wrap justify-end gap-2">
+                  <Button variant="secondary" size="md" onClick={() => setMoreThanOne(null)}>No, leave it as it is</Button>
+                  <Button size="md" onClick={() => { const m = moreThanOne; setMoreThanOne(null); addRoleName(m.key, m.name) }}>Yes, add them as well</Button>
+                </div>
+              </div>
+            </div>
+          )}
+
           {nameChange && (
             <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/40 px-4 py-8">
               <div className="w-full max-w-2xl rounded-xl bg-white shadow-2xl">

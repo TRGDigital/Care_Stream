@@ -30,3 +30,13 @@ test('ARCHIVED AND PICTURES: a name that belongs to an archived person gets an A
   const copy = [...page.matchAll(/(Choose a staff member…|Everyone on your staff is already chosen|Not on your staff list\? Type a name|This person is archived\.[^"]*)/g)].map(m => m[1]).join(' ')
   assert.doesNotMatch(copy, /[–—]| - /)
 })
+
+test('CLOSE AND CONFIRM: the open picker has a Close button, and a second person for a role is only added after the admin confirms (picked or typed)', () => {
+  assert.match(page, /onClick=\{\(\) => setOpen\(false\)\} className="mt-1 text-xs[^"]*">Close<\/button>/)
+  assert.match(page, /function askAddRoleName\(key: string, role: string, existing: string\[\], picked\?: string\)/)
+  assert.match(page, /if \(existing\.length === 0 \|\| existing\.some\(n => n\.toLowerCase\(\) === name\.toLowerCase\(\)\)\) \{ addRoleName\(key, picked\); return \}/)   // first holder, or the same name again: no question
+  assert.match(page, /onPick=\{n => askAddRoleName\(rh\.key, rh\.role, \[\.\.\.rh\.derived, \.\.\.manual\], n\)\}/)
+  assert.match(page, /askAddRoleName\(rh\.key, rh\.role, \[\.\.\.rh\.derived, \.\.\.manual\]\)\} disabled=\{savingOrg/)   // the typed Add button asks too
+  assert.match(page, /Add more than one \{moreThanOne\.role\}\?/); assert.match(page, /No, leave it as it is/); assert.match(page, /Yes, add them as well/)
+  assert.doesNotMatch(page, /onPick=\{n => addRoleName\(/)                                                       // nothing adds a picked name without the check
+})

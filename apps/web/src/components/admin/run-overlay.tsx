@@ -24,11 +24,12 @@ export function useLeaveWarning(active: boolean) {
   }, [active])
 }
 
-export function RunOverlay({ title, unit, progress, phase, onStop }: {
+export function RunOverlay({ title, unit, progress, phase, note, onStop }: {
   title: string
   unit: string                                  // 'regulations' or 'policies'
   progress: { done: number; total: number } | null
   phase?: string | null                         // a short plain line for a stage with no count, e.g. 'Comparing your policies'
+  note?: string | null                          // one plain line under the count, when the count alone could be misread
   onStop?: () => void
 }) {
   const [tip, setTip] = useState(0)
@@ -48,6 +49,7 @@ export function RunOverlay({ title, unit, progress, phase, onStop }: {
               ? <>Checked <strong className="text-neutral-dark">{progress!.done}</strong> of <strong className="text-neutral-dark">{progress!.total}</strong> {unit}.</>
               : 'Getting started…'}
         </p>
+        {note && !phase && <p className="mt-1 text-xs leading-relaxed text-neutral-mid">{note}</p>}
         {hasCount && (
           <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-gray-100">
             <div className="h-2 rounded-full bg-teal transition-all" style={{ width: `${Math.min(100, Math.round((progress!.done / progress!.total) * 100))}%` }} />

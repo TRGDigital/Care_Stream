@@ -1552,7 +1552,7 @@ function PolicyConsistencySection({ token, userId, stepInfo, confirmRun, onRunCo
           </button>
         </div>
         {runErr && <p className="px-6 pt-2 text-xs text-red-600">{runErr}</p>}
-        {running && <RunOverlay title="Checking your policies for contradictions…" unit="policies" progress={prog} phase={phase} onStop={() => { stopRun.current = true }} />}
+        {running && <RunOverlay title="Checking your policies for contradictions…" unit="new or changed policies" note="Policies already read and unchanged are not read again. They are included when everything is compared." progress={prog} phase={phase} onStop={() => { stopRun.current = true }} />}
 
         {loadErr && !data ? (
           <div className="px-6 py-4"><LoadError onRetry={load} /></div>

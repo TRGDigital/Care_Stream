@@ -806,7 +806,7 @@ analyticsRouter.post('/consistency/scan/start', requireAdmin, async (_req: Reque
   try {
     await assertFreeRerun(tenantId, 'consistency')
     const sets = await buildAndCacheSets(tenantId)
-    await dropStaleClaims(tenantId)   // no cap accounts only: long policies stored from their first part alone are read again in full
+    await dropStaleClaims(tenantId)   // a stored reading that no longer matches the policy as it is now is dropped, so the policy is read again (the updated policy is the one that counts)
     const pending = await pendingClaimPolicies(tenantId)
     await stampSectionRun(tenantId, 'consistency')
     ok(res, { sets: sets.length, duplicate_sets: sets.filter(s => s.type === 'duplicate').length, topic_sets: sets.filter(s => s.type === 'topic').length, to_extract: pending.length })

@@ -274,18 +274,19 @@ export async function pendingClaimPolicies(tenantId: string, retryFailedBefore?:
   return sources.filter(s => !have.has(s.id))
 }
 
-/** For an account switched on for no cap: a policy longer than one read had only its FIRST part read before, so its stored claims are dropped here (once) and it is read again in full by the run that follows.
- *  Shorter policies, and every account not switched on, are left alone. */
+/** The policy as it is NOW is the only version the check may use. At the start of a run, any stored reading that no longer matches the policy's current text is dropped, so that policy is read again.
+ *  That covers a policy edited since it was last read, a failed read, and (for an account switched on for no cap) a long policy stored from its first part alone. A policy whose text still matches keeps its reading. */
 export async function dropStaleClaims(tenantId: string): Promise<number> {
-  if (!(await noCapFor(tenantId))) return 0
   const sources = await claimSourcePolicies(tenantId)
   if (!sources.length) return 0
+  const open = await noCapFor(tenantId)
   const rows: any[] = await (prisma as any).policyClaim.findMany({ where: { tenant_id: tenantId, policy_id: { in: sources.map(s => s.id) } }, select: { policy_id: true, content_hash: true } })
   let dropped = 0
   await mapLimit(rows, 6, async (r: any) => {
-    const t = await downloadExtractedText(tenantId, r.policy_id).catch(() => null)
-    if (!t || t.length <= CLAIM_READ_CHARS) return
-    if (r.content_hash === createHash('sha256').update(`${t}|all-parts`).digest('hex')) return
+    const t = await downloadExtractedText(tenantId, r.policy_id).catch(() => undefined)
+    if (t === undefined) return   // the text could not be fetched just now: leave the reading as it is rather than guess
+    if (!t || t.trim().length < 200) { if (r.content_hash === 'no-text') return }   // still no usable text: that stays recorded as such
+    else if (r.content_hash === createHash('sha256').update(open && t.length > CLAIM_READ_CHARS ? `${t}|all-parts` : t).digest('hex')) return   // unchanged: keep it
     await (prisma as any).policyClaim.deleteMany({ where: { tenant_id: tenantId, policy_id: r.policy_id } }).catch(() => undefined)
     dropped++
   })

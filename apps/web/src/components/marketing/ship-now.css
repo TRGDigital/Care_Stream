@@ -13,6 +13,8 @@
 /* ── Stripped header and footer for Google Ads visitors (html.ppc-strip). */
 .ppc-only{display:none !important}
 html.ppc-strip .ppc-only{display:flex !important}
+/* Paid visitors see no Well-led banner: the page has one job. */
+html.ppc-strip .wl-banner{display:none !important}
 html.ppc-strip .cs-teambar,
 html.ppc-strip .cschrome .nav .navbtn,
 html.ppc-strip .cschrome .util > :not(.ppc-only),

@@ -31,6 +31,7 @@ const MARKETING: Entry[] = [
   { url: '/care-audits',                           changeFrequency: 'monthly', priority: 0.9 },
   ...AUDIT_PAGES.map(a => ({ url: `/care-audits/${a.slug}`, changeFrequency: 'monthly' as const, priority: 0.7 })),
   { url: '/cqc-compliance',                        changeFrequency: 'monthly', priority: 0.9 },
+  { url: '/cqc-well-led',                          changeFrequency: 'monthly', priority: 0.9 },
   { url: '/cqc-staff-questions',                   changeFrequency: 'monthly', priority: 0.8 },
   { url: '/business-continuity',                   changeFrequency: 'monthly', priority: 0.8 },
   { url: '/cqc-report-chat',                       changeFrequency: 'monthly', priority: 0.8 },

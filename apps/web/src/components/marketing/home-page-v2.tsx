@@ -8,6 +8,7 @@ import { FreeBanner } from './free-banner'
 import { HomeAccordion } from './home-accordion'
 import { HomeLines } from './home-lines'
 import { HomeWhy } from './home-why'
+import { WellLedHeroPanel, WellLedSection } from './well-led-home'
 import { REVIEWS } from '@/lib/reviews'
 import './home-page-v2.css'
 
@@ -264,6 +265,7 @@ export function HomePageV2({ s, showFree = false, why = [] }: { s: HomeCopy; sho
               <button className="pill pill-solid" type="submit">{s('hero.cta')}</button>
             </form>
             <p className="microcopy">{s('hero.microcopy')}</p>
+            <WellLedHeroPanel />
           </div>
         </div>
         <HomeLines />
@@ -315,6 +317,8 @@ export function HomePageV2({ s, showFree = false, why = [] }: { s: HomeCopy; sho
             </div>
           </div>
         </section>
+
+        <WellLedSection />
 
         {showFree && <FreeBanner variant="home" />}
 

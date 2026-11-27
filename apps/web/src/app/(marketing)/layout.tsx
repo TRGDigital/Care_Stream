@@ -13,6 +13,7 @@ import { OffersProvider } from '@/lib/offers'
 import { getActiveOffers } from '@/lib/offers-server'
 import { ShipNowRoot } from '@/components/marketing/ship-now'
 import { SHIP_NOW } from '@/lib/ship-now'
+import { WellLedBanner } from '@/components/marketing/well-led-banner'
 
 // Runs while the page is still being parsed, before the header is painted, so a Google Ads visitor
 // never sees the full navigation flash before ShipNowRoot strips it after hydration. Same rules as
@@ -32,6 +33,7 @@ export default async function MarketingLayout({ children }: { children: React.Re
       <div className="flex min-h-screen flex-col">
         <MarketingNav />
         <main className="flex-1">{children}</main>
+        <WellLedBanner />
         <FunnelInsightsTracker />
         <FunnelInsightsVisitor />
         <SiteTracker />

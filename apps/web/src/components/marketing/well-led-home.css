@@ -1,0 +1,33 @@
+/* CQC Well-led on the home page: the hero panel and the section. Uses the home theme's tokens (scoped under .hpage-v2). */
+.hpage-v2 .wlh-panel{max-width:720px;margin:26px auto 0;background:var(--ground);border:1px solid rgba(123,63,191,.30);border-radius:20px;padding:20px clamp(16px,3vw,26px) 22px;text-align:left;box-shadow:var(--shadow)}
+.hpage-v2 .wlh-head{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.hpage-v2 .wlh-head b{font-size:1.15rem;letter-spacing:-.02em;font-weight:700}
+.hpage-v2 .wlh-tag{display:inline-flex;align-items:center;gap:6px;background:var(--accent-soft);color:var(--accent);font-weight:700;font-size:.74rem;border-radius:999px;padding:4px 11px}
+.hpage-v2 .wlh-tag i{width:8px;height:8px;border-radius:50%;background:var(--good);display:inline-block}
+.hpage-v2 .wlh-sub{margin:8px 0 14px;color:var(--muted);font-size:.93rem;line-height:1.55}
+.hpage-v2 .wlh-tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+@media(max-width:700px){.hpage-v2 .wlh-tiles{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.hpage-v2 .wlh-tile{display:flex;flex-direction:column;gap:7px;align-items:flex-start;background:var(--ground);border:1px solid var(--line);border-radius:14px;padding:12px;text-decoration:none;color:var(--ink);transition:border-color .15s}
+.hpage-v2 .wlh-tile:hover{border-color:var(--accent)}
+.hpage-v2 .wlh-tile b{font-size:.9rem;line-height:1.25;font-weight:700}
+.hpage-v2 .wlh-tile small{font-size:.78rem;color:var(--muted);line-height:1.35}
+.hpage-v2 .wlh-ic{width:34px;height:34px;border-radius:10px;background:var(--accent-soft);display:inline-flex;align-items:center;justify-content:center;color:var(--accent);flex:none}
+.hpage-v2 .wlh-ic svg{width:17px;height:17px}
+.hpage-v2 .wlh-btn{margin-top:16px}
+
+.hpage-v2 .wlh-sec .wrap{max-width:1240px}
+.hpage-v2 .wlh-sec .lede{max-width:46ch;margin-top:14px}
+.hpage-v2 .wlh-cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin-top:40px}
+@media(max-width:1000px){.hpage-v2 .wlh-cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:560px){.hpage-v2 .wlh-cards{grid-template-columns:1fr}}
+.hpage-v2 .wlh-card{display:flex;flex-direction:column;background:var(--ground);border:1px solid var(--line);border-radius:18px;padding:22px;text-decoration:none;color:var(--ink);box-shadow:var(--shadow);transition:border-color .15s,transform .15s}
+.hpage-v2 .wlh-card:hover{border-color:rgba(123,63,191,.45);transform:translateY(-2px)}
+.hpage-v2 .wlh-card .wlh-ic{width:42px;height:42px;border-radius:12px;margin-bottom:16px}
+.hpage-v2 .wlh-card .wlh-ic svg{width:20px;height:20px}
+.hpage-v2 .wlh-card h3{margin-bottom:6px}
+.hpage-v2 .wlh-card p{margin:0 0 14px;font-size:.92rem;color:var(--muted);line-height:1.5}
+.hpage-v2 .wlh-card ul{list-style:none;margin:0 0 18px;padding:0;display:flex;flex-direction:column;gap:7px;flex:1}
+.hpage-v2 .wlh-card li{display:flex;gap:8px;align-items:flex-start;font-size:.84rem;color:var(--ink-2);line-height:1.35}
+.hpage-v2 .wlh-card li::before{content:"";flex:none;width:15px;height:15px;margin-top:1px;border-radius:50%;background:var(--accent-soft) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M4.5 8.3l2.2 2.2 4.8-4.8' fill='none' stroke='%237B3FBF' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/contain no-repeat}
+.hpage-v2 .wlh-more{font-weight:700;font-size:.9rem;color:var(--accent)}
+.hpage-v2 .wlh-note{font-size:.88rem;color:var(--muted)}

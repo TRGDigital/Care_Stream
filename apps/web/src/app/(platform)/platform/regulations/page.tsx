@@ -111,6 +111,10 @@ export default function RegulationsPage() {
   const [editId,      setEditId]        = useState<string | null>(null)
   const [error,       setError]         = useState<string | null>(null)
   const [search,      setSearch]        = useState('')
+  // Arriving from Policy testing (?key=<reference key>): that regulation opens and scrolls into view.
+  const [focusKey,    setFocusKey]      = useState<string | null>(null)
+  useEffect(() => { try { setFocusKey(new URLSearchParams(window.location.search).get('key')) } catch { /* ignore */ } }, [])
+  useEffect(() => { if (focusKey && regulations.length) setTimeout(() => document.getElementById(`reg-${focusKey}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 150) }, [focusKey, regulations.length])
   const [needsUpdateOnly, setNeedsUpdateOnly] = useState(false)
 
   function load() {
@@ -442,6 +446,7 @@ export default function RegulationsPage() {
                 key={reg.id}
                 reg={reg}
                 token={token}
+                focused={focusKey === reg.reference_key}
                 isEditing={editId === reg.id}
                 onEdit={() => setEditId(reg.id)}
                 onCancelEdit={() => setEditId(null)}
@@ -464,16 +469,18 @@ export default function RegulationsPage() {
 
 // ─── Regulation row ───────────────────────────────────────────────────────────
 
-function RegulationRow({ reg, token, isEditing, onEdit, onCancelEdit, onSaved, onDelete }: {
+function RegulationRow({ reg, token, focused, isEditing, onEdit, onCancelEdit, onSaved, onDelete }: {
   reg:         Regulation
   token:       string
+  focused?:    boolean
   isEditing:   boolean
   onEdit:      () => void
   onCancelEdit: () => void
   onSaved:     (r: Regulation) => void
   onDelete:    () => void
 }) {
-  const [expanded, setExpanded] = useState(false)
+  const [expanded, setExpanded] = useState(!!focused)
+  useEffect(() => { if (focused) setExpanded(true) }, [focused])
   const [form,     setForm]     = useState<Partial<Regulation>>({})
   const [saving,   setSaving]   = useState(false)
   const [notifyTenants, setNotifyTenants] = useState(false)   // per-save: alert assessed tenants of this change?
@@ -767,7 +774,7 @@ function RegulationRow({ reg, token, isEditing, onEdit, onCancelEdit, onSaved, o
   }
 
   return (
-    <div className="rounded-lg border border-gray-200 bg-white">
+    <div id={`reg-${reg.reference_key}`} className={`scroll-mt-24 rounded-lg border bg-white ${focused ? 'border-purple-500 ring-2 ring-purple-500' : 'border-gray-200'}`}>
       <div className="flex items-start gap-3 px-4 py-3.5">
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">

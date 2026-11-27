@@ -4,12 +4,12 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import fs from 'fs'
 import path from 'path'
-import { POLICY_TYPES, betterReading, libraryGaps, parseJudge, quoteInText, gapsIn, policyMatchesType, approvalProblems, DEFAULT_STRESS_JUDGE_PROMPT, DEFAULT_SCENARIO_DRAFTER_PROMPT, type ExpectedPoint } from '../services/policy-testing/stress'
+import { bestElement, POLICY_TYPES, betterReading, libraryGaps, parseJudge, quoteInText, gapsIn, policyMatchesType, approvalProblems, DEFAULT_STRESS_JUDGE_PROMPT, DEFAULT_SCENARIO_DRAFTER_PROMPT, type ExpectedPoint } from '../services/policy-testing/stress'
 import { isPolicyTestingAccount, policyTestingAccounts } from './policy-testing-pilot'
 
 const POINTS: ExpectedPoint[] = [
-  { id: 'p1', text: 'Call emergency services when a head injury is suspected', source_label: 'NICE falls guideline', source_url: 'https://www.nice.org.uk/guidance/ng249' },
-  { id: 'p2', text: 'Record the fall in the care record', source_label: 'Regulation 17', source_url: '' },
+  { id: 'p1', text: 'Call emergency services when a head injury is suspected', source_label: 'NICE falls guideline', source_url: 'https://www.nice.org.uk/guidance/ng249', regulation_key: 'nice-falls' },
+  { id: 'p2', text: 'Record the fall in the care record', source_label: 'Regulation 17', source_url: '', regulation_key: 'reg-17' },
 ]
 const POLICY = 'If a resident falls, the senior carer must call 999 if a head injury is suspected. Staff keep the resident comfortable.'
 
@@ -41,7 +41,9 @@ test('JUDGE: a missing point carries no quote and keeps its suggested wording', 
 })
 
 test('SCENARIOS: only a described, typed, sourced scenario can be approved', () => {
-  assert.deepEqual(approvalProblems({ description: 'A resident is found on the floor overnight by a care worker.', policy_types: ['falls'], expected_points: [...POINTS, { id: 'p3', text: 'Inform the next of kin', source_label: 'Regulation 20', source_url: '' }] }), [])
+  assert.deepEqual(approvalProblems({ description: 'A resident is found on the floor overnight by a care worker.', policy_types: ['falls'], expected_points: [...POINTS, { id: 'p3', text: 'Inform the next of kin', source_label: 'Regulation 20', source_url: '', regulation_key: 'reg-20' }] }), [])
+  // a point with a typed label but no regulation chosen from the Regulations list is not enough
+  assert.equal(approvalProblems({ description: 'A resident is found on the floor overnight by a care worker.', policy_types: ['falls'], expected_points: [...POINTS, { id: 'p3', text: 'Inform the next of kin', source_label: 'Regulation 20', source_url: '' }] }).length, 1)
   const bad = approvalProblems({ description: '', policy_types: [], expected_points: [{ id: 'p1', text: 'x'.repeat(10), source_label: '', source_url: '' }] })
   assert.equal(bad.length, 4)
 })
@@ -110,4 +112,19 @@ test('READING: the policy is read in full (no cut off), in parts, and the rest o
   assert.match(svc, /if \(!r\) \{ failed = true; return \[\] \}/)
   assert.match(svc, /findElsewhere/)
   assert.match(svc, /queryVectors\(namespace, emb, 12\)/)
+})
+
+test('REGULATIONS: each point rests on a regulation record and the required element it comes from, and the judging map links to /platform/regulations', () => {
+  const els = ['The policy must state who to inform, including the next of kin, after a fall', 'The policy must require every fall to be recorded in the care record', 'The policy must set out when emergency services are called']
+  assert.equal(bestElement('Inform the next of kin after a fall', els), els[0])
+  assert.equal(bestElement('Record the fall in the care record', els), els[1])
+  assert.equal(bestElement('Completely unrelated wording about gardens', els), '')
+  const read = (f: string) => fs.readFileSync(path.resolve(__dirname, f), 'utf8')
+  const page = read('../../../web/src/app/(platform)/platform/policy-testing/page.tsx'), regs = read('../../../web/src/app/(platform)/platform/regulations/page.tsx'), svc = read('../services/policy-testing/stress.ts')
+  assert.match(page, /\/platform\/regulations\?key=\$\{encodeURIComponent\(r\.reference_key\)\}/)   // the map links to the regulation record, not a web address
+  assert.doesNotMatch(page, /Source <ExternalLink/)
+  assert.match(page, /Required element it comes from/)
+  assert.match(regs, /get\('key'\)/); assert.match(regs, /id=\{`reg-\$\{reg\.reference_key\}`\}/)
+  assert.match(svc, /regulation_key: input\.regulationKey/)
+  assert.match(DEFAULT_SCENARIO_DRAFTER_PROMPT, /"from"/)
 })

@@ -43,10 +43,10 @@ You are given one regulation record (its name, whether it is statutory or adviso
 Propose scenarios: ordinary, realistic care moments where the regulation bites and a policy of that type must tell staff what to do. For each scenario give:
 - "title": short, plain (for example "A resident is found on the floor overnight")
 - "description": three to five sentences describing the moment. No names. No clinical detail beyond what is needed.
-- "points": the things a good policy tells staff to do in that situation. Every point MUST be taken from, or directly supported by, the authoritative requirements or required elements you were given. Never add a requirement that those texts do not support. If the record gives too little to support a point, leave it out. Prefer 5 to 9 points, each one action or fact a policy must state.
+- "points": the things a good policy tells staff to do in that situation. Every point MUST be taken from, or directly supported by, the authoritative requirements or required elements you were given. Never add a requirement that those texts do not support. If the record gives too little to support a point, leave it out. Prefer 5 to 9 points, each one action or fact a policy must state. For each point give "text" (what the policy must say) and "from" (the wording of the requirement or required element it comes from, copied exactly from the record).
 
 Return ONLY valid JSON, no code fences:
-{ "scenarios": [ { "title": "", "description": "", "points": ["", ""] } ] }
+{ "scenarios": [ { "title": "", "description": "", "points": [ { "text": "", "from": "" } ] } ] }
 British English. No dashes used as punctuation. Do not write clinical advice.`
 
 /** The policy types a scenario can be for, and how a home's policy is matched to one: by its AI classified type or by its name. Grouped for the pickers. Keys never change once a scenario uses them. */
@@ -165,7 +165,8 @@ export function policyMatchesType(policy: { name?: string | null; policy_type?: 
   return t.match.test(`${policy.name ?? ''} ${policy.policy_type ?? ''}`)
 }
 
-export type ExpectedPoint = { id: string; text: string; source_label: string; source_url: string }
+/** One thing a good policy tells staff to do. It rests on a regulation record (regulation_key, in /platform/regulations) and, where known, the required element of that record it comes from (source_text). */
+export type ExpectedPoint = { id: string; text: string; source_label: string; source_url: string; regulation_key?: string; source_text?: string }
 export type Verdict = 'covered' | 'partly' | 'missing'
 export type ElsewhereHit = { policy_id: string; policy_name: string; verdict: 'covered' | 'partly'; quote: string }
 export type PointResult = { id: string; text: string; verdict: Verdict; quote: string; quote_checked: boolean; note: string; suggested_wording: string; source_label: string; source_url: string; elsewhere?: ElsewhereHit[] }
@@ -176,10 +177,23 @@ export function approvalProblems(s: { description: string; policy_types: string[
   if (s.description.trim().length < 20) out.push('Add a description of the situation.')
   if (!s.policy_types.length) out.push('Choose a policy type.')
   if (s.expected_points.length < 3) out.push('Add at least three expected points.')
-  if (s.expected_points.some(p => !p.source_label)) out.push('Every expected point needs the regulation or guidance it comes from.')
+  if (s.expected_points.some(p => !p.source_label || !p.regulation_key)) out.push('Every expected point needs the regulation it comes from, chosen from the Regulations list.')
   return out
 }
 
+
+const wordsOf = (t: string) => new Set(norm(t).split(/[^a-z0-9']+/).filter(w => w.length > 3))
+/** The required element of a regulation record that a point most closely matches (by shared words), or '' when none is close. Used when the drafter did not say which wording a point came from. */
+export function bestElement(text: string, elements: string[]): string {
+  const a = wordsOf(text); let best = '', score = 0
+  for (const e of elements) {
+    const b = wordsOf(e); if (!a.size || !b.size) continue
+    let inter = 0; for (const w of a) if (b.has(w)) inter++
+    const j = inter / (a.size + b.size - inter)
+    if (j > score) { score = j; best = e }
+  }
+  return score >= 0.15 ? best : ''
+}
 
 async function promptFor(usage: string, fallback: string): Promise<string> {
   try {
@@ -368,13 +382,18 @@ export async function draftScenarios(input: { regulationKey: string; policyType:
   const sourceUrl = (reg.source_urls ?? [])[0] ?? ''
   const created: Array<{ id: string; title: string }> = []
   for (const sc of list) {
-    const pts: string[] = (Array.isArray(sc?.points) ? sc.points : []).map((x: any) => String(x ?? '').trim()).filter((x: string) => x.length > 8).slice(0, 12)
+    // Points may come back as plain text (an older saved prompt) or as { text, from }. Each is tied to the wording of the regulation record it rests on: the drafter's own "from" if it is really in the record, otherwise the closest required element.
+    const elements: string[] = (Array.isArray(reg.required_elements) ? reg.required_elements : []).map((x: any) => String(x))
+    const pts = (Array.isArray(sc?.points) ? sc.points : []).map((x: any) => (typeof x === 'string' ? { text: x.trim(), from: '' } : { text: String(x?.text ?? '').trim(), from: String(x?.from ?? '').trim() })).filter((p: any) => p.text.length > 8).slice(0, 12)
     const title = String(sc?.title ?? '').trim().slice(0, 160)
     if (!title || pts.length < 3) continue
     const row = await (prisma as any).policyScenario.create({
       data: {
         title, description: String(sc?.description ?? '').trim().slice(0, 1200), policy_types: [input.policyType], regulation_keys: [input.regulationKey],
-        expected_points: pts.map((text, i) => ({ id: `p${i + 1}`, text, source_label: reg.official_name, source_url: sourceUrl })),
+        expected_points: pts.map((p: any, i: number) => ({
+          id: `p${i + 1}`, text: p.text, source_label: reg.official_name, source_url: sourceUrl, regulation_key: input.regulationKey,
+          source_text: (p.from && norm(requirements).includes(norm(p.from)) ? p.from : bestElement(p.text, elements)).slice(0, 500),
+        })),
         status: 'draft',
       },
     })

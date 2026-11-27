@@ -12,13 +12,13 @@ import { Loader2, FlaskConical, Plus, Trash2, ExternalLink, ArrowRight, Check } 
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
 
-type Point = { id?: string; text: string; source_label: string; source_url: string }
+type Point = { id?: string; text: string; source_label: string; source_url: string; regulation_key?: string; source_text?: string }
 type Scenario = {
   id: string; title: string; description: string; policy_types: string[]; settings: string[]; regulation_keys: string[]; expected_points: Point[]
   extra_instructions: string; status: 'draft' | 'approved'; version: number; problems: string[]
-  regulations: Array<{ reference_key: string; official_name: string; authority_basis: string }>; runs: number; avg_gaps: number | null
+  regulations: Array<{ reference_key: string; official_name: string; authority_basis: string; summary: string; required_elements: string[]; source_urls: string[] }>; runs: number; avg_gaps: number | null
 }
-type Reg = { reference_key: string; official_name: string; authority_basis: string; required_count: number; has_requirements: boolean; scenario_count: number; source_urls: string[] }
+type Reg = { reference_key: string; official_name: string; authority_basis: string; required_count: number; has_requirements: boolean; scenario_count: number; source_urls: string[]; required_elements: string[] }
 type Overview = { types: Array<{ key: string; label: string; group: string }>; prompts: Array<{ usage: string; label: string }>; judge_usage: string; drafter_usage: string; regulations: Reg[]; scenarios: Scenario[] }
 type Result = { id: string; created_at: string; account_number: string; tenant_name: string; policy_name: string; scenario_title: string; scenario_version: number; gaps: number; summary: string; prompt_hash: string; points: Array<{ id: string; text: string; verdict: string; quote: string; note: string }> }
 
@@ -147,17 +147,49 @@ export default function PolicyTestingPage() {
                       ))}</div>
                     </div>
                     <div>
-                      <p className="text-xs font-semibold">Expected points (each needs its source)</p>
-                      <div className="mt-1 space-y-2">
-                        {editing.expected_points.map((p, i) => (
-                          <div key={i} className="grid gap-2 rounded-md border border-gray-200 bg-white p-2 md:grid-cols-[1fr_220px_220px_auto]">
-                            <textarea aria-label={`Point ${i + 1}`} rows={2} value={p.text} onChange={e => setEditing({ ...editing, expected_points: editing.expected_points.map((x, j) => j === i ? { ...x, text: e.target.value } : x) })} className="rounded-md border border-gray-200 px-2 py-1 text-xs" />
-                            <input aria-label={`Source ${i + 1}`} placeholder="Regulation or guidance" value={p.source_label} onChange={e => setEditing({ ...editing, expected_points: editing.expected_points.map((x, j) => j === i ? { ...x, source_label: e.target.value } : x) })} className="rounded-md border border-gray-200 px-2 py-1 text-xs" />
-                            <input aria-label={`Source address ${i + 1}`} placeholder="https:// address" value={p.source_url} onChange={e => setEditing({ ...editing, expected_points: editing.expected_points.map((x, j) => j === i ? { ...x, source_url: e.target.value } : x) })} className="rounded-md border border-gray-200 px-2 py-1 text-xs" />
-                            <button onClick={() => setEditing({ ...editing, expected_points: editing.expected_points.filter((_, j) => j !== i) })} aria-label="Remove point" className="self-start rounded-md border border-gray-200 p-1.5 text-neutral-mid hover:text-red-600"><Trash2 size={12} /></button>
-                          </div>
+                      <p className="text-xs font-semibold">Regulations this scenario rests on (from the Regulations list)</p>
+                      <div className="mt-1 flex flex-wrap items-center gap-2">
+                        {editing.regulation_keys.map(k => (
+                          <span key={k} className="inline-flex items-center gap-1 rounded-full border border-purple-200 bg-purple-50 px-2 py-0.5 text-xs text-purple-800">
+                            {regName.get(k)?.official_name ?? k}
+                            <button onClick={() => setEditing({ ...editing, regulation_keys: editing.regulation_keys.filter(x => x !== k) })} aria-label={`Remove ${regName.get(k)?.official_name ?? k}`}><Trash2 size={10} /></button>
+                          </span>
                         ))}
-                        <button onClick={() => setEditing({ ...editing, expected_points: [...editing.expected_points, { text: '', source_label: editing.regulations[0]?.official_name ?? '', source_url: '' }] })} className="inline-flex items-center gap-1 text-xs font-semibold text-purple-700"><Plus size={12} /> Add a point</button>
+                        <select aria-label="Add a regulation" value="" onChange={e => e.target.value && setEditing({ ...editing, regulation_keys: [...new Set([...editing.regulation_keys, e.target.value])] })} className="rounded-md border border-gray-200 px-2 py-1 text-xs">
+                          <option value="">Add a regulation…</option>
+                          {data.regulations.filter(r => !editing.regulation_keys.includes(r.reference_key)).map(r => <option key={r.reference_key} value={r.reference_key}>{r.official_name}</option>)}
+                        </select>
+                      </div>
+                    </div>
+                    <div>
+                      <p className="text-xs font-semibold">Expected points (each rests on a regulation and the required element it comes from)</p>
+                      <div className="mt-1 space-y-2">
+                        {editing.expected_points.map((p, i) => {
+                          const reg = p.regulation_key ? regName.get(p.regulation_key) : undefined
+                          const setPoint = (patch: Partial<Point>) => setEditing({ ...editing, expected_points: editing.expected_points.map((x, j) => j === i ? { ...x, ...patch } : x) })
+                          return (
+                            <div key={i} className="grid gap-2 rounded-md border border-gray-200 bg-white p-2 md:grid-cols-[1.2fr_1fr_1fr_auto]">
+                              <textarea aria-label={`Point ${i + 1}`} rows={3} value={p.text} onChange={e => setPoint({ text: e.target.value })} className="rounded-md border border-gray-200 px-2 py-1 text-xs" />
+                              <div>
+                                <label className="text-[11px] text-neutral-mid" htmlFor={`pr-${s.id}-${i}`}>Regulation</label>
+                                <select id={`pr-${s.id}-${i}`} value={p.regulation_key ?? ''} onChange={e => { const r = regName.get(e.target.value); setPoint({ regulation_key: e.target.value, source_label: r?.official_name ?? '', source_url: r?.source_urls?.[0] ?? '', source_text: '' }) }} className="w-full rounded-md border border-gray-200 px-2 py-1 text-xs">
+                                  <option value="">Choose…</option>
+                                  {[...new Set([...editing.regulation_keys, ...(p.regulation_key ? [p.regulation_key] : [])])].map(k => <option key={k} value={k}>{regName.get(k)?.official_name ?? k}</option>)}
+                                </select>
+                              </div>
+                              <div>
+                                <label className="text-[11px] text-neutral-mid" htmlFor={`pe-${s.id}-${i}`}>Required element it comes from</label>
+                                <select id={`pe-${s.id}-${i}`} value={p.source_text ?? ''} onChange={e => setPoint({ source_text: e.target.value })} className="w-full rounded-md border border-gray-200 px-2 py-1 text-xs">
+                                  <option value="">Not tied to one element</option>
+                                  {(reg?.required_elements ?? []).map(el => <option key={el} value={el}>{el.length > 90 ? el.slice(0, 90) + '…' : el}</option>)}
+                                  {p.source_text && !(reg?.required_elements ?? []).includes(p.source_text) && <option value={p.source_text}>{p.source_text.slice(0, 90)}</option>}
+                                </select>
+                              </div>
+                              <button onClick={() => setEditing({ ...editing, expected_points: editing.expected_points.filter((_, j) => j !== i) })} aria-label="Remove point" className="self-start rounded-md border border-gray-200 p-1.5 text-neutral-mid hover:text-red-600"><Trash2 size={12} /></button>
+                            </div>
+                          )
+                        })}
+                        <button onClick={() => setEditing({ ...editing, expected_points: [...editing.expected_points, { text: '', source_label: editing.regulations[0]?.official_name ?? '', source_url: editing.regulations[0]?.source_urls?.[0] ?? '', regulation_key: editing.regulation_keys[0] ?? '', source_text: '' }] })} className="inline-flex items-center gap-1 text-xs font-semibold text-purple-700"><Plus size={12} /> Add a point</button>
                       </div>
                     </div>
                     <div>
@@ -182,9 +214,21 @@ export default function PolicyTestingPage() {
             {data.scenarios.length === 0 && <p className="rounded-xl border border-gray-200 bg-white px-5 py-6 text-sm text-neutral-mid">No scenarios yet, so there is nothing to map.</p>}
             {data.scenarios.map(s => (
               <div key={s.id} className="grid items-stretch gap-2 rounded-xl border border-gray-200 bg-white p-3 lg:grid-cols-[1fr_auto_1.2fr_auto_1fr_auto_1fr]">
-                <div className="rounded-lg bg-neutral-light/60 p-3 text-xs"><p className="mb-1 font-bold uppercase tracking-wide text-neutral-mid">Legislation and guidance</p>
-                  {s.regulations.length ? s.regulations.map(r => <p key={r.reference_key} className="font-medium text-neutral-dark">{r.official_name} <span className="text-neutral-mid">({r.authority_basis === 'advisory' ? 'advisory' : 'statutory'})</span></p>) : <p className="text-amber-700">None linked</p>}
-                  {[...new Set(s.expected_points.map(p => p.source_url).filter(Boolean))].slice(0, 2).map(u => <a key={u} href={u} target="_blank" rel="noopener noreferrer" className="mt-1 inline-flex items-center gap-1 text-purple-700 hover:underline">Source <ExternalLink size={10} /></a>)}
+                <div className="rounded-lg bg-neutral-light/60 p-3 text-xs">
+                  <p className="mb-1 font-bold uppercase tracking-wide text-neutral-mid">Legislation and guidance (from Regulations)</p>
+                  {s.regulations.length === 0 && <p className="text-amber-700">No regulation linked</p>}
+                  {s.regulations.map(r => {
+                    const used = [...new Set(s.expected_points.filter(p => p.regulation_key === r.reference_key && p.source_text).map(p => p.source_text as string))]
+                    return (
+                      <div key={r.reference_key} className="mb-2 last:mb-0">
+                        <Link href={`/platform/regulations?key=${encodeURIComponent(r.reference_key)}`} className="inline-flex items-center gap-1 font-semibold text-purple-700 hover:underline">{r.official_name} <ExternalLink size={10} /></Link>
+                        <span className="ml-1 text-neutral-mid">({r.authority_basis === 'advisory' ? 'advisory' : 'statutory'}, {r.required_elements.length} required elements)</span>
+                        {used.length > 0
+                          ? <ul className="mt-1 list-disc space-y-0.5 pl-4 text-neutral-dark">{used.map(u => <li key={u}>{u.length > 110 ? u.slice(0, 110) + '…' : u}</li>)}</ul>
+                          : <p className="mt-0.5 text-amber-700">Points are not tied to a required element yet. Edit the scenario to choose them.</p>}
+                      </div>
+                    )
+                  })}
                 </div>
                 <ArrowRight size={16} className="hidden self-center text-neutral-mid lg:block" />
                 <div className="rounded-lg bg-neutral-light/60 p-3 text-xs"><p className="mb-1 font-bold uppercase tracking-wide text-neutral-mid">Scenario (v{s.version}, {s.status})</p>

@@ -26,6 +26,9 @@ export const stressRouter = Router()
 
 policyTestingAdminRouter.use(requirePlatformAdmin)
 
+/** Points saved before they carried a regulation take the scenario's only regulation, so they are judged the same way as new ones. */
+const withRegKey = (points: ExpectedPoint[], keys: string[]): ExpectedPoint[] => (points ?? []).map(p => ({ ...p, regulation_key: p.regulation_key || (keys.length === 1 ? keys[0] : '') }))
+
 /** Clean the points a person typed or the drafter returned: ids p1..pn, each with its source. */
 function cleanPoints(input: any): ExpectedPoint[] {
   const list = Array.isArray(input) ? input : []
@@ -34,6 +37,8 @@ function cleanPoints(input: any): ExpectedPoint[] {
     text: String(p?.text ?? '').trim().slice(0, 500),
     source_label: String(p?.source_label ?? '').trim().slice(0, 200),
     source_url: /^https:\/\/\S+$/.test(String(p?.source_url ?? '').trim()) ? String(p.source_url).trim().slice(0, 500) : '',
+    regulation_key: String(p?.regulation_key ?? '').trim().slice(0, 120),
+    source_text: String(p?.source_text ?? '').trim().slice(0, 500),
   })).filter((p: ExpectedPoint) => p.text.length >= 8).slice(0, 15)
 }
 const strs = (v: any, max = 20) => (Array.isArray(v) ? v : []).map((x: any) => String(x ?? '').trim()).filter(Boolean).slice(0, max)
@@ -42,7 +47,7 @@ policyTestingAdminRouter.get('/overview', async (_req: Request, res: Response) =
   try {
     const [scenarios, regs, results] = await Promise.all([
       (prisma as any).policyScenario.findMany({ orderBy: [{ status: 'asc' }, { created_at: 'desc' }] }),
-      (prisma as any).externalRegulation.findMany({ where: { is_active: true }, select: { reference_key: true, official_name: true, authority_basis: true, required_elements: true, authoritative_requirements: true, source_urls: true }, orderBy: { official_name: 'asc' } }),
+      (prisma as any).externalRegulation.findMany({ where: { is_active: true }, select: { reference_key: true, official_name: true, authority_basis: true, summary: true, required_elements: true, authoritative_requirements: true, source_urls: true }, orderBy: { official_name: 'asc' } }),
       (prisma as any).policyStressResult.groupBy({ by: ['scenario_id'], _count: { _all: true }, _avg: { gaps: true } }).catch(() => []),
     ])
     const stats = new Map<string, any>((results as any[]).map(r => [r.scenario_id, r]))
@@ -56,12 +61,17 @@ policyTestingAdminRouter.get('/overview', async (_req: Request, res: Response) =
         reference_key: r.reference_key, official_name: r.official_name, authority_basis: r.authority_basis,
         required_count: (r.required_elements ?? []).length, has_requirements: String(r.authoritative_requirements ?? '').trim().length >= 40,
         scenario_count: (scenarios as any[]).filter(s => (s.regulation_keys ?? []).includes(r.reference_key)).length,
-        source_urls: r.source_urls ?? [],
+        source_urls: r.source_urls ?? [], required_elements: r.required_elements ?? [],
       })),
       scenarios: (scenarios as any[]).map(s => ({
         ...s,
-        problems: approvalProblems({ description: s.description, policy_types: s.policy_types ?? [], expected_points: (s.expected_points ?? []) as ExpectedPoint[] }),
-        regulations: (s.regulation_keys ?? []).map((k: string) => ({ reference_key: k, official_name: regByKey.get(k)?.official_name ?? k, authority_basis: regByKey.get(k)?.authority_basis ?? '' })),
+        problems: approvalProblems({ description: s.description, policy_types: s.policy_types ?? [], expected_points: withRegKey((s.expected_points ?? []) as ExpectedPoint[], s.regulation_keys ?? []) }),
+        // The regulation records the scenario rests on, as held in /platform/regulations (the source of truth). Points saved before they carried a regulation fall back to the scenario's only regulation.
+        regulations: (s.regulation_keys ?? []).map((k: string) => ({
+          reference_key: k, official_name: regByKey.get(k)?.official_name ?? k, authority_basis: regByKey.get(k)?.authority_basis ?? '', summary: regByKey.get(k)?.summary ?? '',
+          required_elements: regByKey.get(k)?.required_elements ?? [], source_urls: regByKey.get(k)?.source_urls ?? [],
+        })),
+        expected_points: ((s.expected_points ?? []) as ExpectedPoint[]).map(p => ({ ...p, regulation_key: p.regulation_key || ((s.regulation_keys ?? []).length === 1 ? s.regulation_keys[0] : '') })),
         runs: stats.get(s.id)?._count?._all ?? 0, avg_gaps: stats.get(s.id)?._avg?.gaps ?? null,
       })),
     })
@@ -106,7 +116,7 @@ policyTestingAdminRouter.patch('/scenarios/:id/status', async (req: Request, res
   const cur = await (prisma as any).policyScenario.findUnique({ where: { id } })
   if (!cur) { err(res, 'NOT_FOUND', 'Scenario not found.', 404); return }
   if (status === 'approved') {
-    const problems = approvalProblems({ description: cur.description, policy_types: cur.policy_types ?? [], expected_points: (cur.expected_points ?? []) as ExpectedPoint[] })
+    const problems = approvalProblems({ description: cur.description, policy_types: cur.policy_types ?? [], expected_points: withRegKey((cur.expected_points ?? []) as ExpectedPoint[], cur.regulation_keys ?? []) })
     if (problems.length) { err(res, 'NOT_READY', problems.join(' '), 400); return }
   }
   const row = await (prisma as any).policyScenario.update({ where: { id }, data: { status } })

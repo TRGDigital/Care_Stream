@@ -2970,6 +2970,18 @@ async function ensurePromptsSeeded() {
     } catch { /* skip on conflict */ }
   }
 
+  // The scenario drafter now also says which wording of the regulation record each point comes from. A saved copy from before that keeps its own words and has the two changed parts replaced, with the old text kept in its history.
+  try {
+    const sd = await (prisma as any).aiPrompt.findUnique({ where: { usage: SCENARIO_DRAFTER_USAGE } })
+    const OLD_SHAPE = '{ "scenarios": [ { "title": "", "description": "", "points": ["", ""] } ] }'
+    if (sd && String(sd.content).includes(OLD_SHAPE) && !String(sd.content).includes('"from"')) {
+      await (prisma as any).aiPromptVersion.create({ data: { id: crypto.randomUUID(), prompt_id: sd.id, usage: sd.usage, label: sd.label, content: sd.content } }).catch(() => {})
+      const next = String(sd.content).replace(OLD_SHAPE, '{ "scenarios": [ { "title": "", "description": "", "points": [ { "text": "", "from": "" } ] } ] }')
+        .replace('each one action or fact a policy must state.', 'each one action or fact a policy must state. For each point give "text" (what the policy must say) and "from" (the wording of the requirement or required element it comes from, copied exactly from the record).')
+      await (prisma as any).aiPrompt.update({ where: { id: sd.id }, data: { content: next, updated_at: new Date() } })
+    }
+  } catch { /* non-fatal */ }
+
   // The change review prompt gained sentence by sentence rules (what is relevant to policies). A saved copy from before that keeps every word
   // of its own and gets the new rules added at the end, with the old text kept in its history.
   try {

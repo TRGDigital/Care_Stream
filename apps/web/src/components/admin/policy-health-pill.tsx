@@ -81,21 +81,21 @@ export function PolicyHealthPill({ policyId }: { policyId: string }) {
         <span className={`h-1.5 w-1.5 rounded-full ${st.dot}`} /> {lc ? `Health ${lc.score}${lc.stale ? ' · out of date' : ''}` : 'Health: not checked'}
       </button>
       {open && (
-        <div className="absolute left-0 top-full z-30 mt-1 w-[420px] rounded-xl border border-gray-200 bg-white p-4 text-left shadow-lg">
+        <div className="absolute left-0 top-full z-30 mt-1 w-[640px] max-w-[92vw] rounded-xl border border-gray-200 bg-white p-6 text-left shadow-xl">
           <div className="flex items-start justify-between gap-3">
             <div>
               <p className="text-xs font-bold text-neutral-dark">Policy health</p>
               {lc ? (
-                <p className="mt-0.5"><span className="text-3xl font-extrabold text-neutral-dark">{lc.score}</span><span className="text-sm text-neutral-mid"> / 100 · </span><span className={`rounded-full border px-2 py-0.5 text-[11px] font-semibold ${st.pill}`}>{st.label}</span>
-                  <span className="block text-[11px] text-neutral-mid">Checked {fmtDay(lc.at)}{lc.stale ? '. This policy has changed since, so check again.' : ''}</span></p>
-              ) : <p className="mt-0.5 text-xs text-neutral-mid">Not checked yet. {h.assessed} of {h.dims.length} dimensions have results from other analyses.</p>}
+                <p className="mt-0.5"><span className="text-5xl font-extrabold text-neutral-dark">{lc.score}</span><span className="text-sm text-neutral-mid"> / 100 · </span><span className={`rounded-full border px-2 py-0.5 text-sm font-semibold ${st.pill}`}>{st.label}</span>
+                  <span className="block text-sm text-neutral-mid">Checked {fmtDay(lc.at)}{lc.stale ? '. This policy has changed since, so check again.' : ''}</span></p>
+              ) : <p className="mt-0.5 text-sm text-neutral-mid">Not checked yet. {h.assessed} of {h.dims.length} dimensions have results from other analyses.</p>}
             </div>
-            {stage === 'idle' && <button onClick={start} className="inline-flex shrink-0 items-center gap-1.5 rounded-md bg-purple-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-purple-700"><PlayCircle size={13} /> {lc ? 'Check again' : 'Run health check'}</button>}
+            {stage === 'idle' && <button onClick={start} className="inline-flex shrink-0 items-center gap-1.5 rounded-md bg-purple-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-purple-700"><PlayCircle size={13} /> {lc ? 'Check again' : 'Run health check'}</button>}
           </div>
-          {error && <p className="mt-2 rounded-md bg-red-50 px-2.5 py-1.5 text-xs text-red-700">{error}</p>}
+          {error && <p className="mt-2 rounded-md bg-red-50 px-2.5 py-1.5 text-sm text-red-700">{error}</p>}
 
           {stage === 'confirm' && (
-            <div className="mt-3 rounded-lg bg-neutral-light p-3 text-xs text-neutral-dark">
+            <div className="mt-3 rounded-lg bg-neutral-light p-3 text-sm text-neutral-dark">
               {!plan ? <p className="flex items-center gap-2"><Loader2 size={12} className="animate-spin" /> Working out what to run…</p> : (<>
                 <p className="font-semibold">This will read the policy in full and use about {1 + (withStress ? plan.credits.stress : 0)} AI {1 + (withStress ? plan.credits.stress : 0) === 1 ? 'credit' : 'credits'}.</p>
                 <p className="mt-1 text-neutral-mid">1 for the clarity read{withStress && plan.credits.stress > 0 ? `, and 1 for each situation tested (${plan.credits.stress}).` : '.'}</p>
@@ -113,30 +113,30 @@ export function PolicyHealthPill({ policyId }: { policyId: string }) {
           )}
 
           {stage === 'running' && (
-            <ul className="mt-3 space-y-1.5 rounded-lg bg-neutral-light p-3 text-xs">
+            <ul className="mt-3 space-y-1.5 rounded-lg bg-neutral-light p-3 text-sm">
               {steps.map((x, i) => (
                 <li key={i} className="flex items-center gap-2">
                   {x.state === 'run' ? <Loader2 size={12} className="animate-spin text-purple-600" /> : x.state === 'done' ? <Check size={12} className="text-green-600" /> : x.state === 'failed' ? <span className="text-red-600">✕</span> : <span className="h-3 w-3 rounded-full border border-gray-300" />}
                   <span className={x.state === 'wait' ? 'text-neutral-mid' : 'text-neutral-dark'}>{x.label}{x.state === 'failed' ? ' (could not be completed)' : ''}</span>
                 </li>
               ))}
-              <li className="pt-1 text-[11px] text-neutral-mid">This can take a minute or two. Keep this page open.</li>
+              <li className="pt-1 text-sm text-neutral-mid">This can take a minute or two. Keep this page open.</li>
             </ul>
           )}
 
           {(stage === 'done' && result ? result.fixes : lc?.fixes ?? h.fixes).length > 0 && stage !== 'running' && stage !== 'confirm' && (
             <div className="mt-3 rounded-lg border border-amber-100 bg-amber-50 p-3">
               <p className="text-xs font-bold text-amber-900">Fix these first</p>
-              <ol className="mt-1 list-decimal space-y-1 pl-4 text-xs text-neutral-dark">
+              <ol className="mt-1 list-decimal space-y-1 pl-4 text-sm text-neutral-dark">
                 {(stage === 'done' && result ? result.fixes : lc?.fixes ?? h.fixes).map(f => <li key={f.dim}>{f.text}. <Link href={f.href} className="font-semibold text-purple-700 hover:underline">Open</Link></li>)}
               </ol>
             </div>
           )}
 
-          <ul className="mt-3 space-y-2">
+          <ul className="mt-4 space-y-3.5">
             {h.dims.map(d => (
-              <li key={d.key} className="flex gap-2 text-xs">
-                <span className={`mt-1 h-2 w-2 shrink-0 rounded-full ${BAND_STYLE[d.band].dot}`} />
+              <li key={d.key} className="flex gap-2 text-sm">
+                <span className={`mt-1 h-2.5 w-2.5 shrink-0 rounded-full ${BAND_STYLE[d.band].dot}`} />
                 <span className="min-w-0 flex-1"><span className="font-semibold text-neutral-dark">{d.label}</span> <span className="text-neutral-mid">· {BAND_STYLE[d.band].label}{d.value != null ? ` · ${d.value}` : ''}</span>
                   <span className="block font-normal text-neutral-mid">{d.detail} <Link href={d.href} className="font-semibold text-purple-700 hover:underline">Open</Link></span>
                   {d.checks && (
@@ -150,7 +150,7 @@ export function PolicyHealthPill({ policyId }: { policyId: string }) {
               </li>
             ))}
           </ul>
-          <p className="mt-3 border-t border-gray-100 pt-2 text-[11px] leading-snug text-neutral-mid">
+          <p className="mt-3 border-t border-gray-100 pt-2 text-sm leading-snug text-neutral-mid">
             A rough score from a fixed rule: each dimension is worth Strong 100, Good 70 or Needs attention 30, weighted, over those assessed (at least three). Regulatory coverage, up to date and consistency use your latest results on the Gaps page.
             It is not a compliance rating.
           </p>

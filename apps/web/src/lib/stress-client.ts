@@ -44,7 +44,14 @@ export const stress = {
   run: (token: string, policy_id: string, scenario_id: string) => call<{ result: StressResult }>('/run', token, { method: 'POST', body: JSON.stringify({ policy_id, scenario_id }) }),
 }
 
-/** Whether the pilot is on for this account. Remembered for the visit so the menu does not flicker. */
+// One request per page, not one per badge: the Policies page shows a health badge for every policy, and the API allows 100 requests a minute per person.
+let metaCache: { token: string; at: number; p: Promise<boolean> } | null = null
+function metaOnce(token: string): Promise<boolean> {
+  if (!metaCache || metaCache.token !== token || Date.now() - metaCache.at > 60_000) metaCache = { token, at: Date.now(), p: stress.meta(token).then(m => m.enabled).catch(() => false) }
+  return metaCache.p
+}
+
+/** Whether the pilot is on for this account. Remembered for the visit so the menu does not flicker, and asked of the server once however many components use it. */
 export function useStressMeta(): { enabled: boolean | null } {
   const { data: session } = useSession()
   const token = (session as any)?.accessToken as string | undefined
@@ -53,7 +60,7 @@ export function useStressMeta(): { enabled: boolean | null } {
     if (!token) return
     try { const c = window.sessionStorage.getItem('cs-stress-meta'); if (c) setEnabled(c === '1') } catch { /* ignore */ }
     let live = true
-    stress.meta(token).then(m => { if (live) { setEnabled(m.enabled); try { window.sessionStorage.setItem('cs-stress-meta', m.enabled ? '1' : '0') } catch { /* ignore */ } } }).catch(() => { if (live) setEnabled(false) })
+    metaOnce(token).then(on => { if (live) { setEnabled(on); try { window.sessionStorage.setItem('cs-stress-meta', on ? '1' : '0') } catch { /* ignore */ } } })
     return () => { live = false }
   }, [token])
   return { enabled }

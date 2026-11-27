@@ -104,3 +104,13 @@ test('HEALTH CHECK: planned, run step by step from the page, then snapshotted; t
   assert.match(pill, /const \[withStress, setWithStress\] = useState\(true\)/)   // stress tests are included by default
   assert.match(pill, /It is not a compliance rating/)
 })
+
+test('RATE LIMIT: the pilot check is asked once per page, not once per health badge (the API allows 100 requests a minute per person)', () => {
+  const read = (f: string) => fs.readFileSync(path.resolve(__dirname, f), 'utf8')
+  const client = read('../../../web/src/lib/stress-client.ts'), pill = read('../../../web/src/components/admin/policy-health-pill.tsx')
+  assert.match(client, /function metaOnce\(token: string\): Promise<boolean>/)
+  assert.match(client, /metaOnce\(token\)\.then/)
+  assert.doesNotMatch(client, /stress\.meta\(token\)\.then\(m => \{ if \(live\)/)
+  assert.match(pill, /function loadOnce\(token: string, fresh = false\)/)
+  assert.match(pill, /w-\[640px\]/)
+})

@@ -114,3 +114,15 @@ test('RATE LIMIT: the pilot check is asked once per page, not once per health ba
   assert.match(pill, /function loadOnce\(token: string, fresh = false\)/)
   assert.match(pill, /w-\[640px\]/)
 })
+
+test('OVERLAY: fixed to the window, placed below or above its badge, kept in view as the page scrolls, with no scroll bar showing', () => {
+  const read = (f: string) => fs.readFileSync(path.resolve(__dirname, f), 'utf8')
+  const pill = read('../../../web/src/components/admin/policy-health-pill.tsx')
+  assert.match(pill, /createPortal\(/)
+  assert.match(pill, /position: 'fixed'/)
+  assert.match(pill, /window\.addEventListener\('scroll', place, true\)/)
+  assert.match(pill, /new ResizeObserver\(place\)/)
+  assert.match(pill, /scrollIntoView\(\{ block: 'nearest' \}\)/)
+  assert.match(pill, /\[&::-webkit-scrollbar\]:hidden/)
+  assert.match(pill, /panelRef\.current && !panelRef\.current\.contains\(t\)/)
+})

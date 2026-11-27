@@ -2,7 +2,8 @@
 
 // Policy health (pilot: CS-1001 only): a badge beside each policy on the Policies page. Click it to see the six dimensions, or press Run health check to read the policy, test it against the approved
 // situations that fit it, and get a rough score out of 100 with the three things to fix first. The score is worked out by a fixed rule from the six dimensions. It is not a compliance rating.
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import Link from 'next/link'
 import { useSession } from 'next-auth/react'
 import { Loader2, Check, PlayCircle } from 'lucide-react'
@@ -38,13 +39,37 @@ export function PolicyHealthPill({ policyId }: { policyId: string }) {
   const [result, setResult] = useState<HealthCheckResult | null>(null)
   const [error, setError] = useState('')
   const box = useRef<HTMLSpanElement>(null)
+  const btnRef = useRef<HTMLButtonElement>(null)
+  const panelRef = useRef<HTMLDivElement>(null)
+  const [pos, setPos] = useState<{ top: number; left: number } | null>(null)
 
   useEffect(() => { if (enabled && token) loadOnce(token).then(list => setH(list.find(x => x.id === policyId) ?? null)) }, [enabled, token, policyId])
   useEffect(() => {
     if (!open) return
-    const close = (e: MouseEvent) => { if (box.current && !box.current.contains(e.target as Node) && stage !== 'running') setOpen(false) }
+    const close = (e: MouseEvent) => { const t = e.target as Node; if (box.current && !box.current.contains(t) && panelRef.current && !panelRef.current.contains(t) && stage !== 'running') setOpen(false) }
     document.addEventListener('mousedown', close); return () => document.removeEventListener('mousedown', close)
   }, [open, stage])
+
+  // Always in view: the overlay is fixed to the window, placed below its badge when it fits, above when that fits better, and held inside the window otherwise. It follows the page as it scrolls,
+  // and moves again when its own height changes (confirm, progress, result). Taller than the window, it scrolls inside itself with no scroll bar showing.
+  const place = useCallback(() => {
+    const b = btnRef.current?.getBoundingClientRect(), p = panelRef.current
+    if (!b || !p) return
+    const vw = window.innerWidth, vh = window.innerHeight, w = p.offsetWidth, hgt = Math.min(p.offsetHeight, vh - 16)
+    const left = Math.min(Math.max(8, b.left), Math.max(8, vw - w - 8))
+    let top = b.bottom + 8
+    if (top + hgt > vh - 8) { const above = b.top - 8 - hgt; top = above >= 8 ? above : Math.max(8, vh - hgt - 8) }
+    setPos(cur => (cur && Math.abs(cur.top - top) < 1 && Math.abs(cur.left - left) < 1 ? cur : { top, left }))
+  }, [])
+  useLayoutEffect(() => {
+    if (!open) { setPos(null); return }
+    btnRef.current?.scrollIntoView({ block: 'nearest' })   // the badge itself is on screen before the overlay is placed
+    place()
+    const ro = typeof ResizeObserver !== 'undefined' && panelRef.current ? new ResizeObserver(place) : null
+    if (ro && panelRef.current) ro.observe(panelRef.current)
+    window.addEventListener('scroll', place, true); window.addEventListener('resize', place)
+    return () => { ro?.disconnect(); window.removeEventListener('scroll', place, true); window.removeEventListener('resize', place) }
+  }, [open, place])
 
   if (!enabled || !h || !token) return null
   const lc = h.last_check
@@ -76,12 +101,13 @@ export function PolicyHealthPill({ policyId }: { policyId: string }) {
 
   return (
     <span ref={box} className="relative inline-block shrink-0">
-      <button type="button" onClick={() => (open ? close() : setOpen(true))} aria-expanded={open}
+      <button ref={btnRef} type="button" onClick={() => (open ? close() : setOpen(true))} aria-expanded={open}
               className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-semibold ${st.pill}`}>
         <span className={`h-1.5 w-1.5 rounded-full ${st.dot}`} /> {lc ? `Health ${lc.score}${lc.stale ? ' · out of date' : ''}` : 'Health: not checked'}
       </button>
-      {open && (
-        <div className="absolute left-0 top-full z-30 mt-1 w-[640px] max-w-[92vw] rounded-xl border border-gray-200 bg-white p-6 text-left shadow-xl">
+      {open && createPortal(
+        <div ref={panelRef} role="dialog" aria-label="Policy health" style={{ position: 'fixed', top: pos?.top ?? -9999, left: pos?.left ?? -9999 }}
+             className="z-50 max-h-[calc(100vh-16px)] w-[640px] max-w-[92vw] overflow-y-auto rounded-xl border border-gray-200 bg-white p-6 text-left shadow-xl [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           <div className="flex items-start justify-between gap-3">
             <div>
               <p className="text-xs font-bold text-neutral-dark">Policy health</p>
@@ -154,7 +180,8 @@ export function PolicyHealthPill({ policyId }: { policyId: string }) {
             A rough score from a fixed rule: each dimension is worth Strong 100, Good 70 or Needs attention 30, weighted, over those assessed (at least three). Regulatory coverage, up to date and consistency use your latest results on the Gaps page.
             It is not a compliance rating.
           </p>
-        </div>
+        </div>,
+        document.body,
       )}
     </span>
   )

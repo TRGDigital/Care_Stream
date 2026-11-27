@@ -7,7 +7,7 @@ import { checkAiCreditLimit, logAiCredit, PlanLimitError } from '../lib/plan-lim
 import { policyTestingEnabled } from '../lib/policy-testing-pilot'
 import { downloadExtractedText } from '../services/storage/s3'
 import { isPolicyDocument } from '../lib/document-kind'
-import { analyseClarity } from '../services/policy-testing/clarity'
+import { analyseClarity, clarityStatus } from '../services/policy-testing/clarity'
 import { loadHealth, HEALTH_WEIGHTS } from '../services/policy-testing/health'
 import type { Dim } from '../services/policy-testing/health'
 import {
@@ -215,12 +215,15 @@ stressRouter.post('/run', requireAdmin, async (req: Request, res: Response) => {
 
 // ── Policy clarity and precision (pilot) ─────────────────────────────────────
 
+/** A clarity result as every screen shows it: the band, the seven checks and staff readability worked out by the shared function, never read raw from the row. */
+const shapeClarity = (row: any) => { const cs = clarityStatus(row); return { ...row, band: cs?.band ?? row.band, checks: cs?.checks ?? [], readability: cs?.readability ?? null } }
+
 stressRouter.get('/clarity/library', requireAdmin, async (_req: Request, res: Response) => {
   const tenantId = await guard(res); if (!tenantId) return
   try {
-    const [health, results] = await Promise.all([loadHealth(tenantId), (prisma as any).policyClarityResult.findMany({ where: { tenant_id: tenantId }, orderBy: { created_at: 'desc' }, take: 400, select: { id: true, policy_id: true, band: true, finding_count: true, created_at: true } })])
-    const latest = new Map<string, any>(); for (const r of results as any[]) if (!latest.has(r.policy_id)) latest.set(r.policy_id, r)
-    ok(res, { policies: health.map(h => ({ id: h.id, name: h.name, ready: h.ready, waiting: h.waiting, steps: h.steps, last: latest.get(h.id) ? { id: latest.get(h.id).id, band: latest.get(h.id).band, findings: latest.get(h.id).finding_count, at: latest.get(h.id).created_at } : null })) })
+    const [health, results] = await Promise.all([loadHealth(tenantId), (prisma as any).policyClarityResult.findMany({ where: { tenant_id: tenantId }, orderBy: { created_at: 'desc' }, distinct: ['policy_id'], select: { id: true, policy_id: true, finding_count: true, findings: true, metrics: true, created_at: true } })])
+    const latest = new Map<string, any>(); for (const r of results as any[]) latest.set(r.policy_id, r)
+    ok(res, { policies: health.map(h => { const l = latest.get(h.id), cs = clarityStatus(l); return { id: h.id, name: h.name, ready: h.ready, waiting: h.waiting, steps: h.steps, last: l && cs ? { id: l.id, band: cs.band, findings: l.finding_count, at: l.created_at } : null } }) })
   } catch (e: any) { err(res, 'LIBRARY_FAILED', e?.message ?? 'Could not load policy clarity.', 500) }
 })
 
@@ -228,7 +231,7 @@ stressRouter.get('/clarity/result/:id', requireAdmin, async (req: Request, res: 
   const tenantId = await guard(res); if (!tenantId) return
   const r = await (prisma as any).policyClarityResult.findFirst({ where: { id: String(req.params.id), tenant_id: tenantId } })
   if (!r) { err(res, 'NOT_FOUND', 'Result not found.', 404); return }
-  ok(res, { result: r })
+  ok(res, { result: shapeClarity(r) })
 })
 
 // A policy that still has open regulation gaps, out of date terms or conflicts is not ready: rewriting wording that is about to change wastes effort. The administrator can run it anyway.
@@ -252,7 +255,7 @@ stressRouter.post('/clarity/run', requireAdmin, async (req: Request, res: Respon
       tenant_id: tenantId, policy_id: policy.id, policy_name: policy.name, findings: j.findings, metrics: j.metrics, band: j.band, finding_count: j.findings.length,
       summary: j.summary, prompt_hash: j.prompt_hash, run_by: String((req as any).user?.id ?? ''),
     } })
-    ok(res, { result: row })
+    ok(res, { result: shapeClarity(row) })
   } catch (e: any) {
     if (e instanceof PlanLimitError) { err(res, e.code, e.message, 402); return }
     err(res, 'RUN_FAILED', 'The check could not be completed this time. Please try again.', 500)

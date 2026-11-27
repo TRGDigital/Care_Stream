@@ -4,7 +4,7 @@
 
 import { prisma } from '../../db/client'
 import { isPolicyDocument } from '../../lib/document-kind'
-import { readabilityBand, checkBands, clarityDimBand, HEALTH_CHECKS, type Band, type Metrics, type CheckResult } from './clarity'
+import { clarityStatus, HEALTH_CHECKS, type Band, type CheckResult } from './clarity'
 
 export type DimKey = 'coverage' | 'uptodate' | 'consistency' | 'wording' | 'clarity' | 'practical'
 export const HEALTH_WEIGHTS: Record<DimKey, number> = { coverage: 25, uptodate: 15, consistency: 15, wording: 10, clarity: 20, practical: 15 }
@@ -150,15 +150,11 @@ export async function loadHealth(tenantId: string): Promise<PolicyHealth[]> {
     const cl = clarityBy.get(p.id)
     const myStress = [...stressLatest.values()].filter(r => r.policy_id === p.id)
     const stressPoints = myStress.reduce((n, r) => n + (Array.isArray(r.points) ? r.points.length : 0), 0), stressGaps = myStress.reduce((n, r) => n + (r.gaps ?? 0), 0)
-    const metrics: Metrics | null = cl?.metrics && Object.keys(cl.metrics).length ? cl.metrics : null
-    // The seven checks always show; until clarity has been run each says so.
-    const checks: CheckResult[] = cl ? checkBands(Array.isArray(cl.findings) ? cl.findings : [], metrics?.words ?? 0) : HEALTH_CHECKS.map(c => ({ ...c, count: 0, band: 'none' as Band }))
-    const readability: { band: Band; detail: string } = metrics
-      ? { band: readabilityBand(metrics), detail: `Average sentence ${metrics.avg_sentence_words} words, ${metrics.long_sentence_pct}% long sentences, ${metrics.passive_pct}% passive, reading ease ${metrics.reading_ease}.` }
-      : { band: 'none', detail: 'Measured when clarity is run.' }
-    // Staff readability sits inside clarity: it comes from the same read. A readability that needs attention stops clarity being called Strong.
-    const clarityBandNow: Band = cl ? clarityDimBand((cl.band ?? 'none') as Band, checks) : 'none'
-    const clarityFinal: Band = clarityBandNow === 'strong' && readability.band === 'attention' ? 'good' : clarityBandNow
+    // Clarity as step 5 shows it: one shared function, so the two cannot disagree.
+    const cs = clarityStatus(cl)
+    const checks: CheckResult[] = cs ? cs.checks : HEALTH_CHECKS.map(c => ({ ...c, count: 0, band: 'none' as Band }))   // the seven checks always show; until clarity has been run each says so
+    const readability = cs ? cs.readability : { band: 'none' as Band, detail: 'Measured when clarity is run.' }
+    const clarityFinal: Band = cs ? cs.band : 'none'
     const reviewNote = review ? (review === 'overdue' ? ' Its review date is overdue (shown separately on the Gaps page).' : ' It has no review date set (shown separately on the Gaps page).') : ''
 
     const dims: Dim[] = [

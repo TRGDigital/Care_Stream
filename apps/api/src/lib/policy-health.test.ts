@@ -3,7 +3,7 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import fs from 'fs'
 import path from 'path'
-import { checkBands, clarityDimBand, HEALTH_CHECKS, parseClarity, readabilityMetrics, readabilityBand, clarityBand, CLARITY_TYPES, DEFAULT_POLICY_CLARITY_PROMPT } from '../services/policy-testing/clarity'
+import { clarityStatus, checkBands, clarityDimBand, HEALTH_CHECKS, parseClarity, readabilityMetrics, readabilityBand, clarityBand, CLARITY_TYPES, DEFAULT_POLICY_CLARITY_PROMPT } from '../services/policy-testing/clarity'
 import { scoreOf, topFixes, overallBand, coverageBand, practicalBand, HEALTH_WEIGHTS } from '../services/policy-testing/health'
 
 const TEXT = 'Staff should ensure that residents are appropriately monitored and that any concerns are escalated where necessary. The senior carer records the checks in the care plan every hour overnight.'
@@ -150,4 +150,26 @@ test('SAME AS GAPS: the health row reads steps 1 to 4 from the functions that dr
   assert.match(h, /completed\.has\(c\.reference_key\)/)               // coverage: completed remediations are left out
   assert.match(h, /target_policies/)                                  // coverage: a gap counts against the policy its fixes route to
   assert.doesNotMatch(h, /policyLintResult\.findMany\(\{ where: \{ tenant_id: tenantId \}, select: \{ policy_id: true, findings: true/)   // no raw findings count
+})
+
+test('STEP 5 = HEALTH: one function works out clarity for both, so the band, the seven checks and readability always agree', () => {
+  const read = (f: string) => fs.readFileSync(path.resolve(__dirname, f), 'utf8')
+  const health = read('../services/policy-testing/health.ts'), routes = read('../routes/policy-testing.ts'), sec = read('../../../web/src/components/admin/policy-clarity-section.tsx')
+  assert.match(health, /clarityStatus\(cl\)/)
+  assert.match(routes, /clarityStatus\(row\)|clarityStatus\(l\)/)
+  assert.match(routes, /shapeClarity\(r\)/); assert.match(routes, /shapeClarity\(row\)/)
+  assert.doesNotMatch(sec, /\(n \/ words\) \* 1000/)                  // the page no longer works out the check bands itself
+  assert.match(sec, /result\.checks\.map/)
+  assert.match(sec, /Staff readability/)
+
+  // The same stored result gives the same answer however it is asked for.
+  const mk = (vague: number, words: number, avg: number) => ({ findings: Array.from({ length: vague }, () => ({ type: 'vague' })), metrics: { words, sentences: 40, avg_sentence_words: avg, long_sentence_pct: 5, passive_pct: 10, reading_ease: 60 } })
+  const a = clarityStatus(mk(1, 1500, 15))!                              // 0.7 per thousand: strong overall, vague is good, so held at good
+  assert.equal(a.checks.find(c => c.key === 'vague')!.band, 'good')
+  assert.equal(a.band, 'strong')
+  const b = clarityStatus(mk(3, 1500, 15))!                              // 2 per thousand: vague needs attention, so not strong
+  assert.equal(b.band, 'good')
+  const c = clarityStatus(mk(0, 1500, 30))!                              // no findings but long sentences everywhere
+  assert.equal(c.checks.every(x => x.band === 'strong'), true)
+  assert.equal(clarityStatus(null), null)
 })

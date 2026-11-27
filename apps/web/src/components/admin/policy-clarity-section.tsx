@@ -7,12 +7,6 @@ import { Loader2, FileSearch, ChevronDown, Sparkles, Check, X } from 'lucide-rea
 import { stress, type ClarityPolicy, type ClarityResult } from '@/lib/stress-client'
 import { BAND_STYLE } from './policy-health-pill'
 
-const CHECKS = [
-  { key: 'vague', label: 'Vague or ambiguous wording' }, { key: 'unclear_responsibility', label: 'Unclear responsibilities' }, { key: 'passive', label: 'Passive language' },
-  { key: 'missing_escalation', label: 'Missing escalation routes' }, { key: 'undefined_timeframe', label: 'Undefined timeframes' },
-  { key: 'generic', label: 'Generic statements without practical instructions' }, { key: 'jargon', label: 'Excessive jargon' },
-]
-
 function ResultView({ result }: { result: ClarityResult }) {
   return (
     <div className="mt-4 rounded-xl border border-purple-200 bg-white p-5">
@@ -27,12 +21,16 @@ function ResultView({ result }: { result: ClarityResult }) {
         ))}
       </div>
       <div className="mt-3 grid gap-1.5 sm:grid-cols-2">
-        {CHECKS.map(c => {
-          const n = result.findings.filter(f => f.type === c.key).length, words = result.metrics.words || 1
-          const band = n === 0 ? 'strong' : (n / words) * 1000 <= 1 ? 'good' : 'attention'
-          return <div key={c.key} className="flex items-center gap-2 rounded-md border border-gray-100 px-2.5 py-1.5 text-xs"><span className={`h-2 w-2 shrink-0 rounded-full ${BAND_STYLE[band].dot}`} /><span className="text-neutral-dark">{c.label}</span><span className="ml-auto font-semibold text-neutral-mid">{n === 0 ? 'None' : n}</span></div>
-        })}
+        {result.checks.map(c => (
+          <div key={c.key} className="flex items-center gap-2 rounded-md border border-gray-100 px-2.5 py-1.5 text-xs"><span className={`h-2 w-2 shrink-0 rounded-full ${BAND_STYLE[c.band].dot}`} /><span className="text-neutral-dark">{c.label}</span><span className="ml-auto font-semibold text-neutral-mid">{c.count === 0 ? 'None' : c.count}</span></div>
+        ))}
       </div>
+      {result.readability && (
+        <div className="mt-3 flex items-start gap-2 rounded-md border border-gray-100 px-2.5 py-2 text-xs text-neutral-dark">
+          <span className={`mt-1 h-2 w-2 shrink-0 rounded-full ${BAND_STYLE[result.readability.band].dot}`} />
+          <span><b className="font-semibold">Staff readability</b> <span className="text-neutral-mid">· {BAND_STYLE[result.readability.band].label}</span><span className="block text-neutral-mid">{result.readability.detail}</span></span>
+        </div>
+      )}
       {result.findings.length === 0 ? <p className="mt-4 rounded-md bg-green-50 px-3 py-2 text-sm text-green-800">No unclear wording was found. Every instruction was specific enough.</p> : (
         <ul className="mt-4 space-y-3">
           {result.findings.map((f, i) => (

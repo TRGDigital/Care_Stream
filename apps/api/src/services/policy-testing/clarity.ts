@@ -97,6 +97,23 @@ export function clarityBand(findingCount: number, words: number): Band {
   return per1000 <= 2 ? 'strong' : per1000 <= 5 ? 'good' : 'attention'
 }
 
+/** ONE place that works out what a clarity result means, used by step 5 on the Gaps page AND the policy health row so they can never disagree.
+ *  The band comes from the findings and the policy's length, is held down by any one check that needs attention and by readability that needs attention; the seven checks and staff readability come from the same result. */
+export type ClarityStatus = { band: Band; checks: CheckResult[]; readability: { band: Band; detail: string }; metrics: Metrics | null; findings: number }
+export function clarityStatus(row: { findings?: unknown; metrics?: unknown } | null | undefined): ClarityStatus | null {
+  if (!row) return null
+  const findings = (Array.isArray(row.findings) ? row.findings : []) as Array<{ type: string }>
+  const metrics = row.metrics && typeof row.metrics === 'object' && Object.keys(row.metrics as object).length ? (row.metrics as Metrics) : null
+  const words = metrics?.words ?? 0
+  const checks = checkBands(findings, words)
+  const base = clarityBand(findings.length, words)
+  const readability: { band: Band; detail: string } = metrics
+    ? { band: readabilityBand(metrics), detail: `Average sentence ${metrics.avg_sentence_words} words, ${metrics.long_sentence_pct}% long sentences, ${metrics.passive_pct}% passive, reading ease ${metrics.reading_ease}.` }
+    : { band: 'none', detail: 'Measured when clarity is run.' }
+  const dim = clarityDimBand(base, checks)
+  return { band: dim === 'strong' && readability.band === 'attention' ? 'good' : dim, checks, readability, metrics, findings: findings.length }
+}
+
 // ── Reading the policy ───────────────────────────────────────────────────────
 
 async function promptFor(): Promise<string> {

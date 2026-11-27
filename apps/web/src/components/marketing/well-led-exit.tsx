@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import { X } from 'lucide-react'
+import { watchTopExit } from '@/lib/exit-intent'
 import { HUB_PATH, showsWellLedBanner, statementFor, topicForPath } from '@/lib/well-led'
 
 // The CQC Well-led exit popup: a visitor reading a Well-led page who is about to leave is offered a short demo request.
@@ -13,7 +14,6 @@ import { HUB_PATH, showsWellLedBanner, statementFor, topicForPath } from '@/lib/
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
 const SEEN_KEY = 'cs_wl_exit_seen'       // localStorage: { at, done }
 const SHOWN_SESSION = 'cs-wl-exit'        // sessionStorage: shown this visit
-const EDGE_PX = 24                       // how close to the top edge counts as leaving through the top
 const MIN_MS = 8000                       // not before they have had a proper look
 const REPEAT_DAYS = 14
 const DONE_DAYS = 90
@@ -75,8 +75,8 @@ export function WellLedExit() {
     if (!eligible) return
     const start = Date.now()
     const ready = () => Date.now() - start >= MIN_MS
-    // A real mouse leaves from a few pixels below the edge (the last position it reported), not exactly at 0: accept the top strip, and only when it leaves the window (no element to enter).
-    const leave = (e: MouseEvent) => { if (e.clientY > EDGE_PX || e.relatedTarget || !ready() || isMobile()) return; show() }
+    // The shared rule (lib/exit-intent.ts): leaving the window through the top, allowing for where a fast real mouse stops reporting.
+    const stopWatch = watchTopExit(() => { if (!ready() || isMobile()) return; show() })
     let maxY = 0, lastY = window.scrollY, upRun = 0
     const onScroll = () => {
       if (!isMobile() || !ready()) return
@@ -86,9 +86,8 @@ export function WellLedExit() {
       lastY = y
       if (h > 0 && maxY / h > 0.6 && upRun > 350) show()
     }
-    document.addEventListener('mouseout', leave)
     window.addEventListener('scroll', onScroll, { passive: true })
-    return () => { document.removeEventListener('mouseout', leave); window.removeEventListener('scroll', onScroll) }
+    return () => { stopWatch(); window.removeEventListener('scroll', onScroll) }
   }, [eligible, show])
 
   const close = useCallback(() => { setOpen(false) }, [])

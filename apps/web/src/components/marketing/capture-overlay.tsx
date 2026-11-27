@@ -1,5 +1,6 @@
 'use client'
 
+import { watchTopExit } from '@/lib/exit-intent'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useOffers, licenceOffer, policyOffer, endsText, offerEmoji, type Offer } from '@/lib/offers'
@@ -320,15 +321,13 @@ export function CaptureOverlay({ funnel, product, title, image, quiz, offerName 
   // signed up or reached for the basket. Straight to the hold form.
   useEffect(() => {
     if (!canHold || open || isMobile()) return
-    const leave = (e: MouseEvent) => {
-      // A real mouse leaves from a few pixels below the edge, not exactly at 0: accept the top 24px, only when it leaves the window.
-      if (e.clientY > 24 || e.relatedTarget || session('cs-cap-exit') || hasBasket()) return
+    // The shared rule (lib/exit-intent.ts): leaving through the top, allowing for where a fast real mouse stops reporting.
+    return watchTopExit(() => {
+      if (session('cs-cap-exit') || hasBasket()) return
       if ((window as any).__csWlExit) return   // a CQC Well-led page: its own exit popup owns the exit
       session('cs-cap-exit', true)
       openAt('exit')
-    }
-    document.addEventListener('mouseout', leave)
-    return () => document.removeEventListener('mouseout', leave)
+    })
   }) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => { if (step === 2) setTimeout(() => emailRef.current?.focus(), 50) }, [step])

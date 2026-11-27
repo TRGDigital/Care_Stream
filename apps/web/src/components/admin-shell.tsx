@@ -13,7 +13,7 @@ import { UpgradeOverlay } from './upgrade-overlay'
 import {
   LayoutDashboard, FileText, Users, BarChart2, TrendingUp, ClipboardCheck, CreditCard, MessageSquare, Settings, BookOpen, ShieldAlert, GraduationCap, ShieldCheck,
   Building2, ChevronDown, Check, Loader2, HelpCircle, ClipboardList, Menu, X, Lock, KeyRound, BadgeCheck,
-  PanelLeftClose, PanelLeftOpen, Languages, Compass, Award, Gift, Bell, CalendarDays,
+  PanelLeftClose, PanelLeftOpen, Languages, Compass, Award, Gift, Bell, CalendarDays, FlaskConical,
 } from 'lucide-react'
 import { GuidedTour } from '@/components/admin/guided-tour'
 import { FreeTourHost } from '@/components/admin/free-tours'
@@ -28,6 +28,7 @@ import { SupportMenu } from '@/components/admin/support-menu'
 import { ReleasesButton } from '@/components/admin/releases-overlay'
 import { AskButton, AskPanelHost } from '@/components/ask/ask-overlay'
 import { useHolidayMeta } from '@/lib/holiday-client'
+import { useStressMeta } from '@/lib/stress-client'
 import { SupportChatWidget } from '@/components/support/chat-widget'
 
 const NAV_SECTIONS = [
@@ -383,6 +384,13 @@ function SidebarContent({ pathname, trainingOnly, policiesOnly, freeTier, selfSe
   if (holidayMeta?.enabled) {
     sections = sections.map(s => s.heading === 'Team'
       ? { ...s, items: s.items.flatMap(i => (i.href === '/staff' ? [i, { href: '/holiday', label: 'Holiday tracking', Icon: CalendarDays }] : [i])) }
+      : s)
+  }
+  // Policy testing (pilot, CS-1001 only): the item appears below Policy Gaps Analysis only when the API says this account is in the pilot.
+  const stressMeta = useStressMeta()
+  if (stressMeta.enabled) {
+    sections = sections.map(s => s.heading === 'Reporting'
+      ? { ...s, items: s.items.flatMap(i => (i.href === '/gaps' ? [i, { href: '/stress-testing', label: 'Policy Testing', Icon: FlaskConical }] : [i])) }
       : s)
   }
   // The CPD training sub-item is for full and free accounts only (shop tiers buy licences instead).

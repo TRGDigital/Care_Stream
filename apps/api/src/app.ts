@@ -81,6 +81,7 @@ import { agentActionsRouter } from './routes/agent-actions'
 import { cronRouter } from './routes/cron'
 import { contentRoutineRouter } from './routes/content-routine'
 import { publicScenariosRouter, scenariosAdminRouter } from './routes/scenarios'
+import { policyTestingAdminRouter, stressRouter } from './routes/policy-testing'
 import { staffPhotoFileRouter } from './lib/staff-photos'
 import { emailAvatarRouter } from './services/email/email-avatar'
 import { publicFamilyRouter, residentPhotoFileRouter } from './routes/residents-public'
@@ -167,6 +168,7 @@ app.use('/auth', authRouter)
 app.use('/admin/onboarding-templates', onboardingTemplatesRouter)
 app.use('/admin/user-cases', userCasesAdminRouter)
 app.use('/admin/scenarios', scenariosAdminRouter)
+app.use('/admin/policy-testing', policyTestingAdminRouter)   // owner only: scenarios, the judging map and results
 app.use('/admin/service-pages', servicePagesAdminRouter)
 app.use('/admin/email-previews', emailPreviewsAdminRouter)   // owner-only: send one sample person-led email to a team address
 app.use('/admin/setting-pages', settingPagesAdminRouter)
@@ -314,6 +316,7 @@ app.use('/training-matrix', trainingMatrixRouter)
 app.use('/workforce', workforceRouter)
 app.use('/holiday/admin', holidayAdminRouter)   // holiday tracking pilot (CS-1001 only): administrators
 app.use('/holiday', holidayRouter)                // holiday tracking pilot: staff, approvers and /meta
+app.use('/stress', stressRouter)                   // policy testing pilot (CS-1001 only): test a policy against a scenario
 app.use('/ask', askRouter)   // Ask CareStream (pilot: CS-1001, administrators only)
 app.use('/letterhead', letterheadRouter)   // organisation letterhead and company details (pilot)
 app.use('/signatures', signaturesRouter)   // personal signatures for letters and reports (pilot)

@@ -1083,6 +1083,47 @@ model RegulationChangeReview {
   @@map("regulation_change_reviews")
 }
 
+/// A real-world situation a policy is tested against (Policy testing). Platform owned: drafted from the regulations, approved by the owner, then used to test a home's policies.
+/// expected_points: [{ id, text, source_label, source_url }]. Every point carries the source it rests on. Only approved scenarios reach a home.
+model PolicyScenario {
+  id                 String   @id @default(uuid())
+  title              String
+  description        String   @default("")
+  policy_types       String[] @default([])
+  settings           String[] @default([])
+  regulation_keys    String[] @default([])
+  expected_points    Json     @default("[]")
+  extra_instructions String   @default("")
+  status             String   @default("draft")
+  version            Int      @default(1)
+  created_at         DateTime @default(now())
+  updated_at         DateTime @updatedAt
+
+  @@index([status])
+  @@map("policy_scenarios")
+}
+
+/// One run of a scenario against one policy: the verdict for each expected point, quoted from the policy. Kept so the outcome can be traced back to the scenario version and prompt.
+model PolicyStressResult {
+  id               String   @id @default(uuid())
+  tenant_id        String
+  policy_id        String
+  policy_name      String   @default("")
+  scenario_id      String
+  scenario_version Int      @default(1)
+  scenario_title   String   @default("")
+  points           Json     @default("[]")
+  summary          String   @default("")
+  gaps             Int      @default(0)
+  prompt_hash      String   @default("")
+  run_by           String   @default("")
+  created_at       DateTime @default(now())
+
+  @@index([tenant_id, policy_id, created_at])
+  @@index([scenario_id])
+  @@map("policy_stress_results")
+}
+
 // Heartbeat for scheduled jobs. A row that never appears is the signal: eight jobs stopped
 // on 5 June 2026 and nobody found out for 96 days, because nothing recorded that they were
 // meant to have run. See manual_cron_runs.sql.

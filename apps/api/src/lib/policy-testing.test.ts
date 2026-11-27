@@ -4,7 +4,7 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import fs from 'fs'
 import path from 'path'
-import { parseJudge, quoteInText, gapsIn, policyMatchesType, approvalProblems, DEFAULT_STRESS_JUDGE_PROMPT, DEFAULT_SCENARIO_DRAFTER_PROMPT, type ExpectedPoint } from '../services/policy-testing/stress'
+import { POLICY_TYPES, parseJudge, quoteInText, gapsIn, policyMatchesType, approvalProblems, DEFAULT_STRESS_JUDGE_PROMPT, DEFAULT_SCENARIO_DRAFTER_PROMPT, type ExpectedPoint } from '../services/policy-testing/stress'
 import { isPolicyTestingAccount, policyTestingAccounts } from './policy-testing-pilot'
 
 const POINTS: ExpectedPoint[] = [
@@ -72,4 +72,21 @@ test('WIRING: routes are gated, prompts are editable and tagged, and the prompts
   assert.match(DEFAULT_STRESS_JUDGE_PROMPT, /"points"/)
   assert.match(DEFAULT_SCENARIO_DRAFTER_PROMPT, /"scenarios"/)
   assert.doesNotMatch(DEFAULT_STRESS_JUDGE_PROMPT + DEFAULT_SCENARIO_DRAFTER_PROMPT, /[–—]/)
+})
+
+test('POLICY TYPES: a full grouped list, unique keys, and real policy titles land on the right type', () => {
+  assert.ok(POLICY_TYPES.length >= 90)
+  assert.equal(new Set(POLICY_TYPES.map(t => t.key)).size, POLICY_TYPES.length)
+  assert.deepEqual([...new Set(POLICY_TYPES.map(t => t.group))].length, 7)
+  for (const k of ['falls', 'medication', 'safeguarding', 'infection', 'fire', 'capacity', 'complaints', 'recruitment']) assert.ok(POLICY_TYPES.some(t => t.key === k), k)   // the first eight keep their keys
+  const m = (title: string, key: string) => assert.equal(policyMatchesType({ name: title }, key), true, `${title} -> ${key}`)
+  m('Pressure Ulcer Prevention and Skin Integrity Policy', 'pressure_ulcer')
+  m('Dysphagia, Choking and Modified Diet Policy', 'dysphagia')
+  m('Water Safety and Legionella Policy', 'legionella')
+  m('Whistleblowing and Freedom to Speak Up Policy', 'whistleblowing')
+  m('Missed and Late Visits Policy', 'missed_visits')
+  m('Duty of Candour Policy', 'candour')
+  m('Resuscitation, DNACPR and ReSPECT Policy', 'resuscitation')
+  m('Epilepsy and Seizure Management Policy', 'epilepsy')
+  assert.equal(policyMatchesType({ name: 'Falls Prevention and Management Policy' }, 'pressure_ulcer'), false)
 })

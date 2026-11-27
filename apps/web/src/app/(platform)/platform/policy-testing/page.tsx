@@ -19,8 +19,10 @@ type Scenario = {
   regulations: Array<{ reference_key: string; official_name: string; authority_basis: string }>; runs: number; avg_gaps: number | null
 }
 type Reg = { reference_key: string; official_name: string; authority_basis: string; required_count: number; has_requirements: boolean; scenario_count: number; source_urls: string[] }
-type Overview = { types: Array<{ key: string; label: string }>; prompts: Array<{ usage: string; label: string }>; judge_usage: string; drafter_usage: string; regulations: Reg[]; scenarios: Scenario[] }
+type Overview = { types: Array<{ key: string; label: string; group: string }>; prompts: Array<{ usage: string; label: string }>; judge_usage: string; drafter_usage: string; regulations: Reg[]; scenarios: Scenario[] }
 type Result = { id: string; created_at: string; account_number: string; tenant_name: string; policy_name: string; scenario_title: string; scenario_version: number; gaps: number; summary: string; prompt_hash: string; points: Array<{ id: string; text: string; verdict: string; quote: string; note: string }> }
+
+const groupTypes = (types: Array<{ key: string; label: string; group: string }>) => types.reduce<Record<string, Array<{ key: string; label: string; group: string }>>>((m, t) => { (m[t.group] ??= []).push(t); return m }, {})
 
 const VERDICT: Record<string, string> = { covered: 'bg-green-50 text-green-700', partly: 'bg-amber-50 text-amber-800', missing: 'bg-red-50 text-red-700' }
 
@@ -96,7 +98,7 @@ export default function PolicyTestingPage() {
               <div>
                 <label className="block text-xs font-semibold text-neutral-dark" htmlFor="pt">Policy type</label>
                 <select id="pt" value={draftType} onChange={e => setDraftType(e.target.value)} className="rounded-md border border-gray-200 px-2 py-1.5 text-sm">
-                  {data.types.map(t => <option key={t.key} value={t.key}>{t.label}</option>)}
+                  {Object.entries(groupTypes(data.types)).map(([g, ts]) => <optgroup key={g} label={g}>{ts.map(t => <option key={t.key} value={t.key}>{t.label}</option>)}</optgroup>)}
                 </select>
               </div>
               <button disabled={!draftReg || busy === 'draft'} onClick={draft} className="inline-flex items-center gap-1.5 rounded-md bg-purple-600 px-3 py-2 text-sm font-semibold text-white hover:bg-purple-700 disabled:opacity-40">
@@ -135,8 +137,13 @@ export default function PolicyTestingPage() {
                     <div><label className="text-xs font-semibold" htmlFor={`d-${s.id}`}>The situation</label><textarea id={`d-${s.id}`} rows={3} value={editing.description} onChange={e => setEditing({ ...editing, description: e.target.value })} className="w-full rounded-md border border-gray-200 px-2 py-1.5" /></div>
                     <div>
                       <p className="text-xs font-semibold">Policy types</p>
-                      <div className="mt-1 flex flex-wrap gap-2">{data.types.map(t => (
-                        <label key={t.key} className="inline-flex items-center gap-1.5 text-xs"><input type="checkbox" checked={editing.policy_types.includes(t.key)} onChange={e => setEditing({ ...editing, policy_types: e.target.checked ? [...editing.policy_types, t.key] : editing.policy_types.filter(x => x !== t.key) })} />{t.label}</label>
+                      <div className="mt-1 space-y-1">{Object.entries(groupTypes(data.types)).map(([g, ts]) => (
+                        <details key={g} open={ts.some(t => editing.policy_types.includes(t.key))} className="rounded-md border border-gray-200 bg-white px-2 py-1">
+                          <summary className="cursor-pointer text-xs font-medium text-neutral-dark">{g} <span className="text-neutral-mid">({ts.filter(t => editing.policy_types.includes(t.key)).length} chosen)</span></summary>
+                          <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 pb-1">{ts.map(t => (
+                            <label key={t.key} className="inline-flex items-center gap-1.5 text-xs"><input type="checkbox" checked={editing.policy_types.includes(t.key)} onChange={e => setEditing({ ...editing, policy_types: e.target.checked ? [...editing.policy_types, t.key] : editing.policy_types.filter(x => x !== t.key) })} />{t.label}</label>
+                          ))}</div>
+                        </details>
                       ))}</div>
                     </div>
                     <div>

@@ -46,7 +46,7 @@ policyTestingAdminRouter.get('/overview', async (_req: Request, res: Response) =
     const prompts = await (prisma as any).aiPrompt.findMany({ where: { usage: { in: [STRESS_JUDGE_USAGE, SCENARIO_DRAFTER_USAGE] } }, select: { usage: true, label: true, updated_at: true } }).catch(() => [])
     const regByKey = new Map<string, any>((regs as any[]).map(r => [r.reference_key, r]))
     ok(res, {
-      types: POLICY_TYPES.map(t => ({ key: t.key, label: t.label })),
+      types: POLICY_TYPES.map(t => ({ key: t.key, label: t.label, group: t.group })),
       prompts,
       judge_usage: STRESS_JUDGE_USAGE, drafter_usage: SCENARIO_DRAFTER_USAGE,
       regulations: (regs as any[]).map(r => ({

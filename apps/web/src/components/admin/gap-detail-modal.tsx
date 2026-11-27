@@ -134,10 +134,10 @@ export function findHeadingBlock(root: HTMLElement, anchor: string): HTMLElement
 
 // Tint + W-number a SAF "amend" block that has already been located (element-based, so the
 // caller can guarantee one block hosts at most one badge). Indigo, distinct from gap markers.
-export function markSafBlockEl(el: HTMLElement, num: number): void {
+export function markSafBlockEl(el: HTMLElement, num: number, prefix = 'W'): void {
   if (!el.dataset.csMarked) el.classList.add('bg-indigo-100', 'rounded', 'px-1', 'py-0.5')
   el.dataset.csMarked = '1'
-  el.insertBefore(makeBadge('W' + num, 'bg-indigo-600 text-white'), el.firstChild)
+  el.insertBefore(makeBadge(prefix + num, 'bg-indigo-600 text-white'), el.firstChild)
 }
 
 // Anchor-based SAF marker (Coverage detail): locate the block or heading, tint indigo, W-number.
@@ -190,11 +190,11 @@ function adoptedBlock(i: number, text: string, title?: string): HTMLElement {
 
 // Amend ADOPTED (element-based): replace the located block's content in place with the adopted
 // wording (green), keeping its W-number so it still lines up with its card on the left.
-export function markBlockAdoptedEl(el: HTMLElement, num: number, newText: string): void {
+export function markBlockAdoptedEl(el: HTMLElement, num: number, newText: string, prefix = 'W'): void {
   el.classList.add('bg-green-100', 'rounded', 'px-1', 'py-0.5')
   el.dataset.csMarked = '1'
   el.textContent = ''
-  el.appendChild(makeBadge('W' + num, 'bg-green-600 text-white'))
+  el.appendChild(makeBadge(prefix + num, 'bg-green-600 text-white'))
   el.appendChild(document.createTextNode(newText))
 }
 
@@ -214,9 +214,9 @@ export function markBlockAdopted(root: HTMLElement, anchor: string, i: number, n
 
 // A round W-numbered badge that lines up with the left-hand cards, in the palette of the block
 // it sits in (green when adopted, teal while proposed) — matches the Coverage detail's badges.
-function roundWBadge(num: number, cls: string): HTMLElement {
+function roundWBadge(num: number, cls: string, prefix = 'W'): HTMLElement {
   const b = document.createElement('span')
-  b.textContent = 'W' + num
+  b.textContent = prefix + num
   b.className = `flex h-5 shrink-0 items-center justify-center rounded-full px-1.5 text-[11px] font-bold ${cls}`
   return b
 }
@@ -224,14 +224,14 @@ function roundWBadge(num: number, cls: string): HTMLElement {
 // A "new content" block for add-under-heading / new-section suggestions: a bold title over the
 // body. Formatted to match the Coverage detail's new sections — green once adopted (it's part of
 // the draft), teal + dashed while still proposed. Titles are always presented as their own block.
-export function newBlock(num: number, title: string | undefined, body: string, adopted: boolean, note: string): HTMLElement {
+export function newBlock(num: number, title: string | undefined, body: string, adopted: boolean, note: string, prefix = 'W'): HTMLElement {
   const wrap = document.createElement('div')
   wrap.className = adopted
     ? 'not-prose my-2 rounded-md border border-green-300 bg-green-50 px-3 py-2'
     : 'not-prose my-2 rounded-md border border-dashed border-teal-400 bg-teal-50 px-3 py-2'
   const head = document.createElement('div')
   head.className = 'mb-1 flex items-center gap-2'
-  head.appendChild(roundWBadge(num, adopted ? 'bg-green-200 text-green-900' : 'bg-teal-200 text-teal-900'))
+  head.appendChild(roundWBadge(num, adopted ? 'bg-green-200 text-green-900' : 'bg-teal-200 text-teal-900', prefix))
   const tag = document.createElement('span')
   tag.className = `text-[10px] font-bold uppercase tracking-wide ${adopted ? 'text-green-700' : 'text-teal-700'}`
   tag.textContent = adopted ? 'Adopted' : note

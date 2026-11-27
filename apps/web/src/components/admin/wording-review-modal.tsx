@@ -162,16 +162,16 @@ export function WordingReviewModal({ token, policyId, policyName, statements, al
         const el = elFor[origIdx]
         if (!el || claimed.has(el)) return          // no block, or would collide → leave unplaced
         claimed.add(el)
-        if (adopted.has(origIdx)) markBlockAdoptedEl(el, n, shown)
-        else markSafBlockEl(el, n)
+        if (adopted.has(origIdx)) markBlockAdoptedEl(el, n, shown, P)
+        else markSafBlockEl(el, n, P)
         loc.add(origIdx)
       } else if (a.placement === 'add_under_heading') {
-        const node = newBlock(n, title, body, adopted.has(origIdx), 'New wording')
+        const node = newBlock(n, title, body, adopted.has(origIdx), 'New wording', P)
         const h = elFor[origIdx]
         if (h) h.after(node); else root.appendChild(node)   // heading gone → append at the end
         loc.add(origIdx)
       } else {                                       // new_section
-        root.appendChild(newBlock(n, title ?? (a.section_title || undefined), body, adopted.has(origIdx), 'New section'))
+        root.appendChild(newBlock(n, title ?? (a.section_title || undefined), body, adopted.has(origIdx), 'New section', P))
         loc.add(origIdx)
       }
     })

@@ -1,0 +1,29 @@
+/* The CQC Well-led banner on /pricing. Scoped under .ppage-v2 so it uses the pricing page's own tokens. */
+.ppage-v2 .pwl{background:linear-gradient(180deg,#F1EAFA 0%,#FAF7FD 100%);border-bottom:1px solid var(--line);padding:38px 0 40px}
+.ppage-v2 .pwl-head{max-width:760px;margin:0 auto 26px;text-align:center}
+.ppage-v2 .pwl-tag{display:inline-flex;align-items:center;gap:7px;background:#fff;border:1px solid rgba(123,63,191,.45);color:var(--accent);font-weight:700;font-size:.78rem;border-radius:999px;padding:5px 13px}
+.ppage-v2 .pwl-tag i{width:8px;height:8px;border-radius:50%;background:var(--good);display:inline-block}
+.ppage-v2 .pwl-head h2{font-size:clamp(1.7rem,3.4vw,2.6rem);line-height:1.08;margin:14px 0 10px}
+.ppage-v2 .pwl-head p{margin:0 auto;color:var(--ink-2);font-size:1.02rem;max-width:44em}
+.ppage-v2 .pwl-plans{display:flex;flex-direction:column;gap:14px}
+.ppage-v2 .pwl-plan{display:grid;grid-template-columns:220px minmax(0,1fr);gap:20px;align-items:start;background:#fff;border:1px solid var(--line);border-radius:18px;padding:18px 22px;box-shadow:var(--shadow)}
+.ppage-v2 .pwl-plan.hi{border-color:rgba(123,63,191,.55);box-shadow:0 0 0 1px rgba(123,63,191,.35),var(--shadow)}
+@media(max-width:900px){.ppage-v2 .pwl-plan{grid-template-columns:1fr;gap:12px}}
+.ppage-v2 .pwl-plan-h{display:flex;flex-direction:column;gap:2px}
+.ppage-v2 .pwl-plan-h b{font-size:1.15rem;letter-spacing:-.02em}
+.ppage-v2 .pwl-price{font-size:.9rem;color:var(--muted)}
+.ppage-v2 .pwl-count{margin-top:6px;font-size:.8rem;font-weight:700;color:var(--accent);background:var(--accent-soft);border-radius:999px;padding:3px 10px;align-self:flex-start}
+.ppage-v2 .pwl-chips{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px}
+.ppage-v2 .pwl-chips li{display:flex;align-items:center;gap:8px;font-size:.84rem;line-height:1.3;border-radius:10px;padding:7px 10px;border:1px solid var(--line)}
+.ppage-v2 .pwl-chips li.on{background:var(--accent-soft);border-color:rgba(123,63,191,.28);color:var(--ink);font-weight:600}
+.ppage-v2 .pwl-chips li.off{background:#FBFAFD;color:#9A93A5;border-style:dashed}
+.ppage-v2 .pwl-tick{flex:none;width:17px;height:17px;border-radius:50%;background:var(--accent);color:#fff;display:inline-flex;align-items:center;justify-content:center}
+.ppage-v2 .pwl-tick svg{width:11px;height:11px}
+.ppage-v2 .pwl-no{flex:none;width:17px;height:17px;border-radius:50%;border:1.5px solid #D9D2E0;display:inline-block}
+.ppage-v2 .pwl-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.ppage-v2 .pwl-foot{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:16px;margin-top:22px}
+.ppage-v2 .pwl-foot p{margin:0;font-size:.88rem;color:var(--muted);max-width:40em}
+
+.ppage-v2 .pwl-chips li.part{background:#fff;border-color:rgba(123,63,191,.4);color:var(--ink)}
+.ppage-v2 .pwl-half{flex:none;width:17px;height:17px;border-radius:50%;border:1.5px solid var(--accent);background:linear-gradient(90deg,var(--accent) 50%,#fff 50%);display:inline-block}
+.ppage-v2 .pwl-lim{display:block;font-style:normal;font-weight:600;font-size:.74rem;color:var(--accent)}

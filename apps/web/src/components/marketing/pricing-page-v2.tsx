@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { type PricingValue } from '@/lib/pricing-data'
 import { type PricingView } from '@/lib/pricing-source'
 import { PRICING_FEATURE_LINKS } from '@/lib/pricing-feature-links'
+import { PricingWellLed } from './pricing-well-led'
 import './pricing-page-v2.css'
 import './pricing-page-v2-extra.css'
 
@@ -46,6 +47,7 @@ export function PricingPageV2({ heading, lede, view }: { heading: string; lede: 
 
   return (
     <div className="ppage-v2">
+      <PricingWellLed view={view} />
       <section className="phero">
         <div className="pwrap phero-in">
           <span className="uc-eyebrow">Pricing</span>
@@ -62,7 +64,7 @@ export function PricingPageV2({ heading, lede, view }: { heading: string; lede: 
         </div>
       </section>
 
-      <section className="pplans">
+      <section className="pplans" id="plans">
         <div className="pwrap pplans-in" style={{ ['--plans' as any]: PRICING.plans.length }}>
           {PRICING.plans.map(p => (
             <div className={`pcard${p.highlight ? ' hi' : ''}`} key={p.name}>

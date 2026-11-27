@@ -2,8 +2,8 @@
 
 // §14.7 — Policy library: searchable table, upload, archive.
 
-import { PolicyHealthPill } from '@/components/admin/policy-health-pill'
-import { useEffect, useState, useRef } from 'react'
+import { PolicyHealthPill, PolicyHealthPanel } from '@/components/admin/policy-health-pill'
+import { Fragment, useEffect, useState, useRef } from 'react'
 import { useSearchIntent } from '@/lib/admin-search/intents'
 import dynamic from 'next/dynamic'
 import { useSession } from 'next-auth/react'
@@ -786,6 +786,8 @@ function PolicyGroup({
   // Which row is being renamed, and its in-progress value. Held here rather than per-row so
   // only one name can be open at a time.
   const [renaming, setRenaming] = useState<{ id: string; value: string } | null>(null)
+  const [healthOpen, setHealthOpen] = useState<string | null>(null)   // Policy health (pilot): the policy whose health accordion is open
+  const [healthBusy, setHealthBusy] = useState(false)
   return (
     <div className="rounded-card bg-white shadow-card">
       <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4">
@@ -819,7 +821,8 @@ function PolicyGroup({
             </thead>
             <tbody>
               {policies.map((p: any) => (
-                <tr key={p.id} className="border-b border-gray-50 last:border-0 hover:bg-neutral-light/50">
+                <Fragment key={p.id}>
+                <tr className="border-b border-gray-50 last:border-0 hover:bg-neutral-light/50">
                   <td className="px-6 py-4 font-medium text-neutral-dark">
                     <div className="group/name flex min-w-0 items-center gap-2">
                       {renaming && renaming.id === p.id ? (
@@ -866,7 +869,7 @@ function PolicyGroup({
                         : docSummary[p.id].published_at
                           ? <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-teal-light/40 px-2 py-0.5 text-[10px] font-semibold text-teal"><CheckCircle2 size={9} /> Updated · v{docSummary[p.id].version}</span>
                           : null)}
-                      <PolicyHealthPill policyId={p.id} />
+                      <PolicyHealthPill policyId={p.id} open={healthOpen === p.id} onToggle={() => { if (!healthBusy) setHealthOpen(healthOpen === p.id ? null : p.id) }} />
                     </div>
                   </td>
                   {showSection && (
@@ -918,6 +921,10 @@ function PolicyGroup({
                     </div>
                   </td>
                 </tr>
+                {healthOpen === p.id && (
+                  <tr className="border-b border-gray-100"><td colSpan={showSection ? 6 : 5} className="p-0"><PolicyHealthPanel policyId={p.id} onBusy={setHealthBusy} /></td></tr>
+                )}
+                </Fragment>
               ))}
             </tbody>
           </table>

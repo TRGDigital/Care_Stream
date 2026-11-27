@@ -1,17 +1,25 @@
 // Policy health (pilot, CS-1001): a roll up of what CareStream already knows about each policy, shown as bands with the reason, never a single made up number.
-// Six dimensions. Each says Strong, Good or Needs attention, or "not yet assessed" when the analysis behind it has not run. The overall band uses the weights below,
+// Six dimensions (staff readability sits inside clarity and precision). Each says Strong, Good or Needs attention, or "not yet assessed" when the analysis behind it has not run. The overall band uses the weights below,
 // counting only the dimensions assessed, and needs at least three of them.
 
 import { prisma } from '../../db/client'
 import { isPolicyDocument } from '../../lib/document-kind'
 import { readabilityBand, checkBands, clarityDimBand, HEALTH_CHECKS, type Band, type Metrics, type CheckResult } from './clarity'
 
-export type DimKey = 'coverage' | 'uptodate' | 'consistency' | 'clarity' | 'practical' | 'readability'
-export const HEALTH_WEIGHTS: Record<DimKey, number> = { coverage: 25, uptodate: 15, consistency: 15, clarity: 20, practical: 15, readability: 10 }
+export type DimKey = 'coverage' | 'uptodate' | 'consistency' | 'wording' | 'clarity' | 'practical'
+export const HEALTH_WEIGHTS: Record<DimKey, number> = { coverage: 25, uptodate: 15, consistency: 15, wording: 10, clarity: 20, practical: 15 }
 export const DIM_LABEL: Record<DimKey, string> = {
-  coverage: 'Regulatory coverage', uptodate: 'Up to date', consistency: 'Consistency with your other policies', clarity: 'Clarity and precision', practical: 'Practical use (stress tests)', readability: 'Staff readability',
+  coverage: 'Regulation coverage', uptodate: 'Up to date', consistency: 'Cross-policy consistency', wording: 'CQC wording', clarity: 'Clarity and precision', practical: 'Policy testing',
 }
-export type Dim = { key: DimKey; label: string; band: Band; value?: number | null; detail: string; href: string; /** The seven clarity checks, when clarity has been run. */ checks?: CheckResult[] }
+export type Dim = {
+  key: DimKey; label: string; band: Band; value?: number | null; detail: string; href: string
+  /** When the analysis behind this dimension was last run (null if it has not been). */
+  last_run: string | null
+  /** The seven clarity checks, when clarity has been run. */
+  checks?: CheckResult[]
+  /** Staff readability: measured when clarity is run, so it sits inside Clarity and precision. */
+  readability?: { band: Band; detail: string }
+}
 const VALUE: Record<Exclude<Band, 'none'>, number> = { strong: 100, good: 70, attention: 30 }
 
 export const bandValue = (b: Band): number | null => (b === 'none' ? null : VALUE[b])
@@ -37,7 +45,7 @@ export function topFixes(dims: Dim[], limit = 3): Fix[] {
     consistency: () => 'Resolve the conflicts with your other policies',
     clarity: d => { const worst = [...(d.checks ?? [])].filter(c => c.count > 0).sort((a, b) => b.count - a.count)[0]; return worst ? `Rewrite the unclear passages, starting with ${worst.label.toLowerCase()} (${worst.count})` : 'Rewrite the unclear passages' },
     practical: () => 'Cover the points no policy in your library covers yet',
-    readability: () => 'Shorten the long sentences and use fewer passive phrases',
+    wording: () => 'Review the CQC wording suggestions for this policy',
   }
   return dims
     .filter(d => d.band === 'attention' || d.band === 'good')
@@ -57,18 +65,23 @@ export type LastCheck = { id: string; score: number; band: Band; at: string; sta
 export type PolicyHealth = { id: string; name: string; overall: Band; score: number | null; assessed: number; dims: Dim[]; fixes: Fix[]; ready: boolean; waiting: string[]; last_check: LastCheck | null }
 
 export async function loadHealth(tenantId: string): Promise<PolicyHealth[]> {
-  const [policies, coverage, lint, consistency, clarity, stress, checks] = await Promise.all([
+  const [policies, coverage, lint, consistency, clarity, stress, checks, wording] = await Promise.all([
     (prisma as any).policy.findMany({ where: { tenant_id: tenantId, status: 'active' }, select: { id: true, name: true, version: true }, orderBy: { name: 'asc' } }),
-    (prisma as any).regulationCoverage.findMany({ where: { tenant_id: tenantId }, select: { evidence_policy_id: true, status: true } }).catch(() => []),
-    (prisma as any).policyLintResult.findMany({ where: { tenant_id: tenantId }, select: { policy_id: true, findings: true } }).catch(() => []),
+    (prisma as any).regulationCoverage.findMany({ where: { tenant_id: tenantId }, select: { evidence_policy_id: true, status: true, analysed_at: true } }).catch(() => []),
+    (prisma as any).policyLintResult.findMany({ where: { tenant_id: tenantId }, select: { policy_id: true, findings: true, scanned_at: true } }).catch(() => []),
     (prisma as any).policyConsistency.findUnique({ where: { tenant_id: tenantId }, select: { conflicts: true, dismissed: true, analysed_at: true } }).catch(() => null),
-    (prisma as any).policyClarityResult.findMany({ where: { tenant_id: tenantId }, orderBy: { created_at: 'desc' }, select: { policy_id: true, band: true, finding_count: true, metrics: true, summary: true, findings: true } }).catch(() => []),
-    (prisma as any).policyStressResult.findMany({ where: { tenant_id: tenantId }, orderBy: { created_at: 'desc' }, select: { policy_id: true, scenario_id: true, points: true, gaps: true } }).catch(() => []),
+    (prisma as any).policyClarityResult.findMany({ where: { tenant_id: tenantId }, orderBy: { created_at: 'desc' }, select: { policy_id: true, band: true, finding_count: true, metrics: true, summary: true, findings: true, created_at: true } }).catch(() => []),
+    (prisma as any).policyStressResult.findMany({ where: { tenant_id: tenantId }, orderBy: { created_at: 'desc' }, select: { policy_id: true, scenario_id: true, points: true, gaps: true, created_at: true } }).catch(() => []),
     (prisma as any).policyHealthCheck.findMany({ where: { tenant_id: tenantId }, orderBy: { created_at: 'desc' }, select: { id: true, policy_id: true, policy_version: true, score: true, band: true, fixes: true, created_at: true } }).catch(() => []),
+    (prisma as any).policyWordingAlignment.findMany({ where: { tenant_id: tenantId }, select: { policy_id: true, alignments: true, has_suggestions: true, analysed_at: true } }).catch(() => []),
   ])
+  const iso = (d: any) => (d ? new Date(d).toISOString() : null)
+  const wordingBy = new Map<string, any>((wording as any[]).map(w => [w.policy_id, w]))
+  const coverageRun = iso((coverage as any[]).reduce((m: any, c: any) => (!m || new Date(c.analysed_at) > new Date(m) ? c.analysed_at : m), null))   // the coverage analysis runs over the whole library
   const lastCheck = new Map<string, any>(); for (const c of checks as any[]) if (!lastCheck.has(c.policy_id)) lastCheck.set(c.policy_id, c)
   const dismissed = new Set<string>(Array.isArray(consistency?.dismissed) ? (consistency.dismissed as any[]).map(d => String(d?.id ?? d)) : [])
   const conflicts = (Array.isArray(consistency?.conflicts) ? consistency.conflicts : []).filter((c: any) => !dismissed.has(String(c?.id)))
+  const lintRun = new Map<string, any>((lint as any[]).map(l => [l.policy_id, l.scanned_at]))
   const lintBy = new Map<string, number>((lint as any[]).map(l => [l.policy_id, Array.isArray(l.findings) ? l.findings.length : 0]))
   const clarityBy = new Map<string, any>(); for (const c of clarity as any[]) if (!clarityBy.has(c.policy_id)) clarityBy.set(c.policy_id, c)
   const stressLatest = new Map<string, any>(); for (const r of stress as any[]) { const k = `${r.policy_id}:${r.scenario_id}`; if (!stressLatest.has(k)) stressLatest.set(k, r) }
@@ -85,29 +98,39 @@ export async function loadHealth(tenantId: string): Promise<PolicyHealth[]> {
     // The seven checks always show; until clarity has been run each says so.
     const checks: CheckResult[] = cl ? checkBands(Array.isArray(cl.findings) ? cl.findings : [], metrics?.words ?? 0) : HEALTH_CHECKS.map(c => ({ ...c, count: 0, band: 'none' as Band }))
 
+    const wa = wordingBy.get(p.id)
+    const wordingN = wa?.has_suggestions && Array.isArray(wa.alignments) ? wa.alignments.length : 0
+    const readability: { band: Band; detail: string } = metrics
+      ? { band: readabilityBand(metrics), detail: `Average sentence ${metrics.avg_sentence_words} words, ${metrics.long_sentence_pct}% long sentences, ${metrics.passive_pct}% passive, reading ease ${metrics.reading_ease}.` }
+      : { band: 'none', detail: 'Measured when clarity is run.' }
+    // Staff readability sits inside clarity: it comes from the same read. A readability that needs attention stops clarity being called Strong.
+    const clarityBandNow: Band = cl ? clarityDimBand((cl.band ?? 'none') as Band, checks) : 'none'
+    const clarityFinal: Band = clarityBandNow === 'strong' && readability.band === 'attention' ? 'good' : clarityBandNow
+
     const dims: Dim[] = [
-      { key: 'coverage', label: DIM_LABEL.coverage, band: coverageBand(covered, partial), href: '/gaps',
+      { key: 'coverage', label: DIM_LABEL.coverage, band: coverageBand(covered, partial), href: '/gaps', last_run: coverageRun,
         detail: cov.length ? `${covered} of ${cov.length} regulations this policy answers are fully covered${partial ? `, ${partial} still have missing elements` : ''}.` : 'The gap analysis has not matched this policy to a regulation yet.' },
-      { key: 'uptodate', label: DIM_LABEL.uptodate, band: lintN === undefined ? 'none' : lintN === 0 ? 'strong' : lintN <= 2 ? 'good' : 'attention', href: '/gaps',
+      { key: 'uptodate', label: DIM_LABEL.uptodate, band: lintN === undefined ? 'none' : lintN === 0 ? 'strong' : lintN <= 2 ? 'good' : 'attention', href: '/gaps', last_run: iso(lintRun.get(p.id)),
         detail: lintN === undefined ? 'Not checked yet.' : lintN === 0 ? 'No out of date terms found.' : `${lintN} out of date ${lintN === 1 ? 'term' : 'terms'} to update.` },
-      { key: 'consistency', label: DIM_LABEL.consistency, band: consistency?.analysed_at ? (myConflicts === 0 ? 'strong' : myConflicts <= 1 ? 'good' : 'attention') : 'none', href: '/gaps',
-        detail: consistency?.analysed_at ? (myConflicts === 0 ? 'No open conflicts with your other policies.' : `${myConflicts} open ${myConflicts === 1 ? 'conflict' : 'conflicts'} with other policies.`) : 'Cross policy consistency has not been run yet.' },
-      { key: 'clarity', label: DIM_LABEL.clarity, band: cl ? clarityDimBand((cl.band ?? 'none') as Band, checks) : 'none', href: '/gaps', checks,
-        detail: cl ? `${cl.finding_count} ${cl.finding_count === 1 ? 'passage' : 'passages'} of unclear wording found. The seven checks are below.` : 'Not run yet. Run Policy clarity on the Gaps page and these seven checks fill in.' },
-      { key: 'practical', label: DIM_LABEL.practical, band: practicalBand(stressGaps, stressPoints), href: '/stress-testing',
+      { key: 'consistency', label: DIM_LABEL.consistency, band: consistency?.analysed_at ? (myConflicts === 0 ? 'strong' : myConflicts <= 1 ? 'good' : 'attention') : 'none', href: '/gaps', last_run: iso(consistency?.analysed_at),
+        detail: consistency?.analysed_at ? (myConflicts === 0 ? 'No open conflicts with your other policies.' : `${myConflicts} open ${myConflicts === 1 ? 'conflict' : 'conflicts'} with other policies.`) : 'Cross-policy consistency has not been run yet.' },
+      { key: 'wording', label: DIM_LABEL.wording, band: wa ? (wordingN === 0 ? 'strong' : wordingN <= 2 ? 'good' : 'attention') : 'none', href: '/gaps', last_run: iso(wa?.analysed_at),
+        detail: wa ? (wordingN === 0 ? 'This policy reads in the way the CQC quality statements expect.' : `${wordingN} ${wordingN === 1 ? 'passage' : 'passages'} could be reworded to match the CQC quality statements.`) : 'The CQC wording analysis has not been run on this policy yet.' },
+      { key: 'clarity', label: DIM_LABEL.clarity, band: clarityFinal, href: `/gaps?clarity=${p.id}`, last_run: iso(cl?.created_at), checks, readability,
+        detail: cl ? `${cl.finding_count} ${cl.finding_count === 1 ? 'passage' : 'passages'} of unclear wording found. The seven checks and staff readability are below.` : 'Not run yet. Open step 5 on the Gaps page. The seven checks and staff readability fill in when it is run.' },
+      { key: 'practical', label: DIM_LABEL.practical, band: practicalBand(stressGaps, stressPoints), href: '/stress-testing', last_run: iso(myStress.reduce((m: any, r: any) => (!m || new Date(r.created_at) > new Date(m) ? r.created_at : m), null)),
         detail: myStress.length ? `${myStress.length} ${myStress.length === 1 ? 'situation' : 'situations'} tested, ${stressGaps} ${stressGaps === 1 ? 'point' : 'points'} not covered anywhere in your library.` : 'No situations tested yet. Open Policy Testing.' },
-      { key: 'readability', label: DIM_LABEL.readability, band: metrics ? readabilityBand(metrics) : 'none', href: '/gaps',
-        detail: metrics ? `Average sentence ${metrics.avg_sentence_words} words, ${metrics.long_sentence_pct}% long sentences, reading ease ${metrics.reading_ease}.` : 'Measured when clarity is run.' },
     ]
     for (const d of dims) d.value = bandValue(d.band)
     const o = scoreOf(dims)
     const lc = lastCheck.get(p.id)
-    // Ready for clarity and testing: the regulation, up to date and consistency checks have run and found nothing open for this policy.
+    // Ready for clarity and testing: the regulation, up to date, consistency and CQC wording checks have run and found nothing open for this policy.
     const waiting: string[] = []
     if (!cov.length && !consistency?.analysed_at && lintN === undefined) waiting.push('Run the gap analysis first')
     if (partial > 0) waiting.push(`${partial} open regulation ${partial === 1 ? 'gap' : 'gaps'}`)
     if (lintN && lintN > 0) waiting.push(`${lintN} out of date ${lintN === 1 ? 'term' : 'terms'}`)
     if (myConflicts > 0) waiting.push(`${myConflicts} open ${myConflicts === 1 ? 'conflict' : 'conflicts'}`)
+    if (wordingN > 0) waiting.push(`${wordingN} CQC wording ${wordingN === 1 ? 'suggestion' : 'suggestions'}`)
     return {
       id: p.id, name: p.name, overall: o.band, score: o.score, assessed: o.assessed, dims, fixes: topFixes(dims), ready: waiting.length === 0, waiting,
       last_check: lc ? { id: lc.id, score: lc.score, band: lc.band as Band, at: new Date(lc.created_at).toISOString(), stale: (lc.policy_version ?? 1) !== (p.version ?? 1), fixes: Array.isArray(lc.fixes) ? lc.fixes : [] } : null,

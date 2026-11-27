@@ -1,13 +1,13 @@
 'use client'
 
-// Policy health (pilot: CS-1001 only): a badge beside each policy on the Policies page. Click it to see the six dimensions, or press Run health check to read the policy, test it against the approved
-// situations that fit it, and get a rough score out of 100 with the three things to fix first. The score is worked out by a fixed rule from the six dimensions. It is not a compliance rating.
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
-import { createPortal } from 'react-dom'
+// Policy health (pilot: CS-1001 only). A badge beside each policy on the Policies page; clicking it opens an accordion row under the policy (PolicyHealthPanel) showing the six dimensions, when each was last run,
+// and a Run health check button: read the policy, test it against the approved situations that fit it, and get a rough score out of 100 with the three things to fix first.
+// The score is worked out by a fixed rule from the six dimensions. It is not a compliance rating.
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useSession } from 'next-auth/react'
-import { Loader2, Check, PlayCircle } from 'lucide-react'
-import { stress, useStressMeta, type Band, type HealthCheckResult, type HealthPlan, type PolicyHealth } from '@/lib/stress-client'
+import { Loader2, Check, PlayCircle, ChevronDown } from 'lucide-react'
+import { stress, useStressMeta, type Band, type HealthCheckResult, type HealthDim, type HealthPlan, type PolicyHealth } from '@/lib/stress-client'
 
 export const BAND_STYLE: Record<Band, { label: string; pill: string; dot: string }> = {
   strong:    { label: 'Strong',          pill: 'bg-green-50 text-green-700 border-green-200', dot: 'bg-green-500' },
@@ -16,65 +16,92 @@ export const BAND_STYLE: Record<Band, { label: string; pill: string; dot: string
   none:      { label: 'Not assessed',    pill: 'bg-gray-50 text-gray-600 border-gray-200',    dot: 'bg-gray-300' },
 }
 
-// One request for the whole page: every pill reads the same result. Reset after a check so the pill updates.
+// One request for the whole page: every badge reads the same result, and a finished check refreshes them all.
 let cache: { token: string; at: number; p: Promise<PolicyHealth[]> } | null = null
+const listeners = new Set<() => void>()
 function loadOnce(token: string, fresh = false): Promise<PolicyHealth[]> {
   if (fresh || !cache || cache.token !== token || Date.now() - cache.at > 60_000) cache = { token, at: Date.now(), p: stress.health(token).then(r => r.policies).catch(() => []) }
   return cache.p
 }
-
-type Step = { label: string; state: 'wait' | 'run' | 'done' | 'failed' }
-const fmtDay = (iso: string) => new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
-
-export function PolicyHealthPill({ policyId }: { policyId: string }) {
+function useHealth(policyId: string): { h: PolicyHealth | null | undefined; token?: string; refresh: () => Promise<void> } {
   const { data: session } = useSession()
   const token = (session as any)?.accessToken as string | undefined
   const { enabled } = useStressMeta()
   const [h, setH] = useState<PolicyHealth | null | undefined>(undefined)
-  const [open, setOpen] = useState(false)
+  useEffect(() => {
+    if (!enabled || !token) return
+    const load = () => loadOnce(token).then(list => setH(list.find(x => x.id === policyId) ?? null))
+    void load(); listeners.add(load); return () => { listeners.delete(load) }
+  }, [enabled, token, policyId])
+  const refresh = async () => { if (token) { await loadOnce(token, true); listeners.forEach(fn => fn()) } }
+  return { h: enabled ? h : null, token, refresh }
+}
+
+const fmtDate = (iso: string) => new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+
+/** The badge. Open and toggle belong to the table, so the accordion row can sit under the policy. */
+export function PolicyHealthPill({ policyId, open, onToggle }: { policyId: string; open: boolean; onToggle: () => void }) {
+  const { h } = useHealth(policyId)
+  if (!h) return null
+  const lc = h.last_check
+  const st = BAND_STYLE[lc ? lc.band : 'none']
+  return (
+    <button type="button" onClick={onToggle} aria-expanded={open}
+            className={`inline-flex shrink-0 items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-semibold ${st.pill}`}>
+      <span className={`h-1.5 w-1.5 rounded-full ${st.dot}`} /> {lc ? `Health ${lc.score}${lc.stale ? ' · out of date' : ''}` : 'Health: not checked'}
+      <ChevronDown size={10} className={open ? 'rotate-180 transition-transform' : 'transition-transform'} />
+    </button>
+  )
+}
+
+type Step = { label: string; state: 'wait' | 'run' | 'done' | 'failed' }
+
+function DimCard({ d, h }: { d: HealthDim; h: PolicyHealth }) {
+  const st = BAND_STYLE[d.band]
+  const isClarity = d.key === 'clarity'
+  return (
+    <li className="rounded-xl border border-gray-200 bg-white p-4">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+        <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${st.dot}`} />
+        <h4 className="text-base font-semibold text-neutral-dark">{d.label}</h4>
+        <span className={`rounded-full border px-2 py-0.5 text-xs font-semibold ${st.pill}`}>{st.label}{d.value != null ? ` · ${d.value}` : ''}</span>
+        <span className="ml-auto text-xs text-neutral-mid">{d.last_run ? `Last run ${fmtDate(d.last_run)}` : 'Not run yet'}</span>
+      </div>
+      <p className="mt-1.5 text-sm text-neutral-dark">{d.detail}</p>
+      {isClarity && !h.ready && (
+        <p className="mt-2 rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-900">Step 5 opens for this policy once the steps above are sorted. Waiting for: {h.waiting.join(', ')}. <Link href="/gaps" className="font-semibold text-purple-700 hover:underline">Open the Gaps page</Link></p>
+      )}
+      {isClarity && d.checks && (
+        <div className="mt-3 grid gap-x-6 gap-y-1.5 sm:grid-cols-2">
+          {d.checks.map(c => (
+            <div key={c.key} className="flex items-center gap-2 text-sm text-neutral-dark"><span className={`h-2 w-2 shrink-0 rounded-full ${BAND_STYLE[c.band].dot}`} />{c.label}<span className="ml-auto text-neutral-mid">{c.band === 'none' ? 'not run' : c.count === 0 ? 'none' : c.count}</span></div>
+          ))}
+        </div>
+      )}
+      {isClarity && d.readability && (
+        <div className="mt-3 flex items-start gap-2 border-t border-gray-100 pt-3 text-sm text-neutral-dark">
+          <span className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${BAND_STYLE[d.readability.band].dot}`} />
+          <span><b className="font-semibold">Staff readability</b> <span className="text-neutral-mid">· {BAND_STYLE[d.readability.band].label}</span><span className="block text-neutral-mid">{d.readability.detail}</span></span>
+        </div>
+      )}
+      <p className="mt-3 text-sm"><Link href={d.href} className="font-semibold text-purple-700 hover:underline">{isClarity ? 'Open step 5 on the Gaps page' : d.key === 'practical' ? 'Open Policy Testing' : 'Open on the Gaps page'}</Link></p>
+    </li>
+  )
+}
+
+/** The accordion content under a policy. */
+export function PolicyHealthPanel({ policyId, onBusy }: { policyId: string; onBusy: (busy: boolean) => void }) {
+  const { h, token, refresh } = useHealth(policyId)
   const [stage, setStage] = useState<'idle' | 'confirm' | 'running' | 'done'>('idle')
   const [plan, setPlan] = useState<HealthPlan | null>(null)
   const [withStress, setWithStress] = useState(true)
   const [steps, setSteps] = useState<Step[]>([])
   const [result, setResult] = useState<HealthCheckResult | null>(null)
   const [error, setError] = useState('')
-  const box = useRef<HTMLSpanElement>(null)
-  const btnRef = useRef<HTMLButtonElement>(null)
-  const panelRef = useRef<HTMLDivElement>(null)
-  const [pos, setPos] = useState<{ top: number; left: number } | null>(null)
-
-  useEffect(() => { if (enabled && token) loadOnce(token).then(list => setH(list.find(x => x.id === policyId) ?? null)) }, [enabled, token, policyId])
-  useEffect(() => {
-    if (!open) return
-    const close = (e: MouseEvent) => { const t = e.target as Node; if (box.current && !box.current.contains(t) && panelRef.current && !panelRef.current.contains(t) && stage !== 'running') setOpen(false) }
-    document.addEventListener('mousedown', close); return () => document.removeEventListener('mousedown', close)
-  }, [open, stage])
-
-  // Always in view: the overlay is fixed to the window, placed below its badge when it fits, above when that fits better, and held inside the window otherwise. It follows the page as it scrolls,
-  // and moves again when its own height changes (confirm, progress, result). Taller than the window, it scrolls inside itself with no scroll bar showing.
-  const place = useCallback(() => {
-    const b = btnRef.current?.getBoundingClientRect(), p = panelRef.current
-    if (!b || !p) return
-    const vw = window.innerWidth, vh = window.innerHeight, w = p.offsetWidth, hgt = Math.min(p.offsetHeight, vh - 16)
-    const left = Math.min(Math.max(8, b.left), Math.max(8, vw - w - 8))
-    let top = b.bottom + 8
-    if (top + hgt > vh - 8) { const above = b.top - 8 - hgt; top = above >= 8 ? above : Math.max(8, vh - hgt - 8) }
-    setPos(cur => (cur && Math.abs(cur.top - top) < 1 && Math.abs(cur.left - left) < 1 ? cur : { top, left }))
-  }, [])
-  useLayoutEffect(() => {
-    if (!open) { setPos(null); return }
-    btnRef.current?.scrollIntoView({ block: 'nearest' })   // the badge itself is on screen before the overlay is placed
-    place()
-    const ro = typeof ResizeObserver !== 'undefined' && panelRef.current ? new ResizeObserver(place) : null
-    if (ro && panelRef.current) ro.observe(panelRef.current)
-    window.addEventListener('scroll', place, true); window.addEventListener('resize', place)
-    return () => { ro?.disconnect(); window.removeEventListener('scroll', place, true); window.removeEventListener('resize', place) }
-  }, [open, place])
-
-  if (!enabled || !h || !token) return null
+  if (!h || !token) return <div className="px-6 py-5 text-sm text-neutral-mid"><Loader2 size={14} className="mr-2 inline animate-spin" />Loading</div>
   const lc = h.last_check
-  const band: Band = lc ? lc.band : 'none'
-  const st = BAND_STYLE[band]
+  const st = BAND_STYLE[lc ? lc.band : 'none']
+  const fixes = stage === 'done' && result ? result.fixes : lc?.fixes ?? h.fixes
 
   async function start() {
     setError(''); setStage('confirm')
@@ -83,106 +110,83 @@ export function PolicyHealthPill({ policyId }: { policyId: string }) {
   async function runCheck() {
     if (!plan) return
     const list = withStress ? plan.scenarios : []
-    const init: Step[] = [{ label: 'Reading the whole policy for unclear wording', state: 'run' }, ...list.map(s => ({ label: `Testing: ${s.title}`, state: 'wait' as const })), { label: 'Working out the score', state: 'wait' }]
-    setSteps(init); setStage('running'); setError('')
-    const mark = (i: number, state: Step['state']) => setSteps(cur => cur.map((x, j) => (j === i ? { ...x, state } : j === i + 1 && state === 'done' && x.state === 'wait' ? { ...x, state: 'run' } : x)))
+    setSteps([{ label: 'Reading the whole policy for unclear wording', state: 'run' }, ...list.map(s => ({ label: `Policy testing: ${s.title}`, state: 'wait' as const })), { label: 'Working out the score', state: 'wait' }])
+    setStage('running'); setError(''); onBusy(true)
+    const set = (i: number, state: Step['state']) => setSteps(cur => cur.map((x, j) => (j === i ? { ...x, state } : j === i + 1 && state !== 'run' && x.state === 'wait' ? { ...x, state: 'run' } : x)))
     try {
-      await stress.clarityRun(token!, policyId, true); mark(0, 'done')
-      for (let i = 0; i < list.length; i++) {
-        try { await stress.run(token!, policyId, list[i].id); mark(i + 1, 'done') } catch { mark(i + 1, 'failed') }
-        if (i === list.length - 1) setSteps(cur => cur.map((x, j) => (j === cur.length - 1 ? { ...x, state: 'run' } : x)))
-      }
+      await stress.clarityRun(token!, policyId, true); set(0, 'done')
+      for (let i = 0; i < list.length; i++) { try { await stress.run(token!, policyId, list[i].id); set(i + 1, 'done') } catch { set(i + 1, 'failed') } }
       const r = await stress.healthSnapshot(token!, policyId, withStress)
-      setResult(r.check); setStage('done')
-      const fresh = await loadOnce(token!, true); setH(fresh.find(x => x.id === policyId) ?? h)
-    } catch (e: any) { setError(e.message); setStage('idle') }
+      setResult(r.check); setStage('done'); await refresh()
+    } catch (e: any) { setError(e.message); setStage('idle') } finally { onBusy(false) }
   }
-  const close = () => { setOpen(false); setStage('idle'); setResult(null); setError('') }
 
   return (
-    <span ref={box} className="relative inline-block shrink-0">
-      <button ref={btnRef} type="button" onClick={() => (open ? close() : setOpen(true))} aria-expanded={open}
-              className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-semibold ${st.pill}`}>
-        <span className={`h-1.5 w-1.5 rounded-full ${st.dot}`} /> {lc ? `Health ${lc.score}${lc.stale ? ' · out of date' : ''}` : 'Health: not checked'}
-      </button>
-      {open && createPortal(
-        <div ref={panelRef} role="dialog" aria-label="Policy health" style={{ position: 'fixed', top: pos?.top ?? -9999, left: pos?.left ?? -9999 }}
-             className="z-50 max-h-[calc(100vh-16px)] w-[640px] max-w-[92vw] overflow-y-auto rounded-xl border border-gray-200 bg-white p-6 text-left shadow-xl [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <p className="text-xs font-bold text-neutral-dark">Policy health</p>
-              {lc ? (
-                <p className="mt-0.5"><span className="text-5xl font-extrabold text-neutral-dark">{lc.score}</span><span className="text-sm text-neutral-mid"> / 100 · </span><span className={`rounded-full border px-2 py-0.5 text-sm font-semibold ${st.pill}`}>{st.label}</span>
-                  <span className="block text-sm text-neutral-mid">Checked {fmtDay(lc.at)}{lc.stale ? '. This policy has changed since, so check again.' : ''}</span></p>
-              ) : <p className="mt-0.5 text-sm text-neutral-mid">Not checked yet. {h.assessed} of {h.dims.length} dimensions have results from other analyses.</p>}
-            </div>
-            {stage === 'idle' && <button onClick={start} className="inline-flex shrink-0 items-center gap-1.5 rounded-md bg-purple-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-purple-700"><PlayCircle size={13} /> {lc ? 'Check again' : 'Run health check'}</button>}
+    <div className="grid gap-6 bg-neutral-light/50 px-6 py-6 lg:grid-cols-[340px_minmax(0,1fr)]">
+      <div className="space-y-4">
+        <div>
+          <p className="text-sm font-bold uppercase tracking-wide text-neutral-mid">Policy health</p>
+          {lc ? (
+            <>
+              <p className="mt-1"><span className="text-6xl font-extrabold leading-none text-neutral-dark">{lc.score}</span><span className="text-lg text-neutral-mid"> / 100</span></p>
+              <p className="mt-2"><span className={`rounded-full border px-3 py-1 text-sm font-semibold ${st.pill}`}>{st.label}</span></p>
+              <p className="mt-2 text-sm text-neutral-mid">Checked {fmtDate(lc.at)}{lc.stale ? '. This policy has changed since, so check again.' : '.'}</p>
+            </>
+          ) : <p className="mt-1 text-sm text-neutral-dark">Not checked yet. {h.assessed} of {h.dims.length} dimensions already have results from the analyses on the Gaps page.</p>}
+        </div>
+
+        {stage === 'idle' && (
+          <button onClick={start} className="inline-flex items-center gap-2 rounded-lg bg-purple-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-purple-700"><PlayCircle size={16} /> {lc ? 'Check again' : 'Run health check'}</button>
+        )}
+        {error && <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
+
+        {stage === 'confirm' && (
+          <div className="rounded-xl border border-gray-200 bg-white p-4 text-sm text-neutral-dark">
+            {!plan ? <p className="flex items-center gap-2"><Loader2 size={14} className="animate-spin" /> Working out what to run…</p> : (<>
+              <p className="font-semibold">This reads the policy in full and uses about {1 + (withStress ? plan.credits.stress : 0)} AI {1 + (withStress ? plan.credits.stress : 0) === 1 ? 'credit' : 'credits'}.</p>
+              <p className="mt-1 text-neutral-mid">1 for the clarity read{withStress && plan.credits.stress > 0 ? `, and 1 for each situation tested (${plan.credits.stress}).` : '.'}</p>
+              {plan.scenarios.length > 0 ? (
+                <label className="mt-3 flex items-start gap-2"><input type="checkbox" checked={withStress} onChange={e => setWithStress(e.target.checked)} className="mt-1" />
+                  <span>Include policy testing against {plan.scenarios.length === 1 ? 'the approved situation' : `the ${plan.scenarios.length} approved situations`} that fit this policy:
+                    <span className="mt-1 block text-neutral-mid">{plan.scenarios.map(s => s.title).join(' · ')}</span></span></label>
+              ) : <p className="mt-3 text-neutral-mid">No approved situation fits this policy yet, so no policy testing will run.</p>}
+              <div className="mt-4 flex gap-2">
+                <button onClick={runCheck} className="rounded-lg bg-purple-600 px-4 py-2 font-semibold text-white hover:bg-purple-700">Run</button>
+                <button onClick={() => setStage('idle')} className="rounded-lg border border-gray-200 px-4 py-2 font-medium text-neutral-dark hover:bg-neutral-light">Cancel</button>
+              </div>
+            </>)}
           </div>
-          {error && <p className="mt-2 rounded-md bg-red-50 px-2.5 py-1.5 text-sm text-red-700">{error}</p>}
+        )}
 
-          {stage === 'confirm' && (
-            <div className="mt-3 rounded-lg bg-neutral-light p-3 text-sm text-neutral-dark">
-              {!plan ? <p className="flex items-center gap-2"><Loader2 size={12} className="animate-spin" /> Working out what to run…</p> : (<>
-                <p className="font-semibold">This will read the policy in full and use about {1 + (withStress ? plan.credits.stress : 0)} AI {1 + (withStress ? plan.credits.stress : 0) === 1 ? 'credit' : 'credits'}.</p>
-                <p className="mt-1 text-neutral-mid">1 for the clarity read{withStress && plan.credits.stress > 0 ? `, and 1 for each situation tested (${plan.credits.stress}).` : '.'}</p>
-                {plan.scenarios.length > 0 ? (
-                  <label className="mt-2 flex items-start gap-2"><input type="checkbox" checked={withStress} onChange={e => setWithStress(e.target.checked)} className="mt-0.5" />
-                    <span>Include stress tests against {plan.scenarios.length === 1 ? 'the approved situation' : `the ${plan.scenarios.length} approved situations`} that fit this policy:
-                      <span className="block text-neutral-mid">{plan.scenarios.map(s => s.title).join(' · ')}</span></span></label>
-                ) : <p className="mt-2 text-neutral-mid">No approved situation fits this policy yet, so no stress tests will run.</p>}
-                <div className="mt-3 flex gap-2">
-                  <button onClick={runCheck} className="rounded-md bg-purple-600 px-3 py-1.5 font-semibold text-white hover:bg-purple-700">Run</button>
-                  <button onClick={() => setStage('idle')} className="rounded-md border border-gray-200 px-3 py-1.5 font-medium text-neutral-dark hover:bg-white">Cancel</button>
-                </div>
-              </>)}
-            </div>
-          )}
-
-          {stage === 'running' && (
-            <ul className="mt-3 space-y-1.5 rounded-lg bg-neutral-light p-3 text-sm">
-              {steps.map((x, i) => (
-                <li key={i} className="flex items-center gap-2">
-                  {x.state === 'run' ? <Loader2 size={12} className="animate-spin text-purple-600" /> : x.state === 'done' ? <Check size={12} className="text-green-600" /> : x.state === 'failed' ? <span className="text-red-600">✕</span> : <span className="h-3 w-3 rounded-full border border-gray-300" />}
-                  <span className={x.state === 'wait' ? 'text-neutral-mid' : 'text-neutral-dark'}>{x.label}{x.state === 'failed' ? ' (could not be completed)' : ''}</span>
-                </li>
-              ))}
-              <li className="pt-1 text-sm text-neutral-mid">This can take a minute or two. Keep this page open.</li>
-            </ul>
-          )}
-
-          {(stage === 'done' && result ? result.fixes : lc?.fixes ?? h.fixes).length > 0 && stage !== 'running' && stage !== 'confirm' && (
-            <div className="mt-3 rounded-lg border border-amber-100 bg-amber-50 p-3">
-              <p className="text-xs font-bold text-amber-900">Fix these first</p>
-              <ol className="mt-1 list-decimal space-y-1 pl-4 text-sm text-neutral-dark">
-                {(stage === 'done' && result ? result.fixes : lc?.fixes ?? h.fixes).map(f => <li key={f.dim}>{f.text}. <Link href={f.href} className="font-semibold text-purple-700 hover:underline">Open</Link></li>)}
-              </ol>
-            </div>
-          )}
-
-          <ul className="mt-4 space-y-3.5">
-            {h.dims.map(d => (
-              <li key={d.key} className="flex gap-2 text-sm">
-                <span className={`mt-1 h-2.5 w-2.5 shrink-0 rounded-full ${BAND_STYLE[d.band].dot}`} />
-                <span className="min-w-0 flex-1"><span className="font-semibold text-neutral-dark">{d.label}</span> <span className="text-neutral-mid">· {BAND_STYLE[d.band].label}{d.value != null ? ` · ${d.value}` : ''}</span>
-                  <span className="block font-normal text-neutral-mid">{d.detail} <Link href={d.href} className="font-semibold text-purple-700 hover:underline">Open</Link></span>
-                  {d.checks && (
-                    <ul className="mt-1.5 space-y-1 border-l border-gray-100 pl-2">
-                      {d.checks.map(c => (
-                        <li key={c.key} className="flex items-center gap-1.5 font-normal text-neutral-dark"><span className={`h-1.5 w-1.5 shrink-0 rounded-full ${BAND_STYLE[c.band].dot}`} />{c.label}<span className="ml-auto text-neutral-mid">{c.band === 'none' ? 'not run' : c.count === 0 ? 'none' : c.count}</span></li>
-                      ))}
-                    </ul>
-                  )}
-                </span>
+        {stage === 'running' && (
+          <ul className="space-y-2 rounded-xl border border-gray-200 bg-white p-4 text-sm">
+            {steps.map((x, i) => (
+              <li key={i} className="flex items-center gap-2.5">
+                {x.state === 'run' ? <Loader2 size={14} className="animate-spin text-purple-600" /> : x.state === 'done' ? <Check size={14} className="text-green-600" /> : x.state === 'failed' ? <span className="text-red-600">✕</span> : <span className="h-3.5 w-3.5 rounded-full border border-gray-300" />}
+                <span className={x.state === 'wait' ? 'text-neutral-mid' : 'text-neutral-dark'}>{x.label}{x.state === 'failed' ? ' (could not be completed)' : ''}</span>
               </li>
             ))}
+            <li className="pt-1 text-xs text-neutral-mid">This can take a minute or two. Keep this page open.</li>
           </ul>
-          <p className="mt-3 border-t border-gray-100 pt-2 text-sm leading-snug text-neutral-mid">
-            A rough score from a fixed rule: each dimension is worth Strong 100, Good 70 or Needs attention 30, weighted, over those assessed (at least three). Regulatory coverage, up to date and consistency use your latest results on the Gaps page.
-            It is not a compliance rating.
-          </p>
-        </div>,
-        document.body,
-      )}
-    </span>
+        )}
+
+        {stage !== 'running' && stage !== 'confirm' && fixes.length > 0 && (
+          <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
+            <p className="text-sm font-bold text-amber-900">Fix these first</p>
+            <ol className="mt-2 list-decimal space-y-2 pl-5 text-sm text-neutral-dark">
+              {fixes.map(f => <li key={f.dim}>{f.text}. <Link href={f.href} className="font-semibold text-purple-700 hover:underline">Open</Link></li>)}
+            </ol>
+          </div>
+        )}
+        <p className="text-xs leading-relaxed text-neutral-mid">
+          A rough score from a fixed rule: each dimension is worth Strong 100, Good 70 or Needs attention 30, weighted, over those assessed (at least three). Regulation coverage, up to date, consistency and CQC wording use the latest results on the Gaps page, with the date each was run.
+          Staff readability is part of clarity and precision. It is not a compliance rating.
+        </p>
+      </div>
+
+      <ul className="space-y-3">
+        {h.dims.map(d => <DimCard key={d.key} d={d} h={h} />)}
+      </ul>
+    </div>
   )
 }

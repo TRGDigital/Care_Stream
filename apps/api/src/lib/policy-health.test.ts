@@ -45,6 +45,7 @@ test('HEALTH: the overall band needs three assessed dimensions and weighs them',
   assert.equal(overallBand([{ key: 'coverage', band: 'attention' }, { key: 'uptodate', band: 'strong' }, { key: 'consistency', band: 'good' }]).band, 'good')
   assert.equal(overallBand([{ key: 'coverage', band: 'attention' }, { key: 'clarity', band: 'attention' }, { key: 'consistency', band: 'strong' }]).band, 'attention')
   assert.equal(Object.values(HEALTH_WEIGHTS).reduce((a, b) => a + b, 0), 100)
+  assert.equal(HEALTH_WEIGHTS.wording, 10)
 })
 
 test('WIRING: clarity and health are gated, the prompt is editable and tagged, the section and pill only show in the pilot', () => {
@@ -56,7 +57,7 @@ test('WIRING: clarity and health are gated, the prompt is editable and tagged, t
   assert.match(admin, /\[POLICY_CLARITY_USAGE\]:\s+DEFAULT_POLICY_CLARITY_PROMPT/)
   assert.match(prompts, /policy_clarity: 'Policy clarity'/)
   assert.match(gaps, /stressMeta\.enabled && session\?\.accessToken && <PolicyClaritySection/)
-  assert.match(pill, /if \(!enabled \|\| !h \|\| !token\) return null/)
+  assert.match(pill, /enabled \? h : null/)   // nothing shows outside the pilot
 })
 
 test('HEALTH CHECKS: the seven checks are counted per kind and banded, and one in need of attention stops clarity being Strong', () => {
@@ -77,12 +78,12 @@ test('SCORE: a rough score out of 100 by a fixed rule, only once three dimension
   // coverage 25 strong (100), uptodate 15 good (70), consistency 15 attention (30): (2500 + 1050 + 450) / 55 = 72.7
   const r = scoreOf([{ key: 'coverage', band: 'strong' }, { key: 'uptodate', band: 'good' }, { key: 'consistency', band: 'attention' }, { key: 'clarity', band: 'none' }])
   assert.equal(r.score, 73); assert.equal(r.band, 'good'); assert.equal(r.assessed, 3)
-  assert.equal(scoreOf(['coverage', 'uptodate', 'consistency', 'clarity', 'practical', 'readability'].map(k => ({ key: k as any, band: 'strong' as const }))).score, 100)
+  assert.equal(scoreOf(['coverage', 'uptodate', 'consistency', 'wording', 'clarity', 'practical'].map(k => ({ key: k as any, band: 'strong' as const }))).score, 100)
 })
 
 test('FIXES: the few things that would raise the score most, biggest first, with where to fix them', () => {
   const d = (key: any, band: any, extra: any = {}) => ({ key, label: key, band, detail: '', href: '/gaps', ...extra })
-  const dims = [d('coverage', 'attention'), d('uptodate', 'good'), d('consistency', 'strong'), d('clarity', 'attention', { checks: [{ key: 'vague', label: 'Vague or ambiguous wording', count: 6, band: 'attention' }, { key: 'passive', label: 'Passive language', count: 1, band: 'good' }] }), d('practical', 'none'), d('readability', 'good')]
+  const dims = [d('coverage', 'attention'), d('uptodate', 'good'), d('consistency', 'strong'), d('clarity', 'attention', { checks: [{ key: 'vague', label: 'Vague or ambiguous wording', count: 6, band: 'attention' }, { key: 'passive', label: 'Passive language', count: 1, band: 'good' }] }), d('practical', 'none'), d('wording', 'good')]
   const f = topFixes(dims as any)
   assert.equal(f.length, 3)
   assert.equal(f[0].dim, 'coverage')                               // 25 x 70 = 1750, the biggest gain
@@ -112,17 +113,24 @@ test('RATE LIMIT: the pilot check is asked once per page, not once per health ba
   assert.match(client, /metaOnce\(token\)\.then/)
   assert.doesNotMatch(client, /stress\.meta\(token\)\.then\(m => \{ if \(live\)/)
   assert.match(pill, /function loadOnce\(token: string, fresh = false\)/)
-  assert.match(pill, /w-\[640px\]/)
 })
 
-test('OVERLAY: fixed to the window, placed below or above its badge, kept in view as the page scrolls, with no scroll bar showing', () => {
+test('ACCORDION: health opens as a row under the policy, with last run dates, CQC wording, readability inside clarity, and Policy testing wording', () => {
   const read = (f: string) => fs.readFileSync(path.resolve(__dirname, f), 'utf8')
-  const pill = read('../../../web/src/components/admin/policy-health-pill.tsx')
-  assert.match(pill, /createPortal\(/)
-  assert.match(pill, /position: 'fixed'/)
-  assert.match(pill, /window\.addEventListener\('scroll', place, true\)/)
-  assert.match(pill, /new ResizeObserver\(place\)/)
-  assert.match(pill, /scrollIntoView\(\{ block: 'nearest' \}\)/)
-  assert.match(pill, /\[&::-webkit-scrollbar\]:hidden/)
-  assert.match(pill, /panelRef\.current && !panelRef\.current\.contains\(t\)/)
+  const pill = read('../../../web/src/components/admin/policy-health-pill.tsx'), policies = read('../../../web/src/app/(admin)/policies/page.tsx'), health = read('../services/policy-testing/health.ts')
+  const sec = read('../../../web/src/components/admin/policy-clarity-section.tsx'), gaps = read('../../../web/src/app/(admin)/gaps/page.tsx')
+  assert.doesNotMatch(pill, /createPortal|position: 'fixed'/)                                   // no overlay
+  assert.match(policies, /healthOpen === p\.id && \(/)                                          // the accordion row
+  assert.match(policies, /<Fragment key=\{p\.id\}>/)
+  assert.match(pill, /Last run \$\{fmtDate\(d\.last_run\)\}|Last run \{fmtDate\(d\.last_run\)\}|`Last run \$\{fmtDate/)
+  assert.match(pill, /Not run yet/)
+  assert.match(health, /wording: 'CQC wording'/)
+  assert.match(health, /practical: 'Policy testing'/)
+  assert.doesNotMatch(health + pill, /stress test/i)                                           // the wording matches Policy Testing
+  assert.doesNotMatch(health, /key: 'readability'/)                                            // readability sits inside clarity
+  assert.match(health, /readability: \{ band: Band; detail: string \}|readability,/)
+  assert.match(health, /href: `\/gaps\?clarity=\$\{p\.id\}`/)
+  assert.match(health, /CQC wording \$\{wordingN === 1 \? 'suggestion' : 'suggestions'\}/)   // CQC wording is part of "ready"
+  assert.match(gaps, /get\('clarity'\)/)
+  assert.match(sec, /focusPolicyId/)
 })

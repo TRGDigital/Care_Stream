@@ -2,7 +2,7 @@
 
 // Step 5 on the Gaps page: Policy clarity and precision (pilot: CS-1001 only). Does the policy actually tell staff what to do?
 // A policy only becomes ready once its regulation gaps, out of date terms and conflicts are dealt with, so wording that is about to change is not rewritten. It can still be run anyway.
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Loader2, FileSearch, ChevronDown, Sparkles } from 'lucide-react'
 import { stress, type ClarityPolicy, type ClarityResult } from '@/lib/stress-client'
 import { BAND_STYLE } from './policy-health-pill'
@@ -13,13 +13,15 @@ const CHECKS = [
   { key: 'generic', label: 'Generic statements without practical instructions' }, { key: 'jargon', label: 'Excessive jargon' },
 ]
 
-export function PolicyClaritySection({ token }: { token: string }) {
+export function PolicyClaritySection({ token, focusPolicyId }: { token: string; focusPolicyId?: string | null }) {
   const [policies, setPolicies] = useState<ClarityPolicy[] | null>(null)
   const [result, setResult] = useState<ClarityResult | null>(null)
   const [busy, setBusy] = useState('')
   const [error, setError] = useState('')
   const [showAll, setShowAll] = useState(false)
-  const [open, setOpen] = useState(false)
+  const [open, setOpen] = useState(!!focusPolicyId)   // arriving from a policy's health panel opens this step
+  const [focused, setFocused] = useState(false)
+  const top = useRef<HTMLDivElement>(null)
 
   const load = useCallback(async () => { try { setPolicies((await stress.clarityLibrary(token)).policies) } catch (e: any) { setError(e.message) } }, [token])
   useEffect(() => { void load() }, [load])
@@ -33,11 +35,21 @@ export function PolicyClaritySection({ token }: { token: string }) {
     try { setResult((await stress.clarityResult(token, id)).result) } catch (e: any) { setError(e.message) } finally { setBusy('') }
   }
 
+  // Arriving from a policy's health panel: open step 5, scroll to it, and show that policy first. If it is ready its last result opens; if not, its waiting note is highlighted.
+  useEffect(() => {
+    if (!focusPolicyId || !policies || focused) return
+    setFocused(true); setOpen(true); setShowAll(true)
+    top.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    const p = policies.find(x => x.id === focusPolicyId)
+    if (p?.ready && p.last) void view(p.last.id)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [focusPolicyId, policies, focused])
+
   const ready = (policies ?? []).filter(p => p.ready).length
-  const list = (policies ?? []).filter(p => showAll || p.ready || p.last)
+  const list = (policies ?? []).filter(p => showAll || p.ready || p.last || p.id === focusPolicyId).sort((a, b) => (a.id === focusPolicyId ? -1 : b.id === focusPolicyId ? 1 : 0))
 
   return (
-    <div className="mb-6 rounded-card border border-gray-100 bg-white shadow-card">
+    <div ref={top} className="mb-6 scroll-mt-24 rounded-card border border-gray-100 bg-white shadow-card">
       <button onClick={() => setOpen(v => !v)} className="flex w-full items-center gap-2 px-6 py-4 text-left" aria-expanded={open}>
         <Sparkles size={16} className="shrink-0 text-indigo-500" />
         <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-teal text-[10px] font-bold text-white">5</span>
@@ -61,7 +73,7 @@ export function PolicyClaritySection({ token }: { token: string }) {
           <div className="mt-4 overflow-hidden rounded-xl border border-gray-200 divide-y divide-gray-100">
             {list.length === 0 && <p className="px-4 py-4 text-sm text-neutral-mid">No policy is ready yet. Fix the open items in steps 1 to 4 first, or show all policies below to run one anyway.</p>}
             {list.map(p => (
-              <div key={p.id} className="flex flex-wrap items-center justify-between gap-2 px-4 py-3">
+              <div key={p.id} className={`flex flex-wrap items-center justify-between gap-2 px-4 py-3 ${p.id === focusPolicyId ? 'bg-purple-50/60' : ''}`}>
                 <div className="min-w-0">
                   <p className="text-sm font-medium text-neutral-dark">{p.name}</p>
                   {p.ready

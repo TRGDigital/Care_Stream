@@ -180,6 +180,9 @@ function LoadError({ onRetry }: { onRetry: () => void }) {
 
 export default function GapsPage() {
   const stressMeta = useStressMeta()   // Policy clarity and precision: pilot, CS-1001 only
+  // Arriving from a policy's health panel (?clarity=<policy id>): read from the address in the browser, so the page needs no extra loading boundary.
+  const [clarityFocus, setClarityFocus] = useState<string | null>(null)
+  useEffect(() => { try { setClarityFocus(new URLSearchParams(window.location.search).get('clarity')) } catch { /* ignore */ } }, [])
   const { data: session } = useSession()
   const { features, loading: planLoading } = usePlanFeatures()
   const locked = !!features && !features.has_gap_detection
@@ -863,7 +866,7 @@ export default function GapsPage() {
       {session?.accessToken && <PolicyWordingAlignmentSection token={session.accessToken} userId={userId} stepInfo={stepInfo('wording')} confirmRun={confirmRun} onRunComplete={onRunComplete} pendingPolicies={pipeline?.pending_policies ?? 0} runState={runStateFor('wording')} />}
 
       {/* ── Policy clarity and precision (pilot, CS-1001 only) ───────────── */}
-      {stressMeta.enabled && session?.accessToken && <PolicyClaritySection token={session.accessToken} />}
+      {stressMeta.enabled && session?.accessToken && <PolicyClaritySection token={session.accessToken} focusPolicyId={clarityFocus} />}
 
       {/* ── Policies they do not have at all ───────────────────────────────
           Below the four analysis sections on purpose. Those list work a home can do itself by

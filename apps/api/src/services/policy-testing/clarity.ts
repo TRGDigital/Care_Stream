@@ -58,6 +58,31 @@ export function readabilityMetrics(text: string): Metrics {
   return { words: words.length, sentences: sentences.length, avg_sentence_words: Math.round((nW / nS) * 10) / 10, long_sentence_pct: Math.round((long / nS) * 100), passive_pct: Math.round((passive / nS) * 100), reading_ease: Math.round(ease) }
 }
 
+/** The seven checks shown in policy health, in the owner's own words. They are the first seven kinds the clarity analysis finds (the eighth, "could be misunderstood", is still reported in the clarity result). */
+export const HEALTH_CHECKS: Array<{ key: string; label: string }> = [
+  { key: 'vague', label: 'Vague or ambiguous wording' },
+  { key: 'unclear_responsibility', label: 'Unclear responsibilities' },
+  { key: 'passive', label: 'Passive language' },
+  { key: 'missing_escalation', label: 'Missing escalation routes' },
+  { key: 'undefined_timeframe', label: 'Undefined timeframes' },
+  { key: 'generic', label: 'Generic statements without practical instructions' },
+  { key: 'jargon', label: 'Excessive jargon' },
+]
+export type CheckResult = { key: string; label: string; count: number; band: Band }
+
+/** Each check's band from how many passages of that kind there are for the length of the policy: none is Strong, up to one in a thousand words is Good, more is Needs attention. */
+export function checkBands(findings: Array<{ type: string }>, words: number): CheckResult[] {
+  return HEALTH_CHECKS.map(c => {
+    const count = findings.filter(f => f.type === c.key).length
+    const per1000 = words > 0 ? (count / words) * 1000 : 0
+    return { ...c, count, band: count === 0 ? 'strong' : per1000 <= 1 ? 'good' : 'attention' } as CheckResult
+  })
+}
+
+/** The clarity band for health: the overall band, but one check in need of attention stops it being called Strong. */
+export const clarityDimBand = (overall: Band, checks: CheckResult[]): Band =>
+  overall === 'strong' && checks.some(c => c.band === 'attention') ? 'good' : overall
+
 /** Staff readability from the measures: short sentences, few long ones, not too passive, readable. */
 export function readabilityBand(m: Metrics): Band {
   if (m.sentences < 5) return 'none'

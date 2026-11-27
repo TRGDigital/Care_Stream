@@ -51,7 +51,15 @@ export function PolicyHealthPill({ policyId }: { policyId: string }) {
               <li key={d.key} className="flex gap-2 text-xs">
                 <span className={`mt-1 h-2 w-2 shrink-0 rounded-full ${BAND_STYLE[d.band].dot}`} />
                 <span className="min-w-0"><span className="font-semibold text-neutral-dark">{d.label}</span> <span className="text-neutral-mid">· {BAND_STYLE[d.band].label}</span>
-                  <span className="block font-normal text-neutral-mid">{d.detail} <Link href={d.href} className="font-semibold text-purple-700 hover:underline">Open</Link></span></span>
+                  <span className="block font-normal text-neutral-mid">{d.detail} <Link href={d.href} className="font-semibold text-purple-700 hover:underline">Open</Link></span>
+                  {d.checks && (
+                    <ul className="mt-1.5 space-y-1 border-l border-gray-100 pl-2">
+                      {d.checks.map(c => (
+                        <li key={c.key} className="flex items-center gap-1.5 font-normal text-neutral-dark"><span className={`h-1.5 w-1.5 shrink-0 rounded-full ${BAND_STYLE[c.band].dot}`} />{c.label}<span className="ml-auto text-neutral-mid">{c.count === 0 ? 'none' : c.count}</span></li>
+                      ))}
+                    </ul>
+                  )}
+                </span>
               </li>
             ))}
           </ul>

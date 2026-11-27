@@ -23,7 +23,8 @@ export type ClarityFinding = { quote: string; type: string; type_label: string; 
 export type ClarityMetrics = { words: number; sentences: number; avg_sentence_words: number; long_sentence_pct: number; passive_pct: number; reading_ease: number }
 export type ClarityResult = { id: string; policy_id: string; policy_name: string; findings: ClarityFinding[]; metrics: ClarityMetrics; band: Band; finding_count: number; summary: string; created_at: string }
 export type ClarityPolicy = { id: string; name: string; ready: boolean; waiting: string[]; last: { id: string; band: Band; findings: number; at: string } | null }
-export type HealthDim = { key: string; label: string; band: Band; detail: string; href: string }
+export type HealthCheck = { key: string; label: string; count: number; band: Band }
+export type HealthDim = { key: string; label: string; band: Band; detail: string; href: string; checks?: HealthCheck[] }
 export type PolicyHealth = { id: string; name: string; overall: Band; assessed: number; dims: HealthDim[]; ready: boolean; waiting: string[] }
 
 export const stress = {

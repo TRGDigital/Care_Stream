@@ -4,14 +4,14 @@
 
 import { prisma } from '../../db/client'
 import { isPolicyDocument } from '../../lib/document-kind'
-import { readabilityBand, type Band, type Metrics } from './clarity'
+import { readabilityBand, checkBands, clarityDimBand, type Band, type Metrics, type CheckResult } from './clarity'
 
 export type DimKey = 'coverage' | 'uptodate' | 'consistency' | 'clarity' | 'practical' | 'readability'
 export const HEALTH_WEIGHTS: Record<DimKey, number> = { coverage: 25, uptodate: 15, consistency: 15, clarity: 20, practical: 15, readability: 10 }
 export const DIM_LABEL: Record<DimKey, string> = {
   coverage: 'Regulatory coverage', uptodate: 'Up to date', consistency: 'Consistency with your other policies', clarity: 'Clarity and precision', practical: 'Practical use (stress tests)', readability: 'Staff readability',
 }
-export type Dim = { key: DimKey; label: string; band: Band; detail: string; href: string }
+export type Dim = { key: DimKey; label: string; band: Band; detail: string; href: string; /** The seven clarity checks, when clarity has been run. */ checks?: CheckResult[] }
 const VALUE: Record<Exclude<Band, 'none'>, number> = { strong: 100, good: 70, attention: 30 }
 
 /** The overall band from the dimensions: weighted over those assessed, and only once at least three are. */
@@ -39,7 +39,7 @@ export async function loadHealth(tenantId: string): Promise<PolicyHealth[]> {
     (prisma as any).regulationCoverage.findMany({ where: { tenant_id: tenantId }, select: { evidence_policy_id: true, status: true } }).catch(() => []),
     (prisma as any).policyLintResult.findMany({ where: { tenant_id: tenantId }, select: { policy_id: true, findings: true } }).catch(() => []),
     (prisma as any).policyConsistency.findUnique({ where: { tenant_id: tenantId }, select: { conflicts: true, dismissed: true, analysed_at: true } }).catch(() => null),
-    (prisma as any).policyClarityResult.findMany({ where: { tenant_id: tenantId }, orderBy: { created_at: 'desc' }, select: { policy_id: true, band: true, finding_count: true, metrics: true, summary: true } }).catch(() => []),
+    (prisma as any).policyClarityResult.findMany({ where: { tenant_id: tenantId }, orderBy: { created_at: 'desc' }, select: { policy_id: true, band: true, finding_count: true, metrics: true, summary: true, findings: true } }).catch(() => []),
     (prisma as any).policyStressResult.findMany({ where: { tenant_id: tenantId }, orderBy: { created_at: 'desc' }, select: { policy_id: true, scenario_id: true, points: true, gaps: true } }).catch(() => []),
   ])
   const dismissed = new Set<string>(Array.isArray(consistency?.dismissed) ? (consistency.dismissed as any[]).map(d => String(d?.id ?? d)) : [])
@@ -57,6 +57,7 @@ export async function loadHealth(tenantId: string): Promise<PolicyHealth[]> {
     const myStress = [...stressLatest.values()].filter(r => r.policy_id === p.id)
     const stressPoints = myStress.reduce((n, r) => n + (Array.isArray(r.points) ? r.points.length : 0), 0), stressGaps = myStress.reduce((n, r) => n + (r.gaps ?? 0), 0)
     const metrics: Metrics | null = cl?.metrics && Object.keys(cl.metrics).length ? cl.metrics : null
+    const checks = cl ? checkBands(Array.isArray(cl.findings) ? cl.findings : [], metrics?.words ?? 0) : undefined
 
     const dims: Dim[] = [
       { key: 'coverage', label: DIM_LABEL.coverage, band: coverageBand(covered, partial), href: '/gaps',
@@ -65,8 +66,8 @@ export async function loadHealth(tenantId: string): Promise<PolicyHealth[]> {
         detail: lintN === undefined ? 'Not checked yet.' : lintN === 0 ? 'No out of date terms found.' : `${lintN} out of date ${lintN === 1 ? 'term' : 'terms'} to update.` },
       { key: 'consistency', label: DIM_LABEL.consistency, band: consistency?.analysed_at ? (myConflicts === 0 ? 'strong' : myConflicts <= 1 ? 'good' : 'attention') : 'none', href: '/gaps',
         detail: consistency?.analysed_at ? (myConflicts === 0 ? 'No open conflicts with your other policies.' : `${myConflicts} open ${myConflicts === 1 ? 'conflict' : 'conflicts'} with other policies.`) : 'Cross policy consistency has not been run yet.' },
-      { key: 'clarity', label: DIM_LABEL.clarity, band: (cl?.band ?? 'none') as Band, href: '/gaps',
-        detail: cl ? `${cl.finding_count} ${cl.finding_count === 1 ? 'passage' : 'passages'} of unclear wording found.` : 'Not run yet. Open Policy clarity on the Gaps page.' },
+      { key: 'clarity', label: DIM_LABEL.clarity, band: cl ? clarityDimBand((cl.band ?? 'none') as Band, checks!) : 'none', href: '/gaps', checks,
+        detail: cl ? `${cl.finding_count} ${cl.finding_count === 1 ? 'passage' : 'passages'} of unclear wording found. The seven checks are below.` : 'Not run yet. Open Policy clarity on the Gaps page.' },
       { key: 'practical', label: DIM_LABEL.practical, band: practicalBand(stressGaps, stressPoints), href: '/stress-testing',
         detail: myStress.length ? `${myStress.length} ${myStress.length === 1 ? 'situation' : 'situations'} tested, ${stressGaps} ${stressGaps === 1 ? 'point' : 'points'} not covered anywhere in your library.` : 'No situations tested yet. Open Policy Testing.' },
       { key: 'readability', label: DIM_LABEL.readability, band: metrics ? readabilityBand(metrics) : 'none', href: '/gaps',

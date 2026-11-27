@@ -3,7 +3,7 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import fs from 'fs'
 import path from 'path'
-import { parseClarity, readabilityMetrics, readabilityBand, clarityBand, CLARITY_TYPES, DEFAULT_POLICY_CLARITY_PROMPT } from '../services/policy-testing/clarity'
+import { checkBands, clarityDimBand, HEALTH_CHECKS, parseClarity, readabilityMetrics, readabilityBand, clarityBand, CLARITY_TYPES, DEFAULT_POLICY_CLARITY_PROMPT } from '../services/policy-testing/clarity'
 import { overallBand, coverageBand, practicalBand, HEALTH_WEIGHTS } from '../services/policy-testing/health'
 
 const TEXT = 'Staff should ensure that residents are appropriately monitored and that any concerns are escalated where necessary. The senior carer records the checks in the care plan every hour overnight.'
@@ -57,4 +57,17 @@ test('WIRING: clarity and health are gated, the prompt is editable and tagged, t
   assert.match(prompts, /policy_clarity: 'Policy clarity'/)
   assert.match(gaps, /stressMeta\.enabled && session\?\.accessToken && <PolicyClaritySection/)
   assert.match(pill, /if \(!enabled \|\| !h\) return null/)
+})
+
+test('HEALTH CHECKS: the seven checks are counted per kind and banded, and one in need of attention stops clarity being Strong', () => {
+  assert.deepEqual(HEALTH_CHECKS.map(c => c.label), ['Vague or ambiguous wording', 'Unclear responsibilities', 'Passive language', 'Missing escalation routes', 'Undefined timeframes', 'Generic statements without practical instructions', 'Excessive jargon'])
+  const findings = [{ type: 'vague' }, { type: 'vague' }, { type: 'vague' }, { type: 'passive' }]
+  const c = checkBands(findings, 2000)
+  assert.equal(c.find(x => x.key === 'vague')!.count, 3)
+  assert.equal(c.find(x => x.key === 'vague')!.band, 'attention')   // 1.5 per thousand words
+  assert.equal(c.find(x => x.key === 'passive')!.band, 'good')      // 0.5 per thousand
+  assert.equal(c.find(x => x.key === 'jargon')!.band, 'strong')
+  assert.equal(clarityDimBand('strong', c), 'good')
+  assert.equal(clarityDimBand('strong', checkBands([], 2000)), 'strong')
+  assert.equal(clarityDimBand('attention', c), 'attention')
 })

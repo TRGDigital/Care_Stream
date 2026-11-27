@@ -26,6 +26,13 @@ const ALL_USAGES = [
   { value: 'policy_writer',               label: 'Policy Writer — Policies we write for clients', description: 'The standing instructions for a policy a client has bought through /gaps. No placeholders: the policy title, the home, its address, the regulations it must satisfy, the required elements and the home\'s named role holders are gathered per order and sent separately, so this cannot fall out of step with the data. Two rules earn their place. It must never invent a person, a date or a certificate number, because a fabricated detail in a compliance document is worse than an absent one. And where a role has nobody named it must name the role only, never a placeholder like [name], because role names are filled in at render time from Organisation details.' },
 ]
 
+// A small tag beside a prompt so the important ones are easy to spot in the list.
+const PROMPT_TAGS: Record<string, string> = { regulation_change_review: 'Relevance agent' }
+function PromptTag({ usage }: { usage: string }) {
+  const t = PROMPT_TAGS[usage]
+  return t ? <span className="ml-1.5 inline-block rounded-full bg-purple-100 px-2 py-0.5 align-middle text-[10px] font-bold uppercase tracking-wide text-purple-700">{t}</span> : null
+}
+
 const CATEGORY_DISPLAY: Record<string, string> = {
   policy:          'Policies & Procedures',
   internal_policy: 'Policies & Procedures',
@@ -391,7 +398,7 @@ export default function PromptsPage() {
                           : 'text-neutral-mid hover:bg-neutral-light hover:text-neutral-dark'
                       }`}
                     >
-                      <p className="text-sm font-medium leading-snug">{p.label}</p>
+                      <p className="text-sm font-medium leading-snug">{p.label}<PromptTag usage={p.usage} /></p>
                       {desc && <p className="mt-0.5 text-[10px] leading-tight opacity-70">{desc.slice(0, 50)}…</p>}
                     </button>
                   )
@@ -462,7 +469,7 @@ export default function PromptsPage() {
                   ) : (
                     <div>
                       <div className="border-b border-gray-100 px-5 py-3">
-                        <h2 className="text-sm font-semibold text-neutral-dark">{current.label}</h2>
+                        <h2 className="text-sm font-semibold text-neutral-dark">{current.label}<PromptTag usage={current.usage} /></h2>
                         <p className="text-xs text-neutral-mid">
                           {ask?.notes[current.usage] ?? ALL_USAGES.find(u => u.value === current.usage)?.description}
                         </p>

@@ -4,6 +4,8 @@ import { PRODUCTS, STATEMENTS, HUB_PATH } from '@/lib/well-led'
 import type { WLPage } from '@/lib/well-led-pages'
 import './user-case-page.css'
 import './scenario-page.css'
+import './well-led-page.css'
+import { WellLedMock } from './well-led-mock'
 
 // A CQC Well-led statement page. Same template as a scenario page (hero with an illustration panel, an intro with a picture, cards, FAQs, guide, calls to action),
 // so the two read as one site. Content comes from lib/well-led-pages.ts.
@@ -102,13 +104,18 @@ export function WellLedPageView({ p }: { p: WLPage }) {
         </div>
       </section>
 
-      <section className="uc-guide">
-        <div className="uc-wrap uc-narrow">
-          <span className="uc-eyebrow">Evidence checklist</span>
-          <h2>The evidence you can show</h2>
-          <p className="uc-guide-lede">A provider can keep these records whichever system they use. CareStream helps you keep them in one place.</p>
-          <ul className="uc-checklist">{p.evidence.map((e, i) => <li key={i}><Tick /><span>{e}</span></li>)}</ul>
-          <div className="uc-note"><p>CareStream helps you keep and show the evidence. It does not give a CQC rating, it is not endorsed by CQC, and the judgement is always the inspector&apos;s.</p></div>
+      <section className="wl-ev">
+        <div className="uc-wrap">
+          <div className="wl-evgrid">
+            <div>
+              <span className="uc-eyebrow">Evidence checklist</span>
+              <h2>The evidence you can show</h2>
+              <p className="uc-guide-lede">A provider can keep these records whichever system they use. CareStream helps you keep them in one place.</p>
+              <ul className="uc-checklist">{p.evidence.map((e, i) => <li key={i}><Tick /><span>{e}</span></li>)}</ul>
+              <div className="uc-note"><p>CareStream helps you keep and show the evidence. It does not give a CQC rating, it is not endorsed by CQC, and the judgement is always the inspector&apos;s.</p></div>
+            </div>
+            <WellLedMock slug={p.slug} />
+          </div>
         </div>
       </section>
 

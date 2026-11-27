@@ -163,7 +163,7 @@ export function HomePageV2({ s, showFree = false, why = [] }: { s: HomeCopy; sho
   return (
     <div className="hpage-v2">
       <main>
-        <div className="hero">
+        <div className="hero wl-hero">
           {/* The constellation. Nodes are placed in percentages; the connectors between them are
               measured and drawn in pixels by <HomeLines>, so the elbows stay square. */}
           <svg className="hero-lines" id="heroLines" aria-hidden="true" />
@@ -192,7 +192,7 @@ export function HomePageV2({ s, showFree = false, why = [] }: { s: HomeCopy; sho
           {/* The CPD Certified mark exactly as supplied (lib/cpd.ts): the image itself is never bordered, recoloured
               or given text. It sits in the same pill as the other nodes, ON the green line between the people and
               the training card, so the line runs straight through it. */}
-          <span className="np cpdp" id="n-cpd" style={{ '--d': '1.8s', left: '64%', top: '38px', '--rot': '-1deg' } as Css}>
+          <span className="np cpdp" id="n-cpd" style={{ '--d': '1.8s', left: '53%', top: '38px', '--rot': '-1deg' } as Css}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={CPD_CERTIFIED_LOGO} alt="CPD Certified" width={37} height={34} />
             {s('hero.n.cpd')}
@@ -215,10 +215,15 @@ export function HomePageV2({ s, showFree = false, why = [] }: { s: HomeCopy; sho
             <span>{s('hero.n.gaps.sub')}</span>
             <span className="tag">{s('hero.n.gaps.tag')}</span>
           </div>
-          <span className="np" id="n-wellled" style={{ '--d': '2.8s', left: 'min(88%,calc(100% - 214px))', top: '33%', '--rot': '1deg' } as Css}>
-            <span className="dot" style={{ background: '#1F8A5B' }}><I20><path d="M10 2.5 16.5 5v5c0 4-3 6.4-6.5 7.5C6.5 16.4 3.5 14 3.5 10V5z" {...st} strokeWidth="1.8" /><path d="M7.4 10l1.9 1.9 3.4-3.6" {...sc} strokeWidth="1.8" /></I20></span>
-            Show CQC you are well-led
-          </span>
+          <div className="nd c-green" id="n-wellled" style={{ '--d': '2.8s', left: 'min(93%,calc(100% - 130px))', top: '33%', '--rot': '1.5deg', '--w': '240px' } as Css}>
+            <div className="top">
+              <span className="ic"><I20><path d="M10 2.5 16.5 5v5c0 4-3 6.4-6.5 7.5C6.5 16.4 3.5 14 3.5 10V5z" {...st} strokeWidth="1.7" /><path d="M7.2 10l2 2 3.6-3.8" {...sc} strokeWidth="1.8" /></I20></span>
+              <span className="big">Well-led</span>
+            </div>
+            <b>Show CQC you are well-led</b>
+            <span>Evidence for CQC inspectors</span>
+            <span className="tag">See how</span>
+          </div>
           <span className="np" id="n-evidence" style={{ '--d': '3s', left: 'min(93.5%,calc(100% - 92px))', top: '76%', '--rot': '1.5deg' } as Css}>
             <span className="dot" style={{ background: '#C2503E' }}><I20><path d="M5 3h10v14H5z" stroke="currentColor" strokeWidth="1.8" /><path d="M8 8h4M8 11h4" {...sc} strokeWidth="1.8" /></I20></span>
             {s('hero.n.evidence')}
@@ -269,10 +274,10 @@ export function HomePageV2({ s, showFree = false, why = [] }: { s: HomeCopy; sho
               <button className="pill pill-solid" type="submit">{s('hero.cta')}</button>
             </form>
             <p className="microcopy">{s('hero.microcopy')}</p>
+            {/* Inside the hero, under the trial line. The hero gets extra bottom room (well-led-home.css) so the bottom cards stay clear of it. */}
+            <WellLedHeroPanel />
           </div>
         </div>
-        {/* The Well-led panel sits just below the hero, not inside it: the hero's cards are placed by percentage and one of them ran under the panel. */}
-        <div className="wlh-band"><WellLedHeroPanel /></div>
         <HomeLines />
 
         <div className="wrap proof">

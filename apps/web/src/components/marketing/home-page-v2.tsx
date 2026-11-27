@@ -215,6 +215,10 @@ export function HomePageV2({ s, showFree = false, why = [] }: { s: HomeCopy; sho
             <span>{s('hero.n.gaps.sub')}</span>
             <span className="tag">{s('hero.n.gaps.tag')}</span>
           </div>
+          <span className="np" id="n-wellled" style={{ '--d': '2.8s', left: 'min(88%,calc(100% - 214px))', top: '33%', '--rot': '1deg' } as Css}>
+            <span className="dot" style={{ background: '#1F8A5B' }}><I20><path d="M10 2.5 16.5 5v5c0 4-3 6.4-6.5 7.5C6.5 16.4 3.5 14 3.5 10V5z" {...st} strokeWidth="1.8" /><path d="M7.4 10l1.9 1.9 3.4-3.6" {...sc} strokeWidth="1.8" /></I20></span>
+            Show CQC you are well-led
+          </span>
           <span className="np" id="n-evidence" style={{ '--d': '3s', left: 'min(93.5%,calc(100% - 92px))', top: '76%', '--rot': '1.5deg' } as Css}>
             <span className="dot" style={{ background: '#C2503E' }}><I20><path d="M5 3h10v14H5z" stroke="currentColor" strokeWidth="1.8" /><path d="M8 8h4M8 11h4" {...sc} strokeWidth="1.8" /></I20></span>
             {s('hero.n.evidence')}
@@ -265,9 +269,10 @@ export function HomePageV2({ s, showFree = false, why = [] }: { s: HomeCopy; sho
               <button className="pill pill-solid" type="submit">{s('hero.cta')}</button>
             </form>
             <p className="microcopy">{s('hero.microcopy')}</p>
-            <WellLedHeroPanel />
           </div>
         </div>
+        {/* The Well-led panel sits just below the hero, not inside it: the hero's cards are placed by percentage and one of them ran under the panel. */}
+        <div className="wlh-band"><WellLedHeroPanel /></div>
         <HomeLines />
 
         <div className="wrap proof">

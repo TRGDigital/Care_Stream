@@ -1,5 +1,6 @@
 /* CQC Well-led on the home page: the hero panel and the section. Uses the home theme's tokens (scoped under .hpage-v2). */
-.hpage-v2 .wlh-panel{max-width:720px;margin:26px auto 0;background:var(--ground);border:1px solid rgba(123,63,191,.30);border-radius:20px;padding:20px clamp(16px,3vw,26px) 22px;text-align:left;box-shadow:var(--shadow)}
+.hpage-v2 .wlh-band{padding:0 24px 64px;position:relative;z-index:4}
+.hpage-v2 .wlh-panel{max-width:720px;margin:0 auto;background:var(--ground);border:1px solid rgba(123,63,191,.30);border-radius:20px;padding:20px clamp(16px,3vw,26px) 22px;text-align:left;box-shadow:var(--shadow)}
 .hpage-v2 .wlh-head{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .hpage-v2 .wlh-head b{font-size:1.15rem;letter-spacing:-.02em;font-weight:700}
 .hpage-v2 .wlh-tag{display:inline-flex;align-items:center;gap:6px;background:var(--accent-soft);color:var(--accent);font-weight:700;font-size:.74rem;border-radius:999px;padding:4px 11px}

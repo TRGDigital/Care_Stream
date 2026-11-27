@@ -123,4 +123,5 @@ export function showsWellLedBanner(pathname: string): boolean {
   return false
 }
 
-export const hubHref = (topic: WellLedTopic, from: string) => `${HUB_PATH}?from=${from}-${topic}#${statementFor(topic).anchor}`
+/** The statement page for a topic, with where the visitor came from. */
+export const hubHref = (topic: WellLedTopic, from: string) => `${HUB_PATH}/${statementFor(topic).anchor}?from=${from}-${topic}`

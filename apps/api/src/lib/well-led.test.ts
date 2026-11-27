@@ -30,8 +30,8 @@ test('WELL-LED: every product appears on exactly one home card and in one banner
 })
 
 test('WELL-LED: links carry the source and go to the right section; no dashes in the copy', () => {
-  assert.equal(hubHref('learn', 'banner'), '/cqc-well-led?from=banner-learn#learning')
-  const files = ['../../../web/src/lib/well-led.ts', '../../../web/src/components/marketing/well-led-banner.tsx', '../../../web/src/components/marketing/well-led-home.tsx', '../../../web/src/app/(marketing)/cqc-well-led/page.tsx']
+  assert.equal(hubHref('learn', 'banner'), '/cqc-well-led/learning?from=banner-learn')
+  const files = ['../../../web/src/lib/well-led.ts', '../../../web/src/components/marketing/well-led-banner.tsx', '../../../web/src/components/marketing/well-led-home.tsx', '../../../web/src/app/(marketing)/cqc-well-led/page.tsx', '../../../web/src/app/(marketing)/cqc-well-led/[statement]/page.tsx', '../../../web/src/components/marketing/well-led-page.tsx', '../../../web/src/lib/well-led-pages.ts']
   for (const f of files) {
     const src = fs.readFileSync(path.resolve(__dirname, f), 'utf8')
     assert.doesNotMatch(src, /[–—]/, `${f} has a dash`)
@@ -47,4 +47,17 @@ test('SCENARIO PICTURES: the editor can draw a new picture for a database page a
   assert.match(route, /image must be a full https address/)
   assert.match(panel, /Make a new picture/)
   assert.match(panel, /generateBlogImage\(token/)
+})
+
+test('WELL-LED PAGES: four statement pages, each complete, each with its own picture, and every product named exists', () => {
+  const { WL_PAGES } = require('../../../web/src/lib/well-led-pages')
+  assert.deepEqual(WL_PAGES.map((p: any) => p.slug), ['governance', 'learning', 'inclusion', 'direction'])
+  assert.equal(new Set(WL_PAGES.map((p: any) => p.image)).size, 4)
+  for (const p of WL_PAGES) {
+    assert.ok(p.meta_title.length <= 62, p.slug + ' meta title ' + p.meta_title.length)
+    assert.ok(p.meta_description.length <= 156, p.slug + ' meta description ' + p.meta_description.length)
+    assert.ok(p.looksFor.length >= 3 && p.evidence.length >= 3 && p.helps.length >= 4 && p.limits.length === 3 && p.faqs.length >= 3, p.slug)
+    for (const h of p.helps) assert.ok(PRODUCTS[h.id], p.slug + ' ' + h.id)
+    assert.ok(STATEMENTS.some(s => s.anchor === p.slug && s.topic === p.topic), p.slug + ' statement')
+  }
 })

@@ -32,6 +32,7 @@ const MARKETING: Entry[] = [
   ...AUDIT_PAGES.map(a => ({ url: `/care-audits/${a.slug}`, changeFrequency: 'monthly' as const, priority: 0.7 })),
   { url: '/cqc-compliance',                        changeFrequency: 'monthly', priority: 0.9 },
   { url: '/cqc-well-led',                          changeFrequency: 'monthly', priority: 0.9 },
+  ...['governance', 'learning', 'inclusion', 'direction'].map(x => ({ url: `/cqc-well-led/${x}`, changeFrequency: 'monthly' as const, priority: 0.8 })),
   { url: '/cqc-staff-questions',                   changeFrequency: 'monthly', priority: 0.8 },
   { url: '/business-continuity',                   changeFrequency: 'monthly', priority: 0.8 },
   { url: '/cqc-report-chat',                       changeFrequency: 'monthly', priority: 0.8 },

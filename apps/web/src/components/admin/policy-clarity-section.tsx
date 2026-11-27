@@ -3,11 +3,15 @@
 // Step 5 on the Gaps page: Policy clarity and precision (pilot: CS-1001 only). Does the policy actually tell staff what to do?
 // Each policy opens as its own accordion. A policy opens even when it is not ready, but then shows what is still to do in steps 1 to 4 and offers nothing to run: wording that is about to change is not rewritten.
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Loader2, FileSearch, ChevronDown, Sparkles, Check, X } from 'lucide-react'
+import { Loader2, FileSearch, ChevronDown, Sparkles, Check, X, Wand2 } from 'lucide-react'
+import { WordingReviewModal } from './wording-review-modal'
 import { stress, type ClarityPolicy, type ClarityResult } from '@/lib/stress-client'
 import { BAND_STYLE } from './policy-health-pill'
 
-function ResultView({ result }: { result: ClarityResult }) {
+function ResultView({ result, token, onAdopted }: { result: ClarityResult; token: string; onAdopted: () => void }) {
+  const [reviewing, setReviewing] = useState(false)
+  // Each finding becomes a suggestion in the same side by side review the other steps use: the proposed rewrite on the left, the policy with the passage highlighted on the right.
+  const alignments = result.findings.filter(f => f.suggestion).map(f => ({ focus: `${f.type_label}: ${f.issue}`, placement: 'amend' as const, anchor: f.quote, section_title: '', wording: f.suggestion, ref: `clarity:${f.type}` }))
   return (
     <div className="mt-4 rounded-xl border border-purple-200 bg-white p-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -31,6 +35,13 @@ function ResultView({ result }: { result: ClarityResult }) {
           <span><b className="font-semibold">Staff readability</b> <span className="text-neutral-mid">· {BAND_STYLE[result.readability.band].label}</span><span className="block text-neutral-mid">{result.readability.detail}</span></span>
         </div>
       )}
+      {alignments.length > 0 && (
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-indigo-200 bg-indigo-50/50 px-4 py-3">
+          <p className="text-sm text-neutral-dark">{alignments.length} {alignments.length === 1 ? 'rewrite is' : 'rewrites are'} ready to review next to the policy, and each can be adopted into your draft.</p>
+          <button onClick={() => setReviewing(true)} className="inline-flex items-center gap-1.5 rounded-btn border border-teal/30 bg-white px-3 py-1.5 text-xs font-semibold text-teal hover:bg-teal-light/30"><Wand2 size={13} /> Review &amp; resolve</button>
+        </div>
+      )}
+      {reviewing && <WordingReviewModal variant="clarity" token={token} policyId={result.policy_id} policyName={result.policy_name} statements={[]} alignments={alignments} onClose={() => setReviewing(false)} onAdopted={onAdopted} />}
       {result.findings.length === 0 ? <p className="mt-4 rounded-md bg-green-50 px-3 py-2 text-sm text-green-800">No unclear wording was found. Every instruction was specific enough.</p> : (
         <ul className="mt-4 space-y-3">
           {result.findings.map((f, i) => (
@@ -115,7 +126,7 @@ export function PolicyClaritySection({ token, focusPolicyId }: { token: string; 
                 {list.map(p => {
                   const isOpen = openPolicy === p.id, res = results[p.id]
                   return (
-                    <div key={p.id} className={isOpen ? 'bg-purple-50/30 ring-2 ring-inset ring-purple-500' : p.id === focusPolicyId ? 'bg-purple-50/40' : ''}>
+                    <div key={p.id} className={p.id === focusPolicyId ? 'bg-purple-50/40' : ''}>
                       <button onClick={() => toggle(p)} aria-expanded={isOpen} className="flex w-full flex-wrap items-center gap-2 px-4 py-3 text-left hover:bg-neutral-light/50">
                         <div className="min-w-0 flex-1">
                           <p className="text-sm font-medium text-neutral-dark">{p.name}</p>
@@ -151,7 +162,7 @@ export function PolicyClaritySection({ token, focusPolicyId }: { token: string; 
                                   {busy === p.id ? <><Loader2 size={12} className="animate-spin" /> Reading…</> : <><FileSearch size={12} /> {p.last ? 'Check again' : 'Check clarity'}</>}
                                 </button>
                               </div>
-                              {res ? <ResultView result={res} /> : p.last ? <p className="mt-3 flex items-center gap-2 text-sm text-neutral-mid"><Loader2 size={13} className="animate-spin" /> Loading the last result</p> : null}
+                              {res ? <ResultView result={res} token={token} onAdopted={() => void load()} /> : p.last ? <p className="mt-3 flex items-center gap-2 text-sm text-neutral-mid"><Loader2 size={13} className="animate-spin" /> Loading the last result</p> : null}
                             </>
                           )}
                         </div>

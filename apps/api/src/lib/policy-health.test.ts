@@ -179,5 +179,18 @@ test('OUTLINE: the policy being worked on is outlined in purple while its accord
   const policies = read('../../../web/src/app/(admin)/policies/page.tsx'), sec = read('../../../web/src/components/admin/policy-clarity-section.tsx')
   assert.match(policies, /\[&>td\]:border-t-2 \[&>td\]:border-purple-500 \[&>td:first-child\]:border-l-2 \[&>td:last-child\]:border-r-2/)   // the policy row
   assert.match(policies, /border-x-2 border-b-2 border-purple-500 p-0/)                                                                       // the panel under it, closing the box
-  assert.match(sec, /ring-2 ring-inset ring-purple-500/)                                                                                     // the open policy in step 5
+  assert.doesNotMatch(sec, /ring-purple-500/)                                                                                          // the outline is for the Policies page only, not step 5
+})
+
+test('STEP 5 REVIEW: clarity uses the same side by side review as the other steps, adopting into the policy draft', () => {
+  const read = (f: string) => fs.readFileSync(path.resolve(__dirname, f), 'utf8')
+  const sec = read('../../../web/src/components/admin/policy-clarity-section.tsx'), modal = read('../../../web/src/components/admin/wording-review-modal.tsx'), adoption = read('../services/analytics/policy-adoption.ts')
+  assert.match(sec, /<WordingReviewModal variant="clarity"/)
+  assert.match(sec, /Review &amp; resolve/)
+  assert.match(sec, /ref: `clarity:\$\{f\.type\}`/)                  // each adopted change is recorded as coming from step 5
+  assert.match(sec, /anchor: f\.quote/)                                // the passage is found in the policy by its own words
+  assert.match(modal, /variant = 'wording'/)                          // step 4 is unchanged
+  assert.match(modal, /reference_key: a\.ref \?\? refKey/)
+  assert.match(modal, /const P = clar \? 'C' : 'W'/)
+  assert.match(adoption, /refKey\.startsWith\('clarity:'\)\) return 'clarity'/)
 })

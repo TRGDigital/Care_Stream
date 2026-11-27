@@ -10,7 +10,7 @@ import { persistentCache } from '@/lib/page-cache'
 import { findBlock, findHeadingBlock, markSafBlockEl, markBlockAdoptedEl, newBlock } from './gap-detail-modal'
 import { X, Loader2, CheckCircle2, Sparkles, BookOpen, ChevronDown } from 'lucide-react'
 
-type Alignment = { focus: string; placement: 'amend' | 'add_under_heading' | 'new_section'; anchor: string; section_title: string; wording: string }
+type Alignment = { focus: string; placement: 'amend' | 'add_under_heading' | 'new_section'; anchor: string; section_title: string; wording: string; ref?: string }
 
 // New wording (add-under-heading / new-section) often carries its own title as the first short
 // line — split it out so the title can be shown bold and never duplicated in the body.
@@ -24,7 +24,7 @@ function splitNewWording(a: Alignment): { title?: string; body: string } {
   return { body: a.wording.trim() }
 }
 
-export function WordingReviewModal({ token, policyId, policyName, statements, alignments, onClose, onAdopted }: {
+export function WordingReviewModal({ token, policyId, policyName, statements, alignments, onClose, onAdopted, variant = 'wording' }: {
   token: string
   policyId: string
   policyName: string
@@ -32,7 +32,11 @@ export function WordingReviewModal({ token, policyId, policyName, statements, al
   alignments: Alignment[]
   onClose: () => void
   onAdopted?: () => void
+  // The same side by side review serves step 4 (CQC wording) and step 5 (clarity and precision).
+  variant?: 'wording' | 'clarity'
 }) {
+  const clar = variant === 'clarity'
+  const P = clar ? 'C' : 'W'
   const [html, setHtml]         = useState<string | null>(null)
   const [previewErr, setPreviewErr] = useState('')
   const [adopting, setAdopting] = useState<number | null>(null)
@@ -121,7 +125,7 @@ export function WordingReviewModal({ token, policyId, policyName, statements, al
     try {
       const { title, body } = splitNewWording(a)
       await createApiClient(token).analytics.adoptSuggestion({
-        policy_id: policyId, reference_key: refKey, requirement: a.focus,
+        policy_id: policyId, reference_key: a.ref ?? refKey, requirement: a.focus,
         placement: a.placement, old_text: (a.placement === 'amend' || a.placement === 'add_under_heading') ? a.anchor : '',
         // For a new section, add the title as a bold heading (## …) with just the body beneath it,
         // so the title isn't repeated in the body text.
@@ -139,13 +143,27 @@ export function WordingReviewModal({ token, policyId, policyName, statements, al
       <div className="w-full max-w-[96rem] rounded-card bg-white shadow-xl" onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between gap-3 border-b border-gray-100 px-6 py-4">
           <div className="min-w-0">
-            <p className="flex items-center gap-2 text-base font-bold text-neutral-dark"><Sparkles size={16} className="text-indigo-600" /> CQC wording alignment</p>
+            <p className="flex items-center gap-2 text-base font-bold text-neutral-dark"><Sparkles size={16} className="text-indigo-600" /> {clar ? 'Clarity and precision' : 'CQC wording alignment'}</p>
             <p className="truncate text-xs text-neutral-mid">{policyName}{statements.length ? ` · Supports: ${statements.map(s => s.name).join(', ')}` : ''}</p>
           </div>
           <button onClick={onClose} aria-label="Close" className="shrink-0 rounded p-1 text-neutral-mid hover:bg-neutral-light hover:text-neutral-dark"><X size={18} /></button>
         </div>
 
-        {/* Synopsis — what SAF wording alignment is and does (like the Coverage detail summary) */}
+        {clar ? (
+          <div className="mx-6 mt-5 overflow-hidden rounded-lg border border-indigo-200 bg-indigo-50/50">
+            <div className="flex items-start gap-2.5 px-4 py-3">
+              <BookOpen size={15} className="mt-0.5 shrink-0 text-indigo-600" />
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-bold uppercase tracking-wide text-indigo-700">About clarity and precision</p>
+                <p className="mt-1 text-sm leading-relaxed text-neutral-dark">
+                  This finds wording that sounds professional but does not tell staff exactly what to do: vague wording, no named person, passive wording, no escalation route, no timeframe, jargon.
+                  Each passage is numbered (C1, C2&hellip;) and highlighted on the policy to the right. Adopting a rewrite replaces that passage in your working draft; nothing changes for staff until you publish the policy.
+                  Words in square brackets are for you to decide, so edit them before you publish.
+                </p>
+              </div>
+            </div>
+          </div>
+        ) : (
         <div className="mx-6 mt-5 overflow-hidden rounded-lg border border-indigo-200 bg-indigo-50/50">
           <div className="flex items-start gap-2.5 px-4 py-3">
             <BookOpen size={15} className="mt-0.5 shrink-0 text-indigo-600" />
@@ -168,11 +186,12 @@ export function WordingReviewModal({ token, policyId, policyName, statements, al
             </div>
           </div>
         </div>
+        )}
 
         <div className="mt-4 grid max-h-[84vh] grid-cols-1 divide-y divide-gray-100 overflow-y-auto lg:max-h-[80vh] lg:grid-cols-2 lg:divide-x lg:divide-y-0">
           {/* Suggestions */}
           <div className="space-y-3 overflow-y-auto px-6 py-5 lg:max-h-[87vh]">
-            <p className="text-xs text-neutral-mid">{alignments.length} area{alignments.length === 1 ? '' : 's'} could read in a more person-centred way. Adopting a rewrite replaces the highlighted passage in your policy draft.</p>
+            <p className="text-xs text-neutral-mid">{clar ? `${alignments.length} passage${alignments.length === 1 ? '' : 's'} could tell staff more clearly what to do.` : `${alignments.length} area${alignments.length === 1 ? '' : 's'} could read in a more person-centred way.`} Adopting a rewrite replaces the highlighted passage in your policy draft.</p>
             {adoptErr && <p className="text-xs text-red-600">{adoptErr}</p>}
             {order.map((origIdx, k) => {
               const a = alignments[origIdx]
@@ -181,21 +200,22 @@ export function WordingReviewModal({ token, policyId, policyName, statements, al
               return (
               <div key={origIdx} className="rounded-lg border border-indigo-100 bg-white px-3 py-2.5">
                 <div className="flex items-start gap-2">
-                  <span className="mt-0.5 flex h-5 shrink-0 items-center justify-center rounded-full bg-indigo-100 px-1.5 text-[11px] font-bold text-indigo-700">W{num}</span>
+                  <span className="mt-0.5 flex h-5 shrink-0 items-center justify-center rounded-full bg-indigo-100 px-1.5 text-[11px] font-bold text-indigo-700">{P}{num}</span>
                   <p className="text-xs font-semibold text-indigo-700">{a.focus}</p>
                 </div>
                 <p className="mt-1.5 text-[11px] text-neutral-mid">
                   {located.has(origIdx)
-                    ? <>Shown as <span className="font-semibold text-indigo-700">W{num}</span> in the policy{a.placement === 'amend' ? <>; adopting rewrites that passage.</> : a.placement === 'add_under_heading' ? <>, as a new block under its heading; adopt to add it.</> : <>, as a new section; adopt to add it.</>}</>
+                    ? <>Shown as <span className="font-semibold text-indigo-700">{P}{num}</span> in the policy{a.placement === 'amend' ? <>; adopting rewrites that passage.</> : a.placement === 'add_under_heading' ? <>, as a new block under its heading; adopt to add it.</> : <>, as a new section; adopt to add it.</>}</>
                     : html == null
                       ? <span className="inline-flex items-center gap-1"><Loader2 size={11} className="animate-spin" /> Locating this passage in the policy…</span>
                       : <>Couldn&rsquo;t pinpoint this passage automatically &mdash; adopting still rewrites it in your draft.</>}
                 </p>
                 <p className="mt-1.5 text-[11px] font-semibold uppercase tracking-wide text-neutral-mid">
-                  {a.placement === 'amend' ? 'Person-centred rewrite' : a.placement === 'new_section' ? 'New section to add' : 'New wording to add'}
+                  {a.placement === 'amend' ? (clar ? 'Clearer rewrite' : 'Person-centred rewrite') : a.placement === 'new_section' ? 'New section to add' : 'New wording to add'}
                 </p>
                 {a.placement !== 'amend' && title && <p className="mt-0.5 text-sm font-bold text-neutral-dark">{title}</p>}
                 <p className="mt-0.5 whitespace-pre-line text-sm text-neutral-dark">{a.placement === 'amend' ? a.wording : body}</p>
+                {clar && /\[[^\]]+\]/.test(a.wording) && <p className="mt-1.5 rounded bg-amber-50 px-2 py-1 text-[11px] text-amber-900">This has words in square brackets for you to decide. Adopting puts them in your draft, so edit them before you publish.</p>}
                 <div className="mt-2">
                   {adopted.has(origIdx) ? (
                     <span className="inline-flex items-center gap-1 text-xs font-medium text-green-700"><CheckCircle2 size={13} /> Adopted, shown in the policy</span>
@@ -233,10 +253,10 @@ export function WordingReviewModal({ token, policyId, policyName, statements, al
                     const { title } = splitNewWording(a)
                     return (
                       <li key={origIdx} className="flex gap-2 text-xs text-neutral-dark">
-                        <span className={`flex h-5 shrink-0 items-center justify-center rounded-full px-1.5 text-[11px] font-bold ${isNew ? 'bg-teal-100 text-teal-800' : 'bg-indigo-100 text-indigo-700'}`}>W{num}</span>
+                        <span className={`flex h-5 shrink-0 items-center justify-center rounded-full px-1.5 text-[11px] font-bold ${isNew ? 'bg-teal-100 text-teal-800' : 'bg-indigo-100 text-indigo-700'}`}>{P}{num}</span>
                         <span className="min-w-0">
                           {a.placement === 'amend'
-                            ? <><span className="font-medium text-indigo-700">{a.focus}</span> <span className="text-neutral-mid">&mdash; rewrite this whole passage to read in a more person-centred way.</span></>
+                            ? <><span className="font-medium text-indigo-700">{a.focus}</span> <span className="text-neutral-mid">&mdash; {clar ? 'rewrite this passage so staff know exactly what to do.' : 'rewrite this whole passage to read in a more person-centred way.'}</span></>
                             : a.placement === 'add_under_heading'
                               ? <><span className="text-neutral-dark">New wording{title ? <>: {title}</> : null}</span> <span className="text-neutral-mid">(added under the &ldquo;{a.anchor}&rdquo; heading)</span></>
                               : <span className="text-neutral-dark">New section{title ? <>: {title}</> : null}</span>}

@@ -1692,7 +1692,7 @@ export function createApiClient(token: string) {
       consistencyDetect: () => apiFetch<{ conflicts: number; sets: number }>('/analytics/consistency/detect', token, { method: 'POST' }),
       consistencyDismiss: (key: string) => apiFetch<{ dismissed: boolean }>('/analytics/consistency/dismiss', token, { method: 'POST', body: JSON.stringify({ key }) }),
       // Policy review matrix (deduped across the four gap sections).
-      policyMatrix: () => apiFetch<{ policies: Array<{ policy_id: string; name: string; version: string; status: 'published' | 'draft' | 'pending_manager' | 'pending_external' | 'active'; updated_at: string | null; sources: Array<'coverage' | 'out_of_date' | 'consistency' | 'wording' | 'clarity'>; last_reviewed_at: string | null; next_review_due: string | null; review_overdue: boolean }> }>('/analytics/gaps/matrix', token),
+      policyMatrix: () => apiFetch<{ policies: Array<{ policy_id: string; name: string; version: string; status: 'published' | 'draft' | 'pending_manager' | 'pending_external' | 'active'; updated_at: string | null; sources: Array<'coverage' | 'out_of_date' | 'consistency' | 'wording' | 'clarity' | 'testing'>; last_reviewed_at: string | null; next_review_due: string | null; review_overdue: boolean }> }>('/analytics/gaps/matrix', token),
       // "Mark as updated" — hide a policy from a section list until the next scan re-flags it.
       lintResolve: (policyId: string) => apiFetch<{ resolved: boolean }>(`/analytics/policy-lint/${encodeURIComponent(policyId)}/resolve`, token, { method: 'POST' }),
       reviewResolutions: () =>

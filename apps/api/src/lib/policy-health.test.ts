@@ -189,8 +189,30 @@ test('STEP 5 REVIEW: clarity uses the same side by side review as the other step
   assert.match(sec, /Review &amp; resolve/)
   assert.match(sec, /ref: `clarity:\$\{f\.type\}`/)                  // each adopted change is recorded as coming from step 5
   assert.match(sec, /anchor: f\.quote/)                                // the passage is found in the policy by its own words
-  assert.match(modal, /variant = 'wording'/)                          // step 4 is unchanged
+  assert.match(modal, /variant = 'wording'/)                          // step 4 is unchanged (it is the default)
   assert.match(modal, /reference_key: a\.ref \?\? refKey/)
-  assert.match(modal, /const P = clar \? 'C' : 'W'/)
+  assert.match(modal, /const P = clar \? 'C' : test \? 'T' : 'W'/)
   assert.match(adoption, /refKey\.startsWith\('clarity:'\)\) return 'clarity'/)
+})
+
+test('POLICY TESTING IN HEALTH: shows what is set up, the results, whether the policy changed since, and changes adopted because of testing', () => {
+  const read = (f: string) => fs.readFileSync(path.resolve(__dirname, f), 'utf8')
+  const health = read('../services/policy-testing/health.ts'), pill = read('../../../web/src/components/admin/policy-health-pill.tsx'), page = read('../../../web/src/app/(admin)/stress-testing/page.tsx')
+  const modal = read('../../../web/src/components/admin/wording-review-modal.tsx'), adoption = read('../services/analytics/policy-adoption.ts')
+  assert.match(health, /policyScenario\.findMany\(\{ where: \{ status: 'approved' \}/)                  // what is set up for this policy
+  assert.match(health, /policyMatchesType\(\{ name: p\.name, policy_type: p\.policy_type \}, t\)/)
+  assert.match(health, /policy_changed: myChanges\.some\(c => c\.at > new Date\(r\.created_at\)\)/)      // the policy changed after this test
+  assert.match(health, /c\.ref\.startsWith\('testing:'\)/)                                              // changes adopted because of testing
+  assert.match(health, /No policy testing is set up for this policy yet/)
+  assert.match(health, /none has been tested yet/)
+  assert.match(health, /because of policy testing/)
+  assert.match(health, /href: `\/stress-testing\?policy=\$\{p\.id\}`/)
+  assert.match(pill, /Set up for this policy\. Not tested yet\./)
+  assert.match(pill, /This is recorded in the health check/)
+  assert.match(pill, /Policy changed since, test again/)
+  assert.match(page, /<WordingReviewModal variant="testing"/)
+  assert.match(page, /ref: `testing:\$\{result\.scenario_id\}:\$\{p\.id\}`/)
+  assert.match(page, /get\('policy'\)/)
+  assert.match(modal, /variant\?: 'wording' \| 'clarity' \| 'testing'/)
+  assert.match(adoption, /refKey\.startsWith\('testing:'\)\) return 'testing'/)
 })

@@ -5,12 +5,15 @@
 import { prisma } from '../../db/client'
 import { isPolicyDocument } from '../../lib/document-kind'
 import { clarityStatus, HEALTH_CHECKS, type Band, type CheckResult } from './clarity'
+import { policyMatchesType } from './stress'
 
 export type DimKey = 'coverage' | 'uptodate' | 'consistency' | 'wording' | 'clarity' | 'practical'
 export const HEALTH_WEIGHTS: Record<DimKey, number> = { coverage: 25, uptodate: 15, consistency: 15, wording: 10, clarity: 20, practical: 15 }
 export const DIM_LABEL: Record<DimKey, string> = {
   coverage: 'Regulation coverage', uptodate: 'Up to date', consistency: 'Cross-policy consistency', wording: 'CQC wording', clarity: 'Clarity and precision', practical: 'Policy testing',
 }
+export type TestingResult = { id: string; scenario_id: string; title: string; at: string; covered: number; total: number; elsewhere: number; gaps: number; scenario_changed: boolean; policy_changed: boolean }
+export type TestingInfo = { available: Array<{ id: string; title: string }>; results: TestingResult[]; changes: number; last_change_at: string | null; stale: number }
 export type Dim = {
   key: DimKey; label: string; band: Band; value?: number | null; detail: string; href: string
   /** When the analysis behind this dimension was last run (null if it has not been). */
@@ -19,6 +22,8 @@ export type Dim = {
   checks?: CheckResult[]
   /** Staff readability: measured when clarity is run, so it sits inside Clarity and precision. */
   readability?: { band: Band; detail: string }
+  /** Policy testing: what is set up for this policy, what has been run, and what has changed because of it. */
+  testing?: TestingInfo
 }
 const VALUE: Record<Exclude<Band, 'none'>, number> = { strong: 100, good: 70, attention: 30 }
 
@@ -44,7 +49,7 @@ export function topFixes(dims: Dim[], limit = 3): Fix[] {
     uptodate: () => 'Update the out of date terms',
     consistency: () => 'Resolve the conflicts with your other policies',
     clarity: d => { const worst = [...(d.checks ?? [])].filter(c => c.count > 0).sort((a, b) => b.count - a.count)[0]; return worst ? `Rewrite the unclear passages, starting with ${worst.label.toLowerCase()} (${worst.count})` : 'Rewrite the unclear passages' },
-    practical: () => 'Cover the points no policy in your library covers yet',
+    practical: d => (d.testing && d.testing.stale > 0 ? 'Test this policy again, it has changed since the last policy test' : d.testing && d.testing.available.length > d.testing.results.length ? 'Run the policy tests that are set up for this policy' : 'Cover the points no policy in your library covers yet'),
     wording: () => 'Review the CQC wording suggestions for this policy',
   }
   return dims
@@ -129,13 +134,20 @@ export async function loadGapViews(tenantId: string): Promise<GapViews> {
 }
 
 export async function loadHealth(tenantId: string): Promise<PolicyHealth[]> {
-  const [policies, clarity, stress, checks, g] = await Promise.all([
-    (prisma as any).policy.findMany({ where: { tenant_id: tenantId, status: 'active' }, select: { id: true, name: true, version: true }, orderBy: { name: 'asc' } }),
+  const [policies, clarity, stress, checks, g, scenarios, docs] = await Promise.all([
+    (prisma as any).policy.findMany({ where: { tenant_id: tenantId, status: 'active' }, select: { id: true, name: true, version: true, policy_type: true }, orderBy: { name: 'asc' } }),
     (prisma as any).policyClarityResult.findMany({ where: { tenant_id: tenantId }, orderBy: { created_at: 'desc' }, select: { policy_id: true, band: true, finding_count: true, metrics: true, summary: true, findings: true, created_at: true } }).catch(() => []),
-    (prisma as any).policyStressResult.findMany({ where: { tenant_id: tenantId }, orderBy: { created_at: 'desc' }, select: { policy_id: true, scenario_id: true, points: true, gaps: true, created_at: true } }).catch(() => []),
+    (prisma as any).policyStressResult.findMany({ where: { tenant_id: tenantId }, orderBy: { created_at: 'desc' }, select: { id: true, policy_id: true, scenario_id: true, scenario_title: true, scenario_version: true, points: true, gaps: true, created_at: true } }).catch(() => []),
     (prisma as any).policyHealthCheck.findMany({ where: { tenant_id: tenantId }, orderBy: { created_at: 'desc' }, select: { id: true, policy_id: true, policy_version: true, score: true, band: true, fixes: true, created_at: true } }).catch(() => []),
     loadGapViews(tenantId),
+    (prisma as any).policyScenario.findMany({ where: { status: 'approved' }, select: { id: true, title: true, version: true, policy_types: true }, orderBy: { title: 'asc' } }).catch(() => []),
+    (prisma as any).policyDocument.findMany({ where: { tenant_id: tenantId }, select: { id: true, policy_id: true } }).catch(() => []),
   ])
+  // Changes adopted into each policy's draft, so a test result can say the policy has changed since, and health can say how many changes came from policy testing.
+  const docToPolicy = new Map<string, string>((docs as any[]).map(d => [d.id, d.policy_id]))
+  const changeRows = (docs as any[]).length ? await (prisma as any).policyDocumentChange.findMany({ where: { document_id: { in: (docs as any[]).map(d => d.id) }, reverted: false }, select: { document_id: true, reference_key: true, applied_at: true } }).catch(() => []) : []
+  const changesBy = new Map<string, Array<{ ref: string; at: Date }>>()
+  for (const c of changeRows as any[]) { const pid = docToPolicy.get(c.document_id); if (!pid) continue; const l = changesBy.get(pid) ?? []; l.push({ ref: String(c.reference_key ?? ''), at: new Date(c.applied_at) }); changesBy.set(pid, l) }
   const iso = (d: any) => (d ? new Date(d).toISOString() : null)
   const lastCheck = new Map<string, any>(); for (const c of checks as any[]) if (!lastCheck.has(c.policy_id)) lastCheck.set(c.policy_id, c)
   const clarityBy = new Map<string, any>(); for (const c of clarity as any[]) if (!clarityBy.has(c.policy_id)) clarityBy.set(c.policy_id, c)
@@ -150,6 +162,33 @@ export async function loadHealth(tenantId: string): Promise<PolicyHealth[]> {
     const cl = clarityBy.get(p.id)
     const myStress = [...stressLatest.values()].filter(r => r.policy_id === p.id)
     const stressPoints = myStress.reduce((n, r) => n + (Array.isArray(r.points) ? r.points.length : 0), 0), stressGaps = myStress.reduce((n, r) => n + (r.gaps ?? 0), 0)
+    // Policy testing: what is set up for this policy, what has been run, and what has changed because of it.
+    const myChanges = changesBy.get(p.id) ?? []
+    const available = (scenarios as any[]).filter(sc => (sc.policy_types ?? []).some((t: string) => policyMatchesType({ name: p.name, policy_type: p.policy_type }, t))).map(sc => ({ id: sc.id, title: sc.title, version: sc.version }))
+    const availById = new Map(available.map(x => [x.id, x]))
+    const testingResults: TestingResult[] = myStress.map((r: any) => {
+      const pts: any[] = Array.isArray(r.points) ? r.points : []
+      const notHere = pts.filter(x => x.verdict !== 'covered')
+      return {
+        id: r.id, scenario_id: r.scenario_id, title: r.scenario_title || availById.get(r.scenario_id)?.title || 'Situation', at: new Date(r.created_at).toISOString(),
+        covered: pts.length - notHere.length, total: pts.length, elsewhere: notHere.filter(x => (x.elsewhere ?? []).some((e: any) => e.verdict === 'covered')).length, gaps: r.gaps ?? 0,
+        scenario_changed: availById.has(r.scenario_id) && availById.get(r.scenario_id)!.version !== r.scenario_version,
+        policy_changed: myChanges.some(c => c.at > new Date(r.created_at)),   // something was adopted into the policy after this test, so the result may be out of date
+      }
+    }).sort((a: TestingResult, b: TestingResult) => b.at.localeCompare(a.at))
+    const testChanges = myChanges.filter(c => c.ref.startsWith('testing:'))
+    const testing: TestingInfo = {
+      available: available.map(x => ({ id: x.id, title: x.title })), results: testingResults, changes: testChanges.length,
+      last_change_at: testChanges.length ? new Date(Math.max(...testChanges.map(c => c.at.getTime()))).toISOString() : null,
+      stale: testingResults.filter(r => r.policy_changed || r.scenario_changed).length,
+    }
+    const testingDetail = available.length === 0 && testingResults.length === 0
+      ? 'No policy testing is set up for this policy yet. Situations are added for each type of policy as they are approved.'
+      : testingResults.length === 0
+        ? `${available.length} ${available.length === 1 ? 'situation is' : 'situations are'} set up for this policy and none has been tested yet.`
+        : `${testingResults.length} of ${Math.max(available.length, testingResults.length)} ${Math.max(available.length, testingResults.length) === 1 ? 'situation' : 'situations'} tested, ${stressGaps} ${stressGaps === 1 ? 'point' : 'points'} not covered anywhere in your library.`
+          + (testing.changes > 0 ? ` ${testing.changes} ${testing.changes === 1 ? 'change has' : 'changes have'} been adopted into this policy because of policy testing.` : '')
+          + (testing.stale > 0 ? ` ${testing.stale} ${testing.stale === 1 ? 'result is' : 'results are'} out of date because the policy or the situation has changed since, so test again.` : '')
     // Clarity as step 5 shows it: one shared function, so the two cannot disagree.
     const cs = clarityStatus(cl)
     const checks: CheckResult[] = cs ? cs.checks : HEALTH_CHECKS.map(c => ({ ...c, count: 0, band: 'none' as Band }))   // the seven checks always show; until clarity has been run each says so
@@ -168,8 +207,7 @@ export async function loadHealth(tenantId: string): Promise<PolicyHealth[]> {
         detail: wordingRan ? (wordingN === 0 ? 'Nothing open: this policy reads in the way the CQC quality statements expect.' : `${wordingN} ${wordingN === 1 ? 'passage' : 'passages'} could be reworded to match the CQC quality statements.`) : 'The CQC wording analysis has not been run on this policy yet.' },
       { key: 'clarity', label: DIM_LABEL.clarity, band: clarityFinal, href: `/gaps?clarity=${p.id}`, last_run: iso(cl?.created_at), checks, readability,
         detail: cl ? `${cl.finding_count} ${cl.finding_count === 1 ? 'passage' : 'passages'} of unclear wording found. The seven checks and staff readability are below.` : 'Not run yet. Open step 5 on the Gaps page. The seven checks and staff readability fill in when it is run.' },
-      { key: 'practical', label: DIM_LABEL.practical, band: practicalBand(stressGaps, stressPoints), href: '/stress-testing', last_run: iso(myStress.reduce((m: any, r: any) => (!m || new Date(r.created_at) > new Date(m) ? r.created_at : m), null)),
-        detail: myStress.length ? `${myStress.length} ${myStress.length === 1 ? 'situation' : 'situations'} tested, ${stressGaps} ${stressGaps === 1 ? 'point' : 'points'} not covered anywhere in your library.` : 'No situations tested yet. Open Policy Testing.' },
+      { key: 'practical', label: DIM_LABEL.practical, band: practicalBand(stressGaps, stressPoints), href: `/stress-testing?policy=${p.id}`, last_run: iso(myStress.reduce((m: any, r: any) => (!m || new Date(r.created_at) > new Date(m) ? r.created_at : m), null)), testing, detail: testingDetail },
     ]
     for (const d of dims) d.value = bandValue(d.band)
     const o = scoreOf(dims)

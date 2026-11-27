@@ -656,7 +656,8 @@ export async function getPolicyVersionContent(tenantId: string, versionId: strin
 }
 
 // The reference_key on an adopted change tells us which feature drove the update.
-function sourceOfRef(refKey: string): 'out_of_date' | 'consistency' | 'coverage' | 'clarity' {
+function sourceOfRef(refKey: string): 'out_of_date' | 'consistency' | 'coverage' | 'clarity' | 'testing' {
+  if (refKey.startsWith('testing:')) return 'testing'   // adopted from a policy test result
   if (refKey.startsWith('clarity:')) return 'clarity'   // step 5, clarity and precision
   if (refKey.startsWith('policy-lint:')) return 'out_of_date'
   if (refKey.startsWith('consistency:')) return 'consistency'
@@ -667,7 +668,7 @@ export interface MatrixRow {
   policy_id: string; name: string; version: string
   status: 'published' | 'draft' | 'pending_manager' | 'pending_external' | 'active'
   updated_at: string | null
-  sources: Array<'coverage' | 'out_of_date' | 'consistency' | 'wording' | 'clarity'>
+  sources: Array<'coverage' | 'out_of_date' | 'consistency' | 'wording' | 'clarity' | 'testing'>
   last_reviewed_at: string | null
   next_review_due: string | null
   review_overdue: boolean

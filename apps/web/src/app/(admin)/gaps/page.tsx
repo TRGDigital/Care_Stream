@@ -1234,8 +1234,8 @@ function PolicyHealthSection({ token, userId, stepInfo, confirmRun, onRunComplet
 // ── Policy update matrix ─────────────────────────────────────────────────────────
 type MatrixData = Awaited<ReturnType<ReturnType<typeof createApiClient>['analytics']['policyMatrix']>>
 
-const SOURCE_LABEL: Record<string, string> = { coverage: 'Regulation coverage', out_of_date: 'Out-of-date content', consistency: 'Cross-policy consistency', wording: 'CQC wording', clarity: 'Clarity and precision' }
-const SOURCE_STYLE: Record<string, string> = { coverage: 'bg-red-50 text-red-600', out_of_date: 'bg-amber-50 text-amber-700', consistency: 'bg-indigo-50 text-indigo-600', wording: 'bg-purple-50 text-purple-600', clarity: 'bg-teal-50 text-teal-700' }
+const SOURCE_LABEL: Record<string, string> = { coverage: 'Regulation coverage', out_of_date: 'Out-of-date content', consistency: 'Cross-policy consistency', wording: 'CQC wording', clarity: 'Clarity and precision', testing: 'Policy testing' }
+const SOURCE_STYLE: Record<string, string> = { coverage: 'bg-red-50 text-red-600', out_of_date: 'bg-amber-50 text-amber-700', consistency: 'bg-indigo-50 text-indigo-600', wording: 'bg-purple-50 text-purple-600', clarity: 'bg-teal-50 text-teal-700', testing: 'bg-blue-50 text-blue-700' }
 const MSTATUS: Record<string, { label: string; cls: string }> = {
   published:        { label: 'Live',              cls: 'bg-green-50 text-green-700' },
   draft:            { label: 'Draft',             cls: 'bg-gray-100 text-neutral-mid' },

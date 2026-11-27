@@ -6,6 +6,8 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useSession } from 'next-auth/react'
 import { Loader2, FlaskConical, ChevronDown, Check, AlertTriangle, X } from 'lucide-react'
+import { WordingReviewModal } from '@/components/admin/wording-review-modal'
+import { Wand2 } from 'lucide-react'
 import { stress, useStressMeta, type StressPolicy, type StressResult } from '@/lib/stress-client'
 
 const BADGE = {
@@ -23,12 +25,30 @@ export default function StressTestingPage() {
   const [result, setResult] = useState<StressResult | null>(null)
   const [busy, setBusy] = useState('')
   const [error, setError] = useState('')
+  const [reviewing, setReviewing] = useState(false)
+  const [adoptedCount, setAdoptedCount] = useState(0)
+  useEffect(() => { setAdoptedCount(0); setReviewing(false) }, [result?.id])
 
   const load = useCallback(async () => {
     if (!token) return
     try { setPolicies((await stress.library(token)).policies) } catch (e: any) { setError(e.message) }
   }, [token])
   useEffect(() => { if (enabled) void load() }, [enabled, load])
+
+  // Arriving from a policy's health row (?policy=<id>): that policy opens and its latest result is shown.
+  const [focusDone, setFocusDone] = useState(false)
+  useEffect(() => {
+    if (!policies || focusDone || !token) return
+    setFocusDone(true)
+    let id: string | null = null
+    try { id = new URLSearchParams(window.location.search).get('policy') } catch { /* ignore */ }
+    const p = id ? policies.find(x => x.id === id) : null
+    if (!p) return
+    setOpen(p.id)
+    const latest = p.scenarios.filter(s => s.last).sort((a, b) => b.last!.at.localeCompare(a.last!.at))[0]
+    if (latest?.last) void view(latest.last.id)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [policies, focusDone, token])
 
   async function run(policyId: string, scenarioId: string) {
     if (!token) return
@@ -136,6 +156,20 @@ export default function StressTestingPage() {
               )
             })}
           </ul>
+          {(() => {
+            const alignments = result.points.filter(p => p.verdict !== 'covered' && p.suggested_wording).map(p => ({
+              focus: `${p.text}${(p.elsewhere ?? []).length ? ` (also in ${p.elsewhere![0].policy_name})` : ''}`,
+              placement: (p.verdict === 'partly' && p.quote ? 'amend' : 'new_section') as 'amend' | 'new_section',
+              anchor: p.verdict === 'partly' ? p.quote : '', section_title: p.verdict === 'partly' && p.quote ? '' : p.text.slice(0, 70).replace(/[.:;,]+$/, ''), wording: p.suggested_wording, ref: `testing:${result.scenario_id}:${p.id}`,
+            }))
+            return alignments.length > 0 ? (
+              <div className="mt-4 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-indigo-200 bg-indigo-50/50 px-4 py-3">
+                <p className="text-sm text-neutral-dark">{alignments.length} {alignments.length === 1 ? 'point has' : 'points have'} wording ready to review next to the policy, and each can be adopted into your draft.{adoptedCount > 0 ? ` ${adoptedCount} adopted so far. Run the test again to confirm the gaps are closed.` : ''}</p>
+                <button onClick={() => setReviewing(true)} className="inline-flex items-center gap-1.5 rounded-btn border border-teal/30 bg-white px-3 py-1.5 text-xs font-semibold text-teal hover:bg-teal-light/30"><Wand2 size={13} /> Review &amp; resolve</button>
+                {reviewing && <WordingReviewModal variant="testing" token={token!} policyId={result.policy_id} policyName={result.policy_name} statements={[]} alignments={alignments} onClose={() => setReviewing(false)} onAdopted={() => setAdoptedCount(n => n + 1)} />}
+              </div>
+            ) : null
+          })()}
           <p className="mt-4 text-xs text-neutral-mid">This tests what your policy says. It does not judge the care your team gives, and it is not a compliance rating. Review any suggested wording before you use it.</p>
         </div>
       )}

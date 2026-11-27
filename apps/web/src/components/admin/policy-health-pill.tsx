@@ -78,13 +78,31 @@ function DimCard({ d, h }: { d: HealthDim; h: PolicyHealth }) {
           ))}
         </div>
       )}
+      {d.testing && (d.testing.available.length > 0 || d.testing.results.length > 0) && (
+        <ul className="mt-3 space-y-2 border-t border-gray-100 pt-3">
+          {(() => {
+            const t = d.testing!, byScenario = new Map(t.results.map(r => [r.scenario_id, r]))
+            const rows = [...t.available.map(a => ({ id: a.id, title: a.title, r: byScenario.get(a.id) })), ...t.results.filter(r => !t.available.some(a => a.id === r.scenario_id)).map(r => ({ id: r.scenario_id, title: r.title, r }))]
+            return rows.map(x => (
+              <li key={x.id} className="text-sm text-neutral-dark">
+                <span className="font-medium">{x.title}</span>
+                {x.r ? (
+                  <span className="block text-neutral-mid">Tested {fmtDate(x.r.at)}: {x.r.covered} of {x.r.total} points covered in this policy{x.r.elsewhere > 0 ? `, ${x.r.elsewhere} covered in another policy` : ''}, {x.r.gaps === 0 ? 'nothing missing from your library' : `${x.r.gaps} not covered anywhere`}.
+                    {(x.r.policy_changed || x.r.scenario_changed) && <span className="ml-1 rounded bg-amber-50 px-1.5 py-0.5 text-xs font-semibold text-amber-800">{x.r.policy_changed ? 'Policy changed since, test again' : 'Situation updated, test again'}</span>}</span>
+                ) : <span className="block text-neutral-mid">Set up for this policy. Not tested yet.</span>}
+              </li>
+            ))
+          })()}
+          {d.testing.changes > 0 && <li className="rounded-md bg-blue-50 px-3 py-2 text-sm text-blue-900">{d.testing.changes} {d.testing.changes === 1 ? 'change has' : 'changes have'} been adopted into this policy because of policy testing{d.testing.last_change_at ? ` (last on ${fmtDate(d.testing.last_change_at)})` : ''}. This is recorded in the health check.</li>}
+        </ul>
+      )}
       {isClarity && d.readability && (
         <div className="mt-3 flex items-start gap-2 border-t border-gray-100 pt-3 text-sm text-neutral-dark">
           <span className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${BAND_STYLE[d.readability.band].dot}`} />
           <span><b className="font-semibold">Staff readability</b> <span className="text-neutral-mid">· {BAND_STYLE[d.readability.band].label}</span><span className="block text-neutral-mid">{d.readability.detail}</span></span>
         </div>
       )}
-      <p className="mt-3 text-sm"><Link href={d.href} className="font-semibold text-purple-700 hover:underline">{isClarity ? 'Open this policy in step 5 on the Gaps page' : d.key === 'practical' ? 'Open Policy Testing' : 'Open on the Gaps page'}</Link></p>
+      <p className="mt-3 text-sm"><Link href={d.href} className="font-semibold text-purple-700 hover:underline">{isClarity ? 'Open this policy in step 5 on the Gaps page' : d.key === 'practical' ? (d.testing && d.testing.results.length > 0 ? 'See the results and review changes in Policy Testing' : 'Open Policy Testing for this policy') : 'Open on the Gaps page'}</Link></p>
     </li>
   )
 }

@@ -60,7 +60,7 @@ import { defaultSignalSeeds, signalMatches, type TextSignal } from '../services/
 import { callClaude } from '../services/ai/claude'
 import { snapshotAndAlert } from '../services/regulations/versioning'
 import { checkRegulationSources, gatherSubjects } from '../services/regulations/source-monitor'
-import { reviewPendingChanges, reviewOneChange, diffLines, DEFAULT_CHANGE_REVIEW_PROMPT } from '../services/regulations/change-review'
+import { reviewPendingChanges, reviewOneChange, diffLines, loadLineReviews, DEFAULT_CHANGE_REVIEW_PROMPT } from '../services/regulations/change-review'
 
 export const adminRouter = Router()
 
@@ -2415,6 +2415,15 @@ adminRouter.post('/regulations/check-sources', async (_req: Request, res: Respon
 // lands on. NOTE ON ORDER: registered before '/regulations/:id/versions' so 'changes' is
 // never read as a regulation id.
 
+/** A change as the console shows it: clean sentences, a rebuilt-page flag, and (once reviewed) which sentences matter to policies and which do not. */
+function shapeChange(c: any, rev?: { relevant_added: string[]; relevant_removed: string[]; ignored_note: string }) {
+  const added_lines = diffLines(c.added_text), removed_lines = diffLines(c.removed_text)
+  const base = { ...c, added_lines, removed_lines, whole_page: added_lines.length >= 25 && removed_lines.length <= 2 }
+  if (!rev) return base
+  const ra = new Set(rev.relevant_added.map(l => l.trim())), rr = new Set(rev.relevant_removed.map(l => l.trim()))
+  return { ...base, line_review: true, relevant_added: added_lines.filter(l => ra.has(l)), relevant_removed: removed_lines.filter(l => rr.has(l)), ignored_note: rev.ignored_note }
+}
+
 adminRouter.get('/regulations/changes', async (req: Request, res: Response) => {
   const status = String(req.query.status ?? '')
   try {
@@ -2425,10 +2434,8 @@ adminRouter.get('/regulations/changes', async (req: Request, res: Response) => {
     })
     // Read as clean sentences: HTML codes decoded, cookie banners and date stamps dropped, and the size of the change counted, so a page that was
     // simply rebuilt (the whole page "added") can be told apart from a real amendment.
-    const shaped = (changes as any[]).map(c => {
-      const added_lines = diffLines(c.added_text), removed_lines = diffLines(c.removed_text)
-      return { ...c, added_lines, removed_lines, whole_page: added_lines.length >= 25 && removed_lines.length <= 2 }
-    })
+    const reviews = await loadLineReviews((changes as any[]).map(c => c.id))
+    const shaped = (changes as any[]).map(c => shapeChange(c, reviews.get(c.id)))
     ok(res, {
       changes: shaped,
       counts: {
@@ -2537,8 +2544,8 @@ adminRouter.post('/regulations/changes/:id/review', async (req: Request, res: Re
   try {
     const r = await reviewOneChange(String(req.params.id))
     if (!r.ok) return err(res, 'REVIEW_FAILED', r.message ?? 'Could not explain this change', 502)
-    const added_lines = diffLines(r.change.added_text), removed_lines = diffLines(r.change.removed_text)
-    ok(res, { change: { ...r.change, added_lines, removed_lines, whole_page: added_lines.length >= 25 && removed_lines.length <= 2 } })
+    const rev = (await loadLineReviews([r.change.id])).get(r.change.id)
+    ok(res, { change: shapeChange(r.change, rev) })
   } catch (e: any) {
     err(res, 'REVIEW_FAILED', e.message ?? 'Review failed', 500)
   }

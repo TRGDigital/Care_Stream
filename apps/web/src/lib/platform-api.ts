@@ -699,6 +699,11 @@ export type RegulationChange = {
   removed_lines?: string[]
   /** The whole page appears as new: usually a rebuilt page or the first copy stored, so compare with the source. */
   whole_page?: boolean
+  /** Set once the review has judged each sentence: which ones matter to policies, and why the rest do not. */
+  line_review?: boolean
+  relevant_added?: string[]
+  relevant_removed?: string[]
+  ignored_note?: string
   summary: string
   affects_policies: boolean | null
   impact_note: string

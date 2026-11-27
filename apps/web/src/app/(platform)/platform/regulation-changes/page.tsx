@@ -208,6 +208,20 @@ export default function RegulationChangesPage() {
 
                     {c.impact_note && <p className="mt-1.5 text-sm leading-relaxed text-neutral-mid">{c.impact_note}</p>}
 
+                    {c.line_review ? (
+                      <p className={`mt-2 inline-block rounded-md px-2.5 py-1 text-xs font-semibold ${((c.relevant_added?.length ?? 0) + (c.relevant_removed?.length ?? 0)) > 0 ? 'bg-purple-50 text-purple-700' : 'bg-green-50 text-green-700'}`}>
+                        {((c.relevant_added?.length ?? 0) + (c.relevant_removed?.length ?? 0)) > 0
+                          ? `${(c.relevant_added?.length ?? 0) + (c.relevant_removed?.length ?? 0)} sentences matter to policies · ${(c.added_lines?.length ?? 0) + (c.removed_lines?.length ?? 0) - (c.relevant_added?.length ?? 0) - (c.relevant_removed?.length ?? 0)} not relevant`
+                          : 'Nothing here is relevant to policies'}
+                      </p>
+                    ) : c.summary && (
+                      <button onClick={() => explainOne(c.id)} disabled={busy === `explain-${c.id}`}
+                              className="mt-2 inline-flex items-center gap-1.5 rounded-md border border-purple-200 bg-purple-50 px-2.5 py-1 text-xs font-semibold text-purple-700 hover:bg-purple-100 disabled:opacity-50">
+                        {busy === `explain-${c.id}` ? <Loader2 size={12} className="animate-spin" /> : <RefreshCw size={12} />}
+                        Check what matters
+                      </button>
+                    )}
+
                     <a href={c.url} target="_blank" rel="noopener noreferrer"
                        className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-purple-600 hover:underline">
                       <ExternalLink size={11} /> {c.url.replace(/^https?:\/\//, '').slice(0, 70)}
@@ -274,8 +288,35 @@ export default function RegulationChangesPage() {
                               Open the source page and compare the parts that matter, or press Explain this change for a summary of anything substantial.
                             </p>
                           )}
-                          <ChangeLines title="Added to the page" tone="add" lines={added} />
-                          <ChangeLines title="Removed from the page" tone="remove" lines={removed} />
+                          {c.line_review ? (() => {
+                            const ra = new Set(c.relevant_added ?? []), rr = new Set(c.relevant_removed ?? [])
+                            const ia = added.filter(l => !ra.has(l)), ir = removed.filter(l => !rr.has(l))
+                            return (
+                              <>
+                                <ChangeLines title="Relevant to policies, added" tone="add" lines={added.filter(l => ra.has(l))} />
+                                <ChangeLines title="Relevant to policies, removed" tone="remove" lines={removed.filter(l => rr.has(l))} />
+                                {ra.size + rr.size === 0 && (
+                                  <p className="rounded-md bg-green-50 px-3 py-2 text-xs text-green-800">None of the changed wording is relevant to policies.</p>
+                                )}
+                                {ia.length + ir.length > 0 && (
+                                  <details className="rounded-lg border border-gray-200 bg-white px-3 py-2">
+                                    <summary className="cursor-pointer text-xs font-semibold text-neutral-mid">
+                                      Not relevant ({ia.length + ir.length}){c.ignored_note ? `: ${c.ignored_note}` : ''}
+                                    </summary>
+                                    <div className="mt-2 space-y-2">
+                                      <ChangeLines title="Added, not relevant" tone="remove" lines={ia} />
+                                      <ChangeLines title="Removed, not relevant" tone="remove" lines={ir} />
+                                    </div>
+                                  </details>
+                                )}
+                              </>
+                            )
+                          })() : (
+                            <>
+                              <ChangeLines title="Added to the page" tone="add" lines={added} />
+                              <ChangeLines title="Removed from the page" tone="remove" lines={removed} />
+                            </>
+                          )}
                           {added.length === 0 && removed.length === 0 && (
                             <p className="text-xs text-neutral-mid">Once dates, page numbers and cookie banners are ignored, nothing in the wording changed.</p>
                           )}

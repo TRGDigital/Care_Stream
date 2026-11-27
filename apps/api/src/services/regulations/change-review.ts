@@ -161,13 +161,30 @@ Return ONLY valid JSON, no code fences, in exactly this shape:
 Never invent a change that is not in the text you were given. If the added and removed text
 show nothing of substance, say so and mark it cosmetic.`
 
+/** Always appended, even when an edited prompt is stored, so the per sentence verdict never depends on the wording of the prompt. */
+export const LINE_RELEVANCE_RULES = `
+
+SENTENCE BY SENTENCE
+Every added and removed sentence is numbered (A1, A2 ... and R1, R2 ...). Decide which ones are RELEVANT to a care provider's written policies.
+RELEVANT: a duty, right, timescale, threshold, figure, definition, named body or document, process or requirement a policy would state or rely on.
+NOT RELEVANT: cookie and analytics banners ("These send information about how our site is used to Google Analytics", "Let us know if this is OK"), navigation,
+page furniture, section numbering and sentence fragments cut mid way ("Introduction 1.1 The purpose of this policy is to: a."), contact details, "related content",
+accessibility statements, dates, and anything that is only a re-wording with the same meaning.
+When in doubt about a sentence that carries a real duty or figure, mark it relevant. When a sentence is a cut off fragment or page furniture, mark it not relevant.
+Add these two fields to the JSON:
+  "relevant_added": [the numbers of the ADDED sentences that are relevant, for example [2, 5]],
+  "relevant_removed": [the numbers of the REMOVED sentences that are relevant],
+  "ignored_note": "One short sentence saying what the sentences you marked not relevant were (for example 'cookie banner wording and page numbering')."
+If none are relevant use empty lists, "severity" "cosmetic" and "affects_policies" false.`
+
 async function reviewPrompt(): Promise<string> {
+  let base = DEFAULT_CHANGE_REVIEW_PROMPT
   try {
     const row = await (prisma as any).aiPrompt.findUnique({ where: { usage: CHANGE_REVIEW_PROMPT_USAGE } })
     const stored = typeof row?.content === 'string' ? row.content.trim() : ''
-    if (stored) return stored
+    if (stored) base = stored
   } catch { /* fall through */ }
-  return DEFAULT_CHANGE_REVIEW_PROMPT
+  return base + LINE_RELEVANCE_RULES
 }
 
 export type ChangeReview = {
@@ -175,6 +192,17 @@ export type ChangeReview = {
   affects_policies: boolean
   summary: string
   impact_note: string
+  /** The sentences judged relevant to policies; everything else in the change is treated as not relevant. */
+  relevant_added: string[]
+  relevant_removed: string[]
+  ignored_note: string
+}
+
+const pick = (lines: string[], nums: any): string[] => {
+  if (!Array.isArray(nums)) return []
+  const out = new Set<number>()
+  for (const n of nums) { const i = Number(String(n).replace(/\D/g, '')); if (i >= 1 && i <= lines.length) out.add(i - 1) }
+  return [...out].sort((a, b) => a - b).map(i => lines[i])
 }
 
 /** Ask the model what the diff means. Returns null on any failure: an unreviewed change still
@@ -188,28 +216,36 @@ export async function reviewChange(input: {
 }): Promise<ChangeReview | null> {
   if (!input.added.trim() && !input.removed.trim()) return null
 
+  const addedLines = input.added.split('\n').map(l => l.trim()).filter(Boolean)
+  const removedLines = input.removed.split('\n').map(l => l.trim()).filter(Boolean)
   const user = [
     `REGULATION OR STANDARD: ${input.officialName}`,
     `SOURCE PAGE: ${input.url}`,
     '',
-    input.added.trim()   ? `ADDED TO THE PAGE:\n${input.added}`       : 'NOTHING WAS ADDED.',
+    addedLines.length   ? `ADDED TO THE PAGE:\n${addedLines.map((l, i) => `A${i + 1}. ${l}`).join('\n')}`       : 'NOTHING WAS ADDED.',
     '',
-    input.removed.trim() ? `REMOVED FROM THE PAGE:\n${input.removed}` : 'NOTHING WAS REMOVED.',
+    removedLines.length ? `REMOVED FROM THE PAGE:\n${removedLines.map((l, i) => `R${i + 1}. ${l}`).join('\n')}` : 'NOTHING WAS REMOVED.',
   ].join('\n')
 
   try {
     const raw = await callClaude(await reviewPrompt(), user, {
-      model: MODEL, maxTokens: 900, temperature: 0.1, feature: 'regulation_change_review',
+      model: MODEL, maxTokens: 1200, temperature: 0.1, feature: 'regulation_change_review',
     })
     // The model is told to return bare JSON; a stray fence should not lose the review.
     const json = raw.trim().replace(/^```(?:json)?/i, '').replace(/```$/, '').trim()
     const parsed = JSON.parse(json)
-    const severity = ['material', 'minor', 'cosmetic'].includes(parsed?.severity) ? parsed.severity : 'minor'
+    let severity = ['material', 'minor', 'cosmetic'].includes(parsed?.severity) ? parsed.severity : 'minor'
+    const relevant_added = pick(addedLines, parsed?.relevant_added), relevant_removed = pick(removedLines, parsed?.relevant_removed)
+    let affects = !!parsed?.affects_policies
+    // Nothing relevant in the wording means nothing for a policy to change, whatever else the answer said.
+    if (relevant_added.length === 0 && relevant_removed.length === 0) { severity = 'cosmetic'; affects = false }
     return {
       severity,
-      affects_policies: !!parsed?.affects_policies,
+      affects_policies: affects,
       summary:     String(parsed?.summary ?? '').slice(0, 1200),
       impact_note: String(parsed?.impact_note ?? '').slice(0, 1200),
+      relevant_added, relevant_removed,
+      ignored_note: String(parsed?.ignored_note ?? '').slice(0, 300),
     }
   } catch (e: any) {
     console.error('[change-review] failed:', e?.message ?? e)
@@ -234,6 +270,19 @@ export function diffLines(t: string): string[] {
 }
 const cleanDiff = (t: string) => diffLines(t).join('\n')
 
+/** Remember which sentences were judged relevant. Quietly does nothing if the table has not been created yet. */
+export async function saveLineReview(changeId: string, r: ChangeReview): Promise<void> {
+  const data = { relevant_added: r.relevant_added, relevant_removed: r.relevant_removed, ignored_note: r.ignored_note }
+  await (prisma as any).regulationChangeReview.upsert({ where: { change_id: changeId }, create: { change_id: changeId, ...data }, update: data }).catch(() => {})
+}
+
+/** The stored relevance verdicts for these changes, by change id. Empty when none exist (or the table is not there yet). */
+export async function loadLineReviews(ids: string[]): Promise<Map<string, { relevant_added: string[]; relevant_removed: string[]; ignored_note: string }>> {
+  if (!ids.length) return new Map()
+  const rows = await (prisma as any).regulationChangeReview.findMany({ where: { change_id: { in: ids } } }).catch(() => [])
+  return new Map((rows as any[]).map(r => [r.change_id, { relevant_added: (r.relevant_added as string[]) ?? [], relevant_removed: (r.relevant_removed as string[]) ?? [], ignored_note: r.ignored_note ?? '' }]))
+}
+
 /** Explain one change now (the Explain this change button). Noise-only changes are settled without the model. */
 export async function reviewOneChange(id: string): Promise<{ ok: boolean; change?: any; message?: string }> {
   const c = await (prisma as any).regulationChange.findUnique({ where: { id } }).catch(() => null)
@@ -245,6 +294,7 @@ export async function reviewOneChange(id: string): Promise<{ ok: boolean; change
     const r = await reviewChange({ officialName: c.official_name, url: c.url, added, removed })
     if (!r) return { ok: false, message: 'The explanation could not be made just now. Please try again in a minute.' }
     data = { severity: r.severity, affects_policies: r.affects_policies, summary: r.summary, impact_note: r.impact_note, reviewed_at: new Date() }
+    await saveLineReview(id, r)
   }
   const change = await (prisma as any).regulationChange.update({ where: { id }, data })
   await clearAutoFlags().catch(() => 0)
@@ -276,11 +326,19 @@ export async function clearAutoFlags(): Promise<number> {
  *  A change whose only differences are dates, page numbers or site wording is settled here without the model (free and instant): it is marked
  *  cosmetic. Only changes with real wording left go to the model, at most `limit` per run. Afterwards flags with nothing open behind them are cleared. */
 export async function reviewPendingChanges(limit = 25): Promise<{ reviewed: number; failed: number; auto_cosmetic: number; flags_cleared: number }> {
-  const pending = await (prisma as any).regulationChange.findMany({
+  const unreviewed = await (prisma as any).regulationChange.findMany({
     where:   { reviewed_at: null },
     orderBy: { detected_at: 'asc' },
     take:    400,
   }).catch(() => [])
+  // Changes explained before sentence by sentence relevance existed are looked at again once, so they show what matters and what does not.
+  const explained = await (prisma as any).regulationChange.findMany({
+    where:   { reviewed_at: { not: null }, status: 'new', NOT: { added_text: '', removed_text: '' } },
+    orderBy: { detected_at: 'desc' },
+    take:    300,
+  }).catch(() => [])
+  const have = await loadLineReviews((explained as any[]).map(c => c.id))
+  const pending = [...(unreviewed as any[]), ...(explained as any[]).filter(c => !have.has(c.id) && (cleanDiff(c.added_text) || cleanDiff(c.removed_text)))]
 
   let reviewed = 0, failed = 0, auto = 0, usedModel = 0
   for (const c of pending as any[]) {
@@ -303,6 +361,7 @@ export async function reviewPendingChanges(limit = 25): Promise<{ reviewed: numb
         summary: r.summary, impact_note: r.impact_note, reviewed_at: new Date(),
       },
     }).catch(() => { failed++ })
+    await saveLineReview(c.id, r)
     reviewed++
   }
   const flags_cleared = await clearAutoFlags().catch(() => 0)

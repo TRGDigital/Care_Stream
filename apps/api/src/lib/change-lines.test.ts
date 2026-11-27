@@ -28,3 +28,16 @@ test('LINES: the changes list and the page use clean lines, a short list with Sh
   assert.match(page, /lines\.slice\(0, 6\)/)
   assert.match(page, /The whole page shows as new/)
 })
+
+test('RELEVANCE: each sentence is judged, kept apart from the rest, and nothing relevant means cosmetic', () => {
+  const read = (f: string) => fs.readFileSync(path.resolve(__dirname, f), 'utf8')
+  const svc = read('../services/regulations/change-review.ts'), page = read('../../../web/src/app/(platform)/platform/regulation-changes/page.tsx'), admin = read('../routes/admin.ts')
+  assert.match(svc, /LINE_RELEVANCE_RULES/)
+  assert.match(svc, /A\$\{i \+ 1\}\./)
+  assert.match(svc, /relevant_added\.length === 0 && relevant_removed\.length === 0\) \{ severity = 'cosmetic'; affects = false/)
+  assert.match(svc, /return base \+ LINE_RELEVANCE_RULES/)
+  assert.match(admin, /line_review: true/)
+  assert.match(page, /Nothing here is relevant to policies/)
+  assert.match(page, /Not relevant \(/)
+  assert.match(page, /Check what matters/)
+})

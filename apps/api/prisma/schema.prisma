@@ -1071,6 +1071,18 @@ model RegulationChange {
   @@map("regulation_changes")
 }
 
+/// Which sentences of a recorded change the review judged relevant to a care provider's policies. Kept apart from regulation_changes so a missing table
+/// only switches this feature off and never breaks the changes list.
+model RegulationChangeReview {
+  change_id        String   @id
+  relevant_added   Json     @default("[]")
+  relevant_removed Json     @default("[]")
+  ignored_note     String   @default("")
+  created_at       DateTime @default(now())
+
+  @@map("regulation_change_reviews")
+}
+
 // Heartbeat for scheduled jobs. A row that never appears is the signal: eight jobs stopped
 // on 5 June 2026 and nobody found out for 96 days, because nothing recorded that they were
 // meant to have run. See manual_cron_runs.sql.

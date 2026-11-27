@@ -9,6 +9,7 @@ import { downloadExtractedText } from '../services/storage/s3'
 import { isPolicyDocument } from '../lib/document-kind'
 import { analyseClarity } from '../services/policy-testing/clarity'
 import { loadHealth, HEALTH_WEIGHTS } from '../services/policy-testing/health'
+import type { Dim } from '../services/policy-testing/health'
 import {
   POLICY_TYPES, policyTypeLabel, policyMatchesType, runStressTest, draftScenarios,
   STRESS_JUDGE_USAGE, SCENARIO_DRAFTER_USAGE, approvalProblems, type ExpectedPoint,
@@ -263,4 +264,35 @@ stressRouter.post('/clarity/run', requireAdmin, async (req: Request, res: Respon
 stressRouter.get('/health', requireAdmin, async (_req: Request, res: Response) => {
   const tenantId = await guard(res); if (!tenantId) return
   try { ok(res, { policies: await loadHealth(tenantId), weights: HEALTH_WEIGHTS }) } catch (e: any) { err(res, 'HEALTH_FAILED', e?.message ?? 'Could not load policy health.', 500) }
+})
+
+// ── Run health check (pilot): one policy, everything that can be run for it ──
+// The browser runs the steps one at a time (clarity, then each situation, then this snapshot) so each stays well inside the time limit and the person sees progress.
+// Regulation coverage, out of date terms and consistency work across the whole library, so they use the latest results and say when they were last run.
+
+stressRouter.get('/health/plan', requireAdmin, async (req: Request, res: Response) => {
+  const tenantId = await guard(res); if (!tenantId) return
+  try {
+    const policy = await (prisma as any).policy.findFirst({ where: { id: String(req.query.policy_id ?? ''), tenant_id: tenantId, status: 'active' }, select: { id: true, name: true, policy_type: true } })
+    if (!policy) { err(res, 'NOT_FOUND', 'That policy was not found.', 404); return }
+    const scenarios = (await (prisma as any).policyScenario.findMany({ where: { status: 'approved' }, select: { id: true, title: true, policy_types: true }, orderBy: { title: 'asc' } }))
+      .filter((s: any) => (s.policy_types ?? []).some((t: string) => policyMatchesType(policy, t)))
+    ok(res, { policy: { id: policy.id, name: policy.name }, scenarios: scenarios.map((s: any) => ({ id: s.id, title: s.title })), credits: { clarity: 1, stress: scenarios.length, total: 1 + scenarios.length } })
+  } catch (e: any) { err(res, 'PLAN_FAILED', e?.message ?? 'Could not plan the health check.', 500) }
+})
+
+stressRouter.post('/health/snapshot', requireAdmin, async (req: Request, res: Response) => {
+  const tenantId = await guard(res); if (!tenantId) return
+  try {
+    const policyId = String(req.body?.policy_id ?? '')
+    const policy = await (prisma as any).policy.findFirst({ where: { id: policyId, tenant_id: tenantId, status: 'active' }, select: { id: true, name: true, version: true } })
+    const h = (await loadHealth(tenantId)).find(x => x.id === policyId)
+    if (!policy || !h) { err(res, 'NOT_FOUND', 'That policy was not found.', 404); return }
+    if (h.score === null) { err(res, 'NOT_ENOUGH', `Only ${h.assessed} of 6 checks could be assessed, and a score needs at least 3. Run the gap analysis on the Gaps page, then check again.`, 422); return }
+    const row = await (prisma as any).policyHealthCheck.create({ data: {
+      tenant_id: tenantId, policy_id: policy.id, policy_name: policy.name, policy_version: policy.version ?? 1, score: h.score, band: h.overall, assessed: h.assessed,
+      dims: h.dims as Dim[], fixes: h.fixes, included_stress: req.body?.included_stress !== false, run_by: String((req as any).user?.id ?? ''),
+    } })
+    ok(res, { check: { id: row.id, score: row.score, band: row.band, assessed: row.assessed, dims: h.dims, fixes: h.fixes, at: row.created_at } })
+  } catch (e: any) { err(res, 'SNAPSHOT_FAILED', e?.message ?? 'Could not work out the score.', 500) }
 })

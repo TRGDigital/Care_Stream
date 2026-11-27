@@ -4,7 +4,7 @@ import assert from 'node:assert/strict'
 import fs from 'fs'
 import path from 'path'
 import { checkBands, clarityDimBand, HEALTH_CHECKS, parseClarity, readabilityMetrics, readabilityBand, clarityBand, CLARITY_TYPES, DEFAULT_POLICY_CLARITY_PROMPT } from '../services/policy-testing/clarity'
-import { overallBand, coverageBand, practicalBand, HEALTH_WEIGHTS } from '../services/policy-testing/health'
+import { scoreOf, topFixes, overallBand, coverageBand, practicalBand, HEALTH_WEIGHTS } from '../services/policy-testing/health'
 
 const TEXT = 'Staff should ensure that residents are appropriately monitored and that any concerns are escalated where necessary. The senior carer records the checks in the care plan every hour overnight.'
 
@@ -56,7 +56,7 @@ test('WIRING: clarity and health are gated, the prompt is editable and tagged, t
   assert.match(admin, /\[POLICY_CLARITY_USAGE\]:\s+DEFAULT_POLICY_CLARITY_PROMPT/)
   assert.match(prompts, /policy_clarity: 'Policy clarity'/)
   assert.match(gaps, /stressMeta\.enabled && session\?\.accessToken && <PolicyClaritySection/)
-  assert.match(pill, /if \(!enabled \|\| !h\) return null/)
+  assert.match(pill, /if \(!enabled \|\| !h \|\| !token\) return null/)
 })
 
 test('HEALTH CHECKS: the seven checks are counted per kind and banded, and one in need of attention stops clarity being Strong', () => {
@@ -70,4 +70,37 @@ test('HEALTH CHECKS: the seven checks are counted per kind and banded, and one i
   assert.equal(clarityDimBand('strong', c), 'good')
   assert.equal(clarityDimBand('strong', checkBands([], 2000)), 'strong')
   assert.equal(clarityDimBand('attention', c), 'attention')
+})
+
+test('SCORE: a rough score out of 100 by a fixed rule, only once three dimensions are assessed', () => {
+  assert.equal(scoreOf([{ key: 'coverage', band: 'strong' }, { key: 'uptodate', band: 'strong' }]).score, null)
+  // coverage 25 strong (100), uptodate 15 good (70), consistency 15 attention (30): (2500 + 1050 + 450) / 55 = 72.7
+  const r = scoreOf([{ key: 'coverage', band: 'strong' }, { key: 'uptodate', band: 'good' }, { key: 'consistency', band: 'attention' }, { key: 'clarity', band: 'none' }])
+  assert.equal(r.score, 73); assert.equal(r.band, 'good'); assert.equal(r.assessed, 3)
+  assert.equal(scoreOf(['coverage', 'uptodate', 'consistency', 'clarity', 'practical', 'readability'].map(k => ({ key: k as any, band: 'strong' as const }))).score, 100)
+})
+
+test('FIXES: the few things that would raise the score most, biggest first, with where to fix them', () => {
+  const d = (key: any, band: any, extra: any = {}) => ({ key, label: key, band, detail: '', href: '/gaps', ...extra })
+  const dims = [d('coverage', 'attention'), d('uptodate', 'good'), d('consistency', 'strong'), d('clarity', 'attention', { checks: [{ key: 'vague', label: 'Vague or ambiguous wording', count: 6, band: 'attention' }, { key: 'passive', label: 'Passive language', count: 1, band: 'good' }] }), d('practical', 'none'), d('readability', 'good')]
+  const f = topFixes(dims as any)
+  assert.equal(f.length, 3)
+  assert.equal(f[0].dim, 'coverage')                               // 25 x 70 = 1750, the biggest gain
+  assert.equal(f[1].dim, 'clarity')                                // 20 x 70 = 1400
+  assert.match(f[1].text, /vague or ambiguous wording \(6\)/)
+  assert.ok(f.every(x => x.dim !== 'consistency' && x.dim !== 'practical'))
+})
+
+test('HEALTH CHECK: planned, run step by step from the page, then snapshotted; the badge shows the score and the button', () => {
+  const read = (f: string) => fs.readFileSync(path.resolve(__dirname, f), 'utf8')
+  const routes = read('../routes/policy-testing.ts'), pill = read('../../../web/src/components/admin/policy-health-pill.tsx')
+  assert.match(routes, /stressRouter\.get\('\/health\/plan'/)
+  assert.match(routes, /stressRouter\.post\('\/health\/snapshot'/)
+  assert.match(routes, /code|'NOT_ENOUGH'/)
+  assert.match(pill, /Run health check/)
+  assert.match(pill, /Fix these first/)
+  assert.match(pill, /stress\.clarityRun\(token!, policyId, true\)/)
+  assert.match(pill, /useState<boolean>|useState\(true\)/)
+  assert.match(pill, /const \[withStress, setWithStress\] = useState\(true\)/)   // stress tests are included by default
+  assert.match(pill, /It is not a compliance rating/)
 })

@@ -24,8 +24,12 @@ export type ClarityMetrics = { words: number; sentences: number; avg_sentence_wo
 export type ClarityResult = { id: string; policy_id: string; policy_name: string; findings: ClarityFinding[]; metrics: ClarityMetrics; band: Band; finding_count: number; summary: string; created_at: string }
 export type ClarityPolicy = { id: string; name: string; ready: boolean; waiting: string[]; last: { id: string; band: Band; findings: number; at: string } | null }
 export type HealthCheck = { key: string; label: string; count: number; band: Band }
-export type HealthDim = { key: string; label: string; band: Band; detail: string; href: string; checks?: HealthCheck[] }
-export type PolicyHealth = { id: string; name: string; overall: Band; assessed: number; dims: HealthDim[]; ready: boolean; waiting: string[] }
+export type HealthDim = { key: string; label: string; band: Band; value?: number | null; detail: string; href: string; checks?: HealthCheck[] }
+export type HealthFix = { dim: string; text: string; href: string; gain: number }
+export type HealthLast = { id: string; score: number; band: Band; at: string; stale: boolean; fixes: HealthFix[] }
+export type PolicyHealth = { id: string; name: string; overall: Band; score: number | null; assessed: number; dims: HealthDim[]; fixes: HealthFix[]; ready: boolean; waiting: string[]; last_check: HealthLast | null }
+export type HealthPlan = { policy: { id: string; name: string }; scenarios: Array<{ id: string; title: string }>; credits: { clarity: number; stress: number; total: number } }
+export type HealthCheckResult = { id: string; score: number; band: Band; assessed: number; dims: HealthDim[]; fixes: HealthFix[]; at: string }
 
 export const stress = {
   meta: (token: string) => call<{ enabled: boolean }>('/meta', token),
@@ -34,6 +38,8 @@ export const stress = {
   clarityLibrary: (token: string) => call<{ policies: ClarityPolicy[] }>('/clarity/library', token),
   clarityResult: (token: string, id: string) => call<{ result: ClarityResult }>(`/clarity/result/${encodeURIComponent(id)}`, token),
   clarityRun: (token: string, policy_id: string, force = false) => call<{ result: ClarityResult }>('/clarity/run', token, { method: 'POST', body: JSON.stringify({ policy_id, force }) }),
+  healthPlan: (token: string, policy_id: string) => call<HealthPlan>(`/health/plan?policy_id=${encodeURIComponent(policy_id)}`, token),
+  healthSnapshot: (token: string, policy_id: string, included_stress: boolean) => call<{ check: HealthCheckResult }>('/health/snapshot', token, { method: 'POST', body: JSON.stringify({ policy_id, included_stress }) }),
   health: (token: string) => call<{ policies: PolicyHealth[]; weights: Record<string, number> }>('/health', token),
   run: (token: string, policy_id: string, scenario_id: string) => call<{ result: StressResult }>('/run', token, { method: 'POST', body: JSON.stringify({ policy_id, scenario_id }) }),
 }

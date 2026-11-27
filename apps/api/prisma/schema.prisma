@@ -1143,6 +1143,26 @@ model PolicyClarityResult {
   @@map("policy_clarity_results")
 }
 
+/// One health check of one policy (Policy intelligence pilot): the score out of 100 worked out from the six dimensions at that moment, and what to fix first. Kept so the score can be followed over time.
+model PolicyHealthCheck {
+  id              String   @id @default(uuid())
+  tenant_id       String
+  policy_id       String
+  policy_name     String   @default("")
+  policy_version  Int      @default(1)
+  score           Int      @default(0)
+  band            String   @default("none")
+  assessed        Int      @default(0)
+  dims            Json     @default("[]")
+  fixes           Json     @default("[]")
+  included_stress Boolean  @default(true)
+  run_by          String   @default("")
+  created_at      DateTime @default(now())
+
+  @@index([tenant_id, policy_id, created_at])
+  @@map("policy_health_checks")
+}
+
 // Heartbeat for scheduled jobs. A row that never appears is the signal: eight jobs stopped
 // on 5 June 2026 and nobody found out for 96 days, because nothing recorded that they were
 // meant to have run. See manual_cron_runs.sql.

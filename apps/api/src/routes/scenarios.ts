@@ -85,6 +85,20 @@ scenariosAdminRouter.patch('/:slug/status', async (req: Request, res: Response) 
   ok(res, { slug: row.slug, status: row.status })
 })
 
+// PATCH /admin/scenarios/:slug/image  { image, image_alt? }: the picture a platform owner generated or chose for a database page (the card and share image).
+scenariosAdminRouter.patch('/:slug/image', async (req: Request, res: Response) => {
+  const image = String(req.body?.image ?? '').trim()
+  const alt = req.body?.image_alt === undefined ? undefined : String(req.body.image_alt).trim()
+  if (!/^https:\/\/[^\s]+$/.test(image) || image.length > 600) { err(res, 'VALIDATION_ERROR', 'image must be a full https address.'); return }
+  if (alt !== undefined && alt.length < 20) { err(res, 'VALIDATION_ERROR', 'image_alt must describe the picture (at least 20 characters).'); return }
+  const slug = String(req.params.slug)
+  const r = await (prisma as any).scenarioPage.findUnique({ where: { slug } })
+  if (!r) { err(res, 'NOT_FOUND', 'Scenario not found.', 404); return }
+  const data = { ...(r.data as object), image, ...(alt !== undefined ? { image_alt: alt } : {}) }
+  await (prisma as any).scenarioPage.update({ where: { slug }, data: { data } })
+  ok(res, { slug, image })
+})
+
 // DELETE /admin/scenarios/:slug: only a draft can be deleted.
 scenariosAdminRouter.delete('/:slug', async (req: Request, res: Response) => {
   const slug = String(req.params.slug)

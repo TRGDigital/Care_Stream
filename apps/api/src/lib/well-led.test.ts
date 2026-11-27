@@ -39,3 +39,12 @@ test('WELL-LED: links carry the source and go to the right section; no dashes in
   const page = fs.readFileSync(path.resolve(__dirname, '../../../web/src/app/(marketing)/cqc-well-led/page.tsx'), 'utf8')
   assert.doesNotMatch(page.replace(/^\s*\/\/.*$/gm, ''), /CQC compliant|guarantee/i)
 })
+
+test('SCENARIO PICTURES: the editor can draw a new picture for a database page and save it', () => {
+  const read = (f: string) => fs.readFileSync(path.resolve(__dirname, f), 'utf8')
+  const route = read('../routes/scenarios.ts'), panel = read('../../../web/src/app/(platform)/platform/blog/ScenariosPanel.tsx')
+  assert.match(route, /scenariosAdminRouter\.patch\('\/:slug\/image'/)
+  assert.match(route, /image must be a full https address/)
+  assert.match(panel, /Make a new picture/)
+  assert.match(panel, /generateBlogImage\(token/)
+})

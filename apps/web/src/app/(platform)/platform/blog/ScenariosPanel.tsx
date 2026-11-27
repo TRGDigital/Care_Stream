@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { ALL_SCENARIOS } from '@/data/scenarios'
 import { plainText, type Scenario } from '@/lib/scenarios'
 import kwVolumes from '@/lib/keyword-volumes.json'
+import { generateBlogImage } from '@/lib/platform-api'
 
 // The Scenarios tab: every scenario page with its meta information, keywords and content outline.
 // Pages live in src/data/scenarios/*.json (the first 93) or in the database (written by the nightly routine). "published" ones are public at
@@ -51,6 +52,9 @@ export function ScenariosPanel({ token }: { token: string }) {
   const [open, setOpen] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const [msg, setMsg] = useState<string | null>(null)
+  // A new picture for a database page: the scene to draw (starts as the page's picture description) and which page is being drawn.
+  const [scenes, setScenes] = useState<Record<string, string>>({})
+  const [picBusy, setPicBusy] = useState<string | null>(null)
   const published = list.filter(s => s.status === 'published')
   const dbDrafts = dbList.filter(s => s.status === 'draft').length
 
@@ -62,6 +66,22 @@ export function ScenariosPanel({ token }: { token: string }) {
     } catch { /* the repository pages still show */ }
   }, [token])
   useEffect(() => { loadDb() }, [loadDb])
+
+  async function makePicture(s: Scenario) {
+    const scene = (scenes[s.slug] ?? s.image_alt).trim()
+    if (scene.length < 15) { setMsg('Describe the scene in a sentence or two first.'); return }
+    setPicBusy(s.slug); setMsg(null)
+    try {
+      const url = await generateBlogImage(token, plainText(s.title).slice(0, 190), scene, `scenario-${s.slug}`)
+      const r = await fetch(`${API_URL}/admin/scenarios/${encodeURIComponent(s.slug)}/image`, { method: 'PATCH', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify({ image: url }) })
+      const j = await r.json().catch(() => ({}))
+      if (!r.ok) throw new Error(j?.error?.message ?? 'Could not save the picture.')
+      await loadDb()
+      setMsg('New picture made and saved for this page.')
+    } catch (e) {
+      setMsg(e instanceof Error ? e.message : 'Could not make the picture.')
+    } finally { setPicBusy(null) }
+  }
 
   async function setStatus(slug: string, status: 'published' | 'draft') {
     if (status === 'published' && !window.confirm('Publish this scenario? It goes live on the site (hub, home page and sitemap) within about five minutes.')) return
@@ -218,6 +238,18 @@ export function ScenariosPanel({ token }: { token: string }) {
                   <div className="space-y-2">
                     <img src={s.image} alt={s.image_alt} className="w-full rounded-lg border border-gray-200" />
                     <p className="text-xs text-neutral-mid">Home page card and social share image</p>
+                    {dbSlugs.has(s.slug) && (
+                      <div className="space-y-1.5 border-t border-gray-200 pt-2">
+                        <label className="block text-xs font-semibold text-neutral-dark" htmlFor={`scene-${s.slug}`}>Scene to draw</label>
+                        <textarea id={`scene-${s.slug}`} rows={4} value={scenes[s.slug] ?? s.image_alt}
+                                  onChange={e => setScenes(v => ({ ...v, [s.slug]: e.target.value }))}
+                                  className="w-full rounded-md border border-gray-200 px-2 py-1.5 text-xs" />
+                        <button type="button" disabled={picBusy !== null} onClick={() => makePicture(s)}
+                                className="w-full rounded-md bg-teal px-3 py-1.5 text-xs font-semibold text-white hover:bg-teal/90 disabled:opacity-50">
+                          {picBusy === s.slug ? 'Making the picture...' : 'Make a new picture'}
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}

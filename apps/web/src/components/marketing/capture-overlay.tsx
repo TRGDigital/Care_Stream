@@ -321,7 +321,8 @@ export function CaptureOverlay({ funnel, product, title, image, quiz, offerName 
   useEffect(() => {
     if (!canHold || open || isMobile()) return
     const leave = (e: MouseEvent) => {
-      if (e.clientY > 0 || e.relatedTarget || session('cs-cap-exit') || hasBasket()) return
+      // A real mouse leaves from a few pixels below the edge, not exactly at 0: accept the top 24px, only when it leaves the window.
+      if (e.clientY > 24 || e.relatedTarget || session('cs-cap-exit') || hasBasket()) return
       if ((window as any).__csWlExit) return   // a CQC Well-led page: its own exit popup owns the exit
       session('cs-cap-exit', true)
       openAt('exit')

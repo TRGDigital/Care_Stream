@@ -24,6 +24,7 @@ test('WELL-LED EXIT: once a visit, 14 days between, 90 days after a request; own
   assert.match(src, /sess\(SHOWN_SESSION\) \|\| sess\('cs-cap-exit'\) \|\| sess\('cs-exitq'\)/)
   assert.match(src, /sess\('cs-cap-exit', true\)/)
   assert.match(web('components/marketing/capture-overlay.tsx'), /__csWlExit\) return/)
+  assert.match(web('components/marketing/capture-overlay.tsx'), /e\.clientY > 24 \|\| e\.relatedTarget/)   // the email capture exit accepts the top strip too
   assert.match(web('app/(marketing)/layout.tsx'), /<WellLedBanner \/>\n\s+<WellLedExit \/>/)
 })
 

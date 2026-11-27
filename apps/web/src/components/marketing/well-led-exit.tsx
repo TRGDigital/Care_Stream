@@ -13,6 +13,7 @@ import { HUB_PATH, showsWellLedBanner, statementFor, topicForPath } from '@/lib/
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
 const SEEN_KEY = 'cs_wl_exit_seen'       // localStorage: { at, done }
 const SHOWN_SESSION = 'cs-wl-exit'        // sessionStorage: shown this visit
+const EDGE_PX = 24                       // how close to the top edge counts as leaving through the top
 const MIN_MS = 8000                       // not before they have had a proper look
 const REPEAT_DAYS = 14
 const DONE_DAYS = 90
@@ -74,7 +75,8 @@ export function WellLedExit() {
     if (!eligible) return
     const start = Date.now()
     const ready = () => Date.now() - start >= MIN_MS
-    const leave = (e: MouseEvent) => { if (e.clientY > 0 || e.relatedTarget || !ready() || isMobile()) return; show() }
+    // A real mouse leaves from a few pixels below the edge (the last position it reported), not exactly at 0: accept the top strip, and only when it leaves the window (no element to enter).
+    const leave = (e: MouseEvent) => { if (e.clientY > EDGE_PX || e.relatedTarget || !ready() || isMobile()) return; show() }
     let maxY = 0, lastY = window.scrollY, upRun = 0
     const onScroll = () => {
       if (!isMobile() || !ready()) return

@@ -19,6 +19,7 @@ test('WELL-LED EXIT: shows only where the banner shows, plus the overview, never
 
 test('WELL-LED EXIT: once a visit, 14 days between, 90 days after a request; owns the exit from the email capture', () => {
   const src = web('components/marketing/well-led-exit.tsx')
+  assert.match(src, /EDGE_PX = 24/); assert.match(src, /e\.clientY > EDGE_PX \|\| e\.relatedTarget/)   // a real mouse reports a few pixels, not 0
   assert.match(src, /REPEAT_DAYS = 14/); assert.match(src, /DONE_DAYS = 90/); assert.match(src, /MIN_MS = 8000/)
   assert.match(src, /sess\(SHOWN_SESSION\) \|\| sess\('cs-cap-exit'\) \|\| sess\('cs-exitq'\)/)
   assert.match(src, /sess\('cs-cap-exit', true\)/)

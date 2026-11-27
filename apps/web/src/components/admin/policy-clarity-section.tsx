@@ -3,7 +3,7 @@
 // Step 5 on the Gaps page: Policy clarity and precision (pilot: CS-1001 only). Does the policy actually tell staff what to do?
 // A policy only becomes ready once its regulation gaps, out of date terms and conflicts are dealt with, so wording that is about to change is not rewritten. It can still be run anyway.
 import { useCallback, useEffect, useState } from 'react'
-import { Loader2, FileSearch } from 'lucide-react'
+import { Loader2, FileSearch, ChevronDown, Sparkles } from 'lucide-react'
 import { stress, type ClarityPolicy, type ClarityResult } from '@/lib/stress-client'
 import { BAND_STYLE } from './policy-health-pill'
 
@@ -19,6 +19,7 @@ export function PolicyClaritySection({ token }: { token: string }) {
   const [busy, setBusy] = useState('')
   const [error, setError] = useState('')
   const [showAll, setShowAll] = useState(false)
+  const [open, setOpen] = useState(false)
 
   const load = useCallback(async () => { try { setPolicies((await stress.clarityLibrary(token)).policies) } catch (e: any) { setError(e.message) } }, [token])
   useEffect(() => { void load() }, [load])
@@ -36,16 +37,22 @@ export function PolicyClaritySection({ token }: { token: string }) {
   const list = (policies ?? []).filter(p => showAll || p.ready || p.last)
 
   return (
-    <section className="mt-8 rounded-2xl border border-gray-200 bg-white p-6">
+    <div className="mb-6 rounded-card border border-gray-100 bg-white shadow-card">
+      <button onClick={() => setOpen(v => !v)} className="flex w-full items-center gap-2 px-6 py-4 text-left" aria-expanded={open}>
+        <Sparkles size={16} className="shrink-0 text-indigo-500" />
+        <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-teal text-[10px] font-bold text-white">5</span>
+        <h2 className="text-sm font-semibold text-neutral-dark">Policy clarity and precision</h2>
+        <span className="rounded-full bg-purple-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-purple-700">Pilot</span>
+        {policies && <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-medium text-neutral-mid">{ready} of {policies.length} ready</span>}
+        <ChevronDown size={15} className={`ml-auto shrink-0 text-neutral-mid transition-transform ${open ? 'rotate-180' : ''}`} />
+      </button>
+      {open && (
+    <div className="border-t border-gray-100 p-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <p className="flex items-center gap-2 text-sm font-bold text-neutral-dark"><span className="flex h-6 w-6 items-center justify-center rounded-full bg-purple-600 text-xs text-white">5</span> Policy clarity and precision <span className="rounded-full bg-purple-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-purple-700">Pilot</span></p>
-          <p className="mt-1 max-w-3xl text-sm text-neutral-mid">
-            Does the policy actually tell staff what to do? This reads the whole policy and quotes wording that sounds professional but is not specific enough: vague wording, no named person, passive wording, no escalation route, no timeframe, jargon.
-            It is only offered for a policy once its regulation gaps, out of date terms and conflicts are sorted, so wording that is about to change is not rewritten.
-          </p>
-        </div>
-        {policies && <p className="text-xs text-neutral-mid">{ready} of {policies.length} policies are ready</p>}
+        <p className="max-w-3xl text-sm text-neutral-mid">
+          Does the policy actually tell staff what to do? This reads the whole policy and quotes wording that sounds professional but is not specific enough: vague wording, no named person, passive wording, no escalation route, no timeframe, jargon.
+          It is only offered for a policy once its regulation gaps, out of date terms and conflicts are sorted, so wording that is about to change is not rewritten.
+        </p>
       </div>
       {error && <p className="mt-3 rounded-md bg-red-50 px-3 py-2 text-xs text-red-700">{error}</p>}
 
@@ -107,6 +114,8 @@ export function PolicyClaritySection({ token }: { token: string }) {
           <p className="mt-4 text-xs text-neutral-mid">This judges the wording of the policy, not the care your team gives. Words in square brackets are for you to decide. Review every suggestion before you use it.</p>
         </div>
       )}
-    </section>
+    </div>
+      )}
+    </div>
   )
 }

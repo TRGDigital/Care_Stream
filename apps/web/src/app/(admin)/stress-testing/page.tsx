@@ -56,7 +56,7 @@ export default function StressTestingPage() {
       </div>
 
       {!policies ? <p className="flex items-center gap-2 text-sm text-neutral-mid"><Loader2 size={14} className="animate-spin" /> Loading your policies</p>
-        : policies.length === 0 ? <p className="rounded-xl border border-gray-200 bg-white px-5 py-6 text-sm text-neutral-mid">None of your policies has an approved scenario yet. Scenarios are being added for falls, medication and safeguarding first.</p>
+        : policies.length === 0 ? <p className="rounded-xl border border-gray-200 bg-white px-5 py-6 text-sm text-neutral-mid">No situation is ready to test against your policies yet. A situation appears here once it has been approved on the platform (Policy Testing in the platform console) and one of your policies is of that type, for example a falls policy for a falls situation.</p>
         : (
         <div className="overflow-hidden rounded-xl border border-gray-200 bg-white divide-y divide-gray-100">
           {policies.map(p => (

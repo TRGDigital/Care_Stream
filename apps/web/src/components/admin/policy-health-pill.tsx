@@ -55,7 +55,7 @@ export function PolicyHealthPill({ policyId }: { policyId: string }) {
                   {d.checks && (
                     <ul className="mt-1.5 space-y-1 border-l border-gray-100 pl-2">
                       {d.checks.map(c => (
-                        <li key={c.key} className="flex items-center gap-1.5 font-normal text-neutral-dark"><span className={`h-1.5 w-1.5 shrink-0 rounded-full ${BAND_STYLE[c.band].dot}`} />{c.label}<span className="ml-auto text-neutral-mid">{c.count === 0 ? 'none' : c.count}</span></li>
+                        <li key={c.key} className="flex items-center gap-1.5 font-normal text-neutral-dark"><span className={`h-1.5 w-1.5 shrink-0 rounded-full ${BAND_STYLE[c.band].dot}`} />{c.label}<span className="ml-auto text-neutral-mid">{c.band === 'none' ? 'not run' : c.count === 0 ? 'none' : c.count}</span></li>
                       ))}
                     </ul>
                   )}

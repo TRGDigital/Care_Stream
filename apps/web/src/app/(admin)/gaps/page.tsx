@@ -679,6 +679,13 @@ export default function GapsPage() {
                 <StepMeta info={stepInfo(s.key)} pendingPolicies={pipeline?.pending_policies ?? 0} />
               </div>
             ))}
+            {stressMeta.enabled && (
+              <div className="flex items-center gap-2">
+                <StepChip step={5} />
+                <span className="text-xs font-semibold text-neutral-dark">Policy clarity</span>
+                <span className="rounded-full bg-purple-100 px-2 py-0.5 text-[10px] font-semibold text-purple-700">Pilot</span>
+              </div>
+            )}
           </div>
           {pipeline.pending_changes > 0 && (
             <div className="mt-2.5 flex items-start gap-2 border-t border-gray-50 pt-2.5">

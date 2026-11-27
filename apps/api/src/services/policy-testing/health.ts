@@ -4,7 +4,7 @@
 
 import { prisma } from '../../db/client'
 import { isPolicyDocument } from '../../lib/document-kind'
-import { readabilityBand, checkBands, clarityDimBand, type Band, type Metrics, type CheckResult } from './clarity'
+import { readabilityBand, checkBands, clarityDimBand, HEALTH_CHECKS, type Band, type Metrics, type CheckResult } from './clarity'
 
 export type DimKey = 'coverage' | 'uptodate' | 'consistency' | 'clarity' | 'practical' | 'readability'
 export const HEALTH_WEIGHTS: Record<DimKey, number> = { coverage: 25, uptodate: 15, consistency: 15, clarity: 20, practical: 15, readability: 10 }
@@ -57,7 +57,8 @@ export async function loadHealth(tenantId: string): Promise<PolicyHealth[]> {
     const myStress = [...stressLatest.values()].filter(r => r.policy_id === p.id)
     const stressPoints = myStress.reduce((n, r) => n + (Array.isArray(r.points) ? r.points.length : 0), 0), stressGaps = myStress.reduce((n, r) => n + (r.gaps ?? 0), 0)
     const metrics: Metrics | null = cl?.metrics && Object.keys(cl.metrics).length ? cl.metrics : null
-    const checks = cl ? checkBands(Array.isArray(cl.findings) ? cl.findings : [], metrics?.words ?? 0) : undefined
+    // The seven checks always show; until clarity has been run each says so.
+    const checks: CheckResult[] = cl ? checkBands(Array.isArray(cl.findings) ? cl.findings : [], metrics?.words ?? 0) : HEALTH_CHECKS.map(c => ({ ...c, count: 0, band: 'none' as Band }))
 
     const dims: Dim[] = [
       { key: 'coverage', label: DIM_LABEL.coverage, band: coverageBand(covered, partial), href: '/gaps',
@@ -66,8 +67,8 @@ export async function loadHealth(tenantId: string): Promise<PolicyHealth[]> {
         detail: lintN === undefined ? 'Not checked yet.' : lintN === 0 ? 'No out of date terms found.' : `${lintN} out of date ${lintN === 1 ? 'term' : 'terms'} to update.` },
       { key: 'consistency', label: DIM_LABEL.consistency, band: consistency?.analysed_at ? (myConflicts === 0 ? 'strong' : myConflicts <= 1 ? 'good' : 'attention') : 'none', href: '/gaps',
         detail: consistency?.analysed_at ? (myConflicts === 0 ? 'No open conflicts with your other policies.' : `${myConflicts} open ${myConflicts === 1 ? 'conflict' : 'conflicts'} with other policies.`) : 'Cross policy consistency has not been run yet.' },
-      { key: 'clarity', label: DIM_LABEL.clarity, band: cl ? clarityDimBand((cl.band ?? 'none') as Band, checks!) : 'none', href: '/gaps', checks,
-        detail: cl ? `${cl.finding_count} ${cl.finding_count === 1 ? 'passage' : 'passages'} of unclear wording found. The seven checks are below.` : 'Not run yet. Open Policy clarity on the Gaps page.' },
+      { key: 'clarity', label: DIM_LABEL.clarity, band: cl ? clarityDimBand((cl.band ?? 'none') as Band, checks) : 'none', href: '/gaps', checks,
+        detail: cl ? `${cl.finding_count} ${cl.finding_count === 1 ? 'passage' : 'passages'} of unclear wording found. The seven checks are below.` : 'Not run yet. Run Policy clarity on the Gaps page and these seven checks fill in.' },
       { key: 'practical', label: DIM_LABEL.practical, band: practicalBand(stressGaps, stressPoints), href: '/stress-testing',
         detail: myStress.length ? `${myStress.length} ${myStress.length === 1 ? 'situation' : 'situations'} tested, ${stressGaps} ${stressGaps === 1 ? 'point' : 'points'} not covered anywhere in your library.` : 'No situations tested yet. Open Policy Testing.' },
       { key: 'readability', label: DIM_LABEL.readability, band: metrics ? readabilityBand(metrics) : 'none', href: '/gaps',

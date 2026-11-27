@@ -130,6 +130,22 @@ export async function resolveImpact(referenceKey: string): Promise<ImpactedTenan
 
 export const CHANGE_REVIEW_PROMPT_USAGE = 'regulation_change_review'
 
+/** The sentence by sentence part of the prompt. It is part of the editable default; it is only added in code when a saved prompt predates it. */
+export const LINE_RELEVANCE_RULES = `
+
+SENTENCE BY SENTENCE
+Every added and removed sentence is numbered (A1, A2 ... and R1, R2 ...). Decide which ones are RELEVANT to a care provider's written policies.
+RELEVANT: a duty, right, timescale, threshold, figure, definition, named body or document, process or requirement a policy would state or rely on.
+NOT RELEVANT: cookie and analytics banners ("These send information about how our site is used to Google Analytics", "Let us know if this is OK"), navigation,
+page furniture, section numbering and sentence fragments cut mid way ("Introduction 1.1 The purpose of this policy is to: a."), contact details, "related content",
+accessibility statements, dates, and anything that is only a re-wording with the same meaning.
+When in doubt about a sentence that carries a real duty or figure, mark it relevant. When a sentence is a cut off fragment or page furniture, mark it not relevant.
+Add these two fields to the JSON:
+  "relevant_added": [the numbers of the ADDED sentences that are relevant, for example [2, 5]],
+  "relevant_removed": [the numbers of the REMOVED sentences that are relevant],
+  "ignored_note": "One short sentence saying what the sentences you marked not relevant were (for example 'cookie banner wording and page numbering')."
+If none are relevant use empty lists, "severity" "cosmetic" and "affects_policies" false.`
+
 export const DEFAULT_CHANGE_REVIEW_PROMPT = `You review changes to UK health and social care legislation and guidance pages.
 
 You are given the sentences ADDED to a source page and the sentences REMOVED from it since it
@@ -159,23 +175,7 @@ Return ONLY valid JSON, no code fences, in exactly this shape:
 }
 
 Never invent a change that is not in the text you were given. If the added and removed text
-show nothing of substance, say so and mark it cosmetic.`
-
-/** Always appended, even when an edited prompt is stored, so the per sentence verdict never depends on the wording of the prompt. */
-export const LINE_RELEVANCE_RULES = `
-
-SENTENCE BY SENTENCE
-Every added and removed sentence is numbered (A1, A2 ... and R1, R2 ...). Decide which ones are RELEVANT to a care provider's written policies.
-RELEVANT: a duty, right, timescale, threshold, figure, definition, named body or document, process or requirement a policy would state or rely on.
-NOT RELEVANT: cookie and analytics banners ("These send information about how our site is used to Google Analytics", "Let us know if this is OK"), navigation,
-page furniture, section numbering and sentence fragments cut mid way ("Introduction 1.1 The purpose of this policy is to: a."), contact details, "related content",
-accessibility statements, dates, and anything that is only a re-wording with the same meaning.
-When in doubt about a sentence that carries a real duty or figure, mark it relevant. When a sentence is a cut off fragment or page furniture, mark it not relevant.
-Add these two fields to the JSON:
-  "relevant_added": [the numbers of the ADDED sentences that are relevant, for example [2, 5]],
-  "relevant_removed": [the numbers of the REMOVED sentences that are relevant],
-  "ignored_note": "One short sentence saying what the sentences you marked not relevant were (for example 'cookie banner wording and page numbering')."
-If none are relevant use empty lists, "severity" "cosmetic" and "affects_policies" false.`
+show nothing of substance, say so and mark it cosmetic.${LINE_RELEVANCE_RULES}`
 
 async function reviewPrompt(): Promise<string> {
   let base = DEFAULT_CHANGE_REVIEW_PROMPT
@@ -184,7 +184,8 @@ async function reviewPrompt(): Promise<string> {
     const stored = typeof row?.content === 'string' ? row.content.trim() : ''
     if (stored) base = stored
   } catch { /* fall through */ }
-  return base + LINE_RELEVANCE_RULES
+  // A prompt saved before the sentence by sentence rules existed would return no verdicts at all (everything would read as not relevant), so they are added.
+  return base.includes('relevant_added') ? base : base + LINE_RELEVANCE_RULES
 }
 
 export type ChangeReview = {

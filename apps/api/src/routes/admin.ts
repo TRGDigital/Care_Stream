@@ -60,7 +60,7 @@ import { defaultSignalSeeds, signalMatches, type TextSignal } from '../services/
 import { callClaude } from '../services/ai/claude'
 import { snapshotAndAlert } from '../services/regulations/versioning'
 import { checkRegulationSources, gatherSubjects } from '../services/regulations/source-monitor'
-import { reviewPendingChanges, reviewOneChange, diffLines, loadLineReviews, DEFAULT_CHANGE_REVIEW_PROMPT } from '../services/regulations/change-review'
+import { reviewPendingChanges, reviewOneChange, diffLines, loadLineReviews, DEFAULT_CHANGE_REVIEW_PROMPT, LINE_RELEVANCE_RULES, CHANGE_REVIEW_PROMPT_USAGE } from '../services/regulations/change-review'
 
 export const adminRouter = Router()
 
@@ -2961,6 +2961,16 @@ async function ensurePromptsSeeded() {
       })
     } catch { /* skip on conflict */ }
   }
+
+  // The change review prompt gained sentence by sentence rules (what is relevant to policies). A saved copy from before that keeps every word
+  // of its own and gets the new rules added at the end, with the old text kept in its history.
+  try {
+    const cr = await (prisma as any).aiPrompt.findUnique({ where: { usage: CHANGE_REVIEW_PROMPT_USAGE } })
+    if (cr && !String(cr.content).includes('relevant_added')) {
+      await (prisma as any).aiPromptVersion.create({ data: { id: crypto.randomUUID(), prompt_id: cr.id, usage: cr.usage, label: cr.label, content: cr.content } }).catch(() => {})
+      await (prisma as any).aiPrompt.update({ where: { id: cr.id }, data: { content: String(cr.content).trim() + LINE_RELEVANCE_RULES, updated_at: new Date() } })
+    }
+  } catch { /* non-fatal */ }
 }
 
 adminRouter.get('/prompts', async (_req: Request, res: Response) => {

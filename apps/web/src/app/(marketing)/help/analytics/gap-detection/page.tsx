@@ -60,7 +60,7 @@ export default function Page() {
         ] },
         { type: 'p', text: 'Care managers are recognised automatically. Give a staff member the Care Manager or Registered Manager position and the Policies hub appears in their side menu, with a badge showing anything waiting for them. Every approval, and every send-back with its reason, is kept in an approval trail on the policy so you always have a record of who signed off and when.' },
 
-        { type: 'note', text: 'Regulation coverage, and the step by step "what to add" guidance for each gap, are available on the Professional and Enterprise plans. Acting on gaps means your library keeps improving based on what your team actually needs.' },
+        { type: 'note', text: 'Regulation coverage, and the step by step "what to add" guidance for each gap, are available on the Starter, Professional and Enterprise plans. Adopting a fix into your policy, the approval trail and change alerts are on Professional and Enterprise. Acting on gaps means your library keeps improving based on what your team actually needs.' },
       ]}
       related={[
         { title: 'Organising your policy library', href: '/help/policies/organising' },

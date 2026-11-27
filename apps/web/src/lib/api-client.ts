@@ -221,6 +221,7 @@ export interface PlanFeatures {
   has_advanced_analytics: boolean
   has_cqc_report:         boolean
   has_gap_detection:      boolean
+  has_gap_fixing?:        boolean   // adopt a fix, approvals, publish: Professional and Enterprise
   has_face_to_face:       boolean
   has_custom_audits:      boolean
   has_effectiveness:      boolean

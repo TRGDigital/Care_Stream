@@ -663,7 +663,7 @@ const PREGEN_BATCH = 8
 analyticsRouter.post('/gaps/pregenerate', requireAdmin, async (_req: Request, res: Response) => {
   const tenantId = getTenantId()
   try {
-    await checkFeature(tenantId, 'has_gap_detection')
+    await checkFeature(tenantId, 'has_gap_fixing')
   } catch (e) {
     if (e instanceof PlanLimitError) { err(res, e.code, e.message, 403); return }
     throw e
@@ -1023,7 +1023,7 @@ analyticsRouter.post('/gaps/other-names', requireAdmin, async (req: Request, res
 analyticsRouter.post('/gaps/adopt', requireAdmin, async (req: Request, res: Response) => {
   const tenantId = getTenantId()
   try {
-    await checkFeature(tenantId, 'has_gap_detection')
+    await checkFeature(tenantId, 'has_gap_fixing')
   } catch (e) {
     if (e instanceof PlanLimitError) { err(res, e.code, e.message, 403); return }
     throw e
@@ -1073,7 +1073,7 @@ analyticsRouter.get('/gaps/policy-document/:policyId', requireAdmin, async (req:
 // quality statement(s) expect? Drafts person-centred additions. Consumes an AI credit.
 analyticsRouter.post('/gaps/:reference_key/saf-alignment', requireAdmin, async (req: Request, res: Response) => {
   const tenantId = getTenantId()
-  try { await checkFeature(tenantId, 'has_gap_detection') } catch (e) { if (e instanceof PlanLimitError) { err(res, e.code, e.message, 403); return } throw e }
+  try { await checkFeature(tenantId, 'has_gap_fixing') } catch (e) { if (e instanceof PlanLimitError) { err(res, e.code, e.message, 403); return } throw e }
   try {
     const result = await safAlignment(tenantId, String(req.params.reference_key), String(req.body?.policy_id ?? ''), req.body?.force === true)
     ok(res, result)
@@ -1141,7 +1141,7 @@ analyticsRouter.get('/gaps/saf-coverage', requireAdmin, async (_req: Request, re
 // GET every updated policy with its approval timeline (Analytics → Updated Policies).
 analyticsRouter.get('/gaps/approvals-overview', requireAdmin, async (_req: Request, res: Response) => {
   const tenantId = getTenantId()
-  try { await checkFeature(tenantId, 'has_gap_detection') } catch (e) { if (e instanceof PlanLimitError) { err(res, e.code, e.message, 403); return } throw e }
+  try { await checkFeature(tenantId, 'has_gap_fixing') } catch (e) { if (e instanceof PlanLimitError) { err(res, e.code, e.message, 403); return } throw e }
   try {
     ok(res, await approvalsOverview(tenantId))
   } catch (e: any) {
@@ -1164,7 +1164,7 @@ analyticsRouter.get('/gaps/policy-documents-summary', requireAdmin, async (_req:
 analyticsRouter.post('/gaps/policy-change/:changeId/revert', requireAdmin, async (req: Request, res: Response) => {
   const tenantId = getTenantId()
   try {
-    await checkFeature(tenantId, 'has_gap_detection')
+    await checkFeature(tenantId, 'has_gap_fixing')
   } catch (e) {
     if (e instanceof PlanLimitError) { err(res, e.code, e.message, 403); return }
     throw e
@@ -1183,7 +1183,7 @@ analyticsRouter.post('/gaps/policy-change/:changeId/revert', requireAdmin, async
 analyticsRouter.patch('/gaps/policy-change/:changeId', requireAdmin, async (req: Request, res: Response) => {
   const tenantId = getTenantId()
   try {
-    await checkFeature(tenantId, 'has_gap_detection')
+    await checkFeature(tenantId, 'has_gap_fixing')
   } catch (e) {
     if (e instanceof PlanLimitError) { err(res, e.code, e.message, 403); return }
     throw e
@@ -1208,7 +1208,7 @@ analyticsRouter.patch('/gaps/policy-change/:changeId', requireAdmin, async (req:
 analyticsRouter.post('/gaps/policy-document/:policyId/publish', requireAdmin, async (req: Request, res: Response) => {
   const tenantId = getTenantId()
   try {
-    await checkFeature(tenantId, 'has_gap_detection')
+    await checkFeature(tenantId, 'has_gap_fixing')
   } catch (e) {
     if (e instanceof PlanLimitError) { err(res, e.code, e.message, 403); return }
     throw e
@@ -1254,7 +1254,7 @@ analyticsRouter.get('/gaps/policy-approvals/:policyId', requireAdmin, async (req
 // POST admin submits the adopted changes for approval (was: publish).
 analyticsRouter.post('/gaps/policy-document/:policyId/submit', requireAdmin, async (req: Request, res: Response) => {
   const tenantId = getTenantId()
-  try { await checkFeature(tenantId, 'has_gap_detection') } catch (e) { if (e instanceof PlanLimitError) { err(res, e.code, e.message, 403); return } throw e }
+  try { await checkFeature(tenantId, 'has_gap_fixing') } catch (e) { if (e instanceof PlanLimitError) { err(res, e.code, e.message, 403); return } throw e }
   try {
     const me = await meName(req)
     const r = await submitForApproval(tenantId, String(req.params.policyId), me?.name || me?.email || 'Admin')
@@ -1266,7 +1266,7 @@ analyticsRouter.post('/gaps/policy-document/:policyId/submit', requireAdmin, asy
 // POST care manager approves (gated to the Care Manager position).
 analyticsRouter.post('/gaps/policy-document/:policyId/manager-approve', requireAdmin, async (req: Request, res: Response) => {
   const tenantId = getTenantId()
-  try { await checkFeature(tenantId, 'has_gap_detection') } catch (e) { if (e instanceof PlanLimitError) { err(res, e.code, e.message, 403); return } throw e }
+  try { await checkFeature(tenantId, 'has_gap_fixing') } catch (e) { if (e instanceof PlanLimitError) { err(res, e.code, e.message, 403); return } throw e }
   try {
     const me = await meName(req)
     if (!/care manager|registered manager/i.test(String(me?.job_role ?? ''))) { err(res, 'FORBIDDEN', 'Only the care manager can give this approval.', 403); return }
@@ -1325,7 +1325,7 @@ analyticsRouter.post('/gaps/policy-document/:policyId/external-reissue', require
 analyticsRouter.get('/gaps/matrix', requireAdmin, async (_req: Request, res: Response) => {
   const tenantId = getTenantId()
   try {
-    await checkFeature(tenantId, 'has_gap_detection')
+    await checkFeature(tenantId, 'has_gap_fixing')
   } catch (e) {
     if (e instanceof PlanLimitError) { err(res, e.code, e.message, 403); return }
     throw e
@@ -1337,7 +1337,7 @@ analyticsRouter.get('/gaps/matrix', requireAdmin, async (_req: Request, res: Res
 // Policies whose review date has come around — drives the dashboard reminder.
 analyticsRouter.get('/policies/due-for-review', requireAdmin, async (_req: Request, res: Response) => {
   const tenantId = getTenantId()
-  try { await checkFeature(tenantId, 'has_gap_detection') }
+  try { await checkFeature(tenantId, 'has_gap_fixing') }
   catch (e) { if (e instanceof PlanLimitError) { err(res, e.code, e.message, 403); return } throw e }
   try { ok(res, await policiesDueForReview(tenantId)) }
   catch (e: any) { err(res, 'DUE_FAILED', e.message ?? 'Could not load policies due for review.', 500) }
@@ -1348,7 +1348,7 @@ analyticsRouter.get('/policies/due-for-review', requireAdmin, async (_req: Reque
 // admin can then re-run the AI coverage/wording analyses from /gaps if they want.
 analyticsRouter.post('/policies/re-review', requireAdmin, async (req: Request, res: Response) => {
   const tenantId = getTenantId()
-  try { await checkFeature(tenantId, 'has_gap_detection') }
+  try { await checkFeature(tenantId, 'has_gap_fixing') }
   catch (e) { if (e instanceof PlanLimitError) { err(res, e.code, e.message, 403); return } throw e }
   const ids = Array.isArray(req.body?.policy_ids) ? req.body.policy_ids.map((x: any) => String(x)).filter(Boolean) : []
   if (!ids.length) { err(res, 'BAD_REQUEST', 'No policies selected.', 400); return }
@@ -1477,7 +1477,7 @@ analyticsRouter.delete('/gaps/:reference_key/decision', requireAdmin, async (req
 analyticsRouter.post('/gaps/:reference_key/training-module', requireAdmin, async (req: Request, res: Response) => {
   const tenantId = getTenantId()
   try {
-    await checkFeature(tenantId, 'has_gap_detection')
+    await checkFeature(tenantId, 'has_gap_fixing')
   } catch (e) {
     if (e instanceof PlanLimitError) { err(res, e.code, e.message, 403); return }
     throw e
@@ -1536,7 +1536,7 @@ analyticsRouter.post('/gaps/:reference_key/training-module', requireAdmin, async
 analyticsRouter.post('/gaps/:reference_key/onboarding', requireAdmin, async (req: Request, res: Response) => {
   const tenantId = getTenantId()
   try {
-    await checkFeature(tenantId, 'has_gap_detection')
+    await checkFeature(tenantId, 'has_gap_fixing')
   } catch (e) {
     if (e instanceof PlanLimitError) { err(res, e.code, e.message, 403); return }
     throw e

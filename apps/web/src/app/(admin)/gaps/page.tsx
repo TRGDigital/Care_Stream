@@ -433,15 +433,15 @@ export default function GapsPage() {
 
   // The leave warning while a run is going lives in RunOverlay (shared by all three analyses).
 
-  // Policy gap detection is a Professional+ feature. While the plan is still
+  // Policy gap analysis is on every paid plan (adopting fixes is Professional+). While the plan is still
   // loading, show a skeleton (never the raw API error); once known, show the
   // upgrade prompt for locked tenants.
   if (locked) {
     return (
       <UpgradePanel
         title="Policy gap analysis"
-        description="See which CQC regulations your policies cover, where the gaps are, and the unmatched questions your staff are asking. Available on the Professional and Enterprise plans."
-        tier="Professional"
+        description="See which CQC regulations your policies cover, where the gaps are, and the unmatched questions your staff are asking. Available on the paid plans."
+        tier="Starter"
       />
     )
   }

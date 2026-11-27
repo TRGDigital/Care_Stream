@@ -28,6 +28,7 @@ interface PlanData {
   has_advanced_analytics:      boolean
   has_cqc_report:              boolean
   has_gap_detection:           boolean
+  has_gap_fixing:              boolean
   has_face_to_face:            boolean
   has_custom_audits:           boolean
   has_effectiveness:           boolean
@@ -56,6 +57,7 @@ async function loadTenantPlan(tenantId: string): Promise<{
           has_advanced_analytics:      true,
           has_cqc_report:              true,
           has_gap_detection:           true,
+          has_gap_fixing:              true,
           has_face_to_face:            true,
           has_custom_audits:           true,
           has_effectiveness:           true,
@@ -278,13 +280,14 @@ export async function checkManualKnowledgeLimit(tenantId: string): Promise<void>
 
 // Boolean plan features that can be gated.
 export type PlanFeature =
-  | 'has_gap_detection' | 'has_cqc_report' | 'has_advanced_analytics'
+  | 'has_gap_detection' | 'has_gap_fixing' | 'has_cqc_report' | 'has_advanced_analytics'
   | 'has_face_to_face' | 'has_custom_audits' | 'has_effectiveness' | 'has_training_impact'
   | 'has_workforce_compliance' | 'has_supervisions' | 'has_audit_recommendations'
 
 // Which plan unlocks each feature — used for the upgrade message.
 const FEATURE_TIER: Record<PlanFeature, string> = {
-  has_gap_detection:        'Professional',
+  has_gap_detection:        'Starter',   // gap analysis: coverage, consistency, up to date, wording alignment, what to add (Free has a taster)
+  has_gap_fixing:           'Professional',   // adopting fixes, approvals, publishing, training and onboarding from a gap
   has_cqc_report:           'Professional',
   has_advanced_analytics:   'Professional',
   has_face_to_face:         'Professional',
@@ -336,6 +339,7 @@ export interface PlanFeatures {
   has_advanced_analytics:  boolean
   has_cqc_report:          boolean
   has_gap_detection:       boolean
+  has_gap_fixing:          boolean   // adopt a fix, approvals, publish: Professional and Enterprise
   has_face_to_face:        boolean
   has_custom_audits:       boolean
   has_effectiveness:       boolean
@@ -355,7 +359,7 @@ export async function getPlanFeatures(tenantId: string): Promise<PlanFeatures> {
       plan: {
         select: {
           name: true, price_monthly_pence: true, price_annual_pence: true,
-          has_advanced_analytics: true, has_cqc_report: true, has_gap_detection: true,
+          has_advanced_analytics: true, has_cqc_report: true, has_gap_detection: true, has_gap_fixing: true,
           has_face_to_face: true, has_custom_audits: true, has_effectiveness: true, has_training_impact: true,
           has_workforce_compliance: true, has_supervisions: true, has_audit_recommendations: true,
         },
@@ -371,6 +375,7 @@ export async function getPlanFeatures(tenantId: string): Promise<PlanFeatures> {
     has_advanced_analytics: !!p?.has_advanced_analytics,
     has_cqc_report:         !!p?.has_cqc_report,
     has_gap_detection:      !!p?.has_gap_detection,
+    has_gap_fixing:         !!p?.has_gap_fixing,
     has_face_to_face:       !!p?.has_face_to_face,
     has_custom_audits:      !!p?.has_custom_audits,
     has_effectiveness:      !!p?.has_effectiveness,

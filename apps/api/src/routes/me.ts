@@ -306,7 +306,7 @@ async function isCareManager(userId: string): Promise<boolean> {
 meRouter.get('/policy-approvals', async (req: Request, res: Response) => {
   const tenantId = (req as any).user.tenant_id
   const userId   = (req as any).user.sub
-  if (!((await getPlanFeatures(tenantId).catch(() => null))?.has_gap_detection) || !(await isCareManager(userId))) {
+  if (!((await getPlanFeatures(tenantId).catch(() => null))?.has_gap_fixing) || !(await isCareManager(userId))) {
     ok(res, { is_manager: false, policies: [], published: [] }); return
   }
   const docs = await (prisma as any).policyDocument.findMany({

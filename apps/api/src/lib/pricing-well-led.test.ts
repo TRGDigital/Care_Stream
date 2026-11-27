@@ -26,7 +26,10 @@ test('PRICING WELL-LED: the plans differ exactly as the comparison table says', 
   const ent = Object.fromEntries(byName.Enterprise.items.map(i => [i.id, i.included]))
   assert.equal(ent.audits, true)
   const starter = Object.fromEntries(byName.Starter.items.map(i => [i.id, i.included]))
-  assert.equal(starter.approval, false); assert.equal(starter.coverage, false); assert.equal(starter.cpd, true); assert.equal(starter.knowledge, true)
+  assert.equal(starter.approval, false); assert.equal(starter.roles, false); assert.equal(starter.alerts, false); assert.equal(starter.report, false)
+  // Starter has every Free analysis feature in full, so it can never have less than Free
+  assert.equal(starter.coverage, true); assert.equal(starter.consistency, true); assert.equal(starter.gap, true); assert.equal(starter.cpd, true); assert.equal(starter.knowledge, true); assert.equal(starter.language, true)
+  assert.equal(byName.Starter.items.find(i => i.id === 'matrix')!.limited, 'Online courses')
   assert.ok(strips.every(s => s.total === 14))
   // with the Free plan in front, the columns shift by one and the strips still follow the table
   const withFree = wellLedByPlan({ plans: [{ name: 'Free', price: 'Free' } as any, ...PRICING.plans], groups: PRICING.groups.map(g => ({ ...g, rows: g.rows.map(r => ({ ...r, values: [false, ...r.values] })) })) })
@@ -43,4 +46,10 @@ test('PRICING WELL-LED: the banner copy is the agreed headline, evidence not a r
   assert.doesNotMatch(comp.replace(/^\s*\/\/.*$/gm, ''), /CQC compliant|guarantee/i)
   assert.match(page, /<div className="ppage-v2">\n      <PricingWellLed view=\{view\} \/>\n      <section className="phero">/)
   assert.match(page, /<section className="pplans" id="plans">/)
+})
+
+test('PRICING: a paid plan never has less than the Free plan: the rows Free has must be on Starter', () => {
+  const FREE_ROWS = ['Regulation coverage analysis', 'What to add, with example wording', 'Applicability by care setting and service profile', 'Out of date content detection', 'Cross policy consistency checking', 'Wording aligned to the CQC quality statements', 'Person centred rewording, in your policy voice', 'Training matrix with renewals and gaps']
+  const rows = new Map(PRICING.groups.flatMap(g => g.rows.map(r => [r.label, r.values] as const)))
+  for (const l of FREE_ROWS) { const v = rows.get(l); assert.ok(v, l); assert.ok(v![0] !== false, `Starter is missing "${l}", which the Free plan has`); assert.ok(v![1] !== false && v![2] !== false) }
 })

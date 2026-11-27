@@ -711,7 +711,7 @@ const GUIDE_SECTIONS: GuideSection[] = [
       <div className="space-y-5">
         <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
           <p className="text-sm font-bold text-amber-900">A Professional &amp; Enterprise feature</p>
-          <p className="mt-1 text-sm text-amber-800">Policy Gap Detection is included on the <strong>Professional</strong> and <strong>Enterprise</strong> plans. On Starter, the Gaps page shows an upgrade prompt. You can upgrade in a click from your dashboard.</p>
+          <p className="mt-1 text-sm text-amber-800">The gap analysis (coverage, what to add, out of date content, consistency and CQC wording) is included on <strong>Starter</strong>, <strong>Professional</strong> and <strong>Enterprise</strong>. Adopting a fix into your policy, the approval trail and publishing are on <strong>Professional</strong> and <strong>Enterprise</strong>. You can upgrade in a click from your dashboard.</p>
         </div>
 
         <p className="text-sm text-neutral-mid">

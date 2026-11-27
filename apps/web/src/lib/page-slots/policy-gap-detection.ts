@@ -5,7 +5,7 @@ import type { SlotDef } from './types'
 // overrides it without touching the design.
 export const POLICY_GAP_DETECTION_SLOTS: SlotDef[] = [
   // Hero
-  { key: 'hero.badge', group: 'Hero', label: 'Plan badge', default: 'Professional & Enterprise' },
+  { key: 'hero.badge', group: 'Hero', label: 'Plan badge', default: 'Starter, Professional & Enterprise' },
   { key: 'hero.h1', group: 'Hero', label: 'Headline', default: 'Know exactly where your policies fall short. Then close the gap.' },
   { key: 'hero.intro', group: 'Hero', label: 'Intro paragraph', rich: true, default: 'CareStream reads inside your policies, tells you which regulations you cover and where the gaps are, checks the wording against the CQC Single Assessment Framework and suggests person-centred alternatives, shows what to add and why it is required, and tracks changes to the standards.' },
   { key: 'hero.cta.primary', group: 'Hero', label: 'Primary button', default: 'Start Free Trial' },
@@ -98,8 +98,8 @@ export const POLICY_GAP_DETECTION_SLOTS: SlotDef[] = [
   { key: 'step8.point3', group: 'Step 8 · Turn changes into training', label: 'List item 3', default: 'Reuses your existing training and certificate flow' },
 
   // Availability
-  { key: 'availability.badge', group: 'Availability', label: 'Plan badge', default: 'Professional & Enterprise' },
-  { key: 'availability.h2', group: 'Availability', label: 'Heading', default: 'Policy Gap Detection is included on the Professional and Enterprise plans.' },
-  { key: 'availability.body', group: 'Availability', label: 'Paragraph', rich: true, default: 'Regulation coverage, remediation guidance with the legal basis, change tracking and gap-driven training are all part of Professional and Enterprise. Starter customers can upgrade in a click.' },
+  { key: 'availability.badge', group: 'Availability', label: 'Plan badge', default: 'Starter, Professional & Enterprise' },
+  { key: 'availability.h2', group: 'Availability', label: 'Heading', default: 'Policy Gap Detection is included on every paid plan.' },
+  { key: 'availability.body', group: 'Availability', label: 'Paragraph', rich: true, default: 'Regulation coverage, remediation guidance with the legal basis, consistency checks and wording alignment are part of Starter, Professional and Enterprise. Adopting fixes with an approval trail, change tracking and gap-driven training are on Professional and Enterprise. Upgrade in a click.' },
   { key: 'availability.cta', group: 'Availability', label: 'CTA button', default: 'See plans & pricing' },
 ]

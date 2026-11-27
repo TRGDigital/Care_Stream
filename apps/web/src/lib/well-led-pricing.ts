@@ -23,6 +23,8 @@ export const WELL_LED_ROWS: Record<string, string | null> = {
 
 export type PlanStrip = { name: string; price: string; highlight: boolean; included: number; total: number; items: Array<{ id: string; name: string; included: boolean; limited?: string }> }
 
+/** Values that are part of a product, not all of it: the Free plan's tastes and Starter's online only training matrix. */
+const PART_RX = /^(your \d+|\d+ examples|cpd courses|online courses)/i
 const truthy = (v: unknown) => v === true || (typeof v === 'string' && v.trim() !== '' && !/^(no|none|false)$/i.test(v.trim()))
 
 /** One strip per plan, in the order of the plans on the page, with every Well-led product marked included or not. */
@@ -35,9 +37,8 @@ export function wellLedByPlan(view: Pick<PricingView, 'plans' | 'groups'>): Plan
       const label = WELL_LED_ROWS[id]
       const v = label === null ? true : rows.get(label)?.[i]
       // The Free plan carries text limits ("Your 5 policies", "3 examples"). Those are a taste, not the product, so they show as limited with the note. "English only" is no language support at all.
-      const isFree = p.name === 'Free'
-      if (isFree && typeof v === 'string' && /english only/i.test(v)) return { id, name: PRODUCTS[id].name, included: false }
-      if (isFree && typeof v === 'string' && truthy(v)) return { id, name: PRODUCTS[id].name, included: true, limited: v }
+      if (typeof v === 'string' && /english only/i.test(v)) return { id, name: PRODUCTS[id].name, included: false }
+      if (typeof v === 'string' && PART_RX.test(v.trim())) return { id, name: PRODUCTS[id].name, included: true, limited: v }
       return { id, name: PRODUCTS[id].name, included: truthy(v) }
     })
     return { name: p.name, price: p.price, highlight: !!p.highlight, included: items.filter(x => x.included && !x.limited).length, total: items.length, items }

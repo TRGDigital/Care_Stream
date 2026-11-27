@@ -23,7 +23,7 @@ billingRouter.get('/plans', async (_req: Request, res: Response) => {
       id: true, name: true, price_monthly_pence: true, price_annual_pence: true, monthly_query_limit: true,
       max_policies: true, max_staff_users: true, max_handbooks: true,
       max_manual_knowledge_entries: true, monthly_ai_credit_limit: true, monthly_annual_license_limit: true,
-      has_advanced_analytics: true, has_cqc_report: true, has_gap_detection: true,
+      has_advanced_analytics: true, has_cqc_report: true, has_gap_detection: true, has_gap_fixing: true,
       has_face_to_face: true, has_custom_audits: true, has_effectiveness: true, has_training_impact: true,
     },
   })

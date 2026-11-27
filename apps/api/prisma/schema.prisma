@@ -1124,6 +1124,25 @@ model PolicyStressResult {
   @@map("policy_stress_results")
 }
 
+/// One clarity and precision read of one policy (Policy intelligence pilot): the vague or unclear wording found, quoted from the policy, with a suggested rewrite, and plain readability measures.
+model PolicyClarityResult {
+  id             String   @id @default(uuid())
+  tenant_id      String
+  policy_id      String
+  policy_name    String   @default("")
+  findings       Json     @default("[]")
+  metrics        Json     @default("{}")
+  band           String   @default("none")
+  finding_count  Int      @default(0)
+  summary        String   @default("")
+  prompt_hash    String   @default("")
+  run_by         String   @default("")
+  created_at     DateTime @default(now())
+
+  @@index([tenant_id, policy_id, created_at])
+  @@map("policy_clarity_results")
+}
+
 // Heartbeat for scheduled jobs. A row that never appears is the signal: eight jobs stopped
 // on 5 June 2026 and nobody found out for 96 days, because nothing recorded that they were
 // meant to have run. See manual_cron_runs.sql.

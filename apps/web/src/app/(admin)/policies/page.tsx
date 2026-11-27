@@ -2,6 +2,7 @@
 
 // §14.7 — Policy library: searchable table, upload, archive.
 
+import { PolicyHealthPill } from '@/components/admin/policy-health-pill'
 import { useEffect, useState, useRef } from 'react'
 import { useSearchIntent } from '@/lib/admin-search/intents'
 import dynamic from 'next/dynamic'
@@ -865,6 +866,7 @@ function PolicyGroup({
                         : docSummary[p.id].published_at
                           ? <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-teal-light/40 px-2 py-0.5 text-[10px] font-semibold text-teal"><CheckCircle2 size={9} /> Updated · v{docSummary[p.id].version}</span>
                           : null)}
+                      <PolicyHealthPill policyId={p.id} />
                     </div>
                   </td>
                   {showSection && (

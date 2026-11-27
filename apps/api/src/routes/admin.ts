@@ -61,6 +61,7 @@ import { callClaude } from '../services/ai/claude'
 import { snapshotAndAlert } from '../services/regulations/versioning'
 import { checkRegulationSources, gatherSubjects } from '../services/regulations/source-monitor'
 import { STRESS_JUDGE_USAGE, SCENARIO_DRAFTER_USAGE, DEFAULT_STRESS_JUDGE_PROMPT, DEFAULT_SCENARIO_DRAFTER_PROMPT } from '../services/policy-testing/stress'
+import { POLICY_CLARITY_USAGE, DEFAULT_POLICY_CLARITY_PROMPT } from '../services/policy-testing/clarity'
 import { reviewPendingChanges, reviewOneChange, diffLines, loadLineReviews, DEFAULT_CHANGE_REVIEW_PROMPT, LINE_RELEVANCE_RULES, CHANGE_REVIEW_PROMPT_USAGE } from '../services/regulations/change-review'
 
 export const adminRouter = Router()
@@ -2918,6 +2919,7 @@ const USAGE_LABELS: Record<string, string> = {
   regulation_change_review:        'Legislation Monitor — Change review',
   [STRESS_JUDGE_USAGE]:            'Policy Testing — Scenario judge',
   [SCENARIO_DRAFTER_USAGE]:        'Policy Testing — Scenario drafter',
+  [POLICY_CLARITY_USAGE]:          'Policy Clarity — Clarity and precision',
   website_chat:                    'Website AI Chat — Visitor answers',
   resident_chat:                   'This is me — Hub chat answers',
   ...Object.fromEntries(ASK_PROMPTS.map(p => [p.usage, p.label])),
@@ -2953,6 +2955,7 @@ async function ensurePromptsSeeded() {
     regulation_change_review:   DEFAULT_CHANGE_REVIEW_PROMPT,
     [STRESS_JUDGE_USAGE]:       DEFAULT_STRESS_JUDGE_PROMPT,
     [SCENARIO_DRAFTER_USAGE]:   DEFAULT_SCENARIO_DRAFTER_PROMPT,
+    [POLICY_CLARITY_USAGE]:     DEFAULT_POLICY_CLARITY_PROMPT,
     website_chat:               DEFAULT_WEBSITE_CHAT_PROMPT,
     resident_chat:              DEFAULT_RESIDENT_PROMPT,
     ...Object.fromEntries(ASK_PROMPTS.map(p => [p.usage, p.default])),   // Ask CareStream (group on the Prompts page)

@@ -72,7 +72,7 @@ export default function StressTestingPage() {
                       <div className="min-w-0">
                         <p className="text-sm font-medium text-neutral-dark">{s.title}</p>
                         {s.last
-                          ? <p className="text-xs text-neutral-mid">Last tested {new Date(s.last.at).toLocaleDateString('en-GB')}: {s.last.gaps === 0 ? 'no gaps' : `${s.last.gaps} gap${s.last.gaps === 1 ? '' : 's'}`}{s.last.outdated ? ' (the situation has been updated since, test again)' : ''}</p>
+                          ? <p className="text-xs text-neutral-mid">Last tested {new Date(s.last.at).toLocaleDateString('en-GB')}: {s.last.gaps === 0 ? 'nothing missing from your library' : `${s.last.gaps} not covered anywhere in your library`}{s.last.outdated ? ' (the situation has been updated since, test again)' : ''}</p>
                           : <p className="text-xs text-neutral-mid">Not tested yet</p>}
                       </div>
                       <div className="flex gap-2">
@@ -98,9 +98,19 @@ export default function StressTestingPage() {
               <h2 className="text-lg font-bold text-neutral-dark">{result.policy_name}</h2>
               <p className="text-sm text-neutral-mid">{result.scenario_title}</p>
             </div>
-            <span className={`rounded-full px-3 py-1 text-sm font-semibold ${result.gaps === 0 ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-800'}`}>{result.gaps === 0 ? 'No gaps found' : `${result.gaps} gap${result.gaps === 1 ? '' : 's'} found`}</span>
+            <span className={`rounded-full px-3 py-1 text-sm font-semibold ${result.gaps === 0 ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-800'}`}>{result.gaps === 0 ? 'Nothing missing from your library' : `${result.gaps} not covered anywhere`}</span>
           </div>
           {result.summary && <p className="mt-3 text-sm text-neutral-dark">{result.summary}</p>}
+          {(() => {
+            const notHere = result.points.filter(p => p.verdict !== 'covered'), elsewhere = notHere.filter(p => (p.elsewhere ?? []).some(e => e.verdict === 'covered'))
+            return notHere.length > 0 ? (
+              <div className="mt-3 grid gap-2 sm:grid-cols-3">
+                <div className="rounded-lg bg-neutral-light px-3 py-2 text-xs"><b className="block text-base text-neutral-dark">{result.points.length - notHere.length} of {result.points.length}</b>covered in this policy</div>
+                <div className="rounded-lg bg-blue-50 px-3 py-2 text-xs"><b className="block text-base text-blue-800">{elsewhere.length}</b>not here, but covered in another policy</div>
+                <div className="rounded-lg bg-amber-50 px-3 py-2 text-xs"><b className="block text-base text-amber-800">{result.gaps}</b>not covered anywhere in your library</div>
+              </div>
+            ) : null
+          })()}
           <ul className="mt-4 space-y-3">
             {result.points.map(pt => {
               const b = BADGE[pt.verdict]
@@ -112,6 +122,14 @@ export default function StressTestingPage() {
                   </div>
                   {pt.note && <p className="mt-1.5 text-xs text-neutral-mid">{pt.note}</p>}
                   {pt.quote && <blockquote className="mt-1.5 border-l-2 border-gray-200 pl-3 text-xs italic text-neutral-mid">&ldquo;{pt.quote}&rdquo;</blockquote>}
+                  {(pt.elsewhere ?? []).length > 0 && (
+                    <div className="mt-2 rounded-md border border-blue-100 bg-blue-50 px-3 py-2 text-xs text-neutral-dark">
+                      <span className="font-semibold text-blue-800">{pt.elsewhere!.some(e => e.verdict === 'covered') ? 'Covered in another policy: ' : 'Partly covered in another policy: '}</span>
+                      {pt.elsewhere!.map(e => e.policy_name).filter((n, i, a) => a.indexOf(n) === i).join(', ')}
+                      <blockquote className="mt-1 border-l-2 border-blue-200 pl-2 italic text-neutral-mid">&ldquo;{pt.elsewhere![0].quote}&rdquo;</blockquote>
+                      <span className="mt-1 block text-neutral-mid">You may want this policy to refer to it, so staff using only this policy are pointed to the right place.</span>
+                    </div>
+                  )}
                   {pt.suggested_wording && <div className="mt-2 rounded-md bg-purple-50 px-3 py-2 text-xs text-neutral-dark"><span className="font-semibold text-purple-700">Suggested wording to review: </span>{pt.suggested_wording}</div>}
                   <p className="mt-1.5 text-[11px] text-neutral-mid">{pt.source_url ? <a href={pt.source_url} target="_blank" rel="noopener noreferrer" className="underline">{pt.source_label}</a> : pt.source_label}</p>
                 </li>

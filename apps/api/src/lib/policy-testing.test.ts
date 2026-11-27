@@ -4,7 +4,7 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import fs from 'fs'
 import path from 'path'
-import { POLICY_TYPES, parseJudge, quoteInText, gapsIn, policyMatchesType, approvalProblems, DEFAULT_STRESS_JUDGE_PROMPT, DEFAULT_SCENARIO_DRAFTER_PROMPT, type ExpectedPoint } from '../services/policy-testing/stress'
+import { POLICY_TYPES, betterReading, libraryGaps, parseJudge, quoteInText, gapsIn, policyMatchesType, approvalProblems, DEFAULT_STRESS_JUDGE_PROMPT, DEFAULT_SCENARIO_DRAFTER_PROMPT, type ExpectedPoint } from '../services/policy-testing/stress'
 import { isPolicyTestingAccount, policyTestingAccounts } from './policy-testing-pilot'
 
 const POINTS: ExpectedPoint[] = [
@@ -89,4 +89,25 @@ test('POLICY TYPES: a full grouped list, unique keys, and real policy titles lan
   m('Resuscitation, DNACPR and ReSPECT Policy', 'resuscitation')
   m('Epilepsy and Seizure Management Policy', 'epilepsy')
   assert.equal(policyMatchesType({ name: 'Falls Prevention and Management Policy' }, 'pressure_ulcer'), false)
+})
+
+test('READING: a later part of a long policy can meet a point an earlier part did not, and a gap covered in another policy is not a library gap', () => {
+  const base = { id: 'p1', text: 't', quote: '', quote_checked: true, note: '', suggested_wording: '', source_label: 'x', source_url: '' }
+  const miss = { ...base, verdict: 'missing' as const }, met = { ...base, verdict: 'covered' as const, quote: 'q' }, part = { ...base, verdict: 'partly' as const, quote: 'q' }
+  assert.equal(betterReading(miss, met).verdict, 'covered')
+  assert.equal(betterReading(part, miss).verdict, 'partly')
+  assert.equal(betterReading(met, part).verdict, 'covered')
+  const here = (id: string, v: 'covered' | 'partly' | 'missing', e: Array<'covered' | 'partly'> = []) => ({ ...base, id, verdict: v, elsewhere: e.map(x => ({ policy_id: 'o', policy_name: 'Other policy', verdict: x, quote: 'q' })) })
+  // covered here; missing but covered elsewhere; missing and only partly elsewhere; missing everywhere
+  assert.equal(libraryGaps([here('a', 'covered'), here('b', 'missing', ['covered']), here('c', 'missing', ['partly']), here('d', 'missing')]), 2)
+})
+
+test('READING: the policy is read in full (no cut off), in parts, and the rest of the library is checked', () => {
+  const read = (f: string) => fs.readFileSync(path.resolve(__dirname, f), 'utf8')
+  const svc = read('../services/policy-testing/stress.ts')
+  assert.doesNotMatch(svc, /slice\(0, 80_?000\)/)
+  assert.match(svc, /textWindows\(policyText, POLICY_PART_CHARS\)/)
+  assert.match(svc, /if \(!r\) \{ failed = true; return \[\] \}/)
+  assert.match(svc, /findElsewhere/)
+  assert.match(svc, /queryVectors\(namespace, emb, 12\)/)
 })

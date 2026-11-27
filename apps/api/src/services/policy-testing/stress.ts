@@ -6,6 +6,9 @@
 import { createHash } from 'crypto'
 import { prisma } from '../../db/client'
 import { callClaude } from '../ai/claude'
+import { textWindows, inBatches } from '../analytics/in-batches'
+import { mapLimit } from '../../lib/translate'
+import { isPolicyDocument } from '../../lib/document-kind'
 
 export const STRESS_JUDGE_USAGE = 'policy_stress_judge'
 export const SCENARIO_DRAFTER_USAGE = 'policy_scenario_drafter'
@@ -164,7 +167,8 @@ export function policyMatchesType(policy: { name?: string | null; policy_type?: 
 
 export type ExpectedPoint = { id: string; text: string; source_label: string; source_url: string }
 export type Verdict = 'covered' | 'partly' | 'missing'
-export type PointResult = { id: string; text: string; verdict: Verdict; quote: string; quote_checked: boolean; note: string; suggested_wording: string; source_label: string; source_url: string }
+export type ElsewhereHit = { policy_id: string; policy_name: string; verdict: 'covered' | 'partly'; quote: string }
+export type PointResult = { id: string; text: string; verdict: Verdict; quote: string; quote_checked: boolean; note: string; suggested_wording: string; source_label: string; source_url: string; elsewhere?: ElsewhereHit[] }
 
 /** What a scenario needs before it can reach a home: three or more points, each with a source, a description, and a policy type. */
 export function approvalProblems(s: { description: string; policy_types: string[]; expected_points: ExpectedPoint[] }): string[] {
@@ -216,34 +220,126 @@ export function parseJudge(raw: string, points: ExpectedPoint[], policyText: str
 
 export const gapsIn = (points: Array<{ verdict: string }>) => points.filter(p => p.verdict !== 'covered').length
 
-/** Test one policy against one scenario. Returns null when the model fails. */
-export async function judgeScenario(input: {
-  policyName: string; policyText: string
-  scenario: { title: string; description: string; expected_points: ExpectedPoint[]; extra_instructions?: string }
-}): Promise<{ points: PointResult[]; summary: string; prompt_hash: string } | null> {
-  const base = await promptFor(STRESS_JUDGE_USAGE, DEFAULT_STRESS_JUDGE_PROMPT)
-  const sys = input.scenario.extra_instructions?.trim() ? `${base}\n\nEXTRA INSTRUCTIONS FOR THIS SCENARIO\n${input.scenario.extra_instructions.trim()}` : base
-  const text = input.policyText.slice(0, 80_000)
+// How a policy is read. The same way the gap analysis reads a policy for regulation coverage: the WHOLE policy, in overlapping parts when it is long (never cut off), the expected points in
+// batches of POINTS_PER_CALL, a point counts as met if ANY part meets it, and a failed call means no verdict at all (never a verdict from half a policy or half a checklist).
+const POLICY_PART_CHARS = 60_000
+const POINTS_PER_CALL = 12
+const RANK: Record<Verdict, number> = { missing: 0, partly: 1, covered: 2 }
+
+/** The better of two readings of the same point (a later part of the policy may meet a point an earlier part did not). */
+export const betterReading = (a: PointResult, b: PointResult): PointResult => (RANK[b.verdict] > RANK[a.verdict] ? b : a)
+
+/** Points not covered anywhere in the library: not covered in this policy, and no other policy covers them either. "Partly" elsewhere does not close a gap. */
+export const libraryGaps = (points: PointResult[]): number => points.filter(p => p.verdict !== 'covered' && !(p.elsewhere ?? []).some(e => e.verdict === 'covered')).length
+
+type Scenario = { title: string; description: string; expected_points: ExpectedPoint[]; extra_instructions?: string }
+
+async function judgeBatch(sys: string, policyName: string, partText: string, partNo: number, partsTotal: number, scenario: Scenario, points: ExpectedPoint[], other: boolean): Promise<{ points: PointResult[]; summary: string } | null> {
   const user = [
-    `POLICY: ${input.policyName}`,
+    `POLICY: ${policyName}`,
+    other ? 'This is ANOTHER policy of the same service. Judge only whether THIS policy says each point; the situation below was written for a different policy.' : '',
+    partsTotal > 1 ? `This is part ${partNo} of ${partsTotal} of a long policy. A point that is not in this part is "missing" for this part only; the other parts are read separately.` : '',
     '',
-    `SITUATION: ${input.scenario.title}`,
-    input.scenario.description,
+    `SITUATION: ${scenario.title}`,
+    scenario.description,
     '',
     'EXPECTED POINTS:',
-    ...input.scenario.expected_points.map(p => `${p.id}. ${p.text}  (source: ${p.source_label})`),
+    ...points.map(p => `${p.id}. ${p.text}  (source: ${p.source_label})`),
     '',
     'POLICY TEXT:',
-    text,
-  ].join('\n')
+    partText,
+  ].filter(l => l !== '').join('\n')
   try {
     const raw = await callClaude(sys, user, { maxTokens: 4000, temperature: 0.1, feature: 'policy_stress_test' })
-    const parsed = parseJudge(raw, input.scenario.expected_points, text)
-    return parsed ? { ...parsed, prompt_hash: promptHash(sys) } : null
+    return parseJudge(raw, points, partText)
   } catch (e: any) {
     console.error('[policy-testing] judge failed:', e?.message ?? e)
     return null
   }
+}
+
+/** Read one whole policy against a list of points. Null when any call fails. */
+export async function readPolicy(sys: string, policyName: string, policyText: string, scenario: Scenario, points: ExpectedPoint[], other = false): Promise<{ points: PointResult[]; summary: string | null } | null> {
+  const windows = textWindows(policyText, POLICY_PART_CHARS)
+  const best = new Map<string, PointResult>()
+  let summary: string | null = null
+  for (let w = 0; w < windows.length; w++) {
+    let failed = false
+    await inBatches(points, POINTS_PER_CALL, async chunk => {
+      if (failed) return []
+      const r = await judgeBatch(sys, policyName, windows[w], w + 1, windows.length, scenario, chunk, other)
+      if (!r) { failed = true; return [] }
+      for (const pt of r.points) { const cur = best.get(pt.id); best.set(pt.id, cur ? betterReading(cur, pt) : pt) }
+      if (windows.length === 1 && points.length <= POINTS_PER_CALL) summary = r.summary
+      return []
+    })
+    if (failed) return null
+  }
+  return { points: points.map(p => best.get(p.id)!).filter(Boolean), summary }
+}
+
+async function judgePrompt(scenario: Scenario): Promise<string> {
+  const base = await promptFor(STRESS_JUDGE_USAGE, DEFAULT_STRESS_JUDGE_PROMPT)
+  return scenario.extra_instructions?.trim() ? `${base}\n\nEXTRA INSTRUCTIONS FOR THIS SCENARIO\n${scenario.extra_instructions.trim()}` : base
+}
+
+/** Which OTHER policies in the library say the points this policy does not. Candidates come from a search of the whole library for each point; each candidate is then read in full, the same way. */
+export async function findElsewhere(input: { tenantId: string; primaryPolicyId: string; sys: string; scenario: Scenario; points: ExpectedPoint[] }): Promise<{ checked: boolean; byPoint: Map<string, ElsewhereHit[]> }> {
+  const byPoint = new Map<string, ElsewhereHit[]>()
+  if (!input.points.length) return { checked: true, byPoint }
+  try {
+    // Loaded here so the pure parts of this file (the reading rules, the types, the matching) can be tested without the search and storage services starting up.
+    const [{ embedTexts }, { queryVectors, getTenantNamespace }, { downloadExtractedText }] = await Promise.all([import('../rag/embedder'), import('../vector/pinecone'), import('../storage/s3')])
+    const rows = await (prisma as any).policy.findMany({ where: { tenant_id: input.tenantId, status: 'active' }, select: { id: true, name: true } })
+    const nameById = new Map<string, string>((rows as any[]).filter(r => r.id !== input.primaryPolicyId && isPolicyDocument(r.name ?? '')).map(r => [r.id, r.name as string]))
+    if (!nameById.size) return { checked: true, byPoint }
+    const namespace = getTenantNamespace(input.tenantId)
+    const embeddings = await embedTexts(input.points.map(p => `${input.scenario.title}. ${p.text}`.slice(0, 1500)))
+    const weight = new Map<string, number>()
+    for (const emb of embeddings) for (const m of await queryVectors(namespace, emb, 12)) {
+      const pid = String((m.metadata as any)?.policy_id ?? '')
+      if (nameById.has(pid)) weight.set(pid, (weight.get(pid) ?? 0) + (m.score ?? 0))
+    }
+    const candidates = [...weight.entries()].sort((a, b) => b[1] - a[1]).slice(0, 6).map(([id]) => id)
+    let failures = 0
+    await mapLimit(candidates, 3, async (pid: string) => {
+      const text = await downloadExtractedText(input.tenantId, pid).catch(() => null)
+      if (!text || text.trim().length < 200) return
+      const r = await readPolicy(input.sys, nameById.get(pid)!, text, input.scenario, input.points, true)
+      if (!r) { failures++; return }
+      for (const pt of r.points) {
+        if (pt.verdict === 'missing' || !pt.quote_checked || !pt.quote) continue
+        const list = byPoint.get(pt.id) ?? []
+        list.push({ policy_id: pid, policy_name: nameById.get(pid)!, verdict: pt.verdict as 'covered' | 'partly', quote: pt.quote })
+        byPoint.set(pt.id, list)
+      }
+    })
+    for (const list of byPoint.values()) list.sort((a, b) => RANK[b.verdict] - RANK[a.verdict])
+    return { checked: failures === 0, byPoint }
+  } catch (e: any) {
+    console.error('[policy-testing] other policies check failed:', e?.message ?? e)
+    return { checked: false, byPoint }
+  }
+}
+
+/** Test one policy against one scenario: read the whole policy, then look for what it lacks in the rest of the library. Returns null when the policy could not be read in full. */
+export async function runStressTest(input: { tenantId: string; policyId: string; policyName: string; policyText: string; scenario: Scenario }): Promise<{ points: PointResult[]; summary: string; gaps: number; prompt_hash: string } | null> {
+  const sys = await judgePrompt(input.scenario)
+  const primary = await readPolicy(sys, input.policyName, input.policyText, input.scenario, input.scenario.expected_points)
+  if (!primary) return null
+  const notHere = primary.points.filter(p => p.verdict !== 'covered')
+  const other = await findElsewhere({ tenantId: input.tenantId, primaryPolicyId: input.policyId, sys, scenario: input.scenario, points: input.scenario.expected_points.filter(ep => notHere.some(p => p.id === ep.id)) })
+  const points = primary.points.map(p => ({ ...p, ...(other.byPoint.get(p.id)?.length ? { elsewhere: other.byPoint.get(p.id) } : {}) }))
+  const gaps = libraryGaps(points)
+  const n = points.length, covered = points.filter(p => p.verdict === 'covered').length
+  const closed = notHere.filter(p => (other.byPoint.get(p.id) ?? []).some(e => e.verdict === 'covered')).length
+  const summary = [
+    primary.summary,
+    `In this policy, ${covered} of ${n} points are covered.`,
+    notHere.length ? `${closed} of the ${notHere.length} that are not covered here ${closed === 1 ? 'is' : 'are'} covered in other policies in your library, and ${gaps} ${gaps === 1 ? 'is' : 'are'} not covered anywhere.` : '',
+    other.checked ? '' : 'Some other policies could not be checked this time.',
+  ].filter(Boolean).join(' ')
+  return { points, summary, gaps, prompt_hash: promptHash(sys) }
 }
 
 /** Draft scenarios for one regulation. Each point is taken from the regulation record, and carries its name and first source address. Always saved as drafts. */

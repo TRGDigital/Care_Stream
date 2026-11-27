@@ -14,6 +14,8 @@ import { RunOverlay } from '@/components/admin/run-overlay'
 import { PolicyLintModal } from '@/components/admin/policy-lint-modal'
 import { ConflictModal } from '@/components/admin/conflict-modal'
 import { WordingReviewModal } from '@/components/admin/wording-review-modal'
+import { PolicyClaritySection } from '@/components/admin/policy-clarity-section'
+import { useStressMeta } from '@/lib/stress-client'
 import { CheckCircle2, ChevronDown, FileQuestion, Info, Loader2, RefreshCw, ShieldAlert, Sparkles, TrendingUp, Wand2, FileClock, FileText, AlertCircle, CalendarClock, Check, X, Building2, Coins } from 'lucide-react'
 
 type GapsData = Awaited<ReturnType<ReturnType<typeof createApiClient>['analytics']['gaps']>>
@@ -177,6 +179,7 @@ function LoadError({ onRetry }: { onRetry: () => void }) {
 }
 
 export default function GapsPage() {
+  const stressMeta = useStressMeta()   // Policy clarity and precision: pilot, CS-1001 only
   const { data: session } = useSession()
   const { features, loading: planLoading } = usePlanFeatures()
   const locked = !!features && !features.has_gap_detection
@@ -851,6 +854,9 @@ export default function GapsPage() {
 
       {/* ── CQC wording alignment ─────────────────────────────────────────── */}
       {session?.accessToken && <PolicyWordingAlignmentSection token={session.accessToken} userId={userId} stepInfo={stepInfo('wording')} confirmRun={confirmRun} onRunComplete={onRunComplete} pendingPolicies={pipeline?.pending_policies ?? 0} runState={runStateFor('wording')} />}
+
+      {/* ── Policy clarity and precision (pilot, CS-1001 only) ───────────── */}
+      {stressMeta.enabled && session?.accessToken && <PolicyClaritySection token={session.accessToken} />}
 
       {/* ── Policies they do not have at all ───────────────────────────────
           Below the four analysis sections on purpose. Those list work a home can do itself by

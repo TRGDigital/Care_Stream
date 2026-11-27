@@ -7,8 +7,10 @@ import { checkAiCreditLimit, logAiCredit, PlanLimitError } from '../lib/plan-lim
 import { policyTestingEnabled } from '../lib/policy-testing-pilot'
 import { downloadExtractedText } from '../services/storage/s3'
 import { isPolicyDocument } from '../lib/document-kind'
+import { analyseClarity } from '../services/policy-testing/clarity'
+import { loadHealth, HEALTH_WEIGHTS } from '../services/policy-testing/health'
 import {
-  POLICY_TYPES, policyTypeLabel, policyMatchesType, judgeScenario, draftScenarios, gapsIn,
+  POLICY_TYPES, policyTypeLabel, policyMatchesType, runStressTest, draftScenarios,
   STRESS_JUDGE_USAGE, SCENARIO_DRAFTER_USAGE, approvalProblems, type ExpectedPoint,
 } from '../services/policy-testing/stress'
 
@@ -196,16 +198,69 @@ stressRouter.post('/run', requireAdmin, async (req: Request, res: Response) => {
     const text = await downloadExtractedText(tenantId, policy.id).catch(() => null)
     if (!text || text.trim().length < 200) { err(res, 'NO_TEXT', 'The text of this policy could not be read, so it cannot be tested.', 422); return }
     await checkAiCreditLimit(tenantId)
-    const j = await judgeScenario({ policyName: policy.name, policyText: text, scenario: { title: scenario.title, description: scenario.description, expected_points: scenario.expected_points as ExpectedPoint[], extra_instructions: scenario.extra_instructions } })
-    if (!j) { err(res, 'JUDGE_FAILED', 'The test could not be completed this time. Please try again.', 502); return }
+    const j = await runStressTest({ tenantId, policyId: policy.id, policyName: policy.name, policyText: text, scenario: { title: scenario.title, description: scenario.description, expected_points: scenario.expected_points as ExpectedPoint[], extra_instructions: scenario.extra_instructions } })
+    if (!j) { err(res, 'JUDGE_FAILED', 'The policy could not be read in full this time, so no result was recorded. Please try again.', 502); return }
     await logAiCredit(tenantId, 'policy_stress_test', null)
     const row = await (prisma as any).policyStressResult.create({ data: {
       tenant_id: tenantId, policy_id: policy.id, policy_name: policy.name, scenario_id: scenario.id, scenario_version: scenario.version, scenario_title: scenario.title,
-      points: j.points, summary: j.summary, gaps: gapsIn(j.points), prompt_hash: j.prompt_hash, run_by: String((req as any).user?.id ?? ''),
+      points: j.points, summary: j.summary, gaps: j.gaps, prompt_hash: j.prompt_hash, run_by: String((req as any).user?.id ?? ''),
     } })
     ok(res, { result: row })
   } catch (e: any) {
     if (e instanceof PlanLimitError) { err(res, e.code, e.message, 402); return }
     err(res, 'RUN_FAILED', 'The test could not be completed this time. Please try again.', 500)
   }
+})
+
+// ── Policy clarity and precision (pilot) ─────────────────────────────────────
+
+stressRouter.get('/clarity/library', requireAdmin, async (_req: Request, res: Response) => {
+  const tenantId = await guard(res); if (!tenantId) return
+  try {
+    const [health, results] = await Promise.all([loadHealth(tenantId), (prisma as any).policyClarityResult.findMany({ where: { tenant_id: tenantId }, orderBy: { created_at: 'desc' }, take: 400, select: { id: true, policy_id: true, band: true, finding_count: true, created_at: true } })])
+    const latest = new Map<string, any>(); for (const r of results as any[]) if (!latest.has(r.policy_id)) latest.set(r.policy_id, r)
+    ok(res, { policies: health.map(h => ({ id: h.id, name: h.name, ready: h.ready, waiting: h.waiting, last: latest.get(h.id) ? { id: latest.get(h.id).id, band: latest.get(h.id).band, findings: latest.get(h.id).finding_count, at: latest.get(h.id).created_at } : null })) })
+  } catch (e: any) { err(res, 'LIBRARY_FAILED', e?.message ?? 'Could not load policy clarity.', 500) }
+})
+
+stressRouter.get('/clarity/result/:id', requireAdmin, async (req: Request, res: Response) => {
+  const tenantId = await guard(res); if (!tenantId) return
+  const r = await (prisma as any).policyClarityResult.findFirst({ where: { id: String(req.params.id), tenant_id: tenantId } })
+  if (!r) { err(res, 'NOT_FOUND', 'Result not found.', 404); return }
+  ok(res, { result: r })
+})
+
+// A policy that still has open regulation gaps, out of date terms or conflicts is not ready: rewriting wording that is about to change wastes effort. The administrator can run it anyway.
+stressRouter.post('/clarity/run', requireAdmin, async (req: Request, res: Response) => {
+  const tenantId = await guard(res); if (!tenantId) return
+  try {
+    const policyId = String(req.body?.policy_id ?? '')
+    const policy = await (prisma as any).policy.findFirst({ where: { id: policyId, tenant_id: tenantId, status: 'active' }, select: { id: true, name: true } })
+    if (!policy) { err(res, 'NOT_FOUND', 'That policy was not found.', 404); return }
+    if (req.body?.force !== true) {
+      const h = (await loadHealth(tenantId)).find(x => x.id === policyId)
+      if (h && !h.ready) { err(res, 'NOT_READY', `This policy is waiting for: ${h.waiting.join(', ')}. Fix those first, or run it anyway.`, 409); return }
+    }
+    const text = await downloadExtractedText(tenantId, policy.id).catch(() => null)
+    if (!text || text.trim().length < 200) { err(res, 'NO_TEXT', 'The text of this policy could not be read, so it cannot be checked.', 422); return }
+    await checkAiCreditLimit(tenantId)
+    const j = await analyseClarity({ policyName: policy.name, policyText: text })
+    if (!j) { err(res, 'ANALYSIS_FAILED', 'The policy could not be read in full this time, so no result was recorded. Please try again.', 502); return }
+    await logAiCredit(tenantId, 'policy_clarity', null)
+    const row = await (prisma as any).policyClarityResult.create({ data: {
+      tenant_id: tenantId, policy_id: policy.id, policy_name: policy.name, findings: j.findings, metrics: j.metrics, band: j.band, finding_count: j.findings.length,
+      summary: j.summary, prompt_hash: j.prompt_hash, run_by: String((req as any).user?.id ?? ''),
+    } })
+    ok(res, { result: row })
+  } catch (e: any) {
+    if (e instanceof PlanLimitError) { err(res, e.code, e.message, 402); return }
+    err(res, 'RUN_FAILED', 'The check could not be completed this time. Please try again.', 500)
+  }
+})
+
+// ── Policy health (pilot): the roll up ───────────────────────────────────────
+
+stressRouter.get('/health', requireAdmin, async (_req: Request, res: Response) => {
+  const tenantId = await guard(res); if (!tenantId) return
+  try { ok(res, { policies: await loadHealth(tenantId), weights: HEALTH_WEIGHTS }) } catch (e: any) { err(res, 'HEALTH_FAILED', e?.message ?? 'Could not load policy health.', 500) }
 })

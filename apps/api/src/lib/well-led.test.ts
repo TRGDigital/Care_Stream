@@ -15,6 +15,14 @@ test('WELL-LED: the message follows the page', () => {
   assert.equal(topicForPath('/blog/something-unrelated'), 'gov')
 })
 
+test('WELL-LED: the four statement pages end with the banner, each with its own message', () => {
+  for (const [p, t] of [['/cqc-well-led/governance', 'gov'], ['/cqc-well-led/learning', 'learn'], ['/cqc-well-led/inclusion', 'edi'], ['/cqc-well-led/direction', 'cult']] as const) {
+    assert.equal(showsWellLedBanner(p), true, p)
+    assert.equal(topicForPath(p), t, p)
+  }
+  assert.equal(showsWellLedBanner('/cqc-well-led'), false)
+})
+
 test('WELL-LED: the banner shows on content pages only', () => {
   for (const p of ['/blog/a-post', '/scenarios/a-scenario', '/collection/a-collection', '/care-audits/falls-audit', '/care-policies/safeguarding', '/topics/x/y']) assert.equal(showsWellLedBanner(p), true, p)
   for (const p of ['/', '/blog', '/scenarios', '/pricing', '/cqc-well-led', '/care-policies', '/care-policies/checkout', '/care-policies/thank-you', '/care-policies/packs/x', '/staff-training/x', '/basket', '/register', '/privacy', '/demo']) assert.equal(showsWellLedBanner(p), false, p)

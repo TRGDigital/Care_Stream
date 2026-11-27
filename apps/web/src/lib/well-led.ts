@@ -108,6 +108,8 @@ const RX_CULT  = /culture|induction|incentive|recogni|champion|leader|supervis|v
 /** The Well-led message that suits a page, chosen from its address. Policy and regulation pages get Governance; language pages get Inclusion; audit and training pages get Learning. */
 export function topicForPath(pathname: string): WellLedTopic {
   const p = pathname.toLowerCase()
+  const own = STATEMENTS.find(s => p.replace(/\/+$/, '') === `${HUB_PATH}/${s.anchor}`)   // a statement page speaks for itself
+  if (own) return own.topic
   if (RX_EDI.test(p)) return 'edi'
   if (RX_GOV.test(p)) return 'gov'
   if (RX_LEARN.test(p)) return 'learn'
@@ -119,6 +121,7 @@ export function topicForPath(pathname: string): WellLedTopic {
 export function showsWellLedBanner(pathname: string): boolean {
   const p = pathname.replace(/\/+$/, '')
   if (/^\/(blog|scenarios|collection|care-audits|topics)\/[^/]+/.test(p)) return true
+  if (/^\/cqc-well-led\/(governance|learning|inclusion|direction)$/.test(p)) return true   // the four statement pages end with it too
   if (/^\/care-policies\/[^/]+/.test(p)) return !/^\/care-policies\/(checkout|thank-you|packs)(\/|$)/.test(p)
   return false
 }

@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { FileText, GraduationCap, BarChart3, Check } from 'lucide-react'
-import { PRODUCTS, PRODUCT_GROUPS, statementFor, topicForPath, showsWellLedBanner, hubHref } from '@/lib/well-led'
+import { PRODUCTS, PRODUCT_GROUPS, HUB_PATH, statementFor, topicForPath, showsWellLedBanner, hubHref } from '@/lib/well-led'
 
 const ICONS = { pol: FileText, trn: GraduationCap, evi: BarChart3 }
 
@@ -14,6 +14,9 @@ export function WellLedBanner() {
   if (!showsWellLedBanner(pathname)) return null
   const topic = topicForPath(pathname)
   const st = statementFor(topic)
+  // On a statement page the button goes to the overview, not back to the page the visitor is on.
+  const onStatementPage = pathname.replace(/\/+$/, '').startsWith(`${HUB_PATH}/`)
+  const href = onStatementPage ? `${HUB_PATH}?from=banner-${topic}` : hubHref(topic, 'banner')
   return (
     <aside className="wl-banner mx-auto w-full max-w-content px-6 pb-14 pt-4" aria-label="CQC Well-led">
       <div className="rounded-3xl border border-gray-100 bg-gradient-to-b from-white to-teal-light p-6 shadow-card md:p-8">
@@ -25,8 +28,8 @@ export function WellLedBanner() {
             <h2 className="mt-3 text-2xl font-extrabold leading-tight text-neutral-dark md:text-[26px]">{st.bannerHead}</h2>
             <p className="mt-2 max-w-3xl text-sm leading-relaxed text-neutral-mid">{st.bannerLine}</p>
           </div>
-          <Link href={hubHref(topic, 'banner')} className="rounded-full bg-teal px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-teal-dark">
-            How CareStream helps with CQC Well-led
+          <Link href={href} className="rounded-full bg-teal px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-teal-dark">
+            {onStatementPage ? 'Read the full CQC Well-led guide' : 'How CareStream helps with CQC Well-led'}
           </Link>
         </div>
 

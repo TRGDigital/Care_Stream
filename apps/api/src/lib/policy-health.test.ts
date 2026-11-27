@@ -3,7 +3,7 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import fs from 'fs'
 import path from 'path'
-import { clarityStatus, checkBands, clarityDimBand, HEALTH_CHECKS, parseClarity, readabilityMetrics, readabilityBand, clarityBand, CLARITY_TYPES, DEFAULT_POLICY_CLARITY_PROMPT } from '../services/policy-testing/clarity'
+import { overlapsProtected, filterProtected, clarityStatus, checkBands, clarityDimBand, HEALTH_CHECKS, parseClarity, readabilityMetrics, readabilityBand, clarityBand, CLARITY_TYPES, DEFAULT_POLICY_CLARITY_PROMPT } from '../services/policy-testing/clarity'
 import { scoreOf, topFixes, overallBand, coverageBand, practicalBand, HEALTH_WEIGHTS } from '../services/policy-testing/health'
 
 const TEXT = 'Staff should ensure that residents are appropriately monitored and that any concerns are escalated where necessary. The senior carer records the checks in the care plan every hour overnight.'
@@ -155,9 +155,9 @@ test('SAME AS GAPS: the health row reads steps 1 to 4 from the functions that dr
 test('STEP 5 = HEALTH: one function works out clarity for both, so the band, the seven checks and readability always agree', () => {
   const read = (f: string) => fs.readFileSync(path.resolve(__dirname, f), 'utf8')
   const health = read('../services/policy-testing/health.ts'), routes = read('../routes/policy-testing.ts'), sec = read('../../../web/src/components/admin/policy-clarity-section.tsx')
-  assert.match(health, /clarityStatus\(cl\)/)
-  assert.match(routes, /clarityStatus\(row\)|clarityStatus\(l\)/)
-  assert.match(routes, /shapeClarity\(r\)/); assert.match(routes, /shapeClarity\(row\)/)
+  assert.match(health, /clarityStatus\(cl, /)
+  assert.match(routes, /clarityStatus\(row, prot\)|clarityStatus\(l, /)
+  assert.match(routes, /shapeClarity\(r, tenantId\)/); assert.match(routes, /shapeClarity\(row, tenantId\)/)
   assert.doesNotMatch(sec, /\(n \/ words\) \* 1000/)                  // the page no longer works out the check bands itself
   assert.match(sec, /result\.checks\.map/)
   assert.match(sec, /Staff readability/)
@@ -215,4 +215,43 @@ test('POLICY TESTING IN HEALTH: shows what is set up, the results, whether the p
   assert.match(page, /get\('policy'\)/)
   assert.match(modal, /variant\?: 'wording' \| 'clarity' \| 'testing'/)
   assert.match(adoption, /refKey\.startsWith\('testing:'\)\) return 'testing'/)
+})
+
+test('NEVER REWRITE WHAT HAS BEEN WRITTEN OR CHANGED: a finding that overlaps any adopted change is left out, everywhere', () => {
+  const adopted = ['The Registered Manager will consider each request in accordance with the criteria set out in this policy and will make a decision within the timescales stated.']   // new wording written by an adopted change
+  const replaced = ['While the home will endeavour to grant an employee\'s reasonable request for time off work for training, the decision lies with the home.']                    // old wording an adopted change replaced
+  assert.equal(overlapsProtected('The Registered Manager will consider each request in accordance with the criteria set out in this policy', adopted), true)   // inside what was written
+  assert.equal(overlapsProtected('will endeavour to grant an employee\'s reasonable request for time off work for training, the decision lies with the home', replaced), true)   // what was replaced
+  assert.equal(overlapsProtected('The Registered Manager will consider every request in line with the criteria set out in this policy and decide within the timescales stated', adopted), true)   // slightly re-worded
+  assert.equal(overlapsProtected('Employees should have regular supervision with their line manager and an annual appraisal', adopted), false)   // a different passage stays
+  assert.equal(overlapsProtected('anything', []), false)
+  const f = [{ quote: adopted[0] }, { quote: 'Employees should have regular supervision with their line manager and an annual appraisal' }]
+  const r = filterProtected(f, adopted)
+  assert.equal(r.kept.length, 1); assert.equal(r.removed, 1)
+  // the same rule feeds the clarity status that step 5 AND the health row use
+  const row = { findings: [{ type: 'vague', quote: adopted[0] }, { type: 'undefined_timeframe', quote: f[1].quote }], metrics: { words: 1500, sentences: 60, avg_sentence_words: 18, long_sentence_pct: 5, passive_pct: 10, reading_ease: 60 } }
+  assert.equal(clarityStatus(row, adopted)!.findings, 1)
+  assert.equal(clarityStatus(row, adopted)!.suppressed, 1)
+  assert.equal(clarityStatus(row, [])!.findings, 2)
+  const read = (file: string) => fs.readFileSync(path.resolve(__dirname, file), 'utf8')
+  const health = read('../services/policy-testing/health.ts'), routes = read('../routes/policy-testing.ts'), clarity = read('../services/policy-testing/clarity.ts')
+  assert.match(health, /clarityStatus\(cl, protectedBy\.get\(p\.id\) \?\? \[\]\)/)
+  assert.match(routes, /loadProtectedTexts\(tenantId, row\.policy_id\)/)                 // step 5 result
+  assert.match(routes, /protectedTexts: \(await loadProtectedTexts\(tenantId, policy\.id\)\)/) // at the time it is run
+  assert.match(routes, /suggestion_blocked: true/)                                          // policy test suggestions too
+  assert.match(clarity, /where: \{ document_id: \{ in: \[\.\.\.byDoc\.keys\(\)\] \}, reverted: false \}/)   // every adopted change that has not been reverted
+  // and nothing is run until adopted changes are published, so the policy text read includes what steps 1 to 4 wrote
+  assert.match(health, /label: 'Adopted changes published', done: pending === 0, note: true/)
+})
+
+test('STEP 5 REVIEW: editable wording, the named people from Organisation details, fill in boxes, and no long list under the button', () => {
+  const read = (file: string) => fs.readFileSync(path.resolve(__dirname, file), 'utf8')
+  const modal = read('../../../web/src/components/admin/wording-review-modal.tsx'), sec = read('../../../web/src/components/admin/policy-clarity-section.tsx')
+  assert.match(modal, /<AdoptNamedPeople roleHolders=\{ctx\.role_holders\}/)                          // the same named people panel as Regulation coverage
+  assert.match(modal, /analytics\.weaveName\(\{ text: textOf\(idx\)/)                                 // Weave in, one AI call, undo kept
+  assert.match(modal, /Use the number of staff in CareStream \(\$\{staffCount\}\)|Use the number of staff in CareStream \(\{staffCount\}\)/)
+  assert.match(modal, /Or type a number/)
+  assert.match(modal, /const a: Alignment = \{ \.\.\.a0, wording: textOf\(idx\) \}/)                    // what is adopted is what is in the box
+  assert.doesNotMatch(sec, /result\.findings\.map/)                                                     // the long list under the review button is gone
+  assert.match(sec, /left out because that wording was already written or changed/)
 })

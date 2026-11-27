@@ -7,7 +7,7 @@ import { checkAiCreditLimit, logAiCredit, PlanLimitError } from '../lib/plan-lim
 import { policyTestingEnabled } from '../lib/policy-testing-pilot'
 import { downloadExtractedText } from '../services/storage/s3'
 import { isPolicyDocument } from '../lib/document-kind'
-import { analyseClarity, clarityStatus } from '../services/policy-testing/clarity'
+import { analyseClarity, clarityStatus, loadProtectedTexts, overlapsProtected } from '../services/policy-testing/clarity'
 import { loadHealth, HEALTH_WEIGHTS } from '../services/policy-testing/health'
 import type { Dim } from '../services/policy-testing/health'
 import {
@@ -189,11 +189,18 @@ stressRouter.get('/library', requireAdmin, async (_req: Request, res: Response) 
   } catch (e: any) { err(res, 'LIBRARY_FAILED', e?.message ?? 'Could not load policy testing.', 500) }
 })
 
+/** A policy test result as the page shows it: a suggestion that would rewrite wording an adopted change has already written or replaced is not put forward again. */
+const shapeStress = async (row: any, tenantId: string) => {
+  const prot = (await loadProtectedTexts(tenantId, row.policy_id)).get(row.policy_id) ?? []
+  const points = (Array.isArray(row.points) ? row.points : []).map((p: any) => (p.quote && p.suggested_wording && overlapsProtected(p.quote, prot) ? { ...p, suggested_wording: '', suggestion_blocked: true } : p))
+  return { ...row, points }
+}
+
 stressRouter.get('/result/:id', requireAdmin, async (req: Request, res: Response) => {
   const tenantId = await guard(res); if (!tenantId) return
   const r = await (prisma as any).policyStressResult.findFirst({ where: { id: String(req.params.id), tenant_id: tenantId } })
   if (!r) { err(res, 'NOT_FOUND', 'Result not found.', 404); return }
-  ok(res, { result: r })
+  ok(res, { result: await shapeStress(r, tenantId) })
 })
 
 stressRouter.post('/run', requireAdmin, async (req: Request, res: Response) => {
@@ -216,7 +223,7 @@ stressRouter.post('/run', requireAdmin, async (req: Request, res: Response) => {
       tenant_id: tenantId, policy_id: policy.id, policy_name: policy.name, scenario_id: scenario.id, scenario_version: scenario.version, scenario_title: scenario.title,
       points: j.points, summary: j.summary, gaps: j.gaps, prompt_hash: j.prompt_hash, run_by: String((req as any).user?.id ?? ''),
     } })
-    ok(res, { result: row })
+    ok(res, { result: await shapeStress(row, tenantId) })
   } catch (e: any) {
     if (e instanceof PlanLimitError) { err(res, e.code, e.message, 402); return }
     err(res, 'RUN_FAILED', 'The test could not be completed this time. Please try again.', 500)
@@ -226,14 +233,19 @@ stressRouter.post('/run', requireAdmin, async (req: Request, res: Response) => {
 // ── Policy clarity and precision (pilot) ─────────────────────────────────────
 
 /** A clarity result as every screen shows it: the band, the seven checks and staff readability worked out by the shared function, never read raw from the row. */
-const shapeClarity = (row: any) => { const cs = clarityStatus(row); return { ...row, band: cs?.band ?? row.band, checks: cs?.checks ?? [], readability: cs?.readability ?? null } }
+const shapeClarity = async (row: any, tenantId: string) => {
+  const prot = (await loadProtectedTexts(tenantId, row.policy_id)).get(row.policy_id) ?? []
+  const cs = clarityStatus(row, prot)
+  return { ...row, findings: cs ? cs.visible.map(v => (row.findings as any[]).find(f => f.quote === v.quote) ?? v) : row.findings, finding_count: cs?.findings ?? row.finding_count, suppressed: cs?.suppressed ?? 0, band: cs?.band ?? row.band, checks: cs?.checks ?? [], readability: cs?.readability ?? null }
+}
 
 stressRouter.get('/clarity/library', requireAdmin, async (_req: Request, res: Response) => {
   const tenantId = await guard(res); if (!tenantId) return
   try {
+    const protectedBy = await loadProtectedTexts(tenantId)
     const [health, results] = await Promise.all([loadHealth(tenantId), (prisma as any).policyClarityResult.findMany({ where: { tenant_id: tenantId }, orderBy: { created_at: 'desc' }, distinct: ['policy_id'], select: { id: true, policy_id: true, finding_count: true, findings: true, metrics: true, created_at: true } })])
     const latest = new Map<string, any>(); for (const r of results as any[]) latest.set(r.policy_id, r)
-    ok(res, { policies: health.map(h => { const l = latest.get(h.id), cs = clarityStatus(l); return { id: h.id, name: h.name, ready: h.ready, waiting: h.waiting, steps: h.steps, last: l && cs ? { id: l.id, band: cs.band, findings: l.finding_count, at: l.created_at } : null } }) })
+    ok(res, { policies: health.map(h => { const l = latest.get(h.id), cs = clarityStatus(l, protectedBy.get(h.id) ?? []); return { id: h.id, name: h.name, ready: h.ready, waiting: h.waiting, steps: h.steps, last: l && cs ? { id: l.id, band: cs.band, findings: cs.findings, at: l.created_at } : null } }) })
   } catch (e: any) { err(res, 'LIBRARY_FAILED', e?.message ?? 'Could not load policy clarity.', 500) }
 })
 
@@ -241,7 +253,7 @@ stressRouter.get('/clarity/result/:id', requireAdmin, async (req: Request, res: 
   const tenantId = await guard(res); if (!tenantId) return
   const r = await (prisma as any).policyClarityResult.findFirst({ where: { id: String(req.params.id), tenant_id: tenantId } })
   if (!r) { err(res, 'NOT_FOUND', 'Result not found.', 404); return }
-  ok(res, { result: shapeClarity(r) })
+  ok(res, { result: await shapeClarity(r, tenantId) })
 })
 
 // A policy that still has open regulation gaps, out of date terms or conflicts is not ready: rewriting wording that is about to change wastes effort. The administrator can run it anyway.
@@ -258,14 +270,14 @@ stressRouter.post('/clarity/run', requireAdmin, async (req: Request, res: Respon
     const text = await downloadExtractedText(tenantId, policy.id).catch(() => null)
     if (!text || text.trim().length < 200) { err(res, 'NO_TEXT', 'The text of this policy could not be read, so it cannot be checked.', 422); return }
     await checkAiCreditLimit(tenantId)
-    const j = await analyseClarity({ policyName: policy.name, policyText: text })
+    const j = await analyseClarity({ policyName: policy.name, policyText: text, protectedTexts: (await loadProtectedTexts(tenantId, policy.id)).get(policy.id) ?? [] })
     if (!j) { err(res, 'ANALYSIS_FAILED', 'The policy could not be read in full this time, so no result was recorded. Please try again.', 502); return }
     await logAiCredit(tenantId, 'policy_clarity', null)
     const row = await (prisma as any).policyClarityResult.create({ data: {
       tenant_id: tenantId, policy_id: policy.id, policy_name: policy.name, findings: j.findings, metrics: j.metrics, band: j.band, finding_count: j.findings.length,
       summary: j.summary, prompt_hash: j.prompt_hash, run_by: String((req as any).user?.id ?? ''),
     } })
-    ok(res, { result: shapeClarity(row) })
+    ok(res, { result: await shapeClarity(row, tenantId) })
   } catch (e: any) {
     if (e instanceof PlanLimitError) { err(res, e.code, e.message, 402); return }
     err(res, 'RUN_FAILED', 'The check could not be completed this time. Please try again.', 500)

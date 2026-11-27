@@ -69,7 +69,7 @@ function DimCard({ d, h }: { d: HealthDim; h: PolicyHealth }) {
       </div>
       <p className="mt-1.5 text-sm text-neutral-dark">{d.detail}</p>
       {isClarity && !h.ready && (
-        <p className="mt-2 rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-900">Steps 1, 2, 3 and 4 need completing for this policy before clarity can be run. Still to do: {h.waiting.join('; ')}.</p>
+        <p className="mt-2 rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-900">Steps 1, 2, 3 and 4 need completing, and adopted changes need publishing, before clarity can be run on this policy. Still to do: {h.waiting.join('; ')}.</p>
       )}
       {isClarity && d.checks && (
         <div className="mt-3 grid gap-x-6 gap-y-1.5 sm:grid-cols-2">

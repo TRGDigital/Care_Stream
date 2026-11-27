@@ -42,18 +42,8 @@ function ResultView({ result, token, onAdopted }: { result: ClarityResult; token
         </div>
       )}
       {reviewing && <WordingReviewModal variant="clarity" token={token} policyId={result.policy_id} policyName={result.policy_name} statements={[]} alignments={alignments} onClose={() => setReviewing(false)} onAdopted={onAdopted} />}
-      {result.findings.length === 0 ? <p className="mt-4 rounded-md bg-green-50 px-3 py-2 text-sm text-green-800">No unclear wording was found. Every instruction was specific enough.</p> : (
-        <ul className="mt-4 space-y-3">
-          {result.findings.map((f, i) => (
-            <li key={i} className="rounded-lg border border-gray-100 p-3">
-              <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-semibold text-amber-800">{f.type_label}</span>
-              <blockquote className="mt-1.5 border-l-2 border-gray-200 pl-3 text-sm italic text-neutral-dark">&ldquo;{f.quote}&rdquo;</blockquote>
-              <p className="mt-1.5 text-xs text-neutral-mid">{f.issue}</p>
-              {f.suggestion && <div className="mt-2 rounded-md bg-purple-50 px-3 py-2 text-xs text-neutral-dark"><span className="font-semibold text-purple-700">Suggested wording to review: </span>{f.suggestion}</div>}
-            </li>
-          ))}
-        </ul>
-      )}
+      {result.findings.length === 0 && <p className="mt-4 rounded-md bg-green-50 px-3 py-2 text-sm text-green-800">No unclear wording was found{(result.suppressed ?? 0) > 0 ? ' that has not already been written or changed by an adopted change' : ''}. Every instruction was specific enough.</p>}
+      {(result.suppressed ?? 0) > 0 && <p className="mt-3 rounded-md bg-blue-50 px-3 py-2 text-xs text-blue-900">{result.suppressed} {result.suppressed === 1 ? 'passage was' : 'passages were'} left out because that wording was already written or changed by an adopted change (from steps 1 to 4, policy testing or an earlier clarity change). Wording that has been written or changed is never put forward for rewriting again.</p>}
       <p className="mt-4 text-xs text-neutral-mid">This judges the wording of the policy, not the care your team gives. Words in square brackets are for you to decide. Review every suggestion before you use it.</p>
     </div>
   )
@@ -142,13 +132,13 @@ export function PolicyClaritySection({ token, focusPolicyId }: { token: string; 
                         <div className="border-t border-gray-100 bg-neutral-light/40 px-5 py-4">
                           {!p.ready ? (
                             <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
-                              <p className="text-sm font-semibold text-amber-900">Steps 1, 2, 3 and 4 need completing for this policy first.</p>
-                              <p className="mt-1 text-sm text-amber-900/80">Clarity and precision can be checked once each step has been run for this policy and has nothing open. Nothing can be run here until then.</p>
+                              <p className="text-sm font-semibold text-amber-900">Steps 1, 2, 3 and 4 need completing for this policy first, and anything adopted needs publishing.</p>
+                              <p className="mt-1 text-sm text-amber-900/80">Clarity and precision can be checked once each step has been run for this policy, has nothing open, and every adopted change has been reviewed and published. This is so wording that steps 1 to 4 have written or changed is never rewritten again. Nothing can be run here until then.</p>
                               <ul className="mt-3 space-y-1.5">
                                 {p.steps.map(x => (
                                   <li key={x.step} className="flex items-center gap-2 text-sm text-neutral-dark">
                                     {x.done ? <Check size={14} className="text-green-600" /> : <X size={14} className="text-red-600" />}
-                                    <span className="font-medium">Step {x.step}: {x.label}</span><span className="text-neutral-mid">· {x.detail}</span>
+                                    <span className="font-medium">{x.note ? x.label : `Step ${x.step}: ${x.label}`}</span><span className="text-neutral-mid">· {x.detail}</span>
                                   </li>
                                 ))}
                               </ul>

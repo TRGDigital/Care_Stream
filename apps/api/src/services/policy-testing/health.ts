@@ -4,7 +4,7 @@
 
 import { prisma } from '../../db/client'
 import { isPolicyDocument } from '../../lib/document-kind'
-import { clarityStatus, HEALTH_CHECKS, type Band, type CheckResult } from './clarity'
+import { clarityStatus, loadProtectedTexts, HEALTH_CHECKS, type Band, type CheckResult } from './clarity'
 import { policyMatchesType } from './stress'
 
 export type DimKey = 'coverage' | 'uptodate' | 'consistency' | 'wording' | 'clarity' | 'practical'
@@ -67,7 +67,7 @@ export function coverageBand(covered: number, partial: number): Band {
 export const practicalBand = (gaps: number, points: number): Band => (points === 0 ? 'none' : gaps === 0 ? 'strong' : gaps / points <= 0.2 ? 'good' : 'attention')
 
 export type LastCheck = { id: string; score: number; band: Band; at: string; stale: boolean; fixes: Fix[] }
-export type PreStep = { step: number; label: string; done: boolean; detail: string }
+export type PreStep = { step: number; label: string; done: boolean; detail: string; /** Not a numbered step: a condition that must also be met (adopted changes are published). */ note?: boolean }
 export type PolicyHealth = { id: string; name: string; overall: Band; score: number | null; assessed: number; dims: Dim[]; fixes: Fix[]; ready: boolean; waiting: string[]; steps: PreStep[]; last_check: LastCheck | null }
 
 /** What the Gaps page shows for steps 1 to 4, per policy, taken from the same functions that draw those steps, so the health row can never disagree with Gaps.
@@ -134,7 +134,7 @@ export async function loadGapViews(tenantId: string): Promise<GapViews> {
 }
 
 export async function loadHealth(tenantId: string): Promise<PolicyHealth[]> {
-  const [policies, clarity, stress, checks, g, scenarios, docs] = await Promise.all([
+  const [policies, clarity, stress, checks, g, scenarios, docs, protectedBy] = await Promise.all([
     (prisma as any).policy.findMany({ where: { tenant_id: tenantId, status: 'active' }, select: { id: true, name: true, version: true, policy_type: true }, orderBy: { name: 'asc' } }),
     (prisma as any).policyClarityResult.findMany({ where: { tenant_id: tenantId }, orderBy: { created_at: 'desc' }, select: { policy_id: true, band: true, finding_count: true, metrics: true, summary: true, findings: true, created_at: true } }).catch(() => []),
     (prisma as any).policyStressResult.findMany({ where: { tenant_id: tenantId }, orderBy: { created_at: 'desc' }, select: { id: true, policy_id: true, scenario_id: true, scenario_title: true, scenario_version: true, points: true, gaps: true, created_at: true } }).catch(() => []),
@@ -142,12 +142,13 @@ export async function loadHealth(tenantId: string): Promise<PolicyHealth[]> {
     loadGapViews(tenantId),
     (prisma as any).policyScenario.findMany({ where: { status: 'approved' }, select: { id: true, title: true, version: true, policy_types: true }, orderBy: { title: 'asc' } }).catch(() => []),
     (prisma as any).policyDocument.findMany({ where: { tenant_id: tenantId }, select: { id: true, policy_id: true } }).catch(() => []),
+    loadProtectedTexts(tenantId),
   ])
   // Changes adopted into each policy's draft, so a test result can say the policy has changed since, and health can say how many changes came from policy testing.
   const docToPolicy = new Map<string, string>((docs as any[]).map(d => [d.id, d.policy_id]))
-  const changeRows = (docs as any[]).length ? await (prisma as any).policyDocumentChange.findMany({ where: { document_id: { in: (docs as any[]).map(d => d.id) }, reverted: false }, select: { document_id: true, reference_key: true, applied_at: true } }).catch(() => []) : []
-  const changesBy = new Map<string, Array<{ ref: string; at: Date }>>()
-  for (const c of changeRows as any[]) { const pid = docToPolicy.get(c.document_id); if (!pid) continue; const l = changesBy.get(pid) ?? []; l.push({ ref: String(c.reference_key ?? ''), at: new Date(c.applied_at) }); changesBy.set(pid, l) }
+  const changeRows = (docs as any[]).length ? await (prisma as any).policyDocumentChange.findMany({ where: { document_id: { in: (docs as any[]).map(d => d.id) }, reverted: false }, select: { document_id: true, reference_key: true, applied_at: true, published: true } }).catch(() => []) : []
+  const changesBy = new Map<string, Array<{ ref: string; at: Date; published: boolean }>>()
+  for (const c of changeRows as any[]) { const pid = docToPolicy.get(c.document_id); if (!pid) continue; const l = changesBy.get(pid) ?? []; l.push({ ref: String(c.reference_key ?? ''), at: new Date(c.applied_at), published: !!c.published }); changesBy.set(pid, l) }
   const iso = (d: any) => (d ? new Date(d).toISOString() : null)
   const lastCheck = new Map<string, any>(); for (const c of checks as any[]) if (!lastCheck.has(c.policy_id)) lastCheck.set(c.policy_id, c)
   const clarityBy = new Map<string, any>(); for (const c of clarity as any[]) if (!clarityBy.has(c.policy_id)) clarityBy.set(c.policy_id, c)
@@ -190,7 +191,7 @@ export async function loadHealth(tenantId: string): Promise<PolicyHealth[]> {
           + (testing.changes > 0 ? ` ${testing.changes} ${testing.changes === 1 ? 'change has' : 'changes have'} been adopted into this policy because of policy testing.` : '')
           + (testing.stale > 0 ? ` ${testing.stale} ${testing.stale === 1 ? 'result is' : 'results are'} out of date because the policy or the situation has changed since, so test again.` : '')
     // Clarity as step 5 shows it: one shared function, so the two cannot disagree.
-    const cs = clarityStatus(cl)
+    const cs = clarityStatus(cl, protectedBy.get(p.id) ?? [])   // wording already written or changed by an adopted change is never counted
     const checks: CheckResult[] = cs ? cs.checks : HEALTH_CHECKS.map(c => ({ ...c, count: 0, band: 'none' as Band }))   // the seven checks always show; until clarity has been run each says so
     const readability = cs ? cs.readability : { band: 'none' as Band, detail: 'Measured when clarity is run.' }
     const clarityFinal: Band = cs ? cs.band : 'none'
@@ -206,7 +207,7 @@ export async function loadHealth(tenantId: string): Promise<PolicyHealth[]> {
       { key: 'wording', label: DIM_LABEL.wording, band: wordingRan ? (wordingN === 0 ? 'strong' : wordingN <= 2 ? 'good' : 'attention') : 'none', href: '/gaps', last_run: g.wordingRun.get(p.id) ?? null,
         detail: wordingRan ? (wordingN === 0 ? 'Nothing open: this policy reads in the way the CQC quality statements expect.' : `${wordingN} ${wordingN === 1 ? 'passage' : 'passages'} could be reworded to match the CQC quality statements.`) : 'The CQC wording analysis has not been run on this policy yet.' },
       { key: 'clarity', label: DIM_LABEL.clarity, band: clarityFinal, href: `/gaps?clarity=${p.id}`, last_run: iso(cl?.created_at), checks, readability,
-        detail: cl ? `${cl.finding_count} ${cl.finding_count === 1 ? 'passage' : 'passages'} of unclear wording found. The seven checks and staff readability are below.` : 'Not run yet. Open step 5 on the Gaps page. The seven checks and staff readability fill in when it is run.' },
+        detail: cl ? `${cs!.findings} ${cs!.findings === 1 ? 'passage' : 'passages'} of unclear wording found. The seven checks and staff readability are below.${cs!.suppressed > 0 ? ` ${cs!.suppressed} ${cs!.suppressed === 1 ? 'passage was' : 'passages were'} left out because that wording was already written or changed by an adopted change.` : ''}` : 'Not run yet. Open step 5 on the Gaps page. The seven checks and staff readability fill in when it is run.' },
       { key: 'practical', label: DIM_LABEL.practical, band: practicalBand(stressGaps, stressPoints), href: `/stress-testing?policy=${p.id}`, last_run: iso(myStress.reduce((m: any, r: any) => (!m || new Date(r.created_at) > new Date(m) ? r.created_at : m), null)), testing, detail: testingDetail },
     ]
     for (const d of dims) d.value = bandValue(d.band)
@@ -219,7 +220,10 @@ export async function loadHealth(tenantId: string): Promise<PolicyHealth[]> {
       { step: 3, label: 'Cross-policy consistency', done: g.consAnalysed && myConflicts === 0, detail: !g.consAnalysed ? 'Not run yet' : myConflicts > 0 ? `${myConflicts} open ${myConflicts === 1 ? 'conflict' : 'conflicts'}` : 'Nothing open' },
       { step: 4, label: 'CQC wording', done: wordingRan && wordingN === 0, detail: !wordingRan ? 'Not run yet' : wordingN > 0 ? `${wordingN} wording ${wordingN === 1 ? 'suggestion' : 'suggestions'}` : 'Nothing open' },
     ]
-    const waiting = steps.filter(x => !x.done).map(x => `step ${x.step} ${x.label.toLowerCase()} (${x.detail.toLowerCase()})`)
+    // Adopted changes must be reviewed and published first: clarity reads the published policy, so it must include what steps 1 to 4 wrote.
+    const pending = myChanges.filter(c => !c.published).length
+    steps.push({ step: 0, label: 'Adopted changes published', done: pending === 0, note: true, detail: pending === 0 ? 'Nothing waiting' : `${pending} adopted ${pending === 1 ? 'change is' : 'changes are'} waiting to be reviewed and published on the Policies page` })
+    const waiting = steps.filter(x => !x.done).map(x => x.note ? x.detail.toLowerCase() : `step ${x.step} ${x.label.toLowerCase()} (${x.detail.toLowerCase()})`)
     return {
       id: p.id, name: p.name, overall: o.band, score: o.score, assessed: o.assessed, dims, fixes: topFixes(dims), ready: waiting.length === 0, waiting, steps,
       last_check: lc ? { id: lc.id, score: lc.score, band: lc.band as Band, at: new Date(lc.created_at).toISOString(), stale: (lc.policy_version ?? 1) !== (p.version ?? 1), fixes: Array.isArray(lc.fixes) ? lc.fixes : [] } : null,

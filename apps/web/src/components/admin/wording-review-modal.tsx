@@ -9,6 +9,7 @@ import { createApiClient } from '@/lib/api-client'
 import { persistentCache } from '@/lib/page-cache'
 import { findBlock, findHeadingBlock, markSafBlockEl, markBlockAdoptedEl, newBlock } from './gap-detail-modal'
 import { X, Loader2, CheckCircle2, Sparkles, BookOpen, ChevronDown } from 'lucide-react'
+import { AdoptNamedPeople, type AdoptPerson } from './adopt-named-people'
 
 type Alignment = { focus: string; placement: 'amend' | 'add_under_heading' | 'new_section'; anchor: string; section_title: string; wording: string; ref?: string }
 
@@ -22,6 +23,37 @@ function splitNewWording(a: Alignment): { title?: string; body: string } {
     return { title: head, body: parts.slice(1).join('\n\n').trim() }
   }
   return { body: a.wording.trim() }
+}
+
+/** Words in [square brackets] in a suggestion are for the admin to decide. Each gets a box to type in, and a number gets the option of the number of staff already in CareStream. */
+function PlaceholderFill({ text, staffCount, onChange }: { text: string; staffCount: number | null; onChange: (t: string) => void }) {
+  const tokens = [...new Set(text.match(/\[[^\]]+\]/g) ?? [])]
+  const [vals, setVals] = useState<Record<string, string>>({})
+  if (tokens.length === 0) return null
+  const apply = (tok: string, v: string) => { if (v.trim()) onChange(text.split(tok).join(v.trim())) }
+  return (
+    <div className="mt-2 space-y-2.5 rounded-lg border border-amber-200 bg-amber-50/60 p-3">
+      <p className="text-[11px] font-bold uppercase tracking-wide text-amber-800">Words for you to decide</p>
+      {tokens.map(tok => {
+        const label = tok.slice(1, -1)
+        const isCount = /number|employ|staff|headcount|people|size/i.test(label)
+        const v = vals[tok] ?? ''
+        return (
+          <div key={tok}>
+            <p className="text-xs font-semibold text-neutral-dark">{label}</p>
+            <div className="mt-1 flex flex-wrap items-center gap-2">
+              {isCount && staffCount != null && (
+                <button type="button" onClick={() => apply(tok, String(staffCount))} className="rounded-btn border border-indigo-300 bg-white px-2.5 py-1 text-xs font-medium text-indigo-700 hover:bg-indigo-50">Use the number of staff in CareStream ({staffCount})</button>
+              )}
+              <input value={v} onChange={e => setVals(cur => ({ ...cur, [tok]: e.target.value }))} placeholder={isCount ? 'Or type a number' : 'Type your answer'} aria-label={label}
+                     className="min-w-[10rem] flex-1 rounded-md border border-gray-200 bg-white px-2 py-1 text-xs" />
+              <button type="button" disabled={!v.trim()} onClick={() => apply(tok, v)} className="rounded-btn border border-gray-200 bg-white px-2.5 py-1 text-xs font-medium text-neutral-dark hover:bg-neutral-light disabled:opacity-40">Use this</button>
+            </div>
+          </div>
+        )
+      })}
+    </div>
+  )
 }
 
 export function WordingReviewModal({ token, policyId, policyName, statements, alignments, onClose, onAdopted, variant = 'wording' }: {
@@ -48,6 +80,31 @@ export function WordingReviewModal({ token, policyId, policyName, statements, al
   const [order, setOrder]       = useState<number[]>(() => alignments.map((_, i) => i))
   const [adoptErr, setAdoptErr] = useState('')
   const [synOpen, setSynOpen]   = useState(false)
+  // Clarity and policy testing suggestions can be edited before they are adopted: the wording box, the named people from Organisation details (Weave in), and the words in [brackets].
+  const editable = variant !== 'wording'
+  const [texts, setTexts]       = useState<Record<number, string>>({})
+  const [adoptedTexts, setAdoptedTexts] = useState<Record<number, string>>({})
+  const [undo, setUndo]         = useState<Record<number, string>>({})
+  const [weaving, setWeaving]   = useState<string | null>(null)
+  const [weaveErr, setWeaveErr] = useState('')
+  const [ctx, setCtx]           = useState<Awaited<ReturnType<ReturnType<typeof createApiClient>['analytics']['adoptionContext']>> | null>(null)
+  const [people, setPeople]     = useState<AdoptPerson[]>([])
+  const textOf = (i: number) => texts[i] ?? alignments[i]?.wording ?? ''
+  const staffCount = people.length ? people.filter(p => p.is_active !== false).length : null
+  useEffect(() => {
+    if (!editable) return
+    const api = createApiClient(token)
+    api.analytics.adoptionContext().then(setCtx).catch(() => {})
+    api.users.list().then((d: any) => { const l = Array.isArray(d) ? d : (d?.users ?? []); setPeople(l.map((u: any) => ({ name: String(u.name ?? ''), photo_url: u.photo_url ?? null, is_active: u.is_active !== false }))) }).catch(() => {})
+  }, [editable, token])
+  async function weave(idx: number, name: string, role: string) {
+    setWeaving(name); setWeaveErr('')
+    try {
+      const r = await createApiClient(token).analytics.weaveName({ text: textOf(idx), name, role, policy_name: policyName })
+      setUndo(u => ({ ...u, [idx]: textOf(idx) })); setTexts(t => ({ ...t, [idx]: r.text }))
+    } catch (e: any) { setWeaveErr(e?.message ?? 'Could not place the name this time. Your wording is unchanged.') }
+    finally { setWeaving(null) }
+  }
   const previewRef = useRef<HTMLDivElement>(null)
   const refKey = statements[0]?.reference_key ?? ''
 
@@ -99,12 +156,13 @@ export function WordingReviewModal({ token, policyId, policyName, statements, al
     ord.forEach(origIdx => {
       const a = alignments[origIdx]
       const n = num.get(origIdx) ?? origIdx + 1
-      const { title, body } = splitNewWording(a)
+      const shown = adoptedTexts[origIdx] ?? a.wording
+      const { title, body } = splitNewWording({ ...a, wording: shown })
       if (a.placement === 'amend') {
         const el = elFor[origIdx]
         if (!el || claimed.has(el)) return          // no block, or would collide → leave unplaced
         claimed.add(el)
-        if (adopted.has(origIdx)) markBlockAdoptedEl(el, n, a.wording)
+        if (adopted.has(origIdx)) markBlockAdoptedEl(el, n, shown)
         else markSafBlockEl(el, n)
         loc.add(origIdx)
       } else if (a.placement === 'add_under_heading') {
@@ -119,10 +177,11 @@ export function WordingReviewModal({ token, policyId, policyName, statements, al
     })
     setLocated(loc)
     setOrder(ord)
-  }, [html, alignments, adopted])
+  }, [html, alignments, adopted, adoptedTexts])
 
-  async function adopt(a: Alignment, idx: number) {
+  async function adopt(a0: Alignment, idx: number) {
     setAdopting(idx); setAdoptErr('')
+    const a: Alignment = { ...a0, wording: textOf(idx) }   // what is in the box, which may have been edited
     try {
       const { title, body } = splitNewWording(a)
       await createApiClient(token).analytics.adoptSuggestion({
@@ -133,6 +192,7 @@ export function WordingReviewModal({ token, policyId, policyName, statements, al
         new_text: a.placement === 'new_section' ? body : a.wording,
         section_title: a.placement === 'new_section' ? (title || undefined) : undefined,
       })
+      setAdoptedTexts(t => ({ ...t, [idx]: a.wording }))
       setAdopted(s => new Set(s).add(idx))
       onAdopted?.()
     } catch (e: any) { setAdoptErr(e?.message ?? 'Could not adopt this.') }
@@ -228,8 +288,21 @@ export function WordingReviewModal({ token, policyId, policyName, statements, al
                   {a.placement === 'amend' ? (clar ? 'Clearer rewrite' : test ? 'Wording that covers this point' : 'Person-centred rewrite') : a.placement === 'new_section' ? 'New section to add' : 'New wording to add'}
                 </p>
                 {a.placement !== 'amend' && title && <p className="mt-0.5 text-sm font-bold text-neutral-dark">{title}</p>}
-                <p className="mt-0.5 whitespace-pre-line text-sm text-neutral-dark">{a.placement === 'amend' ? a.wording : body}</p>
-                {(clar || test) && /\[[^\]]+\]/.test(a.wording) && <p className="mt-1.5 rounded bg-amber-50 px-2 py-1 text-[11px] text-amber-900">This has words in square brackets for you to decide. Adopting puts them in your draft, so edit them before you publish.</p>}
+                {editable && !adopted.has(origIdx) ? (
+                  <>
+                    <textarea aria-label={`Wording for ${P}${num}`} value={textOf(origIdx)} onChange={e => setTexts(t => ({ ...t, [origIdx]: e.target.value }))}
+                              rows={Math.min(8, Math.max(3, Math.ceil(textOf(origIdx).length / 70)))} className="mt-1 w-full rounded-md border border-gray-200 px-2 py-1.5 text-sm text-neutral-dark focus:border-indigo-300 focus:outline-none" />
+                    <PlaceholderFill text={textOf(origIdx)} staffCount={staffCount} onChange={t => setTexts(cur => ({ ...cur, [origIdx]: t }))} />
+                    {ctx?.names_v2 && (
+                      <AdoptNamedPeople roleHolders={ctx.role_holders} nominated={ctx.variables.find(v => v.key === 'nominated_individual')?.value ?? ''} approver={ctx.variables.find(v => v.key === 'default_approver')?.value ?? ''}
+                        people={people} wording={textOf(origIdx)} requirement={a.focus} policyName={policyName} policyText={previewRef.current?.textContent ?? ''}
+                        weaving={weaving} canUndo={undo[origIdx] !== undefined} error={weaveErr}
+                        onWeave={(name, role) => void weave(origIdx, name, role)} onUndo={() => { const prev = undo[origIdx]; if (prev === undefined) return; setTexts(t => ({ ...t, [origIdx]: prev })); setUndo(u => { const n2 = { ...u }; delete n2[origIdx]; return n2 }) }} />
+                    )}
+                  </>
+                ) : (
+                  <p className="mt-0.5 whitespace-pre-line text-sm text-neutral-dark">{adopted.has(origIdx) && adoptedTexts[origIdx] ? adoptedTexts[origIdx] : a.placement === 'amend' ? a.wording : body}</p>
+                )}
                 <div className="mt-2">
                   {adopted.has(origIdx) ? (
                     <span className="inline-flex items-center gap-1 text-xs font-medium text-green-700"><CheckCircle2 size={13} /> Adopted, shown in the policy</span>

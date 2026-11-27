@@ -97,12 +97,53 @@ export function clarityBand(findingCount: number, words: number): Band {
   return per1000 <= 2 ? 'strong' : per1000 <= 5 ? 'good' : 'attention'
 }
 
+// ── Never rewrite what has already been written or changed ──────────────────
+// Wording that steps 1 to 4 (or an earlier adoption) wrote, or replaced, is never put forward again. A finding is dropped if its passage overlaps ANY adopted change that has not been reverted:
+// either the new wording that was written, or the old wording that was replaced.
+const normT = (t: string) => String(t ?? '').toLowerCase().replace(/[\u2018\u2019]/g, "'").replace(/[\u201c\u201d]/g, '"').replace(/\s+/g, ' ').trim()
+const wordSet = (t: string) => new Set(normT(t).split(/[^a-z0-9']+/).filter(w => w.length > 3))
+export function overlapsProtected(quote: string, protectedTexts: string[]): boolean {
+  const q = normT(quote); if (!q) return false
+  const qw = wordSet(quote)
+  for (const raw of protectedTexts) {
+    const n = normT(raw); if (!n) continue
+    if (n.length >= 25 && q.length >= 25 && (q.includes(n) || n.includes(q))) return true
+    // The same passage re-worded slightly: most of the same words.
+    const nw = wordSet(raw)
+    if (qw.size >= 4 && nw.size >= 4) { let inter = 0; for (const w of qw) if (nw.has(w)) inter++; if (inter / (qw.size + nw.size - inter) >= 0.5 || inter / qw.size >= 0.8) return true }
+  }
+  return false
+}
+export function filterProtected<T extends { quote: string }>(findings: T[], protectedTexts: string[]): { kept: T[]; removed: number } {
+  if (!protectedTexts.length) return { kept: findings, removed: 0 }
+  const kept = findings.filter(f => !overlapsProtected(f.quote, protectedTexts))
+  return { kept, removed: findings.length - kept.length }
+}
+
+/** The wording adopted into each policy by any step (not reverted): new wording written and old wording replaced. Loaded once for the library or for one policy. */
+export async function loadProtectedTexts(tenantId: string, policyId?: string): Promise<Map<string, string[]>> {
+  const out = new Map<string, string[]>()
+  const docs = await (prisma as any).policyDocument.findMany({ where: { tenant_id: tenantId, ...(policyId ? { policy_id: policyId } : {}) }, select: { id: true, policy_id: true } }).catch(() => [])
+  if (!(docs as any[]).length) return out
+  const byDoc = new Map<string, string>((docs as any[]).map(d => [d.id, d.policy_id]))
+  const changes = await (prisma as any).policyDocumentChange.findMany({ where: { document_id: { in: [...byDoc.keys()] }, reverted: false }, select: { document_id: true, old_text: true, new_text: true, section_title: true } }).catch(() => [])
+  for (const c of changes as any[]) {
+    const pid = byDoc.get(c.document_id); if (!pid) continue
+    const l = out.get(pid) ?? []
+    for (const t of [c.new_text, c.old_text, c.section_title]) if (t && String(t).trim().length > 3) l.push(String(t))
+    out.set(pid, l)
+  }
+  return out
+}
+
 /** ONE place that works out what a clarity result means, used by step 5 on the Gaps page AND the policy health row so they can never disagree.
  *  The band comes from the findings and the policy's length, is held down by any one check that needs attention and by readability that needs attention; the seven checks and staff readability come from the same result. */
-export type ClarityStatus = { band: Band; checks: CheckResult[]; readability: { band: Band; detail: string }; metrics: Metrics | null; findings: number }
-export function clarityStatus(row: { findings?: unknown; metrics?: unknown } | null | undefined): ClarityStatus | null {
+export type ClarityStatus = { band: Band; checks: CheckResult[]; readability: { band: Band; detail: string }; metrics: Metrics | null; findings: number; suppressed: number; visible: Array<{ type: string; quote: string }> }
+/** protectedTexts: wording already written or changed by an adopted change. Findings that overlap it are left out, so the same passage is never put forward twice. */
+export function clarityStatus(row: { findings?: unknown; metrics?: unknown } | null | undefined, protectedTexts: string[] = []): ClarityStatus | null {
   if (!row) return null
-  const findings = (Array.isArray(row.findings) ? row.findings : []) as Array<{ type: string }>
+  const all = (Array.isArray(row.findings) ? row.findings : []) as Array<{ type: string; quote: string }>
+  const { kept: findings, removed: suppressed } = filterProtected(all, protectedTexts)
   const metrics = row.metrics && typeof row.metrics === 'object' && Object.keys(row.metrics as object).length ? (row.metrics as Metrics) : null
   const words = metrics?.words ?? 0
   const checks = checkBands(findings, words)
@@ -111,7 +152,7 @@ export function clarityStatus(row: { findings?: unknown; metrics?: unknown } | n
     ? { band: readabilityBand(metrics), detail: `Average sentence ${metrics.avg_sentence_words} words, ${metrics.long_sentence_pct}% long sentences, ${metrics.passive_pct}% passive, reading ease ${metrics.reading_ease}.` }
     : { band: 'none', detail: 'Measured when clarity is run.' }
   const dim = clarityDimBand(base, checks)
-  return { band: dim === 'strong' && readability.band === 'attention' ? 'good' : dim, checks, readability, metrics, findings: findings.length }
+  return { band: dim === 'strong' && readability.band === 'attention' ? 'good' : dim, checks, readability, metrics, findings: findings.length, suppressed, visible: findings }
 }
 
 // ── Reading the policy ───────────────────────────────────────────────────────
@@ -141,7 +182,7 @@ export function parseClarity(raw: string, partText: string): { findings: Clarity
 
 const PART_CHARS = 20_000
 
-export async function analyseClarity(input: { policyName: string; policyText: string }): Promise<{ findings: ClarityFinding[]; summary: string; metrics: Metrics; band: Band; prompt_hash: string } | null> {
+export async function analyseClarity(input: { policyName: string; policyText: string; protectedTexts?: string[] }): Promise<{ findings: ClarityFinding[]; summary: string; metrics: Metrics; band: Band; prompt_hash: string } | null> {
   const sys = await promptFor()
   const parts = textWindows(input.policyText, PART_CHARS)
   const all: ClarityFinding[] = []
@@ -152,7 +193,7 @@ export async function analyseClarity(input: { policyName: string; policyText: st
     let r: ReturnType<typeof parseClarity> = null
     try { r = parseClarity(await callClaude(sys, user, { maxTokens: 7000, temperature: 0.1, feature: 'policy_clarity' }), parts[i]) } catch (e: any) { console.error('[policy-clarity] call failed:', e?.message ?? e) }
     if (!r) return null   // never a result from half a policy
-    for (const f of r.findings) { const k = f.quote.toLowerCase().replace(/\s+/g, ' '); if (!seen.has(k)) { seen.add(k); all.push(f) } }
+    for (const f of filterProtected(r.findings, input.protectedTexts ?? []).kept) { const k = f.quote.toLowerCase().replace(/\s+/g, ' '); if (!seen.has(k)) { seen.add(k); all.push(f) } }   // wording already written or changed by an adopted change is never put forward again
     if (r.summary) summaries.push(r.summary)
   }
   const metrics = readabilityMetrics(input.policyText)

@@ -60,7 +60,7 @@ import { defaultSignalSeeds, signalMatches, type TextSignal } from '../services/
 import { callClaude } from '../services/ai/claude'
 import { snapshotAndAlert } from '../services/regulations/versioning'
 import { checkRegulationSources, gatherSubjects } from '../services/regulations/source-monitor'
-import { reviewPendingChanges, DEFAULT_CHANGE_REVIEW_PROMPT } from '../services/regulations/change-review'
+import { reviewPendingChanges, reviewOneChange, diffLines, DEFAULT_CHANGE_REVIEW_PROMPT } from '../services/regulations/change-review'
 
 export const adminRouter = Router()
 
@@ -2423,8 +2423,14 @@ adminRouter.get('/regulations/changes', async (req: Request, res: Response) => {
       orderBy: { detected_at: 'desc' },
       take:    200,
     })
+    // Read as clean sentences: HTML codes decoded, cookie banners and date stamps dropped, and the size of the change counted, so a page that was
+    // simply rebuilt (the whole page "added") can be told apart from a real amendment.
+    const shaped = (changes as any[]).map(c => {
+      const added_lines = diffLines(c.added_text), removed_lines = diffLines(c.removed_text)
+      return { ...c, added_lines, removed_lines, whole_page: added_lines.length >= 25 && removed_lines.length <= 2 }
+    })
     ok(res, {
-      changes,
+      changes: shaped,
       counts: {
         new:       await (prisma as any).regulationChange.count({ where: { status: 'new' } }),
         notified:  await (prisma as any).regulationChange.count({ where: { status: 'notified' } }),
@@ -2521,6 +2527,18 @@ adminRouter.get('/regulations/sources', async (_req: Request, res: Response) => 
 adminRouter.post('/regulations/changes/review', async (_req: Request, res: Response) => {
   try {
     ok(res, await reviewPendingChanges())
+  } catch (e: any) {
+    err(res, 'REVIEW_FAILED', e.message ?? 'Review failed', 500)
+  }
+})
+
+// Explain ONE change now (the Explain this change button).
+adminRouter.post('/regulations/changes/:id/review', async (req: Request, res: Response) => {
+  try {
+    const r = await reviewOneChange(String(req.params.id))
+    if (!r.ok) return err(res, 'REVIEW_FAILED', r.message ?? 'Could not explain this change', 502)
+    const added_lines = diffLines(r.change.added_text), removed_lines = diffLines(r.change.removed_text)
+    ok(res, { change: { ...r.change, added_lines, removed_lines, whole_page: added_lines.length >= 25 && removed_lines.length <= 2 } })
   } catch (e: any) {
     err(res, 'REVIEW_FAILED', e.message ?? 'Review failed', 500)
   }

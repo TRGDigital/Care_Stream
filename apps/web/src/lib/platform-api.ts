@@ -694,6 +694,11 @@ export type RegulationChange = {
   detected_at: string
   added_text: string
   removed_text: string
+  /** The same wording as clean sentences (HTML codes decoded, cookie banners and date stamps dropped). */
+  added_lines?: string[]
+  removed_lines?: string[]
+  /** The whole page appears as new: usually a rebuilt page or the first copy stored, so compare with the source. */
+  whole_page?: boolean
   summary: string
   affects_policies: boolean | null
   impact_note: string
@@ -1193,6 +1198,8 @@ export function createPlatformClient(token: string) {
           `/regulations/changes${status ? `?status=${encodeURIComponent(status)}` : ''}`, token),
       reviewChanges: () =>
         adminFetch<{ reviewed: number; failed: number; auto_cosmetic?: number; flags_cleared?: number }>('/regulations/changes/review', token, { method: 'POST' }),
+      reviewChange: (id: string) =>
+        adminFetch<{ change: RegulationChange }>(`/regulations/changes/${id}/review`, token, { method: 'POST' }),
       setChangeStatus: (id: string, status: 'new' | 'dismissed' | 'notified') =>
         adminFetch<{ change: RegulationChange }>(`/regulations/changes/${id}`, token, { method: 'PATCH', body: JSON.stringify({ status }) }),
     },

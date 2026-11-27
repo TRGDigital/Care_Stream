@@ -217,8 +217,39 @@ export async function reviewChange(input: {
   }
 }
 
-/** Drop the noise lines from a stored diff (older changes were recorded before the filter existed). */
-const cleanDiff = (t: string) => String(t ?? '').split('\n').filter(l => l.trim() && !isNoiseLine(l)).join('\n')
+/** The page text as stored keeps its HTML codes (&nbsp; &raquo; &rsquo;). Turned back into the characters for people and for the model to read. */
+const ENTITIES: Record<string, string> = { nbsp: ' ', amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", raquo: '»', laquo: '«', rsquo: '’', lsquo: '‘', rdquo: '”', ldquo: '“', ndash: '–', mdash: '—', pound: '£', hellip: '…', copy: '©', bull: '•' }
+export function decodeEntities(t: string): string {
+  return String(t ?? '')
+    .replace(/&#(\d+);/g, (_, n) => { try { return String.fromCodePoint(Number(n)) } catch { return ' ' } })
+    .replace(/&#x([0-9a-f]+);/gi, (_, n) => { try { return String.fromCodePoint(parseInt(n, 16)) } catch { return ' ' } })
+    .replace(/&([a-z]+);/gi, (m, n) => ENTITIES[n.toLowerCase()] ?? m)
+    .replace(/[ \t]+/g, ' ')
+}
+
+/** A stored diff as clean sentences: HTML codes decoded, and the noise lines (dates, cookie banners, page numbers) dropped. Older changes were
+ *  recorded before the filter existed, so this is applied when they are read, not only when they are made. */
+export function diffLines(t: string): string[] {
+  return decodeEntities(t).split('\n').map(l => l.trim()).filter(l => l && !isNoiseLine(l))
+}
+const cleanDiff = (t: string) => diffLines(t).join('\n')
+
+/** Explain one change now (the Explain this change button). Noise-only changes are settled without the model. */
+export async function reviewOneChange(id: string): Promise<{ ok: boolean; change?: any; message?: string }> {
+  const c = await (prisma as any).regulationChange.findUnique({ where: { id } }).catch(() => null)
+  if (!c) return { ok: false, message: 'That change no longer exists.' }
+  const added = cleanDiff(c.added_text), removed = cleanDiff(c.removed_text)
+  let data: any
+  if (!added && !removed) data = { severity: 'cosmetic', affects_policies: false, summary: 'Only dates, page numbers or site wording changed.', impact_note: 'The requirement itself is unchanged.', reviewed_at: new Date() }
+  else {
+    const r = await reviewChange({ officialName: c.official_name, url: c.url, added, removed })
+    if (!r) return { ok: false, message: 'The explanation could not be made just now. Please try again in a minute.' }
+    data = { severity: r.severity, affects_policies: r.affects_policies, summary: r.summary, impact_note: r.impact_note, reviewed_at: new Date() }
+  }
+  const change = await (prisma as any).regulationChange.update({ where: { id }, data })
+  await clearAutoFlags().catch(() => 0)
+  return { ok: true, change }
+}
 
 /** A regulation the monitor flagged on its own stays flagged only while a real change is open behind it: a change still to be explained, or one
  *  judged material or to affect policies. Flags with nothing behind them (a header that ticked, a date that moved) are cleared. A flag a person

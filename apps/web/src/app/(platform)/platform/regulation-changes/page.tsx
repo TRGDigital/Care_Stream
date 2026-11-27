@@ -74,6 +74,14 @@ export default function RegulationChangesPage() {
     finally { setBusy('') }
   }
 
+  async function explainOne(id: string) {
+    if (!token) return
+    setBusy(`explain-${id}`); setError('')
+    try { await createPlatformClient(token).regulations.reviewChange(id); await load(filter) }
+    catch (e: any) { setError(e?.message ?? 'Could not explain this change') }
+    finally { setBusy('') }
+  }
+
   async function setStatus(id: string, status: 'dismissed' | 'notified') {
     if (!token) return
     setBusy(id)
@@ -187,7 +195,16 @@ export default function RegulationChangesPage() {
 
                     {c.summary
                       ? <p className="mt-2 text-sm leading-relaxed text-neutral-dark">{c.summary}</p>
-                      : <p className="mt-2 text-sm italic text-neutral-mid">Detected, not yet explained. The wording is below.</p>}
+                      : (
+                        <div className="mt-2 flex flex-wrap items-center gap-3">
+                          <p className="text-sm italic text-neutral-mid">Detected, not yet explained.</p>
+                          <button onClick={() => explainOne(c.id)} disabled={busy === `explain-${c.id}`}
+                                  className="inline-flex items-center gap-1.5 rounded-md border border-purple-200 bg-purple-50 px-2.5 py-1 text-xs font-semibold text-purple-700 hover:bg-purple-100 disabled:opacity-50">
+                            {busy === `explain-${c.id}` ? <Loader2 size={12} className="animate-spin" /> : <RefreshCw size={12} />}
+                            Explain this change
+                          </button>
+                        </div>
+                      )}
 
                     {c.impact_note && <p className="mt-1.5 text-sm leading-relaxed text-neutral-mid">{c.impact_note}</p>}
 
@@ -242,22 +259,29 @@ export default function RegulationChangesPage() {
                   <ChevronDown size={13} className={isOpen ? 'rotate-180 transition-transform' : 'transition-transform'} />
                 </button>
                 {isOpen && (
-                  <div className="space-y-2 border-t border-gray-100 px-5 py-4">
-                    {c.added_text && (
-                      <div className="rounded-lg border border-green-200 bg-green-50 px-3 py-2">
-                        <p className="mb-1 text-[10px] font-bold uppercase tracking-wide text-green-700">Added to the page</p>
-                        <p className="whitespace-pre-wrap text-xs leading-relaxed text-neutral-dark">{c.added_text}</p>
-                      </div>
-                    )}
-                    {c.removed_text && (
-                      <div className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2">
-                        <p className="mb-1 text-[10px] font-bold uppercase tracking-wide text-gray-600">Removed from the page</p>
-                        <p className="whitespace-pre-wrap text-xs leading-relaxed text-neutral-mid">{c.removed_text}</p>
-                      </div>
-                    )}
-                    {!c.added_text && !c.removed_text && (
-                      <p className="text-xs text-neutral-mid">No textual difference was captured for this change.</p>
-                    )}
+                  <div className="space-y-3 border-t border-gray-100 px-5 py-4">
+                    {(() => {
+                      const added = c.added_lines ?? (c.added_text ? c.added_text.split('\n') : [])
+                      const removed = c.removed_lines ?? (c.removed_text ? c.removed_text.split('\n') : [])
+                      return (
+                        <>
+                          <p className="text-xs font-semibold text-neutral-dark">
+                            {added.length} {added.length === 1 ? 'sentence' : 'sentences'} added · {removed.length} removed
+                          </p>
+                          {c.whole_page && (
+                            <p className="rounded-md bg-amber-50 px-3 py-2 text-xs leading-relaxed text-amber-900">
+                              The whole page shows as new. That usually means the page was rebuilt or reorganised, or this is the first copy we stored, not that every sentence is new law.
+                              Open the source page and compare the parts that matter, or press Explain this change for a summary of anything substantial.
+                            </p>
+                          )}
+                          <ChangeLines title="Added to the page" tone="add" lines={added} />
+                          <ChangeLines title="Removed from the page" tone="remove" lines={removed} />
+                          {added.length === 0 && removed.length === 0 && (
+                            <p className="text-xs text-neutral-mid">Once dates, page numbers and cookie banners are ignored, nothing in the wording changed.</p>
+                          )}
+                        </>
+                      )
+                    })()}
                   </div>
                 )}
               </div>
@@ -355,5 +379,31 @@ export default function RegulationChangesPage() {
       )}
       </div>
     </PlatformShell>
+  )
+}
+
+// The wording of a change as a short list: the first few sentences, with the rest one click away, so a rebuilt page is not a wall of text.
+function ChangeLines({ title, tone, lines }: { title: string; tone: 'add' | 'remove'; lines: string[] }) {
+  const [all, setAll] = useState(false)
+  if (lines.length === 0) return null
+  const shown = all ? lines : lines.slice(0, 6)
+  const box = tone === 'add' ? 'border-green-200 bg-green-50' : 'border-gray-200 bg-gray-50'
+  const head = tone === 'add' ? 'text-green-700' : 'text-gray-600'
+  return (
+    <div className={`rounded-lg border px-3 py-2 ${box}`}>
+      <p className={`mb-1.5 text-[10px] font-bold uppercase tracking-wide ${head}`}>{title} ({lines.length})</p>
+      <ul className="space-y-1.5">
+        {shown.map((l, i) => (
+          <li key={i} className={`flex gap-2 text-xs leading-relaxed ${tone === 'add' ? 'text-neutral-dark' : 'text-neutral-mid'}`}>
+            <span className={`shrink-0 font-bold ${head}`}>{tone === 'add' ? '+' : '\u2212'}</span><span>{l.length > 400 ? l.slice(0, 400) + '…' : l}</span>
+          </li>
+        ))}
+      </ul>
+      {lines.length > 6 && (
+        <button type="button" onClick={() => setAll(v => !v)} className="mt-2 text-xs font-semibold text-purple-600 hover:underline">
+          {all ? 'Show fewer' : `Show all ${lines.length}`}
+        </button>
+      )}
+    </div>
   )
 }

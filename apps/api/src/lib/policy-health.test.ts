@@ -173,3 +173,11 @@ test('STEP 5 = HEALTH: one function works out clarity for both, so the band, the
   assert.equal(c.checks.every(x => x.band === 'strong'), true)
   assert.equal(clarityStatus(null), null)
 })
+
+test('OUTLINE: the policy being worked on is outlined in purple while its accordion is open', () => {
+  const read = (f: string) => fs.readFileSync(path.resolve(__dirname, f), 'utf8')
+  const policies = read('../../../web/src/app/(admin)/policies/page.tsx'), sec = read('../../../web/src/components/admin/policy-clarity-section.tsx')
+  assert.match(policies, /\[&>td\]:border-t-2 \[&>td\]:border-purple-500 \[&>td:first-child\]:border-l-2 \[&>td:last-child\]:border-r-2/)   // the policy row
+  assert.match(policies, /border-x-2 border-b-2 border-purple-500 p-0/)                                                                       // the panel under it, closing the box
+  assert.match(sec, /ring-2 ring-inset ring-purple-500/)                                                                                     // the open policy in step 5
+})

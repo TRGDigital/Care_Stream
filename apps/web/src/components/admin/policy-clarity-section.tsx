@@ -115,7 +115,7 @@ export function PolicyClaritySection({ token, focusPolicyId }: { token: string; 
                 {list.map(p => {
                   const isOpen = openPolicy === p.id, res = results[p.id]
                   return (
-                    <div key={p.id} className={p.id === focusPolicyId ? 'bg-purple-50/40' : ''}>
+                    <div key={p.id} className={isOpen ? 'bg-purple-50/30 ring-2 ring-inset ring-purple-500' : p.id === focusPolicyId ? 'bg-purple-50/40' : ''}>
                       <button onClick={() => toggle(p)} aria-expanded={isOpen} className="flex w-full flex-wrap items-center gap-2 px-4 py-3 text-left hover:bg-neutral-light/50">
                         <div className="min-w-0 flex-1">
                           <p className="text-sm font-medium text-neutral-dark">{p.name}</p>

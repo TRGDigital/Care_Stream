@@ -822,7 +822,10 @@ function PolicyGroup({
             <tbody>
               {policies.map((p: any) => (
                 <Fragment key={p.id}>
-                <tr className="border-b border-gray-50 last:border-0 hover:bg-neutral-light/50">
+                {/* While its health accordion is open the whole policy (its row and the panel under it) has a purple outline, so it is clear what is being worked on. */}
+                <tr className={healthOpen === p.id
+                  ? 'bg-purple-50/40 [&>td]:border-t-2 [&>td]:border-purple-500 [&>td:first-child]:border-l-2 [&>td:last-child]:border-r-2'
+                  : 'border-b border-gray-50 last:border-0 hover:bg-neutral-light/50'}>
                   <td className="px-6 py-4 font-medium text-neutral-dark">
                     <div className="group/name flex min-w-0 items-center gap-2">
                       {renaming && renaming.id === p.id ? (
@@ -922,7 +925,7 @@ function PolicyGroup({
                   </td>
                 </tr>
                 {healthOpen === p.id && (
-                  <tr className="border-b border-gray-100"><td colSpan={showSection ? 6 : 5} className="p-0"><PolicyHealthPanel policyId={p.id} onBusy={setHealthBusy} /></td></tr>
+                  <tr><td colSpan={showSection ? 6 : 5} className="border-x-2 border-b-2 border-purple-500 p-0"><PolicyHealthPanel policyId={p.id} onBusy={setHealthBusy} /></td></tr>
                 )}
                 </Fragment>
               ))}

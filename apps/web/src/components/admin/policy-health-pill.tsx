@@ -69,7 +69,7 @@ function DimCard({ d, h }: { d: HealthDim; h: PolicyHealth }) {
       </div>
       <p className="mt-1.5 text-sm text-neutral-dark">{d.detail}</p>
       {isClarity && !h.ready && (
-        <p className="mt-2 rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-900">Step 5 opens for this policy once the steps above are sorted. Waiting for: {h.waiting.join(', ')}. <Link href="/gaps" className="font-semibold text-purple-700 hover:underline">Open the Gaps page</Link></p>
+        <p className="mt-2 rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-900">Steps 1, 2, 3 and 4 need completing for this policy before clarity can be run. Still to do: {h.waiting.join('; ')}.</p>
       )}
       {isClarity && d.checks && (
         <div className="mt-3 grid gap-x-6 gap-y-1.5 sm:grid-cols-2">
@@ -84,7 +84,7 @@ function DimCard({ d, h }: { d: HealthDim; h: PolicyHealth }) {
           <span><b className="font-semibold">Staff readability</b> <span className="text-neutral-mid">· {BAND_STYLE[d.readability.band].label}</span><span className="block text-neutral-mid">{d.readability.detail}</span></span>
         </div>
       )}
-      <p className="mt-3 text-sm"><Link href={d.href} className="font-semibold text-purple-700 hover:underline">{isClarity ? 'Open step 5 on the Gaps page' : d.key === 'practical' ? 'Open Policy Testing' : 'Open on the Gaps page'}</Link></p>
+      <p className="mt-3 text-sm"><Link href={d.href} className="font-semibold text-purple-700 hover:underline">{isClarity ? 'Open this policy in step 5 on the Gaps page' : d.key === 'practical' ? 'Open Policy Testing' : 'Open on the Gaps page'}</Link></p>
     </li>
   )
 }
@@ -122,8 +122,9 @@ export function PolicyHealthPanel({ policyId, onBusy }: { policyId: string; onBu
   }
 
   return (
-    <div className="grid gap-6 bg-neutral-light/50 px-6 py-6 lg:grid-cols-[340px_minmax(0,1fr)]">
-      <div className="space-y-4">
+    <div className="grid items-start gap-6 bg-neutral-light/50 px-6 py-6 lg:grid-cols-[340px_minmax(0,1fr)]">
+      {/* Stays in view while the dimension cards scroll past. */}
+      <div className="space-y-4 lg:sticky lg:top-6 lg:self-start">
         <div>
           <p className="text-sm font-bold uppercase tracking-wide text-neutral-mid">Policy health</p>
           {lc ? (

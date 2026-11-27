@@ -220,7 +220,7 @@ stressRouter.get('/clarity/library', requireAdmin, async (_req: Request, res: Re
   try {
     const [health, results] = await Promise.all([loadHealth(tenantId), (prisma as any).policyClarityResult.findMany({ where: { tenant_id: tenantId }, orderBy: { created_at: 'desc' }, take: 400, select: { id: true, policy_id: true, band: true, finding_count: true, created_at: true } })])
     const latest = new Map<string, any>(); for (const r of results as any[]) if (!latest.has(r.policy_id)) latest.set(r.policy_id, r)
-    ok(res, { policies: health.map(h => ({ id: h.id, name: h.name, ready: h.ready, waiting: h.waiting, last: latest.get(h.id) ? { id: latest.get(h.id).id, band: latest.get(h.id).band, findings: latest.get(h.id).finding_count, at: latest.get(h.id).created_at } : null })) })
+    ok(res, { policies: health.map(h => ({ id: h.id, name: h.name, ready: h.ready, waiting: h.waiting, steps: h.steps, last: latest.get(h.id) ? { id: latest.get(h.id).id, band: latest.get(h.id).band, findings: latest.get(h.id).finding_count, at: latest.get(h.id).created_at } : null })) })
   } catch (e: any) { err(res, 'LIBRARY_FAILED', e?.message ?? 'Could not load policy clarity.', 500) }
 })
 

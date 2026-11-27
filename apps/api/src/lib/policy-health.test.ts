@@ -130,7 +130,11 @@ test('ACCORDION: health opens as a row under the policy, with last run dates, CQ
   assert.doesNotMatch(health, /key: 'readability'/)                                            // readability sits inside clarity
   assert.match(health, /readability: \{ band: Band; detail: string \}|readability,/)
   assert.match(health, /href: `\/gaps\?clarity=\$\{p\.id\}`/)
-  assert.match(health, /CQC wording \$\{wordingN === 1 \? 'suggestion' : 'suggestions'\}/)   // CQC wording is part of "ready"
+  assert.match(health, /label: 'CQC wording', done: !!wa && wordingN === 0/)   // CQC wording is part of "ready"
   assert.match(gaps, /get\('clarity'\)/)
   assert.match(sec, /focusPolicyId/)
+  assert.doesNotMatch(sec, /Run anyway/)                                                        // nothing can be run until steps 1 to 4 are done
+  assert.match(sec, /Steps 1, 2, 3 and 4 need completing for this policy first/)
+  assert.match(health, /const steps: PreStep\[\]/)
+  assert.match(pill, /lg:sticky lg:top-6/)                                                       // the score column stays in view
 })

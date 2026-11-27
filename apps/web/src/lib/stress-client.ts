@@ -22,12 +22,13 @@ export type Band = 'strong' | 'good' | 'attention' | 'none'
 export type ClarityFinding = { quote: string; type: string; type_label: string; issue: string; suggestion: string }
 export type ClarityMetrics = { words: number; sentences: number; avg_sentence_words: number; long_sentence_pct: number; passive_pct: number; reading_ease: number }
 export type ClarityResult = { id: string; policy_id: string; policy_name: string; findings: ClarityFinding[]; metrics: ClarityMetrics; band: Band; finding_count: number; summary: string; created_at: string }
-export type ClarityPolicy = { id: string; name: string; ready: boolean; waiting: string[]; last: { id: string; band: Band; findings: number; at: string } | null }
+export type PreStep = { step: number; label: string; done: boolean; detail: string }
+export type ClarityPolicy = { id: string; name: string; ready: boolean; waiting: string[]; steps: PreStep[]; last: { id: string; band: Band; findings: number; at: string } | null }
 export type HealthCheck = { key: string; label: string; count: number; band: Band }
 export type HealthDim = { key: string; label: string; band: Band; value?: number | null; detail: string; href: string; last_run: string | null; checks?: HealthCheck[]; readability?: { band: Band; detail: string } }
 export type HealthFix = { dim: string; text: string; href: string; gain: number }
 export type HealthLast = { id: string; score: number; band: Band; at: string; stale: boolean; fixes: HealthFix[] }
-export type PolicyHealth = { id: string; name: string; overall: Band; score: number | null; assessed: number; dims: HealthDim[]; fixes: HealthFix[]; ready: boolean; waiting: string[]; last_check: HealthLast | null }
+export type PolicyHealth = { id: string; name: string; overall: Band; score: number | null; assessed: number; dims: HealthDim[]; fixes: HealthFix[]; ready: boolean; waiting: string[]; steps: PreStep[]; last_check: HealthLast | null }
 export type HealthPlan = { policy: { id: string; name: string }; scenarios: Array<{ id: string; title: string }>; credits: { clarity: number; stress: number; total: number } }
 export type HealthCheckResult = { id: string; score: number; band: Band; assessed: number; dims: HealthDim[]; fixes: HealthFix[]; at: string }
 

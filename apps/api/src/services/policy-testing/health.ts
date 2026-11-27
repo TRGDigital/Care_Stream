@@ -62,7 +62,8 @@ export function coverageBand(covered: number, partial: number): Band {
 export const practicalBand = (gaps: number, points: number): Band => (points === 0 ? 'none' : gaps === 0 ? 'strong' : gaps / points <= 0.2 ? 'good' : 'attention')
 
 export type LastCheck = { id: string; score: number; band: Band; at: string; stale: boolean; fixes: Fix[] }
-export type PolicyHealth = { id: string; name: string; overall: Band; score: number | null; assessed: number; dims: Dim[]; fixes: Fix[]; ready: boolean; waiting: string[]; last_check: LastCheck | null }
+export type PreStep = { step: number; label: string; done: boolean; detail: string }
+export type PolicyHealth = { id: string; name: string; overall: Band; score: number | null; assessed: number; dims: Dim[]; fixes: Fix[]; ready: boolean; waiting: string[]; steps: PreStep[]; last_check: LastCheck | null }
 
 export async function loadHealth(tenantId: string): Promise<PolicyHealth[]> {
   const [policies, coverage, lint, consistency, clarity, stress, checks, wording] = await Promise.all([
@@ -124,15 +125,16 @@ export async function loadHealth(tenantId: string): Promise<PolicyHealth[]> {
     for (const d of dims) d.value = bandValue(d.band)
     const o = scoreOf(dims)
     const lc = lastCheck.get(p.id)
-    // Ready for clarity and testing: the regulation, up to date, consistency and CQC wording checks have run and found nothing open for this policy.
-    const waiting: string[] = []
-    if (!cov.length && !consistency?.analysed_at && lintN === undefined) waiting.push('Run the gap analysis first')
-    if (partial > 0) waiting.push(`${partial} open regulation ${partial === 1 ? 'gap' : 'gaps'}`)
-    if (lintN && lintN > 0) waiting.push(`${lintN} out of date ${lintN === 1 ? 'term' : 'terms'}`)
-    if (myConflicts > 0) waiting.push(`${myConflicts} open ${myConflicts === 1 ? 'conflict' : 'conflicts'}`)
-    if (wordingN > 0) waiting.push(`${wordingN} CQC wording ${wordingN === 1 ? 'suggestion' : 'suggestions'}`)
+    // Ready for step 5 (clarity and precision): steps 1 to 4 have each been run for this policy and have nothing open.
+    const steps: PreStep[] = [
+      { step: 1, label: 'Regulation coverage', done: !!coverageRun && partial === 0, detail: !coverageRun ? 'Not run yet' : partial > 0 ? `${partial} open regulation ${partial === 1 ? 'gap' : 'gaps'}` : 'Nothing open' },
+      { step: 2, label: 'Out-of-date content', done: lintN !== undefined && lintN === 0, detail: lintN === undefined ? 'Not run yet' : lintN > 0 ? `${lintN} out of date ${lintN === 1 ? 'term' : 'terms'}` : 'Nothing open' },
+      { step: 3, label: 'Cross-policy consistency', done: !!consistency?.analysed_at && myConflicts === 0, detail: !consistency?.analysed_at ? 'Not run yet' : myConflicts > 0 ? `${myConflicts} open ${myConflicts === 1 ? 'conflict' : 'conflicts'}` : 'Nothing open' },
+      { step: 4, label: 'CQC wording', done: !!wa && wordingN === 0, detail: !wa ? 'Not run yet' : wordingN > 0 ? `${wordingN} wording ${wordingN === 1 ? 'suggestion' : 'suggestions'}` : 'Nothing open' },
+    ]
+    const waiting = steps.filter(x => !x.done).map(x => `step ${x.step} ${x.label.toLowerCase()} (${x.detail.toLowerCase()})`)
     return {
-      id: p.id, name: p.name, overall: o.band, score: o.score, assessed: o.assessed, dims, fixes: topFixes(dims), ready: waiting.length === 0, waiting,
+      id: p.id, name: p.name, overall: o.band, score: o.score, assessed: o.assessed, dims, fixes: topFixes(dims), ready: waiting.length === 0, waiting, steps,
       last_check: lc ? { id: lc.id, score: lc.score, band: lc.band as Band, at: new Date(lc.created_at).toISOString(), stale: (lc.policy_version ?? 1) !== (p.version ?? 1), fixes: Array.isArray(lc.fixes) ? lc.fixes : [] } : null,
     }
   })

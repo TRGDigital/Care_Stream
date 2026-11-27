@@ -65,58 +65,111 @@ export type LastCheck = { id: string; score: number; band: Band; at: string; sta
 export type PreStep = { step: number; label: string; done: boolean; detail: string }
 export type PolicyHealth = { id: string; name: string; overall: Band; score: number | null; assessed: number; dims: Dim[]; fixes: Fix[]; ready: boolean; waiting: string[]; steps: PreStep[]; last_check: LastCheck | null }
 
+/** What the Gaps page shows for steps 1 to 4, per policy, taken from the same functions that draw those steps, so the health row can never disagree with Gaps.
+ *  Loaded lazily so the pure scoring rules above can be tested on their own. */
+export type GapViews = {
+  coverageRun: string | null; coverageCovered: Map<string, number>; coverageOpen: Map<string, number>
+  lintRows: Set<string>; lintIssues: Map<string, number>; lintRun: Map<string, string>; reviewState: Map<string, string>
+  consAnalysed: boolean; consRun: string | null; conflictsBy: Map<string, number>
+  wordingRows: Set<string>; wordingCount: Map<string, number>; wordingRun: Map<string, string>
+}
+
+export async function loadGapViews(tenantId: string): Promise<GapViews> {
+  const [{ getTenantLint }, { getConsistency }, { getPolicyWordingAlignment, WORDING_FAILED_MESSAGE }, { facilityTypeToSetting }, { resolveServiceProfile, regulationAppliesToTenant }] = await Promise.all([
+    import('../analytics/policy-lint'), import('../analytics/policy-consistency'), import('../analytics/saf'), import('../../lib/care-setting'), import('../../lib/service-triggers'),
+  ])
+  const iso = (d: any) => (d ? new Date(d).toISOString() : null)
+  const [lint, lintRaw, cons, wording, wordingRaw, regs, coverage, tenant, details, remediations] = await Promise.all([
+    getTenantLint(tenantId).catch(() => null),
+    (prisma as any).policyLintResult.findMany({ where: { tenant_id: tenantId }, select: { policy_id: true, scanned_at: true } }).catch(() => []),
+    getConsistency(tenantId).catch(() => null),
+    getPolicyWordingAlignment(tenantId).catch(() => null),
+    (prisma as any).policyWordingAlignment.findMany({ where: { tenant_id: tenantId }, select: { policy_id: true, message: true, analysed_at: true } }).catch(() => []),
+    (prisma as any).externalRegulation.findMany({ where: { is_active: true }, select: { reference_key: true, applies_to_settings: true, required_triggers: true } }).catch(() => []),
+    (prisma as any).regulationCoverage.findMany({ where: { tenant_id: tenantId }, select: { reference_key: true, status: true, evidence_policy_id: true, analysed_at: true } }).catch(() => []),
+    (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { facility_type: true, service_profile: true } }).catch(() => null),
+    (prisma as any).gapDetailCache.findMany({ where: { tenant_id: tenantId }, select: { reference_key: true, payload: true } }).catch(() => []),
+    (prisma as any).gapRemediation.findMany({ where: { tenant_id: tenantId }, select: { reference_key: true } }).catch(() => []),
+  ])
+
+  // Step 1: the regulations in scope for this service, not already completed, that are only partly covered; each counts against the policy that owns the subject and any policy its fixes route to.
+  const setting = facilityTypeToSetting(tenant?.facility_type)
+  const profile = resolveServiceProfile(setting, (tenant?.service_profile ?? {}) as Record<string, unknown>)
+  const inScope = new Set<string>((regs as any[]).filter(r => regulationAppliesToTenant(r, setting, profile)).map(r => r.reference_key))
+  const completed = new Set<string>((remediations as any[]).map(r => r.reference_key))
+  const targets = new Map<string, string[]>()
+  for (const d of details as any[]) { const tp = (d?.payload as any)?.target_policies; if (Array.isArray(tp)) targets.set(d.reference_key, tp.map((t: any) => t?.id).filter(Boolean)) }
+  const coverageCovered = new Map<string, number>(), coverageOpen = new Map<string, number>()
+  for (const c of coverage as any[]) {
+    if (!inScope.has(c.reference_key) || completed.has(c.reference_key)) continue
+    if (c.status === 'covered' && c.evidence_policy_id) coverageCovered.set(c.evidence_policy_id, (coverageCovered.get(c.evidence_policy_id) ?? 0) + 1)
+    if (c.status === 'partial') for (const id of new Set([c.evidence_policy_id, ...(targets.get(c.reference_key) ?? [])].filter(Boolean) as string[])) coverageOpen.set(id, (coverageOpen.get(id) ?? 0) + 1)
+  }
+  const coverageRun = iso((coverage as any[]).reduce((m: any, c: any) => (!m || new Date(c.analysed_at) > new Date(m) ? c.analysed_at : m), null))
+
+  // Step 2: the content findings the Out-of-date step lists (review dates are shown separately there, ignored findings and policies marked updated are left out).
+  const lintIssues = new Map<string, number>()
+  for (const p of (lint?.policies ?? []) as any[]) lintIssues.set(p.policy_id, (p.findings ?? []).filter((f: any) => f.kind !== 'review_currency' && !f.ignored).length)
+  const reviewState = new Map<string, string>(((lint?.review_currency?.policies ?? []) as any[]).map(r => [r.policy_id, r.state]))
+
+  // Step 3: the conflicts the consistency step lists (dismissed ones and review date ones are left out).
+  const conflictsBy = new Map<string, number>()
+  for (const c of (cons?.conflicts ?? []) as any[]) for (const id of new Set((c.positions ?? []).map((x: any) => x.policy_id))) conflictsBy.set(id as string, (conflictsBy.get(id as string) ?? 0) + 1)
+
+  // Step 4: the CQC wording the wording step lists (policies marked updated are left out).
+  const wordingCount = new Map<string, number>(((wording?.policies ?? []) as any[]).map(w => [w.policy_id, Array.isArray(w.alignments) ? w.alignments.length : 0]))
+  const ok = (wordingRaw as any[]).filter(w => w.message !== WORDING_FAILED_MESSAGE)   // a failed check is not a run
+
+  return {
+    coverageRun, coverageCovered, coverageOpen,
+    lintRows: new Set((lintRaw as any[]).map(l => l.policy_id)), lintIssues, lintRun: new Map((lintRaw as any[]).map(l => [l.policy_id, iso(l.scanned_at)!])), reviewState,
+    consAnalysed: !!cons?.analysed, consRun: cons?.analysed_at ?? null, conflictsBy,
+    wordingRows: new Set(ok.map(w => w.policy_id)), wordingCount, wordingRun: new Map(ok.map(w => [w.policy_id, iso(w.analysed_at)!])),
+  }
+}
+
 export async function loadHealth(tenantId: string): Promise<PolicyHealth[]> {
-  const [policies, coverage, lint, consistency, clarity, stress, checks, wording] = await Promise.all([
+  const [policies, clarity, stress, checks, g] = await Promise.all([
     (prisma as any).policy.findMany({ where: { tenant_id: tenantId, status: 'active' }, select: { id: true, name: true, version: true }, orderBy: { name: 'asc' } }),
-    (prisma as any).regulationCoverage.findMany({ where: { tenant_id: tenantId }, select: { evidence_policy_id: true, status: true, analysed_at: true } }).catch(() => []),
-    (prisma as any).policyLintResult.findMany({ where: { tenant_id: tenantId }, select: { policy_id: true, findings: true, scanned_at: true } }).catch(() => []),
-    (prisma as any).policyConsistency.findUnique({ where: { tenant_id: tenantId }, select: { conflicts: true, dismissed: true, analysed_at: true } }).catch(() => null),
     (prisma as any).policyClarityResult.findMany({ where: { tenant_id: tenantId }, orderBy: { created_at: 'desc' }, select: { policy_id: true, band: true, finding_count: true, metrics: true, summary: true, findings: true, created_at: true } }).catch(() => []),
     (prisma as any).policyStressResult.findMany({ where: { tenant_id: tenantId }, orderBy: { created_at: 'desc' }, select: { policy_id: true, scenario_id: true, points: true, gaps: true, created_at: true } }).catch(() => []),
     (prisma as any).policyHealthCheck.findMany({ where: { tenant_id: tenantId }, orderBy: { created_at: 'desc' }, select: { id: true, policy_id: true, policy_version: true, score: true, band: true, fixes: true, created_at: true } }).catch(() => []),
-    (prisma as any).policyWordingAlignment.findMany({ where: { tenant_id: tenantId }, select: { policy_id: true, alignments: true, has_suggestions: true, analysed_at: true } }).catch(() => []),
+    loadGapViews(tenantId),
   ])
   const iso = (d: any) => (d ? new Date(d).toISOString() : null)
-  const wordingBy = new Map<string, any>((wording as any[]).map(w => [w.policy_id, w]))
-  const coverageRun = iso((coverage as any[]).reduce((m: any, c: any) => (!m || new Date(c.analysed_at) > new Date(m) ? c.analysed_at : m), null))   // the coverage analysis runs over the whole library
   const lastCheck = new Map<string, any>(); for (const c of checks as any[]) if (!lastCheck.has(c.policy_id)) lastCheck.set(c.policy_id, c)
-  const dismissed = new Set<string>(Array.isArray(consistency?.dismissed) ? (consistency.dismissed as any[]).map(d => String(d?.id ?? d)) : [])
-  const conflicts = (Array.isArray(consistency?.conflicts) ? consistency.conflicts : []).filter((c: any) => !dismissed.has(String(c?.id)))
-  const lintRun = new Map<string, any>((lint as any[]).map(l => [l.policy_id, l.scanned_at]))
-  const lintBy = new Map<string, number>((lint as any[]).map(l => [l.policy_id, Array.isArray(l.findings) ? l.findings.length : 0]))
   const clarityBy = new Map<string, any>(); for (const c of clarity as any[]) if (!clarityBy.has(c.policy_id)) clarityBy.set(c.policy_id, c)
   const stressLatest = new Map<string, any>(); for (const r of stress as any[]) { const k = `${r.policy_id}:${r.scenario_id}`; if (!stressLatest.has(k)) stressLatest.set(k, r) }
 
   return (policies as any[]).filter(p => isPolicyDocument(p.name ?? '')).map(p => {
-    const cov = (coverage as any[]).filter(c => c.evidence_policy_id === p.id)
-    const covered = cov.filter(c => c.status === 'covered').length, partial = cov.filter(c => c.status === 'partial').length
-    const lintN = lintBy.get(p.id)
-    const myConflicts = conflicts.filter((c: any) => (c.positions ?? []).some((x: any) => x.policy_id === p.id)).length
+    const covered = g.coverageCovered.get(p.id) ?? 0, partial = g.coverageOpen.get(p.id) ?? 0
+    const lintN = g.lintRows.has(p.id) ? (g.lintIssues.get(p.id) ?? 0) : undefined
+    const review = g.reviewState.get(p.id)
+    const myConflicts = g.conflictsBy.get(p.id) ?? 0
+    const wordingRan = g.wordingRows.has(p.id), wordingN = g.wordingCount.get(p.id) ?? 0
     const cl = clarityBy.get(p.id)
     const myStress = [...stressLatest.values()].filter(r => r.policy_id === p.id)
     const stressPoints = myStress.reduce((n, r) => n + (Array.isArray(r.points) ? r.points.length : 0), 0), stressGaps = myStress.reduce((n, r) => n + (r.gaps ?? 0), 0)
     const metrics: Metrics | null = cl?.metrics && Object.keys(cl.metrics).length ? cl.metrics : null
     // The seven checks always show; until clarity has been run each says so.
     const checks: CheckResult[] = cl ? checkBands(Array.isArray(cl.findings) ? cl.findings : [], metrics?.words ?? 0) : HEALTH_CHECKS.map(c => ({ ...c, count: 0, band: 'none' as Band }))
-
-    const wa = wordingBy.get(p.id)
-    const wordingN = wa?.has_suggestions && Array.isArray(wa.alignments) ? wa.alignments.length : 0
     const readability: { band: Band; detail: string } = metrics
       ? { band: readabilityBand(metrics), detail: `Average sentence ${metrics.avg_sentence_words} words, ${metrics.long_sentence_pct}% long sentences, ${metrics.passive_pct}% passive, reading ease ${metrics.reading_ease}.` }
       : { band: 'none', detail: 'Measured when clarity is run.' }
     // Staff readability sits inside clarity: it comes from the same read. A readability that needs attention stops clarity being called Strong.
     const clarityBandNow: Band = cl ? clarityDimBand((cl.band ?? 'none') as Band, checks) : 'none'
     const clarityFinal: Band = clarityBandNow === 'strong' && readability.band === 'attention' ? 'good' : clarityBandNow
+    const reviewNote = review ? (review === 'overdue' ? ' Its review date is overdue (shown separately on the Gaps page).' : ' It has no review date set (shown separately on the Gaps page).') : ''
 
     const dims: Dim[] = [
-      { key: 'coverage', label: DIM_LABEL.coverage, band: coverageBand(covered, partial), href: '/gaps', last_run: coverageRun,
-        detail: cov.length ? `${covered} of ${cov.length} regulations this policy answers are fully covered${partial ? `, ${partial} still have missing elements` : ''}.` : 'The gap analysis has not matched this policy to a regulation yet.' },
-      { key: 'uptodate', label: DIM_LABEL.uptodate, band: lintN === undefined ? 'none' : lintN === 0 ? 'strong' : lintN <= 2 ? 'good' : 'attention', href: '/gaps', last_run: iso(lintRun.get(p.id)),
-        detail: lintN === undefined ? 'Not checked yet.' : lintN === 0 ? 'No out of date terms found.' : `${lintN} out of date ${lintN === 1 ? 'term' : 'terms'} to update.` },
-      { key: 'consistency', label: DIM_LABEL.consistency, band: consistency?.analysed_at ? (myConflicts === 0 ? 'strong' : myConflicts <= 1 ? 'good' : 'attention') : 'none', href: '/gaps', last_run: iso(consistency?.analysed_at),
-        detail: consistency?.analysed_at ? (myConflicts === 0 ? 'No open conflicts with your other policies.' : `${myConflicts} open ${myConflicts === 1 ? 'conflict' : 'conflicts'} with other policies.`) : 'Cross-policy consistency has not been run yet.' },
-      { key: 'wording', label: DIM_LABEL.wording, band: wa ? (wordingN === 0 ? 'strong' : wordingN <= 2 ? 'good' : 'attention') : 'none', href: '/gaps', last_run: iso(wa?.analysed_at),
-        detail: wa ? (wordingN === 0 ? 'This policy reads in the way the CQC quality statements expect.' : `${wordingN} ${wordingN === 1 ? 'passage' : 'passages'} could be reworded to match the CQC quality statements.`) : 'The CQC wording analysis has not been run on this policy yet.' },
+      { key: 'coverage', label: DIM_LABEL.coverage, band: g.coverageRun ? coverageBand(covered, partial) : 'none', href: '/gaps', last_run: g.coverageRun,
+        detail: g.coverageRun ? (partial > 0 ? `${partial} open regulation ${partial === 1 ? 'gap' : 'gaps'} for this policy on the Gaps page.` : covered > 0 ? `${covered} ${covered === 1 ? 'regulation' : 'regulations'} fully covered by this policy and nothing open.` : 'No regulation is open against this policy.') : 'The gap analysis has not been run yet.' },
+      { key: 'uptodate', label: DIM_LABEL.uptodate, band: lintN === undefined ? 'none' : lintN === 0 ? 'strong' : lintN <= 2 ? 'good' : 'attention', href: '/gaps', last_run: g.lintRun.get(p.id) ?? null,
+        detail: lintN === undefined ? 'Not checked yet.' : (lintN === 0 ? 'No out of date terms found.' : `${lintN} out of date ${lintN === 1 ? 'term' : 'terms'} to update.`) + reviewNote },
+      { key: 'consistency', label: DIM_LABEL.consistency, band: g.consAnalysed ? (myConflicts === 0 ? 'strong' : myConflicts <= 1 ? 'good' : 'attention') : 'none', href: '/gaps', last_run: g.consRun,
+        detail: g.consAnalysed ? (myConflicts === 0 ? 'No open conflicts with your other policies.' : `${myConflicts} open ${myConflicts === 1 ? 'conflict' : 'conflicts'} with other policies.`) : 'Cross-policy consistency has not been run yet.' },
+      { key: 'wording', label: DIM_LABEL.wording, band: wordingRan ? (wordingN === 0 ? 'strong' : wordingN <= 2 ? 'good' : 'attention') : 'none', href: '/gaps', last_run: g.wordingRun.get(p.id) ?? null,
+        detail: wordingRan ? (wordingN === 0 ? 'Nothing open: this policy reads in the way the CQC quality statements expect.' : `${wordingN} ${wordingN === 1 ? 'passage' : 'passages'} could be reworded to match the CQC quality statements.`) : 'The CQC wording analysis has not been run on this policy yet.' },
       { key: 'clarity', label: DIM_LABEL.clarity, band: clarityFinal, href: `/gaps?clarity=${p.id}`, last_run: iso(cl?.created_at), checks, readability,
         detail: cl ? `${cl.finding_count} ${cl.finding_count === 1 ? 'passage' : 'passages'} of unclear wording found. The seven checks and staff readability are below.` : 'Not run yet. Open step 5 on the Gaps page. The seven checks and staff readability fill in when it is run.' },
       { key: 'practical', label: DIM_LABEL.practical, band: practicalBand(stressGaps, stressPoints), href: '/stress-testing', last_run: iso(myStress.reduce((m: any, r: any) => (!m || new Date(r.created_at) > new Date(m) ? r.created_at : m), null)),
@@ -125,12 +178,12 @@ export async function loadHealth(tenantId: string): Promise<PolicyHealth[]> {
     for (const d of dims) d.value = bandValue(d.band)
     const o = scoreOf(dims)
     const lc = lastCheck.get(p.id)
-    // Ready for step 5 (clarity and precision): steps 1 to 4 have each been run for this policy and have nothing open.
+    // Ready for step 5 (clarity and precision): steps 1 to 4 have each been run for this policy and have nothing open, exactly as the Gaps page shows them.
     const steps: PreStep[] = [
-      { step: 1, label: 'Regulation coverage', done: !!coverageRun && partial === 0, detail: !coverageRun ? 'Not run yet' : partial > 0 ? `${partial} open regulation ${partial === 1 ? 'gap' : 'gaps'}` : 'Nothing open' },
+      { step: 1, label: 'Regulation coverage', done: !!g.coverageRun && partial === 0, detail: !g.coverageRun ? 'Not run yet' : partial > 0 ? `${partial} open regulation ${partial === 1 ? 'gap' : 'gaps'}` : 'Nothing open' },
       { step: 2, label: 'Out-of-date content', done: lintN !== undefined && lintN === 0, detail: lintN === undefined ? 'Not run yet' : lintN > 0 ? `${lintN} out of date ${lintN === 1 ? 'term' : 'terms'}` : 'Nothing open' },
-      { step: 3, label: 'Cross-policy consistency', done: !!consistency?.analysed_at && myConflicts === 0, detail: !consistency?.analysed_at ? 'Not run yet' : myConflicts > 0 ? `${myConflicts} open ${myConflicts === 1 ? 'conflict' : 'conflicts'}` : 'Nothing open' },
-      { step: 4, label: 'CQC wording', done: !!wa && wordingN === 0, detail: !wa ? 'Not run yet' : wordingN > 0 ? `${wordingN} wording ${wordingN === 1 ? 'suggestion' : 'suggestions'}` : 'Nothing open' },
+      { step: 3, label: 'Cross-policy consistency', done: g.consAnalysed && myConflicts === 0, detail: !g.consAnalysed ? 'Not run yet' : myConflicts > 0 ? `${myConflicts} open ${myConflicts === 1 ? 'conflict' : 'conflicts'}` : 'Nothing open' },
+      { step: 4, label: 'CQC wording', done: wordingRan && wordingN === 0, detail: !wordingRan ? 'Not run yet' : wordingN > 0 ? `${wordingN} wording ${wordingN === 1 ? 'suggestion' : 'suggestions'}` : 'Nothing open' },
     ]
     const waiting = steps.filter(x => !x.done).map(x => `step ${x.step} ${x.label.toLowerCase()} (${x.detail.toLowerCase()})`)
     return {

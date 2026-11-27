@@ -130,11 +130,24 @@ test('ACCORDION: health opens as a row under the policy, with last run dates, CQ
   assert.doesNotMatch(health, /key: 'readability'/)                                            // readability sits inside clarity
   assert.match(health, /readability: \{ band: Band; detail: string \}|readability,/)
   assert.match(health, /href: `\/gaps\?clarity=\$\{p\.id\}`/)
-  assert.match(health, /label: 'CQC wording', done: !!wa && wordingN === 0/)   // CQC wording is part of "ready"
+  assert.match(health, /label: 'CQC wording', done: wordingRan && wordingN === 0/)   // CQC wording is part of "ready"
   assert.match(gaps, /get\('clarity'\)/)
   assert.match(sec, /focusPolicyId/)
   assert.doesNotMatch(sec, /Run anyway/)                                                        // nothing can be run until steps 1 to 4 are done
   assert.match(sec, /Steps 1, 2, 3 and 4 need completing for this policy first/)
   assert.match(health, /const steps: PreStep\[\]/)
   assert.match(pill, /lg:sticky lg:top-6/)                                                       // the score column stays in view
+})
+
+test('SAME AS GAPS: the health row reads steps 1 to 4 from the functions that draw them on the Gaps page, never from raw rows', () => {
+  const read = (f: string) => fs.readFileSync(path.resolve(__dirname, f), 'utf8')
+  const h = read('../services/policy-testing/health.ts')
+  assert.match(h, /getTenantLint\(tenantId\)/)                       // out of date: review dates, ignored findings and "marked updated" are left out, as on Gaps
+  assert.match(h, /f\.kind !== 'review_currency' && !f\.ignored/)
+  assert.match(h, /getConsistency\(tenantId\)/)                       // consistency: dismissed conflicts are left out
+  assert.match(h, /getPolicyWordingAlignment\(tenantId\)/)            // wording: policies marked updated are left out
+  assert.match(h, /regulationAppliesToTenant\(r, setting, profile\)/) // coverage: only regulations in scope for this service
+  assert.match(h, /completed\.has\(c\.reference_key\)/)               // coverage: completed remediations are left out
+  assert.match(h, /target_policies/)                                  // coverage: a gap counts against the policy its fixes route to
+  assert.doesNotMatch(h, /policyLintResult\.findMany\(\{ where: \{ tenant_id: tenantId \}, select: \{ policy_id: true, findings: true/)   // no raw findings count
 })

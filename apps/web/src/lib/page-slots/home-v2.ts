@@ -17,7 +17,7 @@ export const HOME_V2_SLOTS: SlotDef[] = [
   { key: 'hero.h1.mid', group: 'Hero', label: 'Headline — before the emphasis', default: 'turned into' },
   { key: 'hero.h1.grad1', group: 'Hero', label: 'Headline — emphasis 1', default: 'evidence' },
   { key: 'hero.h1.grad2', group: 'Hero', label: 'Headline — emphasis 2', default: 'for your teams' },
-  { key: 'hero.lede', group: 'Hero', label: 'Sub-paragraph', multiline: true, default: 'Upload your documents once. CareStream turns them into staff answers, training, audits and inspection evidence, grounded only in what you wrote.' },
+  { key: 'hero.lede', group: 'Hero', label: 'Sub-paragraph', multiline: true, default: 'Upload your policies once. CareStream checks them for compliance gaps against the regulations that apply to your service, then turns them into staff answers, training, audits and inspection evidence, grounded only in what you wrote.' },
   { key: 'hero.cta', group: 'Hero', label: 'Submit button', default: 'Start free trial' },
   { key: 'hero.email.placeholder', group: 'Hero', label: 'Email field placeholder', default: 'name@yourcarehome.co.uk' },
   { key: 'hero.microcopy', group: 'Hero', label: 'Line under the button', default: '14 day free trial · Set up in a day · UK data residency' },
